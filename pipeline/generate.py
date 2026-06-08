@@ -745,11 +745,14 @@ def main() -> None:
         mp_pool = mp.Pool(args.workers, initializer=init_worker, initargs=init_args)
         iterator = mp_pool.imap_unordered(worker, tasks, chunksize=16)
 
+    # Write every 100 battles (~20K samples per file at MAX_TURNS=100).
+    # Smaller files load faster in StreamingReplayDataset and avoid 2+ GB pickles.
+    WRITE_EVERY = 100
     try:
         for samples in iterator:
             completed += 1
             batch_samples.extend(samples)
-            if completed % 1000 == 0:
+            if completed % WRITE_EVERY == 0:
                 path = write_batch(output, batch_index, batch_samples)
                 print(json.dumps({
                     "battles": completed,
