@@ -219,7 +219,10 @@ async def run_training(args: argparse.Namespace) -> None:
     n_envs = max(1, args.n_envs)
     tag = random.randint(0, 1_000_000)
 
-    # Spawn n_envs player pairs — each pair runs one game concurrently
+    # Spawn n_envs environments.
+    # If --vs-heuristic: p1=RolloutPlayer, p2=SimpleHeuristicsPlayer (fixed opponent).
+    # This gives a non-trivial value signal — positions that beat the heuristic are better.
+    # Self-play from a random/weak policy produces 50/50 outcomes with no positional signal.
     envs = []
     for i in range(n_envs):
         p1 = RolloutPlayer(model, vocab, device,
@@ -227,19 +230,28 @@ async def run_training(args: argparse.Namespace) -> None:
                            battle_format="gen9randombattle",
                            server_configuration=server,
                            max_concurrent_battles=1)
-        p2 = RolloutPlayer(model, vocab, device,
-                           account_configuration=_account(f"PPO_B{tag}_{i}"),
-                           battle_format="gen9randombattle",
-                           server_configuration=server,
-                           max_concurrent_battles=1)
+        if args.vs_heuristic and SimpleHeuristicsPlayer is not None:
+            p2 = SimpleHeuristicsPlayer(
+                account_configuration=_account(f"PPO_H{tag}_{i}"),
+                battle_format="gen9randombattle",
+                server_configuration=server,
+                max_concurrent_battles=1)
+        else:
+            p2 = RolloutPlayer(model, vocab, device,
+                               account_configuration=_account(f"PPO_B{tag}_{i}"),
+                               battle_format="gen9randombattle",
+                               server_configuration=server,
+                               max_concurrent_battles=1)
         envs.append((p1, p2))
 
-    async def run_one_game(p1: RolloutPlayer, p2: RolloutPlayer) -> list[RolloutStep]:
+    async def run_one_game(p1: RolloutPlayer, p2: Any) -> list[RolloutStep]:
         before = int(getattr(p1, "n_won_battles", 0))
         await p1.battle_against(p2, n_battles=1)
         outcome = 1.0 if int(getattr(p1, "n_won_battles", 0)) > before else -1.0
         steps = compute_gae(p1.collect_episode(outcome), config.gamma, config.gae_lambda)
-        steps += compute_gae(p2.collect_episode(-outcome), config.gamma, config.gae_lambda)
+        # Only collect p2 steps for self-play (heuristic player has no buffer)
+        if isinstance(p2, RolloutPlayer):
+            steps += compute_gae(p2.collect_episode(-outcome), config.gamma, config.gae_lambda)
         return steps
 
     update = 0
@@ -286,6 +298,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout", type=float, default=90.0)
     parser.add_argument("--n-envs", type=int, default=1,
                         help="Number of concurrent self-play environments (asyncio.gather)")
+    parser.add_argument("--vs-heuristic", action="store_true", default=True,
+                        help="Train against SimpleHeuristicsPlayer (default). Use --no-vs-heuristic for self-play.")
+    parser.add_argument("--no-vs-heuristic", dest="vs_heuristic", action="store_false")
     return parser
 
 
