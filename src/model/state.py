@@ -593,6 +593,92 @@ def _action_mask_from_battle(battle: Any) -> np.ndarray:
     return mask
 
 
+def _best_set_from_posterior(posterior_entries: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return the highest-probability set from a posterior entry list."""
+    if not posterior_entries:
+        return None
+    return max(posterior_entries, key=lambda e: float(e.get("probability", 0.0)) if isinstance(e, dict) else 0.0)
+
+
+def _apply_belief_to_opp_team(
+    opp_team: list[Any],
+    belief_posterior: dict[str, list[dict[str, Any]]] | None,
+) -> list[Any]:
+    """
+    Replace opponent team slots with posterior-informed dicts when belief data is available.
+
+    For each slot in the posterior, use the highest-probability set's moves/item/ability
+    to replace UNKNOWN tokens. HP fraction and other observed battle state is preserved
+    from the original slot if it contains that data.
+
+    This implements the AGENTS.md requirement:
+    "the RLM's cross-turn posterior is written back into the opponent tokens
+    as weighted soft assignments over the vocabulary."
+    We use mode (argmax) of the posterior rather than full soft weighting since the
+    model architecture uses integer embedding lookups, not continuous inputs.
+    """
+    if not belief_posterior:
+        return opp_team
+    enriched = list(opp_team)
+    # Build a slot-name → slot-index map from the existing team
+    slot_species_map: dict[str, int] = {}
+    for idx, mon in enumerate(enriched[:TEAM_SIZE]):
+        if mon is None:
+            continue
+        data = _pokemon_dict(mon)
+        species = normalize_name(data.get("species") or "")
+        if species:
+            slot_species_map[species] = idx
+    for slot_key, entries in belief_posterior.items():
+        if not isinstance(entries, list) or not entries:
+            continue
+        best = _best_set_from_posterior(entries)
+        if not isinstance(best, dict):
+            continue
+        # Match by species name (normalised) or slot key
+        species_key = normalize_name(best.get("species") or slot_key.split("_")[0])
+        idx = slot_species_map.get(species_key)
+        if idx is None:
+            # Try matching the slot key itself as species
+            idx = slot_species_map.get(normalize_name(slot_key))
+        if idx is None:
+            # Append as a new unseen opponent Pokémon (within team limit)
+            if len([m for m in enriched[:TEAM_SIZE] if m is not None]) < TEAM_SIZE:
+                for empty_idx in range(TEAM_SIZE):
+                    if enriched[empty_idx] is None:
+                        idx = empty_idx
+                        break
+        if idx is None:
+            continue
+        existing = enriched[idx]
+        existing_data = _pokemon_dict(existing) if existing is not None else {}
+        # Merge: posterior fills in unseen attributes; observed battle state takes priority
+        merged: dict[str, Any] = dict(best)
+        merged["species"] = existing_data.get("species") or best.get("species") or species_key
+        # Preserve observed HP from the battle state
+        if existing_data.get("hp_fraction") is not None:
+            merged["hp_fraction"] = existing_data["hp_fraction"]
+        if existing_data.get("status"):
+            merged["status"] = existing_data["status"]
+        if existing_data.get("is_active") is not None:
+            merged["is_active"] = existing_data["is_active"]
+        # Only override moves/item/ability if the posterior has them and battle hasn't revealed them
+        if not existing_data.get("moves") and best.get("moves"):
+            merged["moves"] = best["moves"]
+        elif existing_data.get("moves"):
+            merged["moves"] = existing_data["moves"]
+        if not existing_data.get("item") and best.get("item"):
+            merged["item"] = best["item"]
+        elif existing_data.get("item"):
+            merged["item"] = existing_data["item"]
+        if not existing_data.get("ability") and best.get("ability"):
+            merged["ability"] = best["ability"]
+        elif existing_data.get("ability"):
+            merged["ability"] = existing_data["ability"]
+        enriched[idx] = merged
+    return enriched
+
+
 # --- Main encoder ---
 
 def encode_state(
@@ -600,6 +686,7 @@ def encode_state(
     vocab: Vocabulary | None = None,
     pool: dict[str, list[dict[str, Any]]] | str | Path | None = None,
     generation: int = 9,
+    belief_posterior: dict[str, list[dict[str, Any]]] | None = None,
 ) -> EncodedState:
     if isinstance(state, EncodedState):
         return state
@@ -608,6 +695,10 @@ def encode_state(
     generation = _generation_from_state(state, generation)
     own_team = _extract_team(state, "own_team")[:TEAM_SIZE]
     opp_team = _extract_team(state, "opponent_team")[:TEAM_SIZE]
+    # Apply belief posterior to enrich opponent tokens before encoding
+    if belief_posterior is None and isinstance(state, dict):
+        belief_posterior = state.get("belief_posterior") or state.get("opponent_posterior")
+    opp_team = _apply_belief_to_opp_team(opp_team, belief_posterior)
     own_team.extend([None] * (TEAM_SIZE - len(own_team)))
     opp_team.extend([None] * (TEAM_SIZE - len(opp_team)))
     species_ids = np.zeros(N_POKEMON, dtype=np.int64)
