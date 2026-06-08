@@ -266,6 +266,21 @@ def _moves_from_choice(choice: str) -> tuple[str | None, bool]:
     return choice, False
 
 
+def _update_hp_from_engine(team: list[dict[str, Any]], side: Any) -> None:
+    """Sync hp_fraction in team dicts from the live engine state.
+
+    Called after every apply_instructions so that mask_opponent_for_p1 and
+    _encode_partial_state see current HP values rather than the static 1.0
+    set by sample_team.  Fainted mons naturally get hp_fraction=0.0, which
+    encode_state maps to hp_fraction_bin 0 — the "fainted" bin — letting
+    the value head learn the most important signal in position evaluation.
+    """
+    for idx, mon in enumerate(list(getattr(side, "pokemon", []) or [])[:len(team)]):
+        hp = float(getattr(mon, "hp", 0))
+        maxhp = float(getattr(mon, "maxhp", 1) or 1)
+        team[idx]["hp_fraction"] = hp / max(1.0, maxhp)
+
+
 def _encode_partial_state(
     own_team: list[dict[str, Any]],
     masked_opp: list[dict[str, Any] | None],
@@ -360,6 +375,12 @@ def run_random_battle(pool: dict[str, Any], vocab: Vocabulary, gen: int, rng: ra
         weights = [max(0.0, float(getattr(b, "percentage", 0.0))) for b in branches]
         branch = rng.choices(branches, weights=weights if sum(weights) > 0 else None, k=1)[0]
         state = state.apply_instructions(branch)
+
+        # Sync HP from engine state so encoded states reflect actual damage.
+        # Without this, every Pokémon appears at full health for the entire
+        # battle and the value head cannot learn the dominant positional signal.
+        _update_hp_from_engine(team1, state.side_one)
+        _update_hp_from_engine(team2, state.side_two)
 
         # Update observation state AFTER applying moves.
         # p1 now knows: what move did p2 just use? did p2 switch?
