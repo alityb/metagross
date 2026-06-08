@@ -622,6 +622,10 @@ def _action_mask_from_dict(state: dict[str, Any]) -> np.ndarray:
         mask[4 + idx] = True
     can_tera = bool(state.get("can_tera") or state.get("can_terastallize"))
     if can_tera:
+        # Tera actions (slots 9-13) are Gen 9 only. For Gen 1-8, can_tera is
+        # never True, so these slots stay masked. Gen 8 Dynamax and Gen 7
+        # Z-moves are ignored (same approach as Foul Play) — poke-engine does
+        # not fully model them and they are masked out at the action level.
         mask[9:13] = mask[:4]
         if any(mask[4:9]):
             mask[13] = True
