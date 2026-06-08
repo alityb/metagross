@@ -1,9 +1,12 @@
 [project]
-name = "alphapokemon"
+name = "metagross"
 version = "0.1.0"
-description = "Gen9 random battle agent with RLM-guided neural MCTS"
+description = "Superhuman Gen1-9 random battle agent via neural MCTS + recursive language model"
 requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src", "."]
