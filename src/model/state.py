@@ -13,9 +13,9 @@ import numpy as np
 N_POKEMON = 12
 TEAM_SIZE = 6
 N_ACTIONS = 14
-BASE_FIELD_FEATURES = 57
-FIELD_FEATURES = BASE_FIELD_FEATURES + 9  # 9-dim generation one-hot
-POKEMON_DENSE_FEATURES = 223
+BASE_FIELD_FEATURES = 61   # 57 base + unrevealed_p1/p2 + sleep_clause_p1/p2
+FIELD_FEATURES = BASE_FIELD_FEATURES + 9  # 9-dim generation one-hot  = 70
+POKEMON_DENSE_FEATURES = 224  # 223 + must_recharge (1)
 UNKNOWN = "<UNKNOWN>"
 
 STATUS_ORDER = ["none", "brn", "frz", "par", "psn", "tox", "slp"]
@@ -112,6 +112,7 @@ class EncodedState:
     move_ids: np.ndarray
     item_ids: np.ndarray
     ability_ids: np.ndarray
+    last_move_ids: np.ndarray   # shape (N_POKEMON,) — last move used per slot
     pokemon_dense: np.ndarray
     field: np.ndarray
     active_indices: np.ndarray
@@ -119,14 +120,15 @@ class EncodedState:
 
     def as_batch(self) -> dict[str, np.ndarray]:
         return {
-            "species_ids": self.species_ids[None, :],
-            "move_ids": self.move_ids[None, :, :],
-            "item_ids": self.item_ids[None, :],
-            "ability_ids": self.ability_ids[None, :],
+            "species_ids":   self.species_ids[None, :],
+            "move_ids":      self.move_ids[None, :, :],
+            "item_ids":      self.item_ids[None, :],
+            "ability_ids":   self.ability_ids[None, :],
+            "last_move_ids": self.last_move_ids[None, :],
             "pokemon_dense": self.pokemon_dense[None, :, :],
-            "field": self.field[None, :],
+            "field":         self.field[None, :],
             "active_indices": self.active_indices[None, :],
-            "action_mask": self.action_mask[None, :],
+            "action_mask":   self.action_mask[None, :],
         }
 
 
@@ -238,6 +240,15 @@ def _pokemon_dict(pokemon: Any) -> dict[str, Any]:
     moves = getattr(pokemon, "moves", None)
     if isinstance(moves, dict):
         moves = list(moves.keys())
+    # last_move: poke-env Move object with .id attribute
+    last_move_obj = getattr(pokemon, "last_move", None)
+    last_move = (
+        getattr(last_move_obj, "id", None)
+        or getattr(last_move_obj, "name", None)
+    )
+    # volatile statuses: poke-env uses pokemon.effects (Effect enum dict)
+    effects = getattr(pokemon, "effects", {}) or {}
+    volatile_effects = [str(k).lower() for k in effects.keys()]
     return {
         "species": getattr(pokemon, "species", None) or getattr(pokemon, "base_species", None) or getattr(pokemon, "id", None),
         "moves": moves or [],
@@ -254,6 +265,9 @@ def _pokemon_dict(pokemon: Any) -> dict[str, Any]:
         "types": getattr(pokemon, "types", None),
         "sleep_turns": getattr(pokemon, "sleep_turns", 0),
         "rest_turns": getattr(pokemon, "rest_turns", 0),
+        "last_move": last_move,
+        "must_recharge": getattr(pokemon, "must_recharge", False),
+        "volatile_effects": volatile_effects,
     }
 
 
@@ -375,8 +389,18 @@ def _encode_pokemon(pokemon: Any, vocab: Vocabulary, active_default: bool = Fals
     partial_trap = float(data.get("partial_trap_turns", 0) or 0)
     parts.append(np.array([min(1.0, partial_trap / 5.0)], dtype=np.float32))
 
+    # must_recharge: binary — on recharge turn the active mon cannot move at all
+    # (Hyper Beam, Giga Impact, etc.). Critical for both policy (don't waste turn)
+    # and opponent inference (safe to set up against a recharging mon).
+    must_recharge = bool(data.get("must_recharge")) or "mustrecharge" in [
+        normalize_name(v) for v in (volatiles if isinstance(volatiles, list) else [])
+    ]
+    parts.append(np.array([1.0 if must_recharge else 0.0], dtype=np.float32))
+
     dense = np.concatenate(parts).astype(np.float32)
-    assert dense.shape[0] == POKEMON_DENSE_FEATURES, f"pokemon dense feature size mismatch: {dense.shape[0]} != {POKEMON_DENSE_FEATURES}"
+    assert dense.shape[0] == POKEMON_DENSE_FEATURES, (
+        f"pokemon dense feature size mismatch: {dense.shape[0]} != {POKEMON_DENSE_FEATURES}"
+    )
     return species_id, move_ids, item_id, ability_id, dense
 
 
@@ -437,7 +461,15 @@ def _safe_int(value: Any, default: int = 0) -> int:
 
 
 def _encode_field(state: Any, generation: int = 9) -> np.ndarray:
-    """Encode field features. BASE_FIELD_FEATURES=57, total with gen one-hot=66."""
+    """Encode field features. BASE_FIELD_FEATURES=61, total with gen one-hot=70.
+
+    Indices 0-56:  original field features (weather, terrain, TR, hazards, screens…)
+    Index 57:      unrevealed_p1 / 5.0   (always 0 for own-side; included for symmetry)
+    Index 58:      unrevealed_p2 / 5.0   (how many opponent mons are still unseen)
+    Index 59:      sleep_clause_p1        (1 if any P1 mon has SLP — Sleep Clause active)
+    Index 60:      sleep_clause_p2        (1 if any P2 mon has SLP)
+    Indices 61-69: generation one-hot (9 dims)
+    """
     base = np.zeros(BASE_FIELD_FEATURES, dtype=np.float32)
     data = state if isinstance(state, dict) else {}
     field = data.get("field", data) if isinstance(data, dict) else {}
@@ -523,7 +555,7 @@ def _encode_field(state: Any, generation: int = 9) -> np.ndarray:
     base[47] = 1.0 if _safe_int(sc_p1.get("safeguard", 0) if isinstance(sc_p1, dict) else 0) else 0.0
     base[48] = 1.0 if _safe_int(sc_p2.get("safeguard", 0) if isinstance(sc_p2, dict) else 0) else 0.0
 
-    # Index 49-50: fainted counts
+    # Index 49-50: fainted counts (own-side knowledge — always exact)
     fainted_p1 = _safe_int(data.get("fainted_p1", 0))
     fainted_p2 = _safe_int(data.get("fainted_p2", 0))
     base[49] = min(1.0, fainted_p1 / 5.0)
@@ -547,7 +579,26 @@ def _encode_field(state: Any, generation: int = 9) -> np.ndarray:
     if isinstance(fs_p2, (list, tuple)):
         base[56] = min(1.0, _safe_int(fs_p2[0]) / 3.0)
 
-    # Generation one-hot (9 dims)
+    # --- New features (indices 57-60) ---
+
+    # Index 57: unrevealed_p1 / 5.0  (always 0 — own team fully known)
+    base[57] = min(1.0, _safe_int(data.get("unrevealed_p1", 0)) / 5.0)
+
+    # Index 58: unrevealed_p2 / 5.0  (opponent mons not yet seen)
+    # Foul Play counts unrevealed mons as alive in its eval — encoding this
+    # directly lets the value head learn the correct hazard-scaling signal.
+    base[58] = min(1.0, _safe_int(data.get("unrevealed_p2", 0)) / 5.0)
+
+    # Index 59: sleep_clause_p1 — 1 if any P1 mon is sleeping.
+    # When active, opponent sleep moves are useless (PS Sleep Clause Mod).
+    sleep_p1 = data.get("sleep_clause_p1", 0)
+    base[59] = 1.0 if (sleep_p1 or _safe_int(sleep_p1)) else 0.0
+
+    # Index 60: sleep_clause_p2
+    sleep_p2 = data.get("sleep_clause_p2", 0)
+    base[60] = 1.0 if (sleep_p2 or _safe_int(sleep_p2)) else 0.0
+
+    # Generation one-hot (9 dims, indices 61-69)
     gen_vec = np.zeros(9, dtype=np.float32)
     gen_vec[max(0, min(8, int(generation) - 1))] = 1.0
 
@@ -733,11 +784,21 @@ def encode_state(
         action_mask = _action_mask_from_dict(state)
     else:
         action_mask = _action_mask_from_battle(state)
+
+    # Build last_move_ids: index into move vocab of the last move used per slot.
+    # Used by PokeNet's last_move embedding — enables Choice lock detection and
+    # two-turn move preparation inference without polluting the dense features.
+    last_move_ids = np.zeros(N_POKEMON, dtype=np.int64)
+    for idx, pokemon in enumerate(own_team + opp_team):
+        data = _pokemon_dict(pokemon)
+        last_move_ids[idx] = _vocab_index(vocab.moves, data.get("last_move"))
+
     return EncodedState(
         species_ids=species_ids,
         move_ids=move_ids,
         item_ids=item_ids,
         ability_ids=ability_ids,
+        last_move_ids=last_move_ids,
         pokemon_dense=dense,
         field=field,
         active_indices=np.array([active_own, active_opp], dtype=np.int64),
@@ -750,12 +811,13 @@ def stack_encoded(states: Iterable[EncodedState]) -> dict[str, np.ndarray]:
     if not encoded:
         raise ValueError("cannot stack an empty state batch")
     return {
-        "species_ids": np.stack([state.species_ids for state in encoded]),
-        "move_ids": np.stack([state.move_ids for state in encoded]),
-        "item_ids": np.stack([state.item_ids for state in encoded]),
-        "ability_ids": np.stack([state.ability_ids for state in encoded]),
-        "pokemon_dense": np.stack([state.pokemon_dense for state in encoded]),
-        "field": np.stack([state.field for state in encoded]),
+        "species_ids":   np.stack([state.species_ids   for state in encoded]),
+        "move_ids":      np.stack([state.move_ids       for state in encoded]),
+        "item_ids":      np.stack([state.item_ids       for state in encoded]),
+        "ability_ids":   np.stack([state.ability_ids    for state in encoded]),
+        "last_move_ids": np.stack([state.last_move_ids  for state in encoded]),
+        "pokemon_dense": np.stack([state.pokemon_dense  for state in encoded]),
+        "field":         np.stack([state.field          for state in encoded]),
         "active_indices": np.stack([state.active_indices for state in encoded]),
-        "action_mask": np.stack([state.action_mask for state in encoded]),
+        "action_mask":   np.stack([state.action_mask    for state in encoded]),
     }

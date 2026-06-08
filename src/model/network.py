@@ -59,7 +59,14 @@ class PokeNet(nn.Module):
         self.item_projection = nn.Linear(config.entity_embedding_dim, config.item_dim)
         self.ability_projection = nn.Linear(config.entity_embedding_dim, config.ability_dim)
 
-        pokemon_raw = config.species_dim + config.move_dim + config.item_dim + config.ability_dim + POKEMON_DENSE_FEATURES
+        pokemon_raw = (
+            config.species_dim   # 64
+            + config.move_dim    # 32  (sum of 4 move slots)
+            + config.move_dim    # 32  (last_move embedding — same projection)
+            + config.item_dim    # 32
+            + config.ability_dim # 32
+            + POKEMON_DENSE_FEATURES  # 224
+        )  # = 416
         self.pokemon_encoder = nn.Sequential(
             nn.Linear(pokemon_raw, config.d_model),
             nn.LayerNorm(config.d_model),
@@ -111,9 +118,11 @@ class PokeNet(nn.Module):
 
         species_emb = self.species_projection(self.species_emb(species))
         move_emb = self.move_projection(self.move_emb(moves)).sum(dim=2)
+        last_move = tensors["last_move_ids"].long()               # (B, 12)
+        last_move_emb = self.move_projection(self.move_emb(last_move))  # (B, 12, move_dim)
         item_emb = self.item_projection(self.item_emb(items))
         ability_emb = self.ability_projection(self.ability_emb(abilities))
-        pokemon_raw = torch.cat([species_emb, move_emb, item_emb, ability_emb, dense], dim=-1)
+        pokemon_raw = torch.cat([species_emb, move_emb, last_move_emb, item_emb, ability_emb, dense], dim=-1)
         pokemon_tokens = self.pokemon_encoder(pokemon_raw)
         field_token = self.field_encoder(field).unsqueeze(1)
         tokens = torch.cat([field_token, pokemon_tokens], dim=1)
@@ -191,6 +200,7 @@ class PokeNet(nn.Module):
             "move_ids",
             "item_ids",
             "ability_ids",
+            "last_move_ids",
             "pokemon_dense",
             "field",
             "active_indices",
