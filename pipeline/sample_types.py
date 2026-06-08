@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from metagross.model.state import EncodedState
+from model.state import EncodedState
 
 
 @dataclass

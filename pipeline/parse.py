@@ -19,7 +19,7 @@ for p in [str(ROOT), str(SRC)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from metagross.model.state import Vocabulary, build_vocabulary, encode_state, generation_from_format, normalize_name
+from model.state import Vocabulary, build_vocabulary, encode_state, generation_from_format, normalize_name
 from pipeline.sample_types import TrainingSample
 
 

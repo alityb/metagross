@@ -9,16 +9,17 @@ import random
 import sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'src'
+SRC = ROOT / "src"
 for _p in [str(ROOT), str(SRC)]:
-    if _p not in sys.path: sys.path.insert(0, _p)
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from pathlib import Path
 from typing import Any
 
 from pipeline.sample_types import TrainingSample
-from metagross.model.engine_bridge import battle_to_poke_engine_state, encode_poke_engine_state
-from metagross.model.state import Vocabulary, build_vocabulary, normalize_name
+from model.engine_bridge import battle_to_poke_engine_state, encode_poke_engine_state
+from model.state import Vocabulary, build_vocabulary, normalize_name
 
 
 POOL: dict[str, Any] = {}

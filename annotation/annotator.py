@@ -7,9 +7,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from metagross.belief.constraints import filter_by_seen_moves, normalize_name, uniform_posterior
-from metagross.rlm.repl_env import RLMConfig, normalize_policy
-from metagross.rlm.strategist import RLMStrategist
+from belief.constraints import filter_by_seen_moves, normalize_name, uniform_posterior
+from rlm.repl_env import RLMConfig, normalize_policy
+from rlm.strategist import RLMStrategist
 
 from .tools import iter_replay_paths
 

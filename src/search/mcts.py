@@ -7,10 +7,10 @@ from typing import Any, Protocol
 
 import torch
 
-from metagross.model.network import PokeNet
-from metagross.model.state import EncodedState, Vocabulary, build_vocabulary, encode_state
-from metagross.model.engine_bridge import battle_to_poke_engine_state, encode_poke_engine_state
-from metagross.rlm.strategist import blend_root_prior
+from model.network import PokeNet
+from model.state import EncodedState, Vocabulary, build_vocabulary, encode_state
+from model.engine_bridge import battle_to_poke_engine_state, encode_poke_engine_state
+from rlm.strategist import blend_root_prior
 
 from .node import MCTSNode
 

@@ -6,13 +6,14 @@ import re
 import sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'src'
+SRC = ROOT / "src"
 for _p in [str(ROOT), str(SRC)]:
-    if _p not in sys.path: sys.path.insert(0, _p)
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from pathlib import Path
 
-from metagross.model.state import normalize_name
+from model.state import normalize_name
 
 
 def extract_block(text: str, start: int) -> tuple[str, int]:

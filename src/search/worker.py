@@ -4,8 +4,8 @@ from typing import Iterable
 
 import torch
 
-from metagross.model.network import PokeNet
-from metagross.model.state import EncodedState, stack_encoded
+from model.network import PokeNet
+from model.state import EncodedState, stack_encoded
 
 
 @torch.no_grad()
