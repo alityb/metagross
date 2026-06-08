@@ -19,12 +19,32 @@ from .env_runner import RolloutPlayer, RolloutStep, compute_gae
 
 try:
     from poke_env import AccountConfiguration
-    from poke_env.player import SimpleHeuristicsPlayer
+    from poke_env.player import MaxBasePowerPlayer, RandomPlayer, SimpleHeuristicsPlayer
     from poke_env.ps_client import ServerConfiguration
 except Exception:  # pragma: no cover - poke-env is optional for local imports
     AccountConfiguration = None  # type: ignore[assignment]
+    MaxBasePowerPlayer = None  # type: ignore[assignment]
+    RandomPlayer = None  # type: ignore[assignment]
     SimpleHeuristicsPlayer = None  # type: ignore[assignment]
     ServerConfiguration = None  # type: ignore[assignment]
+
+
+# Curriculum: start weak, increase difficulty as win rate rises.
+# Format: list of (opponent_class_name, promote_at_winrate)
+# MaxBasePowerPlayer removed — it creates a hard domain shift from Random
+# (policy unlearns RandomPlayer habits against an always-max-damage opponent
+# before having a chance to learn against strategic play). Go directly to
+# SimpleHeuristicsPlayer which provides richer, more representative signal.
+CURRICULUM = [
+    ("RandomPlayer",           0.70),   # ~50% baseline → promote at 70%
+    ("SimpleHeuristicsPlayer", None),   # final target — no promotion
+]
+
+_OPPONENT_CLASSES = {
+    "RandomPlayer":           lambda: RandomPlayer,
+    "MaxBasePowerPlayer":     lambda: MaxBasePowerPlayer,
+    "SimpleHeuristicsPlayer": lambda: SimpleHeuristicsPlayer,
+}
 
 
 @dataclass
@@ -33,7 +53,7 @@ class PPOConfig:
     gae_lambda: float = 0.754
     clip_range: float = 0.083
     value_clip: float = 0.018
-    entropy_coef: float = 0.059
+    entropy_coef: float = 0.10   # raised from 0.059 — keeps entropy >1.8 during curriculum transition
     value_coef: float = 0.438
     max_grad_norm: float = 0.543
     minibatch_size: int = 1024
@@ -219,51 +239,60 @@ async def run_training(args: argparse.Namespace) -> None:
     n_envs = max(1, args.n_envs)
     tag = random.randint(0, 1_000_000)
 
-    # Spawn n_envs environments.
-    # If --vs-heuristic: p1=RolloutPlayer, p2=SimpleHeuristicsPlayer (fixed opponent).
-    # This gives a non-trivial value signal — positions that beat the heuristic are better.
-    # Self-play from a random/weak policy produces 50/50 outcomes with no positional signal.
-    envs = []
-    for i in range(n_envs):
-        p1 = RolloutPlayer(model, vocab, device,
-                           account_configuration=_account(f"PPO_A{tag}_{i}"),
-                           battle_format="gen9randombattle",
-                           server_configuration=server,
-                           max_concurrent_battles=1)
-        if args.vs_heuristic and SimpleHeuristicsPlayer is not None:
-            p2 = SimpleHeuristicsPlayer(
-                account_configuration=_account(f"PPO_H{tag}_{i}"),
-                battle_format="gen9randombattle",
-                server_configuration=server,
-                max_concurrent_battles=1)
-        else:
-            p2 = RolloutPlayer(model, vocab, device,
-                               account_configuration=_account(f"PPO_B{tag}_{i}"),
+    def make_envs(opponent_class_name: str, tag: int) -> list[tuple[Any, Any]]:
+        """Spawn n_envs (p1, p2) pairs with the given opponent class."""
+        opp_cls = _OPPONENT_CLASSES.get(opponent_class_name, lambda: SimpleHeuristicsPlayer)()
+        envs = []
+        for i in range(n_envs):
+            p1 = RolloutPlayer(model, vocab, device,
+                               account_configuration=_account(f"PPO_A{tag}_{i}"),
                                battle_format="gen9randombattle",
                                server_configuration=server,
                                max_concurrent_battles=1)
-        envs.append((p1, p2))
+            if not args.vs_heuristic or opp_cls is None:
+                p2: Any = RolloutPlayer(model, vocab, device,
+                                        account_configuration=_account(f"PPO_B{tag}_{i}"),
+                                        battle_format="gen9randombattle",
+                                        server_configuration=server,
+                                        max_concurrent_battles=1)
+            else:
+                p2 = opp_cls(
+                    account_configuration=_account(f"PPO_O{tag}_{i}"),
+                    battle_format="gen9randombattle",
+                    server_configuration=server,
+                    max_concurrent_battles=1)
+            envs.append((p1, p2))
+        return envs
 
-    async def run_one_game(p1: RolloutPlayer, p2: Any) -> list[RolloutStep]:
+    # Curriculum: start with RandomPlayer, promote when win rate threshold met.
+    curriculum_idx = 0
+    if not args.vs_heuristic:
+        # No curriculum for self-play mode.
+        curriculum_idx = len(CURRICULUM) - 1
+    current_opponent = CURRICULUM[curriculum_idx][0]
+    envs = make_envs(current_opponent, tag)
+    print(json.dumps({"curriculum_start": current_opponent}), flush=True)
+
+    async def run_one_game(p1: RolloutPlayer, p2: Any) -> tuple[list[RolloutStep], float]:
         before = int(getattr(p1, "n_won_battles", 0))
         await p1.battle_against(p2, n_battles=1)
         outcome = 1.0 if int(getattr(p1, "n_won_battles", 0)) > before else -1.0
         steps = compute_gae(p1.collect_episode(outcome), config.gamma, config.gae_lambda)
-        # Only collect p2 steps for self-play (heuristic player has no buffer)
         if isinstance(p2, RolloutPlayer):
             steps += compute_gae(p2.collect_episode(-outcome), config.gamma, config.gae_lambda)
-        return steps
+        return steps, outcome
 
     update = 0
     accumulated_steps: list[RolloutStep] = []
+    recent_outcomes: list[float] = []  # rolling window for curriculum promotion
     while args.max_updates is None or update < args.max_updates:
-        # Run all envs concurrently
         results = await asyncio.gather(*[run_one_game(p1, p2) for p1, p2 in envs])
         batch: list[RolloutStep] = []
-        for steps in results:
+        for steps, outcome in results:
             batch.extend(steps)
+            recent_outcomes.append(outcome)
         accumulated_steps.extend(batch)
-        print(json.dumps({"game_steps": len(batch), "accumulated_steps": len(accumulated_steps)}), flush=True)
+        print(json.dumps({"game_steps": len(batch), "accumulated_steps": len(accumulated_steps), "opponent": current_opponent}), flush=True)
         if len(accumulated_steps) >= config.rollout_steps * 20:
             metrics = ppo_update(model, optimizer, accumulated_steps, config, update, device)
             accumulated_steps.clear()
@@ -275,9 +304,26 @@ async def run_training(args: argparse.Namespace) -> None:
                 current_lr = wang_lr(update)
                 for group in optimizer.param_groups:
                     group["lr"] = current_lr
-            print(json.dumps({"update": update, **metrics, "lr": current_lr}))
+            # Rolling win rate over last 50 games
+            window = recent_outcomes[-50:]
+            rolling_wr = sum(1 for o in window if o > 0) / max(1, len(window))
+            print(json.dumps({"update": update, **metrics, "lr": current_lr,
+                               "opponent": current_opponent, "rolling_wr": round(rolling_wr, 3)}), flush=True)
+            # Curriculum promotion
+            promote_at = CURRICULUM[curriculum_idx][1]
+            if (args.vs_heuristic and promote_at is not None
+                    and rolling_wr >= promote_at
+                    and len(window) >= 30
+                    and curriculum_idx < len(CURRICULUM) - 1):
+                curriculum_idx += 1
+                current_opponent = CURRICULUM[curriculum_idx][0]
+                tag2 = random.randint(0, 1_000_000)
+                envs = make_envs(current_opponent, tag2)
+                print(json.dumps({"curriculum_promote": current_opponent, "rolling_wr": round(rolling_wr, 3)}), flush=True)
             if update % 100 == 0:
-                await validate(model, vocab, device, args.server_url, n_games=args.validation_games)
+                wr = await validate(model, vocab, device, args.server_url, n_games=args.validation_games)
+                if wr >= 0.80:
+                    print(json.dumps({"gate": "PASSED", "winrate": wr}), flush=True)
             if args.output:
                 save_checkpoint(args.output, model, optimizer, phase="phase2", update=update)
 
