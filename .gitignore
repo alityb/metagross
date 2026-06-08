@@ -45,14 +45,14 @@ build/
 *.egg-info/
 
 # Legacy layout directories (superseded by src/metagross/)
-pokenet/
-mcts/
-belief/
-rlm/
-agent/
-training/
-phase0/
-data_pipeline/
+/pokenet/
+/mcts/
+/belief/
+/rlm/
+/agent/
+/training/
+/phase0/
+/data_pipeline/
 AGENTS.md
 
 # Editor / OS
