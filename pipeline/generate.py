@@ -7,19 +7,20 @@ import multiprocessing as mp
 import pickle
 import random
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 for _p in [str(ROOT), str(SRC)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from pathlib import Path
 from typing import Any
 
 from pipeline.sample_types import TrainingSample
-from model.engine_bridge import battle_to_poke_engine_state, encode_poke_engine_state
-from model.state import Vocabulary, build_vocabulary, normalize_name
+from model.engine_bridge import battle_to_poke_engine_state
+from model.state import Vocabulary, build_vocabulary, encode_state, normalize_name
 
 
 POOL: dict[str, Any] = {}
@@ -30,7 +31,7 @@ LEARNSETS: dict[str, Any] = {}
 def _load_poke_engine() -> Any:
     try:
         import poke_engine  # type: ignore[import-not-found]
-    except Exception as exc:  # pragma: no cover - optional Rust wheel
+    except Exception as exc:
         raise RuntimeError("poke_engine is required for synthetic generation") from exc
     return poke_engine
 
@@ -41,6 +42,84 @@ def init_worker(pool: dict[str, Any], vocab: Vocabulary, learnsets: dict[str, An
     VOCAB = vocab
     LEARNSETS = learnsets
 
+
+# ------------------------------------------------------------------ #
+# Partial observability tracking                                       #
+# ------------------------------------------------------------------ #
+
+@dataclass
+class BattleObservationState:
+    """Tracks what one side has observed about the opponent so far."""
+    revealed_slots: set[int]
+    revealed_moves: dict[int, set[str]]
+    revealed_items: dict[int, str | None]
+    revealed_abilities: dict[int, str | None]
+
+    @classmethod
+    def initial(cls, active_slot: int) -> "BattleObservationState":
+        """Battle starts: only the active slot's species is revealed, no moves seen."""
+        return cls(
+            revealed_slots={active_slot},
+            revealed_moves={active_slot: set()},
+            revealed_items={},
+            revealed_abilities={},
+        )
+
+    def update_after_move(
+        self,
+        opp_active_slot: int,
+        move_used: str | None,
+        item_activated: str | None = None,
+        ability_triggered: str | None = None,
+    ) -> None:
+        self.revealed_slots.add(opp_active_slot)
+        self.revealed_moves.setdefault(opp_active_slot, set())
+        if move_used:
+            self.revealed_moves[opp_active_slot].add(move_used)
+        if item_activated:
+            self.revealed_items[opp_active_slot] = item_activated
+        if ability_triggered:
+            self.revealed_abilities[opp_active_slot] = ability_triggered
+
+    def update_after_switch(self, new_active_slot: int) -> None:
+        """Opponent switches in: new slot species is now revealed."""
+        self.revealed_slots.add(new_active_slot)
+        self.revealed_moves.setdefault(new_active_slot, set())
+
+
+def mask_opponent_for_p1(
+    full_opp_team: list[dict[str, Any]],
+    obs: BattleObservationState,
+    active_opp_slot: int,
+) -> list[dict[str, Any] | None]:
+    """
+    Returns the opponent team as the observing player can currently see it.
+
+    - Unrevealed slots → None (encode_state treats None as full UNKNOWN token).
+    - Revealed slots → only what has been observed: species known, moves only
+      if used, item/ability only if activated/triggered.
+    """
+    visible: list[dict[str, Any] | None] = []
+    for idx, mon in enumerate(full_opp_team):
+        if idx not in obs.revealed_slots:
+            visible.append(None)  # full UNKNOWN
+        else:
+            visible.append({
+                "species": mon["species"],
+                "moves": sorted(obs.revealed_moves.get(idx, set()))[:4],
+                "item": obs.revealed_items.get(idx),        # None until activated
+                "ability": obs.revealed_abilities.get(idx),  # None until triggered
+                "hp_fraction": mon.get("hp_fraction", 1.0),
+                "is_active": idx == active_opp_slot,
+                "status": mon.get("status"),
+                "types": mon.get("types", []),
+            })
+    return visible
+
+
+# ------------------------------------------------------------------ #
+# Team sampling helpers                                                #
+# ------------------------------------------------------------------ #
 
 def stat_calc(base: int, level: int, hp: bool = False, ev: int = 85, iv: int = 31) -> int:
     common = math.floor(((2 * int(base) + iv + math.floor(ev / 4)) * level) / 100)
@@ -92,7 +171,7 @@ def sample_team(pool: dict[str, Any], gen: int, rng: random.Random) -> list[dict
         if gen_sets:
             base_set = rng.choice(gen_sets)
         else:
-            all_sets = [sample for sets in (entry.get("sets") or {}).values() for sample in sets]
+            all_sets = [s for sets in (entry.get("sets") or {}).values() for s in sets]
             base_set = rng.choice(all_sets) if all_sets else {}
         all_moves = legal_moves_for_species(species_id, gen, list(base_set.get("moves") or []), rng)
         n_moves = rng.choices([1, 2, 3, 4], weights=[0.05, 0.10, 0.20, 0.65])[0]
@@ -100,25 +179,27 @@ def sample_team(pool: dict[str, Any], gen: int, rng: random.Random) -> list[dict
         level = int(base_set.get("level") or (100 if gen >= 6 else 50))
         pokedex_entry = entry.get("pokedex") or {}
         stats = stats_from_pokedex(pokedex_entry, level, base_set.get("stats") or None)
-        team.append(
-            {
-                "species": species_id,
-                "moves": moves,
-                "item": base_set.get("item", "") if gen >= 2 else "",
-                "ability": base_set.get("ability", "") if gen >= 3 else "",
-                "level": level,
-                "types": pokedex_entry.get("types", ["normal"]),
-                "stats": stats,
-                "hp": stats["hp"],
-                "max_hp": stats["hp"],
-                "hp_fraction": 1.0,
-                "is_active": False,
-            }
-        )
+        team.append({
+            "species": species_id,
+            "moves": moves,
+            "item": base_set.get("item", "") if gen >= 2 else "",
+            "ability": base_set.get("ability", "") if gen >= 3 else "",
+            "level": level,
+            "types": pokedex_entry.get("types", ["normal"]),
+            "stats": stats,
+            "hp": stats["hp"],
+            "max_hp": stats["hp"],
+            "hp_fraction": 1.0,
+            "is_active": False,
+        })
     if team:
         team[0]["is_active"] = True
     return team
 
+
+# ------------------------------------------------------------------ #
+# Engine helpers                                                       #
+# ------------------------------------------------------------------ #
 
 def teams_to_poke_engine_state(team1: list[dict[str, Any]], team2: list[dict[str, Any]], gen: int) -> Any:
     return battle_to_poke_engine_state({"own_team": team1, "opponent_team": team2, "generation": gen})
@@ -178,22 +259,92 @@ def _hp_fraction_total(side: Any) -> float:
     return total_hp / max(1.0, total_max)
 
 
+def _moves_from_choice(choice: str) -> tuple[str | None, bool]:
+    """Returns (move_name, is_switch)."""
+    if choice.startswith("switch "):
+        return None, True
+    return choice, False
+
+
+def _encode_partial_state(
+    own_team: list[dict[str, Any]],
+    masked_opp: list[dict[str, Any] | None],
+    available_choices: list[str],
+    turn: int,
+    gen: int,
+    vocab: Vocabulary,
+) -> Any:
+    """Encode a state from one player's perspective with masked opponent."""
+    move_choices = [c for c in available_choices if not c.startswith("switch ")]
+    switch_choices = [c for c in available_choices if c.startswith("switch ")]
+    return encode_state(
+        {
+            "turn": turn,
+            "generation": gen,
+            "own_team": own_team,
+            "opponent_team": masked_opp,
+            "available_moves": [{"move": m, "disabled": False} for m in move_choices[:4]],
+            "available_switches": [{"species": m.split(" ", 1)[1]} for m in switch_choices[:5]],
+        },
+        vocab=vocab,
+        generation=gen,
+    )
+
+
+# ------------------------------------------------------------------ #
+# Main battle runner with partial observability                        #
+# ------------------------------------------------------------------ #
+
 def run_random_battle(pool: dict[str, Any], vocab: Vocabulary, gen: int, rng: random.Random) -> list[TrainingSample]:
     poke_engine = _load_poke_engine()
     team1 = sample_team(pool, gen, rng)
     team2 = sample_team(pool, gen, rng)
     state = teams_to_poke_engine_state(team1, team2, gen)
+
+    # Initial active slots
+    active_p1 = int(state.side_one.active_index)
+    active_p2 = int(state.side_two.active_index)
+
+    # p1 can observe p2's active species; p2 can observe p1's active species.
+    # Everything else is UNKNOWN at the start.
+    obs_p1 = BattleObservationState.initial(active_p2)
+    obs_p2 = BattleObservationState.initial(active_p1)
+
     samples_p1: list[tuple[Any, int, int]] = []
     samples_p2: list[tuple[Any, int, int]] = []
+
     for turn in range(MAX_TURNS):
         if is_terminal(state):
             break
+
         p1_moves = get_available_engine_moves(state.side_one)
         p2_moves = get_available_engine_moves(state.side_two)
         if not p1_moves or not p2_moves:
             break
+
         p1_choice = rng.choice(p1_moves)
         p2_choice = rng.choice(p2_moves)
+
+        # Current active slots BEFORE applying moves
+        active_p2_slot = int(state.side_two.active_index)
+        active_p1_slot = int(state.side_one.active_index)
+
+        # Encode with masked opponent view — this is the training signal.
+        # Both engine mechanics and the full team are still fully known;
+        # only the encoded state seen by the model uses the masked view.
+        masked_opp_for_p1 = mask_opponent_for_p1(team2, obs_p1, active_p2_slot)
+        masked_opp_for_p2 = mask_opponent_for_p1(team1, obs_p2, active_p1_slot)
+
+        encoded_p1 = _encode_partial_state(team1, masked_opp_for_p1, p1_moves, turn, gen, vocab)
+        encoded_p2 = _encode_partial_state(team2, masked_opp_for_p2, p2_moves, turn, gen, vocab)
+
+        action_p1 = engine_move_to_action_index(state.side_one, p1_choice)
+        action_p2 = engine_move_to_action_index(state.side_two, p2_choice)
+
+        samples_p1.append((encoded_p1, action_p1, turn))
+        samples_p2.append((encoded_p2, action_p2, turn))
+
+        # Apply moves to the engine (uses full information)
         try:
             branches = poke_engine.generate_instructions(state, p1_choice, p2_choice)
         except Exception:
@@ -205,33 +356,50 @@ def run_random_battle(pool: dict[str, Any], vocab: Vocabulary, gen: int, rng: ra
                 break
         if not branches:
             break
-        encoded_p1 = encode_poke_engine_state(state, vocab=vocab, mirror=False, generation=gen)
-        encoded_p2 = encode_poke_engine_state(state, vocab=vocab, mirror=True, generation=gen)
-        action_p1 = engine_move_to_action_index(state.side_one, p1_choice)
-        action_p2 = engine_move_to_action_index(state.side_two, p2_choice)
-        samples_p1.append((encoded_p1, action_p1, turn))
-        samples_p2.append((encoded_p2, action_p2, turn))
-        weights = [max(0.0, float(getattr(branch, "percentage", 0.0))) for branch in branches]
+
+        weights = [max(0.0, float(getattr(b, "percentage", 0.0))) for b in branches]
         branch = rng.choices(branches, weights=weights if sum(weights) > 0 else None, k=1)[0]
         state = state.apply_instructions(branch)
-    # Determine outcome: terminal check first, then HP-based for timeout
+
+        # Update observation state AFTER applying moves.
+        # p1 now knows: what move did p2 just use? did p2 switch?
+        p2_move_name, p2_is_switch = _moves_from_choice(p2_choice)
+        if p2_is_switch:
+            new_p2_active = int(state.side_two.active_index)
+            obs_p1.update_after_switch(new_p2_active)
+        else:
+            obs_p1.update_after_move(active_p2_slot, p2_move_name)
+
+        # p2 observes p1 symmetrically
+        p1_move_name, p1_is_switch = _moves_from_choice(p1_choice)
+        if p1_is_switch:
+            new_p1_active = int(state.side_one.active_index)
+            obs_p2.update_after_switch(new_p1_active)
+        else:
+            obs_p2.update_after_move(active_p1_slot, p1_move_name)
+
+    # Outcome determination
     if not has_healthy_pokemon(state.side_two):
         outcome_p1 = 1.0
     elif not has_healthy_pokemon(state.side_one):
         outcome_p1 = -1.0
     else:
-        # Timeout: winner is whoever has more total HP remaining
         p1_hp = _hp_fraction_total(state.side_one)
         p2_hp = _hp_fraction_total(state.side_two)
         outcome_p1 = 1.0 if p1_hp > p2_hp else -1.0
+
     battle_id = f"synthetic_gen{gen}_{rng.randint(0, 2**32)}"
     result: list[TrainingSample] = []
     for encoded, action, turn in samples_p1:
         result.append(TrainingSample(battle_id, turn, encoded, action, outcome_p1, {}, gen))
     for encoded, action, turn in samples_p2:
-        result.append(TrainingSample(battle_id + "_p2", turn, encoded, action, -outcome_p1, {}, gen))
+        result.append(TrainingSample(f"{battle_id}_p2", turn, encoded, action, -outcome_p1, {}, gen))
     return result
 
+
+# ------------------------------------------------------------------ #
+# Worker / batch infrastructure                                        #
+# ------------------------------------------------------------------ #
 
 def worker(task: tuple[int, int | None, int]) -> list[TrainingSample]:
     index, fixed_gen, seed = task
@@ -250,7 +418,7 @@ def write_batch(output: Path, batch_index: int, samples: list[TrainingSample]) -
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate random-vs-random synthetic battles with poke-engine")
+    parser = argparse.ArgumentParser(description="Generate random-vs-random synthetic battles with partial observability")
     parser.add_argument("--pool", default="data/all_gen_pool.json")
     parser.add_argument("--learnsets", default="data/learnsets.json")
     parser.add_argument("--output", default="data/synthetic")
