@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Checkpoints and model weights
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.npz
+
+# Large generated data (keep pool + small fixtures, exclude bulk data)
+data/annotations/*
+!data/annotations/.gitkeep
+data/replays/*
+!data/replays/.gitkeep
+!data/replays/sample.log
+data/raw_replays/
+data/parsed/
+data/parsed_*/
+data/synthetic/
+data/learnsets.json
+data/descriptions.json
+data/entity_embeddings.pt
+data/all_gen_pool.json
+data/pokedex.json
+data/moves.json
+data/random_sets/
+data/replay_ids*.jsonl
+
+# Build artifacts
+*.whl
+wheels/
+dist/
+build/
+*.egg-info/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+/tmp/

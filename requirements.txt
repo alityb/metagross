@@ -1,0 +1,7 @@
+numpy>=1.26
+torch>=2.2
+tqdm>=4.66
+anthropic>=0.34
+poke-env>=0.8
+sentence-transformers>=3.0
+git+https://github.com/pmariglia/poke-engine.git#subdirectory=poke-engine-py

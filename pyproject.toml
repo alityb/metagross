@@ -1,0 +1,9 @@
+[project]
+name = "alphapokemon"
+version = "0.1.0"
+description = "Gen9 random battle agent with RLM-guided neural MCTS"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
