@@ -267,20 +267,42 @@ async def run_training(args: argparse.Namespace) -> None:
     # Curriculum: start with RandomPlayer, promote when win rate threshold met.
     curriculum_idx = 0
     if not args.vs_heuristic:
-        # No curriculum for self-play mode.
+        # Self-play mode — no curriculum, both sides are RolloutPlayer.
         curriculum_idx = len(CURRICULUM) - 1
-    current_opponent = CURRICULUM[curriculum_idx][0]
-    envs = make_envs(current_opponent, tag)
+        current_opponent = "SelfPlay"
+    else:
+        current_opponent = CURRICULUM[curriculum_idx][0]
+    envs = make_envs(current_opponent if args.vs_heuristic else "SelfPlay", tag)
     print(json.dumps({"curriculum_start": current_opponent}), flush=True)
 
     async def run_one_game(p1: RolloutPlayer, p2: Any) -> tuple[list[RolloutStep], float]:
         before = int(getattr(p1, "n_won_battles", 0))
         await p1.battle_against(p2, n_battles=1)
-        outcome = 1.0 if int(getattr(p1, "n_won_battles", 0)) > before else -1.0
+        won = int(getattr(p1, "n_won_battles", 0)) > before
+        outcome = 1.0 if won else -1.0
+
+        # Faint shaping (Nebraskinator: +/-0.1 per faint).
+        # In PS randombattle the game ends when all mons on one side faint, so:
+        # winner always has 6 opponent faints; loser always has 6 own faints.
+        # We only need to count the non-predetermined side from poke-env.
+        try:
+            battles = list(p1.battles.values())
+            if battles:
+                last = battles[-1]
+                if won:
+                    opp_faints = 6
+                    own_faints = sum(1 for p in last.team.values() if p.fainted)
+                else:
+                    own_faints = 6
+                    opp_faints = sum(1 for p in last.opponent_team.values() if p.fainted)
+                outcome += 0.1 * (opp_faints - own_faints)
+        except Exception:
+            pass  # faint shaping is a bonus — never let it crash the game loop
+
         steps = compute_gae(p1.collect_episode(outcome), config.gamma, config.gae_lambda)
         if isinstance(p2, RolloutPlayer):
             steps += compute_gae(p2.collect_episode(-outcome), config.gamma, config.gae_lambda)
-        return steps, outcome
+        return steps, 1.0 if won else -1.0  # return raw outcome for WR tracking
 
     update = 0
     accumulated_steps: list[RolloutStep] = []
