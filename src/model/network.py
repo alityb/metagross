@@ -86,8 +86,22 @@ class PokeNet(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(layer, num_layers=config.num_layers)
         head_input = config.d_model * 3
-        self.policy_head = nn.Sequential(nn.Linear(head_input, config.d_model), nn.ReLU(), nn.Linear(config.d_model, config.action_dim))
-        self.value_head = nn.Sequential(nn.Linear(head_input, config.d_model), nn.ReLU(), nn.Linear(config.d_model, 1), nn.Tanh())
+        self.policy_head = nn.Sequential(
+            nn.Linear(head_input, config.d_model), nn.ReLU(),
+            nn.Linear(config.d_model, config.action_dim),
+        )
+        # Ensemble of 4 value heads — take minimum over targets during training
+        # (conservative Q-estimate, prevents overestimation spiral that caused
+        # Phase 2 collapses). Matches Metamon NCritics=4 approach.
+        # At inference: use mean over all 4 for best estimate.
+        self.n_critics = 4
+        self.value_heads = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(head_input, config.d_model), nn.ReLU(),
+                nn.Linear(config.d_model, 1), nn.Tanh(),
+            )
+            for _ in range(self.n_critics)
+        ])
         self.reset_parameters()
         self._freeze_entity_embeddings()
 
@@ -106,32 +120,36 @@ class PokeNet(nn.Module):
         self.item_emb.weight.requires_grad = False
         self.ability_emb.weight.requires_grad = False
 
-    def forward(self, batch: dict[str, Any] | EncodedState) -> tuple[torch.Tensor, torch.Tensor]:
-        tensors = self._to_tensors(batch)
-        species = tensors["species_ids"].long()
-        moves = tensors["move_ids"].long()
-        items = tensors["item_ids"].long()
+    def _encode(self, tensors: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
+        """Shared encoder: returns (head_state [B, 3*d_model], masked_logits [B, 14])."""
+        species   = tensors["species_ids"].long()
+        moves     = tensors["move_ids"].long()
+        items     = tensors["item_ids"].long()
         abilities = tensors["ability_ids"].long()
-        dense = tensors["pokemon_dense"].float()
-        field = tensors["field"].float()
-        active = tensors["active_indices"].long()
+        dense     = tensors["pokemon_dense"].float()
+        field     = tensors["field"].float()
+        active    = tensors["active_indices"].long()
+        last_move = tensors["last_move_ids"].long()
 
-        species_emb = self.species_projection(self.species_emb(species))
-        move_emb = self.move_projection(self.move_emb(moves)).sum(dim=2)
-        last_move = tensors["last_move_ids"].long()               # (B, 12)
-        last_move_emb = self.move_projection(self.move_emb(last_move))  # (B, 12, move_dim)
-        item_emb = self.item_projection(self.item_emb(items))
-        ability_emb = self.ability_projection(self.ability_emb(abilities))
-        pokemon_raw = torch.cat([species_emb, move_emb, last_move_emb, item_emb, ability_emb, dense], dim=-1)
+        species_emb   = self.species_projection(self.species_emb(species))
+        move_emb      = self.move_projection(self.move_emb(moves)).sum(dim=2)
+        last_move_emb = self.move_projection(self.move_emb(last_move))
+        item_emb      = self.item_projection(self.item_emb(items))
+        ability_emb   = self.ability_projection(self.ability_emb(abilities))
+        pokemon_raw   = torch.cat([species_emb, move_emb, last_move_emb,
+                                   item_emb, ability_emb, dense], dim=-1)
         pokemon_tokens = self.pokemon_encoder(pokemon_raw)
-        field_token = self.field_encoder(field).unsqueeze(1)
-        tokens = torch.cat([field_token, pokemon_tokens], dim=1)
-        encoded = self.transformer(tokens)
+        field_token    = self.field_encoder(field).unsqueeze(1)
+        tokens         = torch.cat([field_token, pokemon_tokens], dim=1)
+        encoded        = self.transformer(tokens)
 
         batch_index = torch.arange(encoded.shape[0], device=encoded.device)
-        own_index = active[:, 0].clamp(0, 5) + 1
-        opp_index = active[:, 1].clamp(0, 5) + 7
-        head_state = torch.cat([encoded[:, 0], encoded[batch_index, own_index], encoded[batch_index, opp_index]], dim=-1)
+        own_index   = active[:, 0].clamp(0, 5) + 1
+        opp_index   = active[:, 1].clamp(0, 5) + 7
+        head_state  = torch.cat(
+            [encoded[:, 0], encoded[batch_index, own_index], encoded[batch_index, opp_index]],
+            dim=-1,
+        )
         logits = self.policy_head(head_state)
         mask = tensors.get("action_mask")
         if mask is not None:
@@ -140,8 +158,25 @@ class PokeNet(nn.Module):
             if all_invalid.any():
                 mask_bool[all_invalid, :4] = True
             logits = logits.masked_fill(~mask_bool, torch.finfo(logits.dtype).min)
-        value = self.value_head(head_state).squeeze(-1)
-        return logits, value
+        return head_state, logits
+
+    def forward(self, batch: dict[str, Any] | EncodedState) -> tuple[torch.Tensor, torch.Tensor]:
+        tensors = self._to_tensors(batch)
+        head_state, logits = self._encode(tensors)
+        # Ensemble mean for inference (conservative individual estimates averaged)
+        values = torch.stack([h(head_state).squeeze(-1) for h in self.value_heads], dim=1)
+        return logits, values.mean(dim=1)
+
+    def value_ensemble(self, batch: dict[str, Any] | EncodedState) -> tuple[torch.Tensor, torch.Tensor]:
+        """Returns (logits, values) where values.shape == (B, n_critics).
+
+        PPO training uses values.min(dim=1).values as the conservative target
+        to prevent overestimation spirals (Metamon NCritics=4 approach).
+        """
+        tensors = self._to_tensors(batch)
+        head_state, logits = self._encode(tensors)
+        values = torch.stack([h(head_state).squeeze(-1) for h in self.value_heads], dim=1)
+        return logits, values
 
     def policy_value(self, batch: dict[str, Any] | EncodedState) -> tuple[torch.Tensor, torch.Tensor]:
         logits, value = self.forward(batch)

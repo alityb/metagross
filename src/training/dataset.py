@@ -178,7 +178,17 @@ def _belief_entropy(target: Any) -> float:
     return float(np.mean(entropies)) if entropies else 0.0
 
 
-def collate_replay_samples(records: Iterable[dict[str, Any]]) -> dict[str, Any]:
+def collate_replay_samples(
+    records: Iterable[dict[str, Any]],
+    token_mask_prob: float = 0.15,
+) -> dict[str, Any]:
+    """Collate a batch of replay samples into model-ready tensors.
+
+    token_mask_prob: probability of zeroing each opponent pokemon's species_id,
+        move_ids, item_id, ability_id (Metamon token-mask augmentation).
+        Forces the model to handle partial observability robustly.
+        Set to 0.0 to disable (e.g. during validation).
+    """
     batch = list(records)
     model_batch = stack_encoded([record["encoded_state"] for record in batch])
     actions = np.asarray([record["action"] for record in batch], dtype=np.int64)
@@ -186,6 +196,24 @@ def collate_replay_samples(records: Iterable[dict[str, Any]]) -> dict[str, Any]:
     for row, action in enumerate(actions):
         if 0 <= action < 14:
             policy_targets[row, action] = 1.0
+
+    # Token mask augmentation: randomly blank opponent slots to UNKNOWN.
+    # This mirrors Metamon's `token_mask_aug=True` — the model must learn to
+    # play correctly even when it knows nothing about 0-5 opponent slots,
+    # which is exactly the real partial-observability setting.
+    if token_mask_prob > 0.0:
+        for key in ("species_ids", "item_ids", "ability_ids"):
+            arr = model_batch[key]  # shape (B, 12)
+            # Only mask opponent slots (indices 6-11)
+            mask = np.random.random(arr[:, 6:].shape) < token_mask_prob
+            arr[:, 6:] = np.where(mask, 0, arr[:, 6:])
+            model_batch[key] = arr
+        # move_ids: shape (B, 12, 4)
+        move_arr = model_batch["move_ids"]
+        mask = np.random.random(move_arr[:, 6:, :].shape) < token_mask_prob
+        move_arr[:, 6:, :] = np.where(mask, 0, move_arr[:, 6:, :])
+        model_batch["move_ids"] = move_arr
+
     model_batch.update(
         {
             "actions": actions,

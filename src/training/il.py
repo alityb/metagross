@@ -34,7 +34,18 @@ def train_epoch(
     device: torch.device,
     target_fn: Callable[[dict[str, Any], torch.device], dict[str, torch.Tensor]],
     smoke: bool = False,
+    awr_beta: float = 1.0,
 ) -> dict[str, float]:
+    """Train one epoch with AWR advantage-weighted policy loss (Metamon ExpRL).
+
+    AWR: weight each (state, action) by exp(β × advantage) where
+    advantage = Q(s,a) - mean_Q(s).  This means we imitate strongly
+    above-average decisions and downweight below-average ones rather
+    than treating all actions equally (pure BC).
+
+    awr_beta=0.0 → pure behavioral cloning (original behaviour)
+    awr_beta=1.0 → standard AWR (Metamon default, outperforms pure BC)
+    """
     model.train()
     totals = {"loss": 0.0, "policy": 0.0, "value": 0.0, "belief": 0.0, "distill": 0.0, "policy_distill": 0.0, "batches": 0.0}
     for step, batch in enumerate(loader, start=1):
@@ -42,10 +53,26 @@ def train_epoch(
         logits, values = model(batch)
         action_mask = torch.as_tensor(batch["action_mask"], dtype=torch.bool, device=device)
         valid_actions = (targets["actions"] >= 0) & action_mask.gather(1, targets["actions"].clamp_min(0).unsqueeze(1)).squeeze(1)
+
         if valid_actions.any():
-            policy_loss = F.cross_entropy(logits[valid_actions], targets["actions"][valid_actions])
+            # AWR advantage weighting
+            if awr_beta > 0.0:
+                with torch.no_grad():
+                    # Q(s, a_taken) ≈ values (scalar baseline); advantage per-step
+                    # = outcome - value_estimate. Clamp weights to [1e-3, 20] for stability.
+                    adv = (targets["outcomes"][valid_actions] - values[valid_actions]).detach()
+                    weights = torch.exp(awr_beta * adv).clamp(1e-3, 20.0)
+                per_sample_ce = F.cross_entropy(
+                    logits[valid_actions],
+                    targets["actions"][valid_actions],
+                    reduction="none",
+                )
+                policy_loss = (weights * per_sample_ce).mean()
+            else:
+                policy_loss = F.cross_entropy(logits[valid_actions], targets["actions"][valid_actions])
         else:
             policy_loss = logits.new_zeros(())
+
         value_loss = F.mse_loss(values, targets["outcomes"])
         belief_loss = targets["belief_entropy"].mean()
         has_annotation = targets.get("has_annotation")
