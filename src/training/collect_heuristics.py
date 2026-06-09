@@ -45,8 +45,6 @@ LOGGER = logging.getLogger(__name__)
 
 try:
     from poke_env.player import SimpleHeuristicsPlayer
-    from poke_env.environment.move import Move
-    from poke_env.environment.pokemon import Pokemon
 except ImportError as exc:
     raise SystemExit("poke-env required: pip install poke-env") from exc
 
@@ -58,11 +56,8 @@ except ImportError as exc:
 def order_to_action_index(order: object, battle: object) -> int:
     """Map a poke-env BattleOrder back to our 0–13 integer action space.
 
-    Action layout:
-        0–3:   move slot 0–3
-        4–8:   switch to bench slot 0–4
-        9–12:  terastallize + move slot 0–3
-        13:    terastallize + switch slot 0
+    Uses duck-typing — works across poke-env versions regardless of where
+    Move/Pokemon classes are imported from.
     """
     target = getattr(order, "order", None)
     if target is None:
@@ -71,20 +66,22 @@ def order_to_action_index(order: object, battle: object) -> int:
     moves    = list(getattr(battle, "available_moves",    []) or [])
     switches = list(getattr(battle, "available_switches", []) or [])
 
-    # Switch?
-    if isinstance(target, Pokemon):
+    # Distinguish switch (Pokemon object) from move by checking for species attr
+    is_switch = hasattr(target, "species")
+    if is_switch:
+        target_species = getattr(target, "species", None)
         for i, sw in enumerate(switches[:5]):
-            if sw.species == target.species:
+            if getattr(sw, "species", None) == target_species:
                 return 13 if is_tera else 4 + i
-        return 4  # fallback: first switch
+        return 4
 
-    # Move (Move object or has .id)
+    # Move: compare by .id attribute
     move_id = getattr(target, "id", None) or str(target)
     for i, mv in enumerate(moves[:4]):
         mv_id = getattr(mv, "id", None) or str(mv)
         if mv_id == move_id:
             return (9 + i) if is_tera else i
-    return 0  # fallback: first move
+    return 0
 
 
 # ------------------------------------------------------------------ #
@@ -136,12 +133,17 @@ class RecordingHeuristicsPlayer(SimpleHeuristicsPlayer):  # type: ignore[misc]
 # ------------------------------------------------------------------ #
 
 def _server_config(url: str):
-    from poke_env import ServerConfiguration
-    ws = url.replace("http://", "ws://").replace("https://", "wss://")
-    if not ws.startswith("ws"):
-        ws = f"ws://{ws}"
-    host = ws.replace("ws://", "").replace("wss://", "")
-    return ServerConfiguration(f"{host}", "")
+    try:
+        from poke_env.ps_client import ServerConfiguration
+    except ImportError:
+        from poke_env import ServerConfiguration  # type: ignore[no-redef]
+    ws = url if "://" in url else f"ws://{url}"
+    if ws.rstrip("/").endswith(":8000"):
+        ws = ws.rstrip("/") + "/showdown/websocket"
+    return ServerConfiguration(
+        websocket_url=ws,
+        authentication_url="https://play.pokemonshowdown.com/action.php?",
+    )
 
 
 def _account(name: str):
