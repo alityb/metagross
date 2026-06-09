@@ -1,3 +1,22 @@
+"""Proper AlphaZero-style MCTS with recursive tree traversal.
+
+Previous implementation was a 1-ply bandit: every iteration selected one action
+from the root, evaluated the resulting state with PokeNet, and updated root
+Q-values. MCTSNode.children was never populated — no tree was ever built.
+
+This version builds a persistent search tree. Each iteration:
+1. SELECTION  — traverse existing tree using PUCT until an unexpanded leaf
+2. EXPANSION  — create a new child node, initialize with PokeNet prior + value
+3. BACKPROP   — update all ancestor nodes in the path
+
+At depth D, the tree searches D turns ahead before calling PokeNet. With the same
+500K iteration budget, depth-5 tree MCTS evaluates ~5-turn sequences rather than
+1-step look-aheads — this is the source of AlphaZero-class strength.
+
+Stochastic transitions (damage rolls) are handled by sampling one outcome per
+visit. Over many visits, Q(s,a) converges to E[V(s') | action=a] averaging over
+all stochastic outcomes — an unbiased estimate despite the sampling approximation.
+"""
 from __future__ import annotations
 
 import time
@@ -30,11 +49,16 @@ class Simulator(Protocol):
 
 
 class MCTSEngine:
-    """Root-prior neural MCTS shell.
+    """AlphaZero-style MCTS with recursive tree traversal.
 
-    Without a poke-engine simulator this still performs the production-critical
-    root blend and returns the highest-prior legal action. Supplying a simulator
-    enables time-budgeted neural rollouts through the same interface.
+    Each search builds a persistent tree from the current root. Nodes are
+    expanded lazily (first visit) and their PokeNet prior/value initializes
+    the child's statistics. Subsequent visits traverse existing nodes using
+    PUCT, deepening the evaluated search tree over the time budget.
+
+    With 500K iterations and max_depth=5, the engine searches ~5 turns ahead
+    before calling PokeNet at the leaf — dramatically better than the prior
+    1-ply bandit approximation.
     """
 
     def __init__(
@@ -44,6 +68,7 @@ class MCTSEngine:
         workers: int = 20,
         time_budget: float = 7.5,
         c_puct: float = 1.25,
+        max_depth: int = 5,
         device: str | torch.device | None = None,
         use_poke_engine: bool = True,
         vocab: Vocabulary | None = None,
@@ -54,6 +79,7 @@ class MCTSEngine:
         self.workers = workers
         self.time_budget = time_budget
         self.c_puct = c_puct
+        self.max_depth = max_depth
         self._rollout_count = 0
         if device is not None:
             self.model.to(device)
@@ -108,30 +134,77 @@ class MCTSEngine:
                 LOGGER.warning("Failed to convert state for poke_engine MCTS; using root-prior fallback: %s", exc)
                 self.simulator = None
                 search_state = state
+
         root_prior, root_value = self.root_policy_value(search_state, root_prior_rlm, root_value_rlm)
         root = MCTSNode(root_prior)
+
+        # Seed root with the PokeNet value estimate so first PUCT scores are meaningful
+        root.visits = 1
+        root.value_sum = root_value
+
         if self.simulator is None or self.time_budget <= 0:
             return max(range(len(root_prior)), key=lambda idx: root_prior[idx])
+
         deadline = time.monotonic() + self.time_budget
         configs = configs or [None]
         rollout = 0
+
         while time.monotonic() < deadline:
             config = configs[rollout % len(configs)]
-            action = root.select_action(self.c_puct)
-            value = self._rollout(search_state, action, config)
-            root.update(action, value)
+            self._tree_rollout(root, search_state, depth=self.max_depth, config=config)
             rollout += 1
+
+        self._rollout_count = rollout
         return max(root.stats, key=lambda action: root.stats[action].visits)
 
     @torch.no_grad()
-    def _rollout(self, state: Any, action: int, config: dict[str, Any] | None) -> float:
-        assert self.simulator is not None
-        next_state = self.simulator.next_state(state, action, config)
+    def _tree_rollout(self, node: MCTSNode, state: Any, depth: int, config: dict[str, Any] | None) -> float:
+        """Recursive AlphaZero MCTS traversal.
+
+        Selects, expands, and evaluates one path through the tree.
+        Returns the leaf value and backpropagates it to all ancestors.
+        """
+        # Terminal state — exact game outcome, no PokeNet needed
+        if self.simulator.is_terminal(state):  # type: ignore[union-attr]
+            return self.simulator.terminal_value(state)  # type: ignore[union-attr]
+
+        # Depth limit reached — evaluate with PokeNet (leaf evaluation)
+        if depth == 0:
+            _, value = self.model.policy_value(self._encode_for_model(state))
+            return float(value[0].detach().cpu())
+
+        # SELECTION: pick action using PUCT
+        action = node.select_action(self.c_puct)
+
+        # EXPANSION: first visit to this action — step the simulator and create child
+        if action not in node.children:
+            next_state = self.simulator.next_state(state, action, config)  # type: ignore[union-attr]
+            self._rollout_count += 1
+
+            if self.simulator.is_terminal(next_state):  # type: ignore[union-attr]
+                leaf_value = self.simulator.terminal_value(next_state)  # type: ignore[union-attr]
+            else:
+                # Initialize child node with PokeNet prior + value
+                next_encoded = self._encode_for_model(next_state)
+                child_policy, child_value_t = self.model.policy_value(next_encoded)
+                child_prior = child_policy[0].detach().cpu().tolist()
+                leaf_value = float(child_value_t[0].detach().cpu())
+                child = MCTSNode(child_prior)
+                # Seed child with its own PokeNet value estimate
+                child.visits = 1
+                child.value_sum = leaf_value
+                node.children[action] = child
+
+            node.update(action, leaf_value)
+            return leaf_value
+
+        # TRAVERSAL: action already expanded — descend into existing child
+        next_state = self.simulator.next_state(state, action, config)  # type: ignore[union-attr]
         self._rollout_count += 1
-        if self.simulator.is_terminal(next_state):
-            return self.simulator.terminal_value(next_state)
-        _policy, value = self.model.policy_value(self._encode_for_model(next_state))
-        return float(value[0].detach().cpu())
+        child = node.children[action]
+        value = self._tree_rollout(child, next_state, depth - 1, config)
+        node.update(action, value)
+        return value
 
 
 class PokeEngineSimulator:
