@@ -39,3 +39,35 @@ Verification performed:
 
 - The server started on port `8000`.
 - A websocket connection to `ws://localhost:8000/showdown/websocket` opened successfully.
+
+## poke-env Match Runner
+
+Official docs read before install:
+
+- poke-env README: `https://raw.githubusercontent.com/hsahovic/poke-env/master/README.md`
+- The Read the Docs getting-started page was attempted first, but returned HTTP 429 during setup, so the current GitHub README was used as the official install source.
+
+Pinned package used for verification:
+
+- `poke-env==0.15.0`
+
+Exact commands run:
+
+```bash
+python3.11 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install poke-env
+.venv/bin/python scripts/smoke_poke_env.py
+```
+
+Reproducible commands from this repo:
+
+```bash
+scripts/install_python_env.sh
+.venv/bin/python scripts/smoke_poke_env.py
+```
+
+Verification performed:
+
+- One full `gen9randombattle` completed on the local server between poke-env's built-in `RandomPlayer` and `MaxBasePowerPlayer`.
+- Smoke-test result: `finished=1`, `random_wins=0`, `max_power_wins=1`.
