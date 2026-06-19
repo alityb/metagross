@@ -150,7 +150,7 @@ Verification performed:
 - `random` vs `max_damage` completed paired local games.
 - `foul_play` vs `random` completed paired local games with Foul Play in both challenger and acceptor roles.
 - `foul_play` vs `foul_play` completed paired local games and returned `1/2` for side A in smoke testing.
-- Powered harness-trust criteria are documented in `PHASE0_HARNESS_GATE.md`; the N=20 self-play rows below are not sufficient to clear that gate.
+- Powered harness-trust criteria are documented in `AGENTS.md` §6; the N=20 self-play rows below are not sufficient to clear that gate.
 
 Harness output:
 
