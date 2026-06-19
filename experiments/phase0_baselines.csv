@@ -1,0 +1,1 @@
+run_id,date,phase,format,change (ONE var),baseline,N_games,winrate,CI95,ladder_elo,gxe,belief_brier,decision(advance/iterate/rollback),notes
