@@ -158,3 +158,24 @@ Harness output:
 - Supports paired play with `--paired` and even `--n-games`.
 - Supports local or live websocket targets with `--server local|live` and `--websocket-uri` overrides.
 - Supports live ladder mode with `--mode ladder` for credentialed runs.
+
+## Recorded Phase 0 Baselines
+
+Baseline commands run against the local server:
+
+```bash
+.venv/bin/python -m eval.run --agent-a foul_play --agent-b foul_play --n-games 20 --paired --foul-play-search-time-ms 25 --game-timeout-seconds 900 --run-id phase0_foul_self_n20_s25 --json-out experiments/phase0_foul_self_n20_s25.json --append-experiment-log experiments/phase0_baselines.csv
+.venv/bin/python -m eval.run --agent-a foul_play --agent-b random --n-games 20 --paired --foul-play-search-time-ms 25 --game-timeout-seconds 900 --run-id phase0_foul_vs_random_n20_s25 --json-out experiments/phase0_foul_vs_random_n20_s25.json --append-experiment-log experiments/phase0_baselines.csv
+.venv/bin/python -m eval.run --agent-a foul_play --agent-b max_damage --n-games 20 --paired --foul-play-search-time-ms 25 --game-timeout-seconds 900 --run-id phase0_foul_vs_max_damage_n20_s25 --json-out experiments/phase0_foul_vs_max_damage_n20_s25.json --append-experiment-log experiments/phase0_baselines.csv
+```
+
+Recorded local H2H baselines:
+
+- Foul Play vs Foul Play self-play: `12/20 = 60.0%`, Wilson 95% CI `[38.7%, 78.1%]`; CI straddles 50%, so the self-play sanity check passes.
+- Foul Play vs random: `20/20 = 100.0%`, Wilson 95% CI `[83.9%, 100.0%]`; significant Foul Play win.
+- Foul Play vs max-damage: `20/20 = 100.0%`, Wilson 95% CI `[83.9%, 100.0%]`; significant Foul Play win.
+
+Live ladder ELO/GXE sample:
+
+- Not run in Phase 0 setup because no credentialed ladder account was provided.
+- The harness supports credentialed live runs with `--mode ladder --server live`.

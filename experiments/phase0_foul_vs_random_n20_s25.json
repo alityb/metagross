@@ -1,0 +1,221 @@
+{
+  "games": [
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-52",
+      "challenger": "agent_a",
+      "game_index": 1,
+      "winner": "agent_a",
+      "winner_username": "p0f001b897"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-53",
+      "challenger": "agent_b",
+      "game_index": 2,
+      "winner": "agent_a",
+      "winner_username": "p0f002f088"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-54",
+      "challenger": "agent_a",
+      "game_index": 3,
+      "winner": "agent_a",
+      "winner_username": "p0f0036f4a"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-55",
+      "challenger": "agent_b",
+      "game_index": 4,
+      "winner": "agent_a",
+      "winner_username": "p0f004e798"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-56",
+      "challenger": "agent_a",
+      "game_index": 5,
+      "winner": "agent_a",
+      "winner_username": "p0f005075b"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-57",
+      "challenger": "agent_b",
+      "game_index": 6,
+      "winner": "agent_a",
+      "winner_username": "p0f006ed59"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-58",
+      "challenger": "agent_a",
+      "game_index": 7,
+      "winner": "agent_a",
+      "winner_username": "p0f0075d97"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-59",
+      "challenger": "agent_b",
+      "game_index": 8,
+      "winner": "agent_a",
+      "winner_username": "p0f008a022"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-60",
+      "challenger": "agent_a",
+      "game_index": 9,
+      "winner": "agent_a",
+      "winner_username": "p0f00948e9"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-61",
+      "challenger": "agent_b",
+      "game_index": 10,
+      "winner": "agent_a",
+      "winner_username": "p0f0104543"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-62",
+      "challenger": "agent_a",
+      "game_index": 11,
+      "winner": "agent_a",
+      "winner_username": "p0f0113f82"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-63",
+      "challenger": "agent_b",
+      "game_index": 12,
+      "winner": "agent_a",
+      "winner_username": "p0f0122c83"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-64",
+      "challenger": "agent_a",
+      "game_index": 13,
+      "winner": "agent_a",
+      "winner_username": "p0f013ff9f"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-65",
+      "challenger": "agent_b",
+      "game_index": 14,
+      "winner": "agent_a",
+      "winner_username": "p0f0142617"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-66",
+      "challenger": "agent_a",
+      "game_index": 15,
+      "winner": "agent_a",
+      "winner_username": "p0f01542ae"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-67",
+      "challenger": "agent_b",
+      "game_index": 16,
+      "winner": "agent_a",
+      "winner_username": "p0f0162330"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-68",
+      "challenger": "agent_a",
+      "game_index": 17,
+      "winner": "agent_a",
+      "winner_username": "p0f017f0d4"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-69",
+      "challenger": "agent_b",
+      "game_index": 18,
+      "winner": "agent_a",
+      "winner_username": "p0f0187305"
+    },
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-70",
+      "challenger": "agent_a",
+      "game_index": 19,
+      "winner": "agent_a",
+      "winner_username": "p0f0191b88"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play",
+      "agent_b": "random",
+      "battle_tag": "battle-gen9randombattle-71",
+      "challenger": "agent_b",
+      "game_index": 20,
+      "winner": "agent_a",
+      "winner_username": "p0f020e42e"
+    }
+  ],
+  "summary": {
+    "agent_a": "foul_play",
+    "agent_a_losses": 0,
+    "agent_a_wins": 20,
+    "agent_b": "random",
+    "ci95_high": 1.0,
+    "ci95_low": 0.8388748419471806,
+    "decisive_games": 20,
+    "format": "gen9randombattle",
+    "foul_play_search_time_ms": 25,
+    "mode": "h2h",
+    "n_games": 20,
+    "paired": true,
+    "server": "local",
+    "ties_or_unknown": 0,
+    "winrate": 1.0
+  }
+}

@@ -1,1 +1,4 @@
 run_id,date,phase,format,change (ONE var),baseline,N_games,winrate,CI95,ladder_elo,gxe,belief_brier,decision(advance/iterate/rollback),notes
+phase0_foul_self_n20_s25,2026-06-19,0,gen9randombattle,stock_foul_play_baseline,foul_play_vs_foul_play,20,0.6000,"[0.3866, 0.7812]",,,,record,paired=True; decisive=20; ties_or_unknown=0; foul_play_search_time_ms=25
+phase0_foul_vs_random_n20_s25,2026-06-19,0,gen9randombattle,stock_foul_play_baseline,foul_play_vs_random,20,1.0000,"[0.8389, 1.0000]",,,,record,paired=True; decisive=20; ties_or_unknown=0; foul_play_search_time_ms=25
+phase0_foul_vs_max_damage_n20_s25,2026-06-19,0,gen9randombattle,stock_foul_play_baseline,foul_play_vs_max_damage,20,1.0000,"[0.8389, 1.0000]",,,,record,paired=True; decisive=20; ties_or_unknown=0; foul_play_search_time_ms=25
