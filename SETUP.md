@@ -149,7 +149,8 @@ Verification performed:
 
 - `random` vs `max_damage` completed paired local games.
 - `foul_play` vs `random` completed paired local games with Foul Play in both challenger and acceptor roles.
-- `foul_play` vs `foul_play` completed paired local games and returned `1/2` for side A, so the self-play CI straddled 50% in smoke testing.
+- `foul_play` vs `foul_play` completed paired local games and returned `1/2` for side A in smoke testing.
+- Powered harness-trust criteria are documented in `PHASE0_HARNESS_GATE.md`; the N=20 self-play rows below are not sufficient to clear that gate.
 
 Harness output:
 
@@ -171,7 +172,7 @@ Baseline commands run against the local server:
 
 Recorded local H2H baselines:
 
-- Foul Play vs Foul Play self-play: `12/20 = 60.0%`, Wilson 95% CI `[38.7%, 78.1%]`; CI straddles 50%, so the self-play sanity check passes.
+- Foul Play vs Foul Play self-play smoke: `12/20 = 60.0%`, Wilson 95% CI `[38.7%, 78.1%]`; this confirms end-to-end completion but is underpowered and does not clear the harness-trust gate.
 - Foul Play vs random: `20/20 = 100.0%`, Wilson 95% CI `[83.9%, 100.0%]`; significant Foul Play win.
 - Foul Play vs max-damage: `20/20 = 100.0%`, Wilson 95% CI `[83.9%, 100.0%]`; significant Foul Play win.
 

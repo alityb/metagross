@@ -23,6 +23,10 @@ once with B challenging A.
 
 Use `--log-dir` to preserve per-game Foul Play subprocess logs for debugging.
 
+Before using the harness for Phase 1 decisions, run the powered self-play gate in
+`PHASE0_HARNESS_GATE.md`. The N=20 self-play row in `SETUP.md` is only a smoke
+check.
+
 Live ladder support is available for credentialed runs:
 
 ```bash
