@@ -128,3 +128,33 @@ Foul Play evaluation location for Phase 1:
 - Foul Play calls `poke_engine.monte_carlo_tree_search` from `external/foul-play/fp/search/main.py::get_result_from_mcts`.
 - The leaf/position evaluation used by the pinned gen9/terastallization build is `poke-engine==0.0.47`, `src/genx/evaluate.rs::evaluate(state: &State) -> f32`.
 - MCTS uses it at `poke-engine==0.0.47`, `src/mcts.rs::Node::rollout` and `src/mcts.rs::perform_mcts` for `root_eval`.
+
+## Fixed Opponent Pool and Eval Harness
+
+The fixed Phase 0 opponent pool is implemented in `eval/run.py`:
+
+- `random`: poke-env `RandomPlayer`
+- `max_damage`: poke-env `MaxBasePowerPlayer`
+- `foul_play`: stock Foul Play through `scripts/run_foul_play.py`
+
+Harness smoke commands run:
+
+```bash
+.venv/bin/python -m eval.run --agent-a random --agent-b max_damage --n-games 2 --paired --game-timeout-seconds 180
+.venv/bin/python -m eval.run --agent-a foul_play --agent-b random --n-games 2 --paired --foul-play-search-time-ms 25 --game-timeout-seconds 900
+.venv/bin/python -m eval.run --agent-a foul_play --agent-b foul_play --n-games 2 --paired --foul-play-search-time-ms 25 --game-timeout-seconds 900
+```
+
+Verification performed:
+
+- `random` vs `max_damage` completed paired local games.
+- `foul_play` vs `random` completed paired local games with Foul Play in both challenger and acceptor roles.
+- `foul_play` vs `foul_play` completed paired local games and returned `1/2` for side A, so the self-play CI straddled 50% in smoke testing.
+
+Harness output:
+
+- Reports agent A win rate over decisive games.
+- Reports Wilson 95% CI.
+- Supports paired play with `--paired` and even `--n-games`.
+- Supports local or live websocket targets with `--server local|live` and `--websocket-uri` overrides.
+- Supports live ladder mode with `--mode ladder` for credentialed runs.
