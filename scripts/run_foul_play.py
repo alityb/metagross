@@ -9,6 +9,9 @@ from pathlib import Path
 def patch_foul_play_protocol_bugs() -> None:
     import fp.run_battle as run_battle
 
+    if not hasattr(run_battle, "format_decision") or not callable(run_battle.format_decision):
+        raise RuntimeError("Foul Play patch target fp.run_battle.format_decision is missing")
+
     original_format_decision = run_battle.format_decision
 
     def format_decision_with_default(battle, decision):

@@ -6,6 +6,7 @@ import csv
 import json
 import logging
 import math
+import os
 import re
 import secrets
 import sys
@@ -27,7 +28,7 @@ DEFAULT_FORMAT = "gen9randombattle"
 LOCAL_WEBSOCKET_URI = "ws://localhost:8000/showdown/websocket"
 LIVE_WEBSOCKET_URI = "wss://sim3.psim.us/showdown/websocket"
 SHOWDOWN_AUTH_URI = "https://play.pokemonshowdown.com/action.php?"
-AGENT_NAMES = ("random", "max_damage", "foul_play")
+AGENT_NAMES = ("random", "max_damage", "foul_play", "foul_play_learned")
 EXPERIMENT_FIELDS = [
     "run_id",
     "date",
@@ -112,7 +113,11 @@ def make_username(role: str, game_index: int) -> str:
 
 
 def is_foul_play(agent: str) -> bool:
-    return agent == "foul_play"
+    return agent in {"foul_play", "foul_play_learned"}
+
+
+def is_learned_foul_play(agent: str) -> bool:
+    return agent == "foul_play_learned"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -204,8 +209,20 @@ def foul_play_command(
     return cmd
 
 
+def foul_play_env(args: argparse.Namespace, agent: str) -> dict[str, str]:
+    env = os.environ.copy()
+    if is_learned_foul_play(agent):
+        if not args.learned_value_model:
+            raise ValueError("foul_play_learned requires --learned-value-model")
+        env["METAGROSS_VALUE_MODEL"] = str(Path(args.learned_value_model).resolve())
+    else:
+        env.pop("METAGROSS_VALUE_MODEL", None)
+    return env
+
+
 async def start_foul_play(
     args: argparse.Namespace,
+    agent: str,
     server_configuration: ServerConfiguration,
     username: str,
     bot_mode: str,
@@ -219,6 +236,7 @@ async def start_foul_play(
         stdout=log_file,
         stderr=asyncio.subprocess.STDOUT,
         cwd=ROOT_DIR,
+        env=foul_play_env(args, agent),
     )
     return proc, log_path, log_file
 
@@ -382,10 +400,17 @@ async def play_foul_play_accepts_poke_env_challenge(
     log_dir: Path,
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
+    acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index)
     challenger_username = make_username("c", game_index)
     proc, log_path, log_file = await start_foul_play(
-        args, server_configuration, fp_username, "accept_challenge", None, log_dir
+        args,
+        acceptor_agent,
+        server_configuration,
+        fp_username,
+        "accept_challenge",
+        None,
+        log_dir,
     )
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     await ensure_foul_play_still_running(proc, log_path, log_file)
@@ -447,6 +472,7 @@ async def play_foul_play_challenges_poke_env(
     acceptor_slot: str,
     log_dir: Path,
 ) -> GameResult:
+    challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index)
     acceptor_username = make_username("a", game_index)
@@ -458,6 +484,7 @@ async def play_foul_play_challenges_poke_env(
 
     proc, log_path, log_file = await start_foul_play(
         args,
+        challenger_agent,
         server_configuration,
         fp_username,
         "challenge_user",
@@ -519,10 +546,13 @@ async def play_foul_play_vs_foul_play(
     acceptor_slot: str,
     log_dir: Path,
 ) -> GameResult:
+    challenger_agent = agent_for_slot(args, challenger_slot)
+    acceptor_agent = agent_for_slot(args, acceptor_slot)
     challenger_username = make_username("x", game_index)
     acceptor_username = make_username("y", game_index)
     acceptor_proc, acceptor_log_path, acceptor_log_file = await start_foul_play(
         args,
+        acceptor_agent,
         server_configuration,
         acceptor_username,
         "accept_challenge",
@@ -532,6 +562,7 @@ async def play_foul_play_vs_foul_play(
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     challenger_proc, challenger_log_path, challenger_log_file = await start_foul_play(
         args,
+        challenger_agent,
         server_configuration,
         challenger_username,
         "challenge_user",
@@ -792,6 +823,7 @@ async def run_ladder(args: argparse.Namespace) -> dict[str, object]:
         with tempfile.TemporaryDirectory(prefix="phase0-ladder-") as temp_dir_name:
             proc, log_path, log_file = await start_foul_play(
                 args,
+                args.agent,
                 server_configuration,
                 args.username,
                 "search_ladder",
@@ -831,9 +863,9 @@ def append_experiment_row(args: argparse.Namespace, summary: EvalSummary) -> Non
     row = {
         "run_id": args.run_id,
         "date": datetime.now(timezone.utc).date().isoformat(),
-        "phase": "0",
+        "phase": args.phase,
         "format": summary.format,
-        "change (ONE var)": "stock_foul_play_baseline",
+        "change (ONE var)": args.change_name,
         "baseline": f"{summary.agent_a}_vs_{summary.agent_b}",
         "N_games": str(summary.n_games),
         "winrate": f"{summary.winrate:.4f}",
@@ -841,7 +873,8 @@ def append_experiment_row(args: argparse.Namespace, summary: EvalSummary) -> Non
         "ladder_elo": "",
         "gxe": "",
         "belief_brier": "",
-        "decision(advance/iterate/rollback)": "iterate" if summary.void_games else "record",
+        "decision(advance/iterate/rollback)": args.decision
+        or ("iterate" if summary.void_games else "record"),
         "notes": (
             f"paired={summary.paired}; decisive={summary.decisive_games}; "
             f"completed={summary.completed_games}; voids={summary.void_games}; "
@@ -885,6 +918,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--log-dir", default=None)
     parser.add_argument("--fail-fast", action="store_true")
     parser.add_argument("--foul-play-python", default=str(ROOT_DIR / ".venv-foul-play" / "bin" / "python"))
+    parser.add_argument("--learned-value-model", default=None)
     parser.add_argument("--foul-play-search-time-ms", type=int, default=100)
     parser.add_argument("--foul-play-search-parallelism", type=int, default=1)
     parser.add_argument("--foul-play-search-threads", type=int, default=1)
@@ -893,6 +927,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--foul-play-log-level", default="INFO")
     parser.add_argument("--json-out", default=None)
     parser.add_argument("--append-experiment-log", default=None)
+    parser.add_argument("--phase", default="0")
+    parser.add_argument("--change-name", default="stock_foul_play_baseline")
+    parser.add_argument("--decision", default=None)
     parser.add_argument(
         "--run-id",
         default=f"phase0_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",

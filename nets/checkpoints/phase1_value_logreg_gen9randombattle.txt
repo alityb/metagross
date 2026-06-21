@@ -1,0 +1,5 @@
+metagross_value_net_v1
+# fixed side_one perspective; direct win probability leaf value
+# features hp_fraction_diff alive_fraction_diff active_hp_fraction_diff opponent_status_fraction_minus_own item_fraction_diff opponent_used_tera_minus_own active_attack_boost_diff active_defense_boost_diff active_special_attack_boost_diff active_special_defense_boost_diff active_speed_boost_diff screen_score_diff opponent_hazard_score_minus_own active_stat_total_diff team_stat_total_diff substitute_diff
+bias -0.00740659589
+weights 1.00680943 0.940986797 -0.0881627651 -0.0447222121 0.44305826 0.0948285179 1.20467134 0.666550869 0.503349365 -0.0412737112 1.28041496 0.0836955037 1.13298109 -0.00623686431 -0.000196072986 -0.354715208
