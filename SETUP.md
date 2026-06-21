@@ -102,6 +102,11 @@ scripts/install_foul_play.sh
 .venv-foul-play/bin/python scripts/run_foul_play.py --help
 ```
 
+`scripts/run_foul_play.py` leaves Foul Play's search/evaluation code unchanged,
+but applies two non-strategic runner fixes: macOS process pools use `fork`, and
+Foul Play's engine-level `No Move` choice is sent to Showdown as `/choose default`
+instead of crashing in `format_decision`.
+
 Local verification command shape:
 
 ```bash
@@ -156,6 +161,8 @@ Harness output:
 
 - Reports agent A win rate over decisive games.
 - Reports Wilson 95% CI.
+- Reports completed games, void games, and agent-A challenger/acceptor role splits.
+- Voids per-game subprocess failures and continues, so long runs are not aborted by one stock-runner crash.
 - Supports paired play with `--paired` and even `--n-games`.
 - Supports local or live websocket targets with `--server local|live` and `--websocket-uri` overrides.
 - Supports live ladder mode with `--mode ladder` for credentialed runs.

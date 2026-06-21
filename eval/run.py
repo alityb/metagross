@@ -56,6 +56,8 @@ class GameResult:
     winner: Optional[str]
     winner_username: Optional[str]
     battle_tag: Optional[str]
+    void: bool = False
+    error: Optional[str] = None
 
 
 @dataclass
@@ -66,6 +68,8 @@ class EvalSummary:
     agent_a: str
     agent_b: str
     n_games: int
+    completed_games: int
+    void_games: int
     decisive_games: int
     agent_a_wins: int
     agent_a_losses: int
@@ -75,6 +79,12 @@ class EvalSummary:
     ci95_high: float
     paired: bool
     foul_play_search_time_ms: int
+    agent_a_as_challenger_wins: int
+    agent_a_as_challenger_games: int
+    agent_a_as_acceptor_wins: int
+    agent_a_as_acceptor_games: int
+    voids_with_agent_a_challenger: int
+    voids_with_agent_b_challenger: int
 
 
 class FoulPlayError(RuntimeError):
@@ -240,6 +250,17 @@ async def wait_for_foul_play(
     return output
 
 
+async def terminate_process(proc: asyncio.subprocess.Process) -> None:
+    if proc.returncode is not None:
+        return
+    proc.terminate()
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=10)
+    except asyncio.TimeoutError:
+        proc.kill()
+        await proc.wait()
+
+
 async def ensure_foul_play_still_running(
     proc: asyncio.subprocess.Process,
     log_path: Path,
@@ -263,6 +284,7 @@ async def wait_for_external_battle(
     )
     if not done:
         client_task.cancel()
+        proc_task.cancel()
         raise FoulPlayError("Timed out waiting for external battle to make progress")
 
     if proc_task in done:
@@ -371,6 +393,7 @@ async def play_foul_play_accepts_poke_env_challenge(
     challenger = make_poke_env_player(
         challenger_agent, challenger_username, server_configuration, args.format
     )
+    proc_task = None
     try:
         client_task = asyncio.create_task(challenger.send_challenges(fp_username, n_challenges=1))
         proc_task = asyncio.create_task(
@@ -405,6 +428,13 @@ async def play_foul_play_accepts_poke_env_challenge(
             winner_username,
             battle_tag,
         )
+    except Exception:
+        if proc_task is not None and not proc_task.done():
+            proc_task.cancel()
+        await terminate_process(proc)
+        if proc_task is not None:
+            await asyncio.gather(proc_task, return_exceptions=True)
+        raise
     finally:
         await close_poke_env_player(challenger)
 
@@ -434,6 +464,7 @@ async def play_foul_play_challenges_poke_env(
         acceptor_username,
         log_dir,
     )
+    proc_task = None
     try:
         proc_task = asyncio.create_task(
             wait_for_foul_play(proc, log_path, log_file, args.game_timeout_seconds)
@@ -467,6 +498,13 @@ async def play_foul_play_challenges_poke_env(
             winner_username,
             battle_tag,
         )
+    except Exception:
+        if proc_task is not None and not proc_task.done():
+            proc_task.cancel()
+        await terminate_process(proc)
+        if proc_task is not None:
+            await asyncio.gather(proc_task, return_exceptions=True)
+        raise
     finally:
         if not accept_task.done():
             accept_task.cancel()
@@ -501,20 +539,36 @@ async def play_foul_play_vs_foul_play(
         log_dir,
     )
 
-    acceptor_output, challenger_output = await asyncio.gather(
+    acceptor_task = asyncio.create_task(
         wait_for_foul_play(
             acceptor_proc,
             acceptor_log_path,
             acceptor_log_file,
             args.game_timeout_seconds,
-        ),
+        )
+    )
+    challenger_task = asyncio.create_task(
         wait_for_foul_play(
             challenger_proc,
             challenger_log_path,
             challenger_log_file,
             args.game_timeout_seconds,
-        ),
+        )
     )
+    try:
+        acceptor_output, challenger_output = await asyncio.gather(
+            acceptor_task, challenger_task
+        )
+    except Exception:
+        for task in (acceptor_task, challenger_task):
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(acceptor_task, challenger_task, return_exceptions=True)
+        await asyncio.gather(
+            terminate_process(acceptor_proc),
+            terminate_process(challenger_proc),
+        )
+        raise
     fp_winner = parse_foul_play_winner(acceptor_output) or parse_foul_play_winner(
         challenger_output
     )
@@ -581,6 +635,61 @@ def side_schedule(n_games: int, paired: bool) -> list[tuple[str, str]]:
     return [("agent_a", "agent_b") for _ in range(n_games)]
 
 
+def short_error(exc: Exception) -> str:
+    message = str(exc).splitlines()[0] if str(exc) else ""
+    return f"{type(exc).__name__}: {message[:500]}"
+
+
+async def run_scheduled_game(
+    args: argparse.Namespace,
+    server_configuration: ServerConfiguration,
+    index: int,
+    challenger: str,
+    acceptor: str,
+    log_dir: Path,
+) -> GameResult:
+    print(
+        "starting game={} challenger={}({}) acceptor={}({})".format(
+            index,
+            challenger,
+            agent_for_slot(args, challenger),
+            acceptor,
+            agent_for_slot(args, acceptor),
+        ),
+        flush=True,
+    )
+    try:
+        result = await play_one_game(
+            args, server_configuration, index, challenger, acceptor, log_dir
+        )
+    except Exception as exc:
+        if args.fail_fast:
+            raise
+        result = GameResult(
+            index,
+            args.agent_a,
+            args.agent_b,
+            challenger,
+            acceptor,
+            None,
+            None,
+            None,
+            void=True,
+            error=short_error(exc),
+        )
+        print(
+            f"game={index} challenger={challenger} acceptor={acceptor} void=true error={result.error}",
+            flush=True,
+        )
+        return result
+
+    print(
+        f"game={index} challenger={challenger} acceptor={acceptor} winner={result.winner}",
+        flush=True,
+    )
+    return result
+
+
 async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResult]]:
     server_configuration = make_server_configuration(args)
     schedule = side_schedule(args.n_games, args.paired)
@@ -590,53 +699,46 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
         log_dir = Path(args.log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
         for index, (challenger, acceptor) in enumerate(schedule, start=1):
-            print(
-                "starting game={} challenger={}({}) acceptor={}({})".format(
-                    index,
-                    challenger,
-                    agent_for_slot(args, challenger),
-                    acceptor,
-                    agent_for_slot(args, acceptor),
-                ),
-                flush=True,
-            )
-            result = await play_one_game(
+            result = await run_scheduled_game(
                 args, server_configuration, index, challenger, acceptor, log_dir
             )
             results.append(result)
-            print(
-                f"game={index} challenger={challenger} acceptor={acceptor} winner={result.winner}",
-                flush=True,
-            )
     else:
         with tempfile.TemporaryDirectory(prefix="phase0-eval-") as temp_dir_name:
             log_dir = Path(temp_dir_name)
             for index, (challenger, acceptor) in enumerate(schedule, start=1):
-                print(
-                    "starting game={} challenger={}({}) acceptor={}({})".format(
-                        index,
-                        challenger,
-                        agent_for_slot(args, challenger),
-                        acceptor,
-                        agent_for_slot(args, acceptor),
-                    ),
-                    flush=True,
-                )
-                result = await play_one_game(
+                result = await run_scheduled_game(
                     args, server_configuration, index, challenger, acceptor, log_dir
                 )
                 results.append(result)
-                print(
-                    f"game={index} challenger={challenger} acceptor={acceptor} winner={result.winner}",
-                    flush=True,
-                )
 
-    agent_a_wins = sum(1 for result in results if result.winner == "agent_a")
-    agent_a_losses = sum(1 for result in results if result.winner == "agent_b")
-    ties_or_unknown = len(results) - agent_a_wins - agent_a_losses
+    completed_results = [result for result in results if not result.void]
+    decisive_results = [
+        result for result in completed_results if result.winner in {"agent_a", "agent_b"}
+    ]
+    void_games = len(results) - len(completed_results)
+    agent_a_wins = sum(1 for result in decisive_results if result.winner == "agent_a")
+    agent_a_losses = sum(1 for result in decisive_results if result.winner == "agent_b")
+    ties_or_unknown = len(completed_results) - agent_a_wins - agent_a_losses
     decisive_games = agent_a_wins + agent_a_losses
     winrate = agent_a_wins / decisive_games if decisive_games else 0.0
     ci_low, ci_high = wilson_ci(agent_a_wins, decisive_games)
+    agent_a_as_challenger_games = sum(
+        1 for result in decisive_results if result.challenger == "agent_a"
+    )
+    agent_a_as_challenger_wins = sum(
+        1
+        for result in decisive_results
+        if result.challenger == "agent_a" and result.winner == "agent_a"
+    )
+    agent_a_as_acceptor_games = sum(
+        1 for result in decisive_results if result.acceptor == "agent_a"
+    )
+    agent_a_as_acceptor_wins = sum(
+        1
+        for result in decisive_results
+        if result.acceptor == "agent_a" and result.winner == "agent_a"
+    )
     summary = EvalSummary(
         mode="h2h",
         format=args.format,
@@ -644,6 +746,8 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
         agent_a=args.agent_a,
         agent_b=args.agent_b,
         n_games=len(results),
+        completed_games=len(completed_results),
+        void_games=void_games,
         decisive_games=decisive_games,
         agent_a_wins=agent_a_wins,
         agent_a_losses=agent_a_losses,
@@ -653,6 +757,16 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
         ci95_high=ci_high,
         paired=args.paired,
         foul_play_search_time_ms=args.foul_play_search_time_ms,
+        agent_a_as_challenger_wins=agent_a_as_challenger_wins,
+        agent_a_as_challenger_games=agent_a_as_challenger_games,
+        agent_a_as_acceptor_wins=agent_a_as_acceptor_wins,
+        agent_a_as_acceptor_games=agent_a_as_acceptor_games,
+        voids_with_agent_a_challenger=sum(
+            1 for result in results if result.void and result.challenger == "agent_a"
+        ),
+        voids_with_agent_b_challenger=sum(
+            1 for result in results if result.void and result.challenger == "agent_b"
+        ),
     )
     return summary, results
 
@@ -727,11 +841,16 @@ def append_experiment_row(args: argparse.Namespace, summary: EvalSummary) -> Non
         "ladder_elo": "",
         "gxe": "",
         "belief_brier": "",
-        "decision(advance/iterate/rollback)": "record",
+        "decision(advance/iterate/rollback)": "iterate" if summary.void_games else "record",
         "notes": (
             f"paired={summary.paired}; decisive={summary.decisive_games}; "
+            f"completed={summary.completed_games}; voids={summary.void_games}; "
             f"ties_or_unknown={summary.ties_or_unknown}; "
-            f"foul_play_search_time_ms={summary.foul_play_search_time_ms}"
+            f"foul_play_search_time_ms={summary.foul_play_search_time_ms}; "
+            f"agent_a_as_challenger={summary.agent_a_as_challenger_wins}/{summary.agent_a_as_challenger_games}; "
+            f"agent_a_as_acceptor={summary.agent_a_as_acceptor_wins}/{summary.agent_a_as_acceptor_games}; "
+            f"voids_agent_a_challenger={summary.voids_with_agent_a_challenger}; "
+            f"voids_agent_b_challenger={summary.voids_with_agent_b_challenger}"
         ),
     }
     with path.open("a", newline="", encoding="utf-8") as handle:
@@ -764,6 +883,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--game-timeout-seconds", type=int, default=900)
     parser.add_argument("--client-finish-grace-seconds", type=int, default=30)
     parser.add_argument("--log-dir", default=None)
+    parser.add_argument("--fail-fast", action="store_true")
     parser.add_argument("--foul-play-python", default=str(ROOT_DIR / ".venv-foul-play" / "bin" / "python"))
     parser.add_argument("--foul-play-search-time-ms", type=int, default=100)
     parser.add_argument("--foul-play-search-parallelism", type=int, default=1)

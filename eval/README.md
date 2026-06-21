@@ -22,6 +22,9 @@ With `--paired`, `N` must be even; each pair runs once with A challenging B and
 once with B challenging A.
 
 Use `--log-dir` to preserve per-game Foul Play subprocess logs for debugging.
+Per-game subprocess crashes are reported as voids and excluded from decisive-game
+win rate; the summary includes void counts and agent-A challenger/acceptor role
+splits so excluded games can be checked for slot symmetry.
 
 Before using the harness for Phase 1 decisions, run the powered self-play gate in
 `AGENTS.md` §6. The N=20 self-play row in `SETUP.md` is only a smoke check.
