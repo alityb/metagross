@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-06-21T02:26:52.136258+00:00",
+  "examples": 43332,
+  "feature_masking": "public replay information only at each turn",
+  "feature_names": [
+    "hp_fraction_diff",
+    "alive_fraction_diff",
+    "active_hp_fraction_diff",
+    "opponent_status_fraction_minus_own",
+    "item_fraction_diff",
+    "opponent_used_tera_minus_own",
+    "active_attack_boost_diff",
+    "active_defense_boost_diff",
+    "active_special_attack_boost_diff",
+    "active_special_defense_boost_diff",
+    "active_speed_boost_diff",
+    "screen_score_diff",
+    "opponent_hazard_score_minus_own",
+    "active_stat_total_diff",
+    "team_stat_total_diff",
+    "substitute_diff"
+  ],
+  "format": "gen9randombattle",
+  "heldout_accuracy": 0.5820447726748211,
+  "heldout_base_rate": 0.5077313639510732,
+  "heldout_brier": 0.2379400259687842,
+  "heldout_cross_entropy": 0.6681197464112837,
+  "heldout_examples": 8666,
+  "model_type": "logistic_value_net",
+  "perspective": "fixed side_one; no to-move sign flip",
+  "reliability": [
+    {
+      "bin": 0,
+      "count": 1,
+      "hi": 0.1,
+      "lo": 0.0,
+      "mean_pred": 0.07550436714190661,
+      "winrate": 0.0
+    },
+    {
+      "bin": 1,
+      "count": 27,
+      "hi": 0.2,
+      "lo": 0.1,
+      "mean_pred": 0.1776903480167418,
+      "winrate": 0.1111111111111111
+    },
+    {
+      "bin": 2,
+      "count": 189,
+      "hi": 0.3,
+      "lo": 0.2,
+      "mean_pred": 0.26437966455188555,
+      "winrate": 0.18518518518518517
+    },
+    {
+      "bin": 3,
+      "count": 1015,
+      "hi": 0.4,
+      "lo": 0.3,
+      "mean_pred": 0.3604734559278227,
+      "winrate": 0.38226600985221676
+    },
+    {
+      "bin": 4,
+      "count": 3354,
+      "hi": 0.5,
+      "lo": 0.4,
+      "mean_pred": 0.4610296517570499,
+      "winrate": 0.4606440071556351
+    },
+    {
+      "bin": 5,
+      "count": 2857,
+      "hi": 0.6,
+      "lo": 0.5,
+      "mean_pred": 0.5436085625441477,
+      "winrate": 0.5526776338816941
+    },
+    {
+      "bin": 6,
+      "count": 1016,
+      "hi": 0.7,
+      "lo": 0.6,
+      "mean_pred": 0.6396185945675827,
+      "winrate": 0.6673228346456693
+    },
+    {
+      "bin": 7,
+      "count": 189,
+      "hi": 0.8,
+      "lo": 0.7,
+      "mean_pred": 0.7355410465664406,
+      "winrate": 0.8253968253968254
+    },
+    {
+      "bin": 8,
+      "count": 17,
+      "hi": 0.9,
+      "lo": 0.8,
+      "mean_pred": 0.8397489341684232,
+      "winrate": 0.8823529411764706
+    },
+    {
+      "bin": 9,
+      "count": 1,
+      "hi": 1.0,
+      "lo": 0.9,
+      "mean_pred": 0.9102068345055938,
+      "winrate": 1.0
+    }
+  ],
+  "replays_used": 1000,
+  "train_cross_entropy": 0.6677683251210489,
+  "train_examples": 34666
+}
