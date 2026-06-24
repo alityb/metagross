@@ -209,12 +209,32 @@ def foul_play_command(
     return cmd
 
 
-def foul_play_env(args: argparse.Namespace, agent: str) -> dict[str, str]:
+def model_for_agent(args: argparse.Namespace, agent: str) -> Optional[str]:
+    """Return the model path for the given agent, respecting per-slot overrides."""
+    if agent == "foul_play_learned":
+        # Per-slot overrides take priority over the shared --learned-value-model
+        # They're stored as args.agent_a_model / args.agent_b_model and resolved
+        # by the caller from the slot name.
+        return args.learned_value_model or None
+    return None
+
+
+def model_for_slot(args: argparse.Namespace, slot: str) -> Optional[str]:
+    """Return per-slot model override, falling back to shared --learned-value-model."""
+    if slot == "agent_a" and getattr(args, "agent_a_model", None):
+        return args.agent_a_model
+    if slot == "agent_b" and getattr(args, "agent_b_model", None):
+        return args.agent_b_model
+    return args.learned_value_model
+
+
+def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional[str] = None) -> dict[str, str]:
     env = os.environ.copy()
+    model = model_override if model_override is not None else model_for_agent(args, agent)
     if is_learned_foul_play(agent):
-        if not args.learned_value_model:
-            raise ValueError("foul_play_learned requires --learned-value-model")
-        env["METAGROSS_VALUE_MODEL"] = str(Path(args.learned_value_model).resolve())
+        if not model:
+            raise ValueError("foul_play_learned requires --learned-value-model or a per-slot model override")
+        env["METAGROSS_VALUE_MODEL"] = str(Path(model).resolve())
     else:
         env.pop("METAGROSS_VALUE_MODEL", None)
     return env
@@ -228,6 +248,7 @@ async def start_foul_play(
     bot_mode: str,
     user_to_challenge: Optional[str],
     log_dir: Path,
+    model_override: Optional[str] = None,
 ) -> tuple[asyncio.subprocess.Process, Path, object]:
     log_path = log_dir / f"{username}.log"
     log_file = log_path.open("w", encoding="utf-8")
@@ -236,7 +257,7 @@ async def start_foul_play(
         stdout=log_file,
         stderr=asyncio.subprocess.STDOUT,
         cwd=ROOT_DIR,
-        env=foul_play_env(args, agent),
+        env=foul_play_env(args, agent, model_override),
     )
     return proc, log_path, log_file
 
@@ -411,6 +432,7 @@ async def play_foul_play_accepts_poke_env_challenge(
         "accept_challenge",
         None,
         log_dir,
+        model_override=model_for_slot(args, acceptor_slot),
     )
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     await ensure_foul_play_still_running(proc, log_path, log_file)
@@ -490,6 +512,7 @@ async def play_foul_play_challenges_poke_env(
         "challenge_user",
         acceptor_username,
         log_dir,
+        model_override=model_for_slot(args, challenger_slot),
     )
     proc_task = None
     try:
@@ -558,6 +581,7 @@ async def play_foul_play_vs_foul_play(
         "accept_challenge",
         None,
         log_dir,
+        model_override=model_for_slot(args, acceptor_slot),
     )
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     challenger_proc, challenger_log_path, challenger_log_file = await start_foul_play(
@@ -568,6 +592,7 @@ async def play_foul_play_vs_foul_play(
         "challenge_user",
         acceptor_username,
         log_dir,
+        model_override=model_for_slot(args, challenger_slot),
     )
 
     acceptor_task = asyncio.create_task(
@@ -919,6 +944,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--fail-fast", action="store_true")
     parser.add_argument("--foul-play-python", default=str(ROOT_DIR / ".venv-foul-play" / "bin" / "python"))
     parser.add_argument("--learned-value-model", default=None)
+    parser.add_argument("--agent-a-model", default=None,
+                        help="Per-slot model override for agent-a (foul_play_learned only).")
+    parser.add_argument("--agent-b-model", default=None,
+                        help="Per-slot model override for agent-b (foul_play_learned only).")
     parser.add_argument("--foul-play-search-time-ms", type=int, default=100)
     parser.add_argument("--foul-play-search-parallelism", type=int, default=1)
     parser.add_argument("--foul-play-search-threads", type=int, default=1)
