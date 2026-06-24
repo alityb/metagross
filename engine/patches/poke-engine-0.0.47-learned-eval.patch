@@ -1,7 +1,7 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
-+++ b/src/learned_value.rs	2026-06-20 18:26:19
-@@ -0,0 +1,211 @@
++++ b/src/learned_value.rs	2026-06-20 23:25:55
+@@ -0,0 +1,343 @@
 +use crate::engine::items::Items;
 +use crate::state::{Pokemon, PokemonStatus, Side, State};
 +use std::env;
@@ -11,9 +11,21 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +const FEATURE_COUNT: usize = 16;
 +
 +#[derive(Debug)]
-+struct LearnedValueModel {
-+    bias: f32,
-+    weights: Vec<f32>,
++enum LearnedValueModel {
++    Linear {
++        bias: f32,
++        weights: Vec<f32>,
++    },
++    Mlp {
++        hidden1: usize,
++        hidden2: usize,
++        w1: Vec<f32>,
++        b1: Vec<f32>,
++        w2: Vec<f32>,
++        b2: Vec<f32>,
++        w3: Vec<f32>,
++        b3: f32,
++    },
 +}
 +
 +static MODEL: OnceLock<Option<LearnedValueModel>> = OnceLock::new();
@@ -25,11 +37,54 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +pub fn learned_value(state: &State) -> Option<f32> {
 +    let model = model()?;
 +    let features = extract_features(state);
-+    let mut logit = model.bias;
-+    for (weight, feature) in model.weights.iter().zip(features.iter()) {
-+        logit += weight * feature;
-+    }
++    let logit = model.predict(&features);
 +    Some(sigmoid(logit).clamp(0.0, 1.0))
++}
++
++impl LearnedValueModel {
++    fn predict(&self, features: &[f32; FEATURE_COUNT]) -> f32 {
++        match self {
++            LearnedValueModel::Linear { bias, weights } => {
++                let mut logit = *bias;
++                for (weight, feature) in weights.iter().zip(features.iter()) {
++                    logit += weight * feature;
++                }
++                logit
++            }
++            LearnedValueModel::Mlp {
++                hidden1,
++                hidden2,
++                w1,
++                b1,
++                w2,
++                b2,
++                w3,
++                b3,
++            } => {
++                let mut a1 = vec![0.0; *hidden1];
++                for j in 0..*hidden1 {
++                    let mut z = b1[j];
++                    for i in 0..FEATURE_COUNT {
++                        z += features[i] * w1[i * *hidden1 + j];
++                    }
++                    a1[j] = z.tanh();
++                }
++                let mut a2 = vec![0.0; *hidden2];
++                for j in 0..*hidden2 {
++                    let mut z = b2[j];
++                    for i in 0..*hidden1 {
++                        z += a1[i] * w2[i * *hidden2 + j];
++                    }
++                    a2[j] = z.tanh();
++                }
++                let mut logit = *b3;
++                for i in 0..*hidden2 {
++                    logit += a2[i] * w3[i];
++                }
++                logit
++            }
++        }
++    }
 +}
 +
 +fn model() -> Option<&'static LearnedValueModel> {
@@ -47,6 +102,9 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +}
 +
 +fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
++    if contents.lines().any(|line| line.trim() == "metagross_value_mlp_v1") {
++        return parse_mlp_model(contents).map(Some);
++    }
 +    let mut bias = None;
 +    let mut weights = None;
 +    for raw_line in contents.lines() {
@@ -80,10 +138,84 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +            None => {}
 +        }
 +    }
-+    Ok(Some(LearnedValueModel {
++    Ok(Some(LearnedValueModel::Linear {
 +        bias: bias.ok_or_else(|| "missing bias".to_string())?,
 +        weights: weights.ok_or_else(|| "missing weights".to_string())?,
 +    }))
++}
++
++fn parse_floats<'a, I>(parts: I, label: &str) -> Result<Vec<f32>, String>
++where
++    I: Iterator<Item = &'a str>,
++{
++    parts
++        .map(|p| p.parse::<f32>().map_err(|err| format!("invalid {} value: {}", label, err)))
++        .collect()
++}
++
++fn parse_mlp_model(contents: &str) -> Result<LearnedValueModel, String> {
++    let mut dims = None;
++    let mut w1 = None;
++    let mut b1 = None;
++    let mut w2 = None;
++    let mut b2 = None;
++    let mut w3 = None;
++    let mut b3 = None;
++    for raw_line in contents.lines() {
++        let line = raw_line.split('#').next().unwrap_or("").trim();
++        if line.is_empty() || line == "metagross_value_mlp_v1" {
++            continue;
++        }
++        let mut parts = line.split_whitespace();
++        match parts.next() {
++            Some("dims") => {
++                let parsed: Result<Vec<usize>, _> = parts.map(|p| p.parse::<usize>()).collect();
++                let parsed = parsed.map_err(|err| format!("invalid dims: {}", err))?;
++                if parsed.len() != 4 || parsed[0] != FEATURE_COUNT || parsed[3] != 1 {
++                    return Err("expected dims 16 H1 H2 1".to_string());
++                }
++                dims = Some((parsed[1], parsed[2]));
++            }
++            Some("w1") => w1 = Some(parse_floats(parts, "w1")?),
++            Some("b1") => b1 = Some(parse_floats(parts, "b1")?),
++            Some("w2") => w2 = Some(parse_floats(parts, "w2")?),
++            Some("b2") => b2 = Some(parse_floats(parts, "b2")?),
++            Some("w3") => w3 = Some(parse_floats(parts, "w3")?),
++            Some("b3") => {
++                b3 = Some(
++                    parts
++                        .next()
++                        .ok_or_else(|| "b3 line missing value".to_string())?
++                        .parse::<f32>()
++                        .map_err(|err| format!("invalid b3: {}", err))?,
++                )
++            }
++            Some(other) => return Err(format!("unknown model line: {}", other)),
++            None => {}
++        }
++    }
++    let (hidden1, hidden2) = dims.ok_or_else(|| "missing dims".to_string())?;
++    let w1 = w1.ok_or_else(|| "missing w1".to_string())?;
++    let b1 = b1.ok_or_else(|| "missing b1".to_string())?;
++    let w2 = w2.ok_or_else(|| "missing w2".to_string())?;
++    let b2 = b2.ok_or_else(|| "missing b2".to_string())?;
++    let w3 = w3.ok_or_else(|| "missing w3".to_string())?;
++    if w1.len() != FEATURE_COUNT * hidden1 || b1.len() != hidden1 {
++        return Err("w1/b1 shape mismatch".to_string());
++    }
++    if w2.len() != hidden1 * hidden2 || b2.len() != hidden2 || w3.len() != hidden2 {
++        return Err("w2/b2/w3 shape mismatch".to_string());
++    }
++    Ok(LearnedValueModel::Mlp {
++        hidden1,
++        hidden2,
++        w1,
++        b1,
++        w2,
++        b2,
++        w3,
++        b3: b3.ok_or_else(|| "missing b3".to_string())?,
++    })
 +}
 +
 +fn sigmoid(x: f32) -> f32 {
@@ -215,7 +347,7 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +}
 diff -ruN a/src/lib.rs b/src/lib.rs
 --- a/src/lib.rs	2026-06-13 13:32:23
-+++ b/src/lib.rs	2026-06-20 18:26:19
++++ b/src/lib.rs	2026-06-20 19:14:18
 @@ -18,6 +18,7 @@
  pub mod choices;
  pub mod instruction;
@@ -226,7 +358,7 @@ diff -ruN a/src/lib.rs b/src/lib.rs
  pub mod pokemon;
 diff -ruN a/src/mcts.rs b/src/mcts.rs
 --- a/src/mcts.rs	2026-06-13 13:32:23
-+++ b/src/mcts.rs	2026-06-20 18:26:19
++++ b/src/mcts.rs	2026-06-20 19:14:18
 @@ -2,6 +2,7 @@
  use crate::engine::generate_instructions::generate_instructions_from_move_pair;
  use crate::engine::state::MoveChoice;
@@ -245,8 +377,12 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
              let eval = evaluate(state);
              sigmoid(eval - root_eval)
          } else {
-@@ -301,2 +305,2 @@
+@@ -298,7 +302,7 @@
+     root_node.root = true;
+     let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
+
 -    let root_eval = evaluate(state);
 +    let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
      let search_limit = if max_iterations > 0 {
+         SearchLimit::Iterations(max_iterations)
      } else {
