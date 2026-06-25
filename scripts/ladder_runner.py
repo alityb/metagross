@@ -36,10 +36,11 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 FOUL_PLAY_DIR = ROOT_DIR / "external" / "foul-play"
 VENV_PY = ROOT_DIR / ".venv-foul-play" / "bin" / "python"
 LIVE_URI = "wss://sim3.psim.us/showdown/websocket"
-GAME_TIMEOUT_MINUTES = 15
+GAME_TIMEOUT_MINUTES = 20
 CHECKPOINT_EVERY = 20
 BACKOFF_BASE = 30  # seconds before retry on connection error
 BACKOFF_MAX = 300
+BETWEEN_GAMES_DELAY = 15  # polite pause between games
 
 
 def setup_logging(log_file: str) -> logging.Logger:
@@ -90,6 +91,7 @@ def parse_rating_line(raw_line: str) -> tuple[Optional[int], Optional[float]]:
 
 async def run_one_game(
     username: str,
+    password: Optional[str],
     search_time_ms: int,
     model_path: Optional[str],
     logger: logging.Logger,
@@ -120,6 +122,8 @@ async def run_one_game(
         "--search-threads", "1",
         "--log-level", "INFO",
     ]
+    if password:
+        cmd.extend(["--ps-password", password])
 
     t0 = time.time()
     record: dict = {
@@ -213,6 +217,7 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
 
         record = await run_one_game(
             username=args.username,
+            password=getattr(args, 'password', None),
             search_time_ms=args.search_time_ms,
             model_path=args.learned_value_model,
             logger=logger,
@@ -230,14 +235,14 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
                 "GAME_ERROR game=%d error=%s consecutive=%d",
                 game_index, record["error"], consecutive_errors,
             )
-            if consecutive_errors >= 5:
+        if consecutive_errors >= 5 and consecutive_errors < 15:
                 backoff = min(BACKOFF_BASE * (2 ** min(consecutive_errors - 5, 5)), BACKOFF_MAX)
                 logger.error(
                     "WATCHDOG: %d consecutive errors — backing off %ds before retry",
                     consecutive_errors, backoff,
                 )
                 await asyncio.sleep(backoff)
-            elif consecutive_errors >= 15:
+        if consecutive_errors >= 15:
                 logger.critical(
                     "FATAL: 15 consecutive errors, aborting. Check connection and account status."
                 )
@@ -258,8 +263,8 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
         if completed > 0 and completed % CHECKPOINT_EVERY == 0:
             write_checkpoint(args.log_file, args.label, [g for g in games if not g.get("error")], logger)
 
-        # Brief pause between games to be polite to the ladder
-        await asyncio.sleep(3)
+        # Polite pause between games — avoids rapid reconnection throttling
+        await asyncio.sleep(BETWEEN_GAMES_DELAY)
 
     # Final summary
     good = [g for g in games if not g.get("error")]
@@ -279,6 +284,7 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Overnight ladder measurement runner")
     parser.add_argument("--username", required=True)
+    parser.add_argument("--password", default=None, help="Registered account password (enables persistent ELO)")
     parser.add_argument("--label", required=True, help="Short label for log (e.g. stock_foul_play)")
     parser.add_argument("--n-games", type=int, default=200)
     parser.add_argument("--search-time-ms", type=int, default=100)
