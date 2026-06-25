@@ -10,6 +10,7 @@ from pathlib import Path
 
 def patch_foul_play_protocol_bugs() -> None:
     import fp.run_battle as run_battle
+    import fp.websocket_client as ws_client
 
     if not hasattr(run_battle, "format_decision") or not callable(run_battle.format_decision):
         raise RuntimeError("Foul Play patch target fp.run_battle.format_decision is missing")
@@ -22,6 +23,17 @@ def patch_foul_play_protocol_bugs() -> None:
         return original_format_decision(battle, decision)
 
     run_battle.format_decision = format_decision_with_default
+
+    # Disable websocket keepalive pings so the long MCTS subprocess
+    # doesn't cause a keepalive timeout during search.
+    import websockets
+    _orig_connect = websockets.connect
+
+    def connect_no_ping(address, *args, **kwargs):
+        kwargs.setdefault("ping_interval", None)
+        return _orig_connect(address, *args, **kwargs)
+
+    ws_client.websockets.connect = connect_no_ping
 
 
 def extract_value_features(state) -> list[float]:
