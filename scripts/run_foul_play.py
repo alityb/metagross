@@ -35,6 +35,24 @@ def patch_foul_play_protocol_bugs() -> None:
 
     ws_client.websockets.connect = connect_no_ping
 
+    # Intercept receive_message to print |raw| rating lines to stdout
+    # so the ladder runner can parse ELO without requiring DEBUG logging.
+    import logging as _logging
+    _logger = _logging.getLogger("fp.rating_intercept")
+    original_receive = ws_client.PSWebsocketClient.receive_message
+
+    async def receive_message_with_rating_log(self):
+        message = await original_receive(self)
+        # The rating line appears as: "|raw|USERNAME's rating: N → <strong>M</strong>..."
+        # It's embedded in a multi-line message; scan each line.
+        for line in message.splitlines():
+            if line.startswith("|raw|") and ("<strong>" in line or "rating:" in line.lower()):
+                import sys
+                print(f"RATING_LINE {line}", file=sys.stdout, flush=True)
+        return message
+
+    ws_client.PSWebsocketClient.receive_message = receive_message_with_rating_log
+
 
 def extract_value_features(state) -> list[float]:
     """Extract 24 enriched features from a poke_engine State object.
