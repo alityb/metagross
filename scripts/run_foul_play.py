@@ -25,89 +25,13 @@ def patch_foul_play_protocol_bugs() -> None:
 
 
 def extract_value_features(state) -> list[float]:
-    def hp_fraction(pokemon) -> float:
-        if pokemon is None or pokemon.hp <= 0 or pokemon.maxhp <= 0:
-            return 0.0
-        return max(0.0, min(1.0, pokemon.hp / pokemon.maxhp))
+    """Extract 24 enriched features from a poke_engine State object.
 
-    def active(side):
-        return side.pokemon[int(side.active_index)]
-
-    def alive(side) -> list:
-        return [pokemon for pokemon in side.pokemon if pokemon.hp > 0]
-
-    def hp_total(side) -> float:
-        return sum(hp_fraction(pokemon) for pokemon in side.pokemon) / 6.0
-
-    def alive_fraction(side) -> float:
-        return len(alive(side)) / 6.0
-
-    def status_fraction(side) -> float:
-        return sum(1 for pokemon in alive(side) if pokemon.status.lower() != "none") / 6.0
-
-    def item_fraction(side) -> float:
-        return sum(1 for pokemon in alive(side) if pokemon.item.lower() != "none") / 6.0
-
-    def used_tera(side) -> float:
-        return 1.0 if any(pokemon.terastallized for pokemon in side.pokemon) else 0.0
-
-    def screen_score(side) -> float:
-        conditions = side.side_conditions
-        return (conditions.reflect + conditions.light_screen + conditions.aurora_veil * 2) / 8.0
-
-    def hazard_score(side) -> float:
-        conditions = side.side_conditions
-        return (
-            conditions.stealth_rock
-            + conditions.spikes
-            + conditions.toxic_spikes
-            + conditions.sticky_web * 2
-        ) / 8.0
-
-    def active_stat_total(side) -> float:
-        pokemon = active(side)
-        return (
-            pokemon.attack
-            + pokemon.defense
-            + pokemon.special_attack
-            + pokemon.special_defense
-            + pokemon.speed
-        ) / 1000.0
-
-    def team_stat_total(side) -> float:
-        return (
-            sum(
-                pokemon.attack
-                + pokemon.defense
-                + pokemon.special_attack
-                + pokemon.special_defense
-                + pokemon.speed
-                for pokemon in alive(side)
-            )
-            / 6000.0
-        )
-
-    side_one = state.side_one
-    side_two = state.side_two
-    return [
-        hp_total(side_one) - hp_total(side_two),
-        alive_fraction(side_one) - alive_fraction(side_two),
-        hp_fraction(active(side_one)) - hp_fraction(active(side_two)),
-        status_fraction(side_two) - status_fraction(side_one),
-        item_fraction(side_one) - item_fraction(side_two),
-        used_tera(side_two) - used_tera(side_one),
-        side_one.attack_boost / 6.0 - side_two.attack_boost / 6.0,
-        side_one.defense_boost / 6.0 - side_two.defense_boost / 6.0,
-        side_one.special_attack_boost / 6.0 - side_two.special_attack_boost / 6.0,
-        side_one.special_defense_boost / 6.0 - side_two.special_defense_boost / 6.0,
-        side_one.speed_boost / 6.0 - side_two.speed_boost / 6.0,
-        screen_score(side_one) - screen_score(side_two),
-        hazard_score(side_two) - hazard_score(side_one),
-        active_stat_total(side_one) - active_stat_total(side_two),
-        team_stat_total(side_one) - team_stat_total(side_two),
-        (1.0 if side_one.substitute_health > 0 else 0.0)
-        - (1.0 if side_two.substitute_health > 0 else 0.0),
-    ]
+    Delegates to the Rust compute_value_features binding so training and
+    inference use EXACTLY the same featurization.
+    """
+    import poke_engine as _pe
+    return _pe.compute_value_features(state)
 
 
 def patch_decision_logging() -> None:
