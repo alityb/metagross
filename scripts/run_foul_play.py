@@ -10,7 +10,9 @@ from pathlib import Path
 
 def patch_foul_play_protocol_bugs() -> None:
     import fp.run_battle as run_battle
+    import fp.battle as battle_module
     import fp.websocket_client as ws_client
+    import constants
 
     if not hasattr(run_battle, "format_decision") or not callable(run_battle.format_decision):
         raise RuntimeError("Foul Play patch target fp.run_battle.format_decision is missing")
@@ -23,6 +25,22 @@ def patch_foul_play_protocol_bugs() -> None:
         return original_format_decision(battle, decision)
 
     run_battle.format_decision = format_decision_with_default
+
+    # Gen1 Struggle patch: when PP is exhausted, Showdown sends "fight" as the
+    # move name. FP doesn't know this move and crashes in update_from_request_json.
+    # Patch _initialize_user_active_from_request_json to skip unknown moves
+    # gracefully so the game can continue (the bot will use /choose default).
+    _orig_init_active = battle_module.Battler._initialize_user_active_from_request_json
+
+    def _safe_init_active(self, request_json):
+        try:
+            _orig_init_active(self, request_json)
+        except (IndexError, KeyError, ValueError):
+            # PP-exhausted state: Showdown sent "fight" or empty move list.
+            # Leave move list unchanged so async_pick_move can fall back to default.
+            pass
+
+    battle_module.Battler._initialize_user_active_from_request_json = _safe_init_active
 
     # Disable websocket keepalive pings so the long MCTS subprocess
     # doesn't cause a keepalive timeout during search.

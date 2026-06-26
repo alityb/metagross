@@ -1,16 +1,28 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
-+++ b/src/learned_value.rs	2026-06-24 19:44:48
-@@ -0,0 +1,387 @@
++++ b/src/learned_value.rs	2026-06-26 00:00:00
+@@ -0,0 +1,328 @@
 +use crate::choices::{Choices, MoveCategory};
-+use crate::engine::abilities::Abilities;
-+use crate::engine::items::Items;
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
 +use std::env;
 +use std::fs;
 +use std::sync::OnceLock;
 +
-+const FEATURE_COUNT: usize = 24;
++// Gen1-appropriate feature set (no items, no abilities, no tera, no weather/terrain)
++//
++//  0  hp_frac_diff              side total HP fraction (s1 - s2)
++//  1  alive_frac_diff           alive count fraction (s1 - s2)
++//  2  active_hp_frac_diff       active mon HP fraction (s1 - s2)
++//  3  status_frac_diff          opponent status fraction - own (s2 - s1)
++//  4  attack_boost_diff         (s1 - s2) / 6
++//  5  defense_boost_diff        (s1 - s2) / 6
++//  6  special_attack_boost_diff (s1 - s2) / 6  [= special boost in gen1]
++//  7  speed_boost_diff          (s1 - s2) / 6
++//  8  sub_diff                  s1_has_sub - s2_has_sub
++//  9  active_stat_total_diff    active mon total stats normalized
++// 10  team_stat_total_diff      team total stats normalized
++// 11  type_adv                  log2(s1_best_stab_vs_s2) - log2(s2_best_stab_vs_s1)
++const FEATURE_COUNT: usize = 12;
 +
 +#[derive(Debug)]
 +enum LearnedValueModel {
@@ -182,97 +194,77 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +
 +fn sigmoid(x: f32) -> f32 { 1.0 / (1.0 + (-x).exp()) }
 +
-+// ── Type chart ────────────────────────────────────────────────────────────────
-+fn type_matchup(atk: PokemonType, def: PokemonType) -> f32 {
++// ── Gen1 type chart ────────────────────────────────────────────────────────────
++// Notable gen1 differences from later gens:
++//   Ghost has NO effect on Psychic (gen1 bug → 0.0)
++//   Bug is SE against Poison (gen1 only → 2.0)
++//   Poison is SE against Bug (gen1 only → 2.0)
++//   Bug is SE against Psychic (gen1 only → 2.0)
++//   No Dark, Steel, Fairy types exist in gen1
++fn gen1_type_matchup(atk: PokemonType, def: PokemonType) -> f32 {
 +    use PokemonType::*;
 +    match (atk, def) {
-+        (NORMAL, ROCK) | (NORMAL, STEEL) => 0.5,
++        (NORMAL, ROCK) => 0.5,
 +        (NORMAL, GHOST) => 0.0,
 +        (FIRE, FIRE) | (FIRE, WATER) | (FIRE, ROCK) | (FIRE, DRAGON) => 0.5,
-+        (FIRE, GRASS) | (FIRE, ICE) | (FIRE, BUG) | (FIRE, STEEL) => 2.0,
++        (FIRE, GRASS) | (FIRE, ICE) | (FIRE, BUG) => 2.0,
 +        (WATER, WATER) | (WATER, GRASS) | (WATER, DRAGON) => 0.5,
 +        (WATER, FIRE) | (WATER, GROUND) | (WATER, ROCK) => 2.0,
 +        (ELECTRIC, ELECTRIC) | (ELECTRIC, GRASS) | (ELECTRIC, DRAGON) => 0.5,
 +        (ELECTRIC, GROUND) => 0.0,
 +        (ELECTRIC, FLYING) | (ELECTRIC, WATER) => 2.0,
 +        (GRASS, FIRE) | (GRASS, GRASS) | (GRASS, POISON) | (GRASS, FLYING)
-+        | (GRASS, BUG) | (GRASS, DRAGON) | (GRASS, STEEL) => 0.5,
++        | (GRASS, BUG) | (GRASS, DRAGON) => 0.5,
 +        (GRASS, WATER) | (GRASS, GROUND) | (GRASS, ROCK) => 2.0,
-+        (ICE, FIRE) | (ICE, WATER) | (ICE, ICE) | (ICE, STEEL) => 0.5,
++        (ICE, WATER) | (ICE, ICE) => 0.5,
 +        (ICE, GRASS) | (ICE, GROUND) | (ICE, FLYING) | (ICE, DRAGON) => 2.0,
 +        (FIGHTING, POISON) | (FIGHTING, FLYING) | (FIGHTING, PSYCHIC)
-+        | (FIGHTING, BUG) | (FIGHTING, FAIRY) => 0.5,
++        | (FIGHTING, BUG) => 0.5,
 +        (FIGHTING, GHOST) => 0.0,
-+        (FIGHTING, NORMAL) | (FIGHTING, ICE) | (FIGHTING, ROCK)
-+        | (FIGHTING, DARK) | (FIGHTING, STEEL) => 2.0,
++        (FIGHTING, NORMAL) | (FIGHTING, ICE) | (FIGHTING, ROCK) => 2.0,
 +        (POISON, POISON) | (POISON, GROUND) | (POISON, ROCK) | (POISON, GHOST) => 0.5,
-+        (POISON, STEEL) => 0.0,
-+        (POISON, GRASS) | (POISON, FAIRY) => 2.0,
-+        (GROUND, GRASS) | (GROUND, BUG) => 0.5,
++        (POISON, GRASS) | (POISON, BUG) => 2.0,
++        (GROUND, GRASS) => 0.5,
 +        (GROUND, FLYING) => 0.0,
-+        (GROUND, FIRE) | (GROUND, ELECTRIC) | (GROUND, POISON)
-+        | (GROUND, ROCK) | (GROUND, STEEL) => 2.0,
-+        (FLYING, ELECTRIC) | (FLYING, ROCK) | (FLYING, STEEL) => 0.5,
++        (GROUND, FIRE) | (GROUND, ELECTRIC) | (GROUND, POISON) | (GROUND, ROCK) => 2.0,
++        (FLYING, ELECTRIC) | (FLYING, ROCK) => 0.5,
 +        (FLYING, GRASS) | (FLYING, FIGHTING) | (FLYING, BUG) => 2.0,
-+        (PSYCHIC, PSYCHIC) | (PSYCHIC, STEEL) => 0.5,
-+        (PSYCHIC, DARK) => 0.0,
++        (PSYCHIC, PSYCHIC) => 0.5,
++        (PSYCHIC, GHOST) => 0.0, // gen1: ghost had no effect on psychic (bug)
 +        (PSYCHIC, FIGHTING) | (PSYCHIC, POISON) => 2.0,
-+        (BUG, FIRE) | (BUG, FIGHTING) | (BUG, FLYING) | (BUG, GHOST)
-+        | (BUG, STEEL) | (BUG, FAIRY) => 0.5,
-+        (BUG, GRASS) | (BUG, PSYCHIC) | (BUG, DARK) => 2.0,
-+        (ROCK, FIGHTING) | (ROCK, GROUND) | (ROCK, STEEL) => 0.5,
++        (BUG, FIRE) | (BUG, FLYING) | (BUG, GHOST) => 0.5,
++        (BUG, GRASS) | (BUG, POISON) | (BUG, PSYCHIC) => 2.0,
++        (ROCK, FIGHTING) | (ROCK, GROUND) => 0.5,
 +        (ROCK, FIRE) | (ROCK, ICE) | (ROCK, FLYING) | (ROCK, BUG) => 2.0,
-+        (GHOST, NORMAL) => 0.0,
-+        (GHOST, DARK) => 0.5,
-+        (GHOST, PSYCHIC) | (GHOST, GHOST) => 2.0,
-+        (DRAGON, STEEL) => 0.5,
-+        (DRAGON, FAIRY) => 0.0,
++        (GHOST, NORMAL) | (GHOST, PSYCHIC) => 0.0,
 +        (DRAGON, DRAGON) => 2.0,
-+        (DARK, FIGHTING) | (DARK, DARK) | (DARK, FAIRY) => 0.5,
-+        (DARK, PSYCHIC) | (DARK, GHOST) => 2.0,
-+        (STEEL, FIRE) | (STEEL, WATER) | (STEEL, ELECTRIC) | (STEEL, STEEL) => 0.5,
-+        (STEEL, ICE) | (STEEL, ROCK) | (STEEL, FAIRY) => 2.0,
-+        (FAIRY, FIRE) | (FAIRY, POISON) | (FAIRY, STEEL) => 0.5,
-+        (FAIRY, FIGHTING) | (FAIRY, DRAGON) | (FAIRY, DARK) => 2.0,
 +        _ => 1.0,
 +    }
 +}
 +
-+fn ability_grants_immunity(ability: Abilities, move_type: PokemonType) -> bool {
-+    use Abilities::*; use PokemonType::*;
-+    matches!(
-+        (ability, move_type),
-+        (LEVITATE, GROUND) | (WATERABSORB, WATER) | (DRYSKIN, WATER) | (STORMDRAIN, WATER)
-+        | (VOLTABSORB, ELECTRIC) | (LIGHTNINGROD, ELECTRIC) | (MOTORDRIVE, ELECTRIC)
-+        | (FLASHFIRE, FIRE) | (WELLBAKEDBODY, FIRE)
-+        | (SAPSIPPER, GRASS) | (EARTHEATER, GROUND)
-+    )
-+}
-+
-+fn effective_mult(atk_type: PokemonType, def: &Pokemon) -> f32 {
++fn gen1_effective_mult(atk_type: PokemonType, def: &Pokemon) -> f32 {
 +    if atk_type == PokemonType::TYPELESS || atk_type == PokemonType::STELLAR { return 1.0; }
-+    if ability_grants_immunity(def.ability, atk_type) { return 0.0; }
-+    type_matchup(atk_type, def.types.0) * type_matchup(atk_type, def.types.1)
++    gen1_type_matchup(atk_type, def.types.0) * gen1_type_matchup(atk_type, def.types.1)
 +}
 +
-+fn stab_best_mult(attacker: &Pokemon, defender: &Pokemon) -> f32 {
++fn gen1_stab_best_mult(attacker: &Pokemon, defender: &Pokemon) -> f32 {
 +    let mut best = 1.0f32;
 +    for t in [attacker.types.0, attacker.types.1] {
 +        if t == PokemonType::TYPELESS || t == PokemonType::STELLAR { continue; }
-+        let m = effective_mult(t, defender);
++        let m = gen1_effective_mult(t, defender);
 +        if m > best { best = m; }
 +    }
 +    best
 +}
 +
-+fn move_best_mult(attacker: &Pokemon, defender: &Pokemon) -> f32 {
++fn gen1_move_best_mult(attacker: &Pokemon, defender: &Pokemon) -> f32 {
 +    let mut best = 1.0f32;
 +    for mv in attacker.moves.into_iter() {
 +        if mv.id == Choices::NONE { continue; }
 +        if mv.choice.category == MoveCategory::Status { continue; }
 +        let t = mv.choice.move_type;
 +        if t == PokemonType::TYPELESS { continue; }
-+        let m = effective_mult(t, defender);
++        let m = gen1_effective_mult(t, defender);
 +        if m > best { best = m; }
 +    }
 +    best
@@ -283,24 +275,7 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +    (mult.ln() / std::f32::consts::LN_2).clamp(-2.0, 2.0)
 +}
 +
-+// ── Speed ─────────────────────────────────────────────────────────────────────
-+fn speed_boost_mult(boost: i8) -> f32 {
-+    match boost {
-+        6=>4.0, 5=>3.5, 4=>3.0, 3=>2.5, 2=>2.0, 1=>1.5,
-+        0=>1.0,
-+        -1=>2.0/3.0, -2=>0.5, -3=>0.4, -4=>1.0/3.0, -5=>2.0/7.0, -6=>0.25,
-+        _=>1.0,
-+    }
-+}
-+
-+fn adjusted_speed(side: &Side, trick_room: bool) -> f32 {
-+    let active = &side.pokemon[side.active_index];
-+    let raw = active.speed as f32 * speed_boost_mult(side.speed_boost);
-+    let raw = if side.side_conditions.tailwind > 0 { raw * 2.0 } else { raw };
-+    if trick_room { 1.0 / raw.max(1.0) } else { raw }
-+}
-+
-+// ── Original 16-feature helpers ───────────────────────────────────────────────
++// ── Scalar helpers ─────────────────────────────────────────────────────────────
 +fn hp_fraction(p: &Pokemon) -> f32 {
 +    if p.maxhp <= 0 || p.hp <= 0 { 0.0 }
 +    else { (p.hp as f32 / p.maxhp as f32).clamp(0.0, 1.0) }
@@ -316,11 +291,6 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +        .filter(|p| p.hp > 0 && p.status != PokemonStatus::NONE)
 +        .count() as f32 / 6.0
 +}
-+fn side_item_fraction(side: &Side) -> f32 {
-+    side.pokemon.into_iter()
-+        .filter(|p| p.hp > 0 && p.item != Items::NONE)
-+        .count() as f32 / 6.0
-+}
 +fn active_stat_total(side: &Side) -> f32 {
 +    let a = &side.pokemon[side.active_index];
 +    (a.attack + a.defense + a.special_attack + a.special_defense + a.speed) as f32 / 1000.0
@@ -330,68 +300,39 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +        .map(|p| (p.attack + p.defense + p.special_attack + p.special_defense + p.speed) as f32)
 +        .sum::<f32>() / 6000.0
 +}
-+fn screen_score(side: &Side) -> f32 {
-+    let c = &side.side_conditions;
-+    (c.reflect + c.light_screen + c.aurora_veil * 2) as f32 / 8.0
-+}
-+fn hazard_score(side: &Side) -> f32 {
-+    let c = &side.side_conditions;
-+    (c.stealth_rock + c.spikes + c.toxic_spikes + c.sticky_web * 2) as f32 / 8.0
-+}
-+fn boost_features(side: &Side) -> [f32; 5] {
-+    [ side.attack_boost as f32 / 6.0, side.defense_boost as f32 / 6.0,
-+      side.special_attack_boost as f32 / 6.0, side.special_defense_boost as f32 / 6.0,
-+      side.speed_boost as f32 / 6.0 ]
-+}
 +
-+// ── Main extractor: returns [f32; 24] ────────────────────────────────────────
++// ── Main feature extractor: returns [f32; 12] ─────────────────────────────────
 +fn extract_features(state: &State) -> [f32; FEATURE_COUNT] {
 +    let s1 = &state.side_one; let s2 = &state.side_two;
 +    let a1 = &s1.pokemon[s1.active_index]; let a2 = &s2.pokemon[s2.active_index];
-+    let trick_room = state.trick_room.active;
-+    let b1 = boost_features(s1); let b2 = boost_features(s2);
 +
-+    // existing 16
-+    let s1_used_tera = s1.pokemon.into_iter().any(|p| p.terastallized);
-+    let s2_used_tera = s2.pokemon.into_iter().any(|p| p.terastallized);
-+
-+    // new 8: type matchup + speed
-+    let s1_stab = stab_best_mult(a1, a2); let s2_stab = stab_best_mult(a2, a1);
-+    let s1_move = move_best_mult(a1, a2); let s2_move = move_best_mult(a2, a1);
-+    let spd1 = adjusted_speed(s1, trick_room); let spd2 = adjusted_speed(s2, trick_room);
-+    let spd_sum = (spd1 + spd2).max(1.0);
++    let s1_stab = gen1_stab_best_mult(a1, a2);
++    let s2_stab = gen1_stab_best_mult(a2, a1);
++    let s1_move = gen1_move_best_mult(a1, a2);
++    let s2_move = gen1_move_best_mult(a2, a1);
++    // type_adv: positive = s1 has type advantage over s2
++    let type_adv = (log2_type_mult(s1_stab.max(s1_move)) - log2_type_mult(s2_stab.max(s2_move)))
++        .clamp(-2.0, 2.0);
 +
 +    [
-+        // 0-15: original features
 +        side_hp_fraction(s1) - side_hp_fraction(s2),
 +        side_alive_fraction(s1) - side_alive_fraction(s2),
 +        hp_fraction(a1) - hp_fraction(a2),
 +        side_status_fraction(s2) - side_status_fraction(s1),
-+        side_item_fraction(s1) - side_item_fraction(s2),
-+        if s2_used_tera { 1.0 } else { 0.0 } - if s1_used_tera { 1.0 } else { 0.0 },
-+        b1[0] - b2[0], b1[1] - b2[1], b1[2] - b2[2], b1[3] - b2[3], b1[4] - b2[4],
-+        screen_score(s1) - screen_score(s2),
-+        hazard_score(s2) - hazard_score(s1),
-+        active_stat_total(s1) - active_stat_total(s2),
-+        team_stat_total(s1) - team_stat_total(s2),
++        (s1.attack_boost - s2.attack_boost) as f32 / 6.0,
++        (s1.defense_boost - s2.defense_boost) as f32 / 6.0,
++        (s1.special_attack_boost - s2.special_attack_boost) as f32 / 6.0,
++        (s1.speed_boost - s2.speed_boost) as f32 / 6.0,
 +        if s1.substitute_health > 0 { 1.0 } else { 0.0 }
 +            - if s2.substitute_health > 0 { 1.0 } else { 0.0 },
-+        // 16-23: enriched type + speed features
-+        log2_type_mult(s1_stab),                        // s1 best STAB vs s2 (log2)
-+        log2_type_mult(s2_stab),                        // s2 best STAB vs s1 (log2)
-+        log2_type_mult(s1_move),                        // s1 best move vs s2 (log2)
-+        log2_type_mult(s2_move),                        // s2 best move vs s1 (log2)
-+        if s1_stab >= 1.9 { 1.0f32 } else { 0.0 },    // s1 has SE STAB on s2
-+        if s2_stab >= 1.9 { 1.0f32 } else { 0.0 },    // s2 has SE STAB on s1
-+        (spd1 - spd2) / spd_sum,                       // speed advantage ∈ (-1, 1)
-+        if spd1 > spd2 * 1.05 { 1.0f32 }               // ternary outspeed
-+            else if spd2 > spd1 * 1.05 { -1.0 }
-+            else { 0.0 },
++        active_stat_total(s1) - active_stat_total(s2),
++        team_stat_total(s1) - team_stat_total(s2),
++        type_adv,
 +    ]
 +}
 diff -ruN a/src/lib.rs b/src/lib.rs
 --- a/src/lib.rs	2026-06-13 13:32:23
-+++ b/src/lib.rs	2026-06-24 18:50:56
++++ b/src/lib.rs	2026-06-26 00:00:00
 @@ -18,6 +18,7 @@
  pub mod choices;
  pub mod instruction;
@@ -402,7 +343,7 @@ diff -ruN a/src/lib.rs b/src/lib.rs
  pub mod pokemon;
 diff -ruN a/src/mcts.rs b/src/mcts.rs
 --- a/src/mcts.rs	2026-06-13 13:32:23
-+++ b/src/mcts.rs	2026-06-24 18:50:56
++++ b/src/mcts.rs	2026-06-26 00:00:00
 @@ -2,6 +2,7 @@
  use crate::engine::generate_instructions::generate_instructions_from_move_pair;
  use crate::engine::state::MoveChoice;
@@ -424,18 +365,18 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
 @@ -298,7 +302,7 @@
      root_node.root = true;
      let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
-
+ 
 -    let root_eval = evaluate(state);
 +    let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
      let search_limit = if max_iterations > 0 {
          SearchLimit::Iterations(max_iterations)
      } else {
 --- a/poke-engine-py/src/lib.rs	2026-06-13 13:32:23
-+++ b/poke-engine-py/src/lib.rs	2026-06-24 19:45:05
++++ b/poke-engine-py/src/lib.rs	2026-06-26 00:00:00
 @@ -1099,6 +1099,12 @@
      Ok((s1_py_rolls, s2_py_rolls))
  }
-
+ 
 +#[pyfunction]
 +fn compute_value_features(state: PyState) -> Vec<f32> {
 +    let s: poke_engine::state::State = state.into();

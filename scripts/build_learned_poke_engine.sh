@@ -18,4 +18,4 @@ mkdir -p "$BUILD_DIR"
 tar -xzf "$SRC_TARBALL" -C "$BUILD_DIR" --strip-components=1
 patch -d "$BUILD_DIR" -p1 < "$PATCH_FILE"
 "$PYTHON_BIN" -m pip install -v --force-reinstall --no-cache-dir "$BUILD_DIR" \
-  --config-settings="build-args=--features poke-engine/terastallization --no-default-features"
+  --config-settings="build-args=--features poke-engine/gen1 --no-default-features"

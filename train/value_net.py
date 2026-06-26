@@ -13,32 +13,22 @@ from typing import Iterable, Optional
 import numpy as np
 
 
+# Gen1-appropriate feature set (12 features).
+# Must match FEATURE_COUNT and extract_features() order in
+# engine/patches/poke-engine-0.0.47-learned-eval.patch.
 FEATURE_NAMES = [
-    "hp_fraction_diff",
-    "alive_fraction_diff",
-    "active_hp_fraction_diff",
-    "opponent_status_fraction_minus_own",
-    "item_fraction_diff",
-    "opponent_used_tera_minus_own",
-    "active_attack_boost_diff",
-    "active_defense_boost_diff",
-    "active_special_attack_boost_diff",
-    "active_special_defense_boost_diff",
-    "active_speed_boost_diff",
-    "screen_score_diff",
-    "opponent_hazard_score_minus_own",
-    "active_stat_total_diff",
-    "team_stat_total_diff",
-    "substitute_diff",
-    # enriched features (added for feature-ceiling test)
-    "log2_s1_stab_vs_s2",
-    "log2_s2_stab_vs_s1",
-    "log2_s1_bestmove_vs_s2",
-    "log2_s2_bestmove_vs_s1",
-    "s1_has_se_stab",
-    "s2_has_se_stab",
-    "s1_speed_advantage",
-    "s1_outspeeds",
+    "hp_frac_diff",                  # 0  side total HP fraction (s1 - s2)
+    "alive_frac_diff",               # 1  alive count fraction (s1 - s2)
+    "active_hp_frac_diff",           # 2  active mon HP fraction (s1 - s2)
+    "status_frac_diff",              # 3  opponent status frac - own (s2 - s1)
+    "attack_boost_diff",             # 4  (s1 - s2) / 6
+    "defense_boost_diff",            # 5  (s1 - s2) / 6
+    "special_attack_boost_diff",     # 6  (s1 - s2) / 6  [= special in gen1]
+    "speed_boost_diff",              # 7  (s1 - s2) / 6
+    "sub_diff",                      # 8  s1_has_sub - s2_has_sub
+    "active_stat_total_diff",        # 9  active mon total stats normalized
+    "team_stat_total_diff",          # 10 team total stats normalized
+    "type_adv",                      # 11 log2(s1_best_type_vs_s2) - log2(s2_best_type_vs_s1)
 ]
 
 STAT_KEYS = {
