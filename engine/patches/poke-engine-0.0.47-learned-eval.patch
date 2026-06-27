@@ -1,7 +1,7 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
 +++ b/src/learned_value.rs	2026-06-26 00:00:00
-@@ -0,0 +1,328 @@
+@@ -0,0 +1,349 @@
 +use crate::choices::{Choices, MoveCategory};
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
 +use std::env;
@@ -50,6 +50,27 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +    let features = extract_features(state);
 +    let logit = model.predict(&features);
 +    Some(sigmoid(logit).clamp(0.0, 1.0))
++}
++
++/// Raw logit from the model (before sigmoid). Used for root-centered evaluation.
++pub fn learned_logit(state: &State) -> Option<f32> {
++    let model = model()?;
++    let features = extract_features(state);
++    Some(model.predict(&features))
++}
++
++/// Standard (unscaled) sigmoid for use with learned logits.
++/// mcts.rs uses a *scaled* sigmoid (0.0125 factor) tuned for hand eval units
++/// (~200 range). Learned model logits are in [-4, 4] so we need the real sigmoid.
++pub fn standard_sigmoid(x: f32) -> f32 {
++    1.0 / (1.0 + (-x).exp())
++}
++
++/// Root-centered value for MCTS: standard_sigmoid(leaf_logit - root_logit).
++/// Analogous to the hand eval's sigmoid(eval - root_eval) but in logit space.
++pub fn learned_rollout_value(state: &State, root_logit: f32) -> Option<f32> {
++    let logit = learned_logit(state)?;
++    Some(standard_sigmoid(logit - root_logit).clamp(0.0, 1.0))
 +}
 +
 +pub fn extract_features_vec(state: &State) -> Vec<f32> {
@@ -348,7 +369,7 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
  use crate::engine::generate_instructions::generate_instructions_from_move_pair;
  use crate::engine::state::MoveChoice;
  use crate::instruction::StateInstructions;
-+use crate::learned_value::{learned_eval_enabled, learned_value};
++use crate::learned_value::{learned_logit, learned_rollout_value};
  use crate::state::State;
  use rand::distr::weighted::WeightedIndex;
  use rand::prelude::*;
@@ -356,7 +377,7 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
      pub fn rollout(&mut self, state: &mut State, root_eval: &f32) -> f32 {
          let battle_is_over = state.battle_is_over();
          if battle_is_over == 0.0 {
-+            if let Some(value) = learned_value(state) {
++            if let Some(value) = learned_rollout_value(state, *root_eval) {
 +                return value;
 +            }
              let eval = evaluate(state);
@@ -367,7 +388,7 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
      let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
  
 -    let root_eval = evaluate(state);
-+    let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
++    let root_eval = if let Some(logit) = learned_logit(state) { logit } else { evaluate(state) };
      let search_limit = if max_iterations > 0 {
          SearchLimit::Iterations(max_iterations)
      } else {
