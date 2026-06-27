@@ -1,0 +1,28 @@
+{
+  "n_train": 9603157,
+  "n_held": 1067017,
+  "base_rate": 0.49255165457725525,
+  "train_bce": 0.6039069294929504,
+  "held_bce": 0.6037740111351013,
+  "held_brier": 0.2096642702817917,
+  "held_accuracy": 0.6542754239154578,
+  "feature_names": [
+    "hp_frac_diff",
+    "alive_frac_diff",
+    "active_hp_frac_diff",
+    "status_frac_diff",
+    "attack_boost_diff",
+    "defense_boost_diff",
+    "special_attack_boost_diff",
+    "speed_boost_diff",
+    "sub_diff",
+    "active_stat_total_diff",
+    "team_stat_total_diff",
+    "type_adv"
+  ],
+  "arch": {
+    "h1": 32,
+    "h2": 16
+  },
+  "source": "metamon_gen1ou_human_replays_bc"
+}
