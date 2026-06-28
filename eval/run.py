@@ -175,8 +175,15 @@ def foul_play_command(
     username: str,
     bot_mode: str,
     user_to_challenge: Optional[str],
+    slot: Optional[str] = None,
 ) -> list[str]:
-    python_bin = Path(args.foul_play_python)
+    # Per-slot Python binary override (for A/B testing different poke-engine builds)
+    if slot == "agent_a" and getattr(args, "agent_a_python", None):
+        python_bin = Path(args.agent_a_python)
+    elif slot == "agent_b" and getattr(args, "agent_b_python", None):
+        python_bin = Path(args.agent_b_python)
+    else:
+        python_bin = Path(args.foul_play_python)
     runner = ROOT_DIR / "scripts" / "run_foul_play.py"
     cmd = [
         str(python_bin),
@@ -249,11 +256,12 @@ async def start_foul_play(
     user_to_challenge: Optional[str],
     log_dir: Path,
     model_override: Optional[str] = None,
+    slot: Optional[str] = None,
 ) -> tuple[asyncio.subprocess.Process, Path, object]:
     log_path = log_dir / f"{username}.log"
     log_file = log_path.open("w", encoding="utf-8")
     proc = await asyncio.create_subprocess_exec(
-        *foul_play_command(args, server_configuration, username, bot_mode, user_to_challenge),
+        *foul_play_command(args, server_configuration, username, bot_mode, user_to_challenge, slot=slot),
         stdout=log_file,
         stderr=asyncio.subprocess.STDOUT,
         cwd=ROOT_DIR,
@@ -582,6 +590,7 @@ async def play_foul_play_vs_foul_play(
         None,
         log_dir,
         model_override=model_for_slot(args, acceptor_slot),
+        slot=acceptor_slot,
     )
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     challenger_proc, challenger_log_path, challenger_log_file = await start_foul_play(
@@ -593,6 +602,7 @@ async def play_foul_play_vs_foul_play(
         acceptor_username,
         log_dir,
         model_override=model_for_slot(args, challenger_slot),
+        slot=challenger_slot,
     )
 
     acceptor_task = asyncio.create_task(
@@ -943,6 +953,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--log-dir", default=None)
     parser.add_argument("--fail-fast", action="store_true")
     parser.add_argument("--foul-play-python", default=str(ROOT_DIR / ".venv-foul-play" / "bin" / "python"))
+    parser.add_argument("--agent-a-python", default=None,
+                        help="Override Python binary for agent-a (for testing different poke-engine builds)")
+    parser.add_argument("--agent-b-python", default=None,
+                        help="Override Python binary for agent-b")
     parser.add_argument("--learned-value-model", default=None)
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")
