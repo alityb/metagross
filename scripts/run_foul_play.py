@@ -42,6 +42,47 @@ def patch_foul_play_protocol_bugs() -> None:
 
     battle_module.Battler._initialize_user_active_from_request_json = _safe_init_active
 
+    # Gen1 speed range patch: check_speed_ranges looks up the last selected move
+    # in all_move_json, but "nomove" (no move selected at game start / forced switch)
+    # is not in the moves database. Patch to skip gracefully.
+    import fp.battle_modifier as battle_modifier_module
+    _orig_check_speed = battle_modifier_module.check_speed_ranges
+
+    def _safe_check_speed(battle, msg_lines):
+        try:
+            _orig_check_speed(battle, msg_lines)
+        except (KeyError, AttributeError, TypeError):
+            pass
+
+    battle_modifier_module.check_speed_ranges = _safe_check_speed
+
+    # Local-server login bypass: FP's login() always calls play.pokemonshowdown.com
+    # to get an assertion token, which fails with no network or on local-only machines.
+    # For local Showdown servers (--no-security), any assertion string works including
+    # the raw challstr itself. Detect local server from sys.argv since FoulPlayConfig
+    # may not be initialized yet at patch time.
+    import sys as _sys
+    _ws_uri = next((a for i, a in enumerate(_sys.argv)
+                    if i > 0 and _sys.argv[i-1] == "--websocket-uri"), "")
+    if "localhost" in _ws_uri or "127.0.0.1" in _ws_uri:
+        import asyncio as _asyncio
+        import fp.websocket_client as ws_client2
+
+        _orig_login = ws_client2.PSWebsocketClient.login
+
+        async def _local_login(self):
+            import logging as _lg
+            _lg.getLogger("fp.local_login").info("Logging in (local server bypass)...")
+            _client_id, _challstr = await self.get_id_and_challstr()
+            # With --no-security (noguestsecurity), Showdown accepts empty assertion.
+            # Sending the raw challstr as assertion fails validation; empty string works.
+            await self.send_message("", [f"/trn {self.username},0,"])
+            _lg.getLogger("fp.local_login").info("Successfully logged in")
+            await _asyncio.sleep(2)
+            return self.username
+
+        ws_client2.PSWebsocketClient.login = _local_login
+
     # Disable websocket keepalive pings so the long MCTS subprocess
     # doesn't cause a keepalive timeout during search.
     import websockets

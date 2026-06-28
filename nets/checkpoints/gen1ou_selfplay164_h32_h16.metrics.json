@@ -1,0 +1,9 @@
+{
+  "n_battles": 148,
+  "n_train": 17649,
+  "n_held": 1613,
+  "base_rate": 0.4922504723072052,
+  "held_brier": 0.23853716254234314,
+  "held_accuracy": 0.5598264104153751,
+  "source": "gen1ou_selfplay_164games_exact_features"
+}
