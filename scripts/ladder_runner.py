@@ -96,6 +96,7 @@ async def run_one_game(
     model_path: Optional[str],
     logger: logging.Logger,
     game_index: int,
+    pokemon_format: str = "gen9randombattle",
 ) -> dict:
     """
     Run one Foul Play search_ladder game via subprocess.
@@ -115,7 +116,7 @@ async def run_one_game(
         "--websocket-uri", LIVE_URI,
         "--ps-username", username,
         "--bot-mode", "search_ladder",
-        "--pokemon-format", "gen9randombattle",
+        "--pokemon-format", pokemon_format,
         "--run-count", "1",
         "--search-time-ms", str(search_time_ms),
         "--search-parallelism", "1",
@@ -222,6 +223,7 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
             model_path=args.learned_value_model,
             logger=logger,
             game_index=game_index,
+            pokemon_format=getattr(args, 'pokemon_format', 'gen9randombattle'),
         )
 
         record["username"] = args.username
@@ -289,6 +291,7 @@ def main() -> None:
     parser.add_argument("--n-games", type=int, default=200)
     parser.add_argument("--search-time-ms", type=int, default=100)
     parser.add_argument("--learned-value-model", default=None)
+    parser.add_argument("--pokemon-format", default="gen9randombattle")
     parser.add_argument("--log-file", required=True, help="Append-only log file path")
     parser.add_argument("--run-count-start", type=int, default=0,
                         help="Game index to start from (for resuming)")
