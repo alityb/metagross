@@ -37,7 +37,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 FOUL_PLAY_DIR = ROOT_DIR / "external" / "foul-play"
 VENV_PY = ROOT_DIR / ".venv-foul-play" / "bin" / "python"
 LIVE_URI = "wss://sim3.psim.us/showdown/websocket"
-GAME_TIMEOUT_MINUTES = 20
+GAME_TIMEOUT_MINUTES = 45  # gen1ou endgames can involve Rest/Recover stalls
 CHECKPOINT_EVERY = 20
 BACKOFF_BASE = 30  # seconds before retry on connection error
 BACKOFF_MAX = 300
@@ -212,6 +212,12 @@ async def run_one_game(
                         elo_m = re.search(r"<strong>(\d+)</strong>", decoded)
                         if elo_m:
                             record["elo_after"] = int(elo_m.group(1))
+                        # Fallback result detection from rating line when Winner: was missed
+                        if record.get("result") is None:
+                            if "for winning" in decoded:
+                                record["result"] = "win"
+                            elif "for losing" in decoded or "for tying" in decoded:
+                                record["result"] = "loss"
             elif "W:" in decoded and "L:" in decoded:
                 pass  # aggregate counts, not per-game
 

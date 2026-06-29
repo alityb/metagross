@@ -1,7 +1,7 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
 +++ b/src/learned_value.rs	2026-06-28 00:00:00
-@@ -0,0 +1,426 @@
+@@ -0,0 +1,432 @@
 +use crate::choices::{Choices, MoveCategory};
 +use crate::engine::state::MoveChoice;
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
@@ -280,16 +280,22 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +        }
 +    }).collect();
 +
-+    // Softmax — no temperature scaling (T=1), just normalize
-+    let max_s = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-+    let exps: Vec<f32> = scores.iter().map(|s| (s - max_s).exp()).collect();
-+    let sum_e: f32 = exps.iter().sum();
++    // Direct proportional normalization (NO softmax/exp).
++    // Raw scores are in [15, 225] range — softmax would collapse to degenerate
++    // distribution (100% on highest-power move). Direct normalization gives
++    // sensible priors: Hyper Beam ~36%, Body Slam ~19%, Status ~6%, etc.
++    // Use sqrt-scaling to compress the spread further (more uniform exploration).
++
++
++    // Sqrt-scale then normalize
++    let sqrt_scores: Vec<f32> = scores.iter().map(|s| s.sqrt()).collect();
++    let sum_e: f32 = sqrt_scores.iter().sum();
 +    if sum_e <= 0.0 {
 +        // Fallback: uniform
 +        let u = 1.0 / choices.len() as f32;
 +        return vec![u; choices.len()];
 +    }
-+    exps.iter().map(|e| e / sum_e).collect()
++    sqrt_scores.iter().map(|e| e / sum_e).collect()
 +}
 +
 +// ── Gen1 type chart ────────────────────────────────────────────────────────────
