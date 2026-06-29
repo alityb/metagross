@@ -25,6 +25,7 @@ import os
 import re
 import sys
 import time
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -87,6 +88,26 @@ def parse_rating_line(raw_line: str) -> tuple[Optional[int], Optional[float]]:
     gxe_match = re.search(r"GXE:\s*([\d.]+)", raw_line)
     gxe = float(gxe_match.group(1)) if gxe_match else None
     return elo, gxe
+
+
+def fetch_gxe(username: str, pokemon_format: str) -> Optional[float]:
+    """Fetch GXE from the PS user profile API.
+
+    Endpoint: https://pokemonshowdown.com/users/{user_id}.json
+    Returns the GXE for the given format, or None on failure.
+    Only works for registered accounts with enough rated games.
+    """
+    try:
+        user_id = re.sub(r"[^a-z0-9]", "", username.lower())
+        url = f"https://pokemonshowdown.com/users/{user_id}.json"
+        req = urllib.request.Request(url, headers={"User-Agent": "metagross-ladder/0.1"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        rating = data.get("ratings", {}).get(pokemon_format, {})
+        gxe = rating.get("gxe")
+        return float(gxe) if gxe is not None else None
+    except Exception:
+        return None
 
 
 async def run_one_game(
@@ -176,15 +197,21 @@ async def run_one_game(
             elif "Winner:" in decoded:
                 winner = decoded.split("Winner:")[-1].strip()
                 record["result"] = "win" if winner == username else "loss"
-            elif "|raw|" in decoded or "&rarr;" in decoded or "rating:" in decoded.lower():
-                # Rating line: "metagrass1's rating: 1000 → <strong>1041</strong>"
-                # Or logged as: "INFO     |raw|metagrass1's rating: 1000 &rarr; <strong>1041</strong>"
-                elo_m = re.search(r"<strong>(\d+)</strong>", decoded)
-                if elo_m:
-                    record["elo_after"] = int(elo_m.group(1))
-                gxe_m = re.search(r"GXE:\s*([\d.]+)", decoded)
-                if gxe_m:
-                    record["gxe_after"] = float(gxe_m.group(1))
+            elif "|raw|" in decoded or "&rarr;" in decoded:
+                # Rating line format (both local and live server):
+                #   "USERNAME's rating: OLD &rarr; <strong>NEW</strong><br />(+N for winning)"
+                # The server sends BOTH players' rating lines.  We must only
+                # extract the ELO from lines that contain OUR username.
+                # Match is case-insensitive because PS normalises to lowercase IDs.
+                username_id = re.sub(r"[^a-z0-9]", "", username.lower())
+                # Extract the name before "'s rating:"
+                name_m = re.search(r"([A-Za-z0-9 _-]+)'s rating:", decoded)
+                if name_m:
+                    line_owner_id = re.sub(r"[^a-z0-9]", "", name_m.group(1).lower())
+                    if line_owner_id == username_id:
+                        elo_m = re.search(r"<strong>(\d+)</strong>", decoded)
+                        if elo_m:
+                            record["elo_after"] = int(elo_m.group(1))
             elif "W:" in decoded and "L:" in decoded:
                 pass  # aggregate counts, not per-game
 
@@ -200,6 +227,14 @@ async def run_one_game(
         logger.error("Exception in game=%d: %s", game_index, exc)
 
     record["duration_s"] = round(time.time() - t0, 1)
+
+    # Fetch GXE from the PS API (only meaningful for registered accounts
+    # after Glicko-RD has converged, typically 30+ rated games).
+    if not record.get("error") and password:
+        gxe = fetch_gxe(username, pokemon_format)
+        if gxe is not None:
+            record["gxe_after"] = gxe
+
     return record
 
 

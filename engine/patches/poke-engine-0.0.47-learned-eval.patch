@@ -1,8 +1,9 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
 +++ b/src/learned_value.rs	2026-06-28 00:00:00
-@@ -0,0 +1,349 @@
+@@ -0,0 +1,426 @@
 +use crate::choices::{Choices, MoveCategory};
++use crate::engine::state::MoveChoice;
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
 +use std::env;
 +use std::fs;
@@ -215,6 +216,82 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +
 +fn sigmoid(x: f32) -> f32 { 1.0 / (1.0 + (-x).exp()) }
 +
++// ── Policy prior for PUCT ─────────────────────────────────────────────────────
++//
++// AlphaGo/AlphaZero key insight: PUCT = Q(s,a) + c_puct * P(a|s) * sqrt(N) / (1+n_a)
++// The prior P(a|s) guides initial exploration toward promising moves.
++// Without a prior (uniform P), all moves get equal initial exploration.
++// With a strong prior, the search focuses on promising moves earlier.
++//
++// Phase 1 (now): Computed prior from domain knowledge (base_power, STAB, type matchup)
++// Phase 2 (expert iteration): Replace with a trained policy network
++//
++// The `METAGROSS_POLICY_MODEL` env var will trigger the learned prior when set.
++// Until then, the computed prior provides a meaningful non-uniform initialization.
++
++/// Score for a single move choice — unnormalized prior logit.
++fn prior_score_for_move(active: &Pokemon, choice: &MoveChoice) -> f32 {
++    match choice {
++        MoveChoice::Move(mv_idx) => {
++            let mv = &active.moves[mv_idx];
++            if mv.id == Choices::NONE || mv.pp <= 0 { return 0.0; }
++            let bp = mv.choice.base_power;
++            if mv.choice.category == MoveCategory::Status || bp <= 0.0 {
++                // Status moves (Thunder Wave, Sleep Powder, etc.): meaningful but not high-power
++                // Give them a fixed score so they compete with weak attacks
++                15.0
++            } else {
++                // Offensive move: base_power * STAB
++                let stab = if active.types.0 == mv.choice.move_type
++                    || active.types.1 == mv.choice.move_type
++                    { 1.5 } else { 1.0 };
++                bp * stab
++            }
++        }
++        MoveChoice::Switch(sw_idx) => {
++            // Switching is important; give a meaningful base score
++            // Scale by HP fraction of the switched-in mon so we prefer healthy mons
++            // (the pokemon array is on the Side, not passed here, so use flat score)
++            40.0  // Will be adjusted in compute_move_priors which has the full Side
++        }
++        MoveChoice::None => 5.0,
++    }
++}
++
++/// Compute softmax prior probabilities over a list of MoveChoices for one side.
++/// Returns probabilities summing to 1.0, indexed parallel to `choices`.
++/// This is P(a|s) for PUCT.  Currently computed from domain knowledge;
++/// will be replaced by a policy network in the expert-iteration phase.
++pub fn compute_move_priors(side: &Side, choices: &[MoveChoice]) -> Vec<f32> {
++    if choices.is_empty() { return vec![]; }
++    let active = &side.pokemon[side.active_index];
++    let mut scores: Vec<f32> = choices.iter().map(|c| {
++        match c {
++            MoveChoice::Switch(sw_idx) => {
++                let target = &side.pokemon[*sw_idx];
++                if target.hp == 0 { 0.001 }  // near-zero for fainted mons
++                else {
++                    let hp_frac = target.hp as f32 / target.maxhp.max(1) as f32;
++                    // Switching into a healthy mon is valuable
++                    40.0 * hp_frac
++                }
++            }
++            other => prior_score_for_move(active, other).max(0.001),
++        }
++    }).collect();
++
++    // Softmax — no temperature scaling (T=1), just normalize
++    let max_s = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
++    let exps: Vec<f32> = scores.iter().map(|s| (s - max_s).exp()).collect();
++    let sum_e: f32 = exps.iter().sum();
++    if sum_e <= 0.0 {
++        // Fallback: uniform
++        let u = 1.0 / choices.len() as f32;
++        return vec![u; choices.len()];
++    }
++    exps.iter().map(|e| e / sum_e).collect()
++}
++
 +// ── Gen1 type chart ────────────────────────────────────────────────────────────
 +// Notable gen1 differences from later gens:
 +//   Ghost has NO effect on Psychic (gen1 bug → 0.0)
@@ -369,11 +446,169 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
  use crate::engine::generate_instructions::generate_instructions_from_move_pair;
  use crate::engine::state::MoveChoice;
  use crate::instruction::StateInstructions;
-+use crate::learned_value::{learned_logit, learned_rollout_value};
++use crate::learned_value::{compute_move_priors, learned_logit, learned_rollout_value};
  use crate::state::State;
  use rand::distr::weighted::WeightedIndex;
  use rand::prelude::*;
-@@ -180,6 +181,9 @@
+@@ -14,19 +15,29 @@
+     1.0 / (1.0 + (-0.0125 * x).exp())
+ }
+ 
++// ── PUCT constant ─────────────────────────────────────────────────────────────
++// PUCT = Q(s,a) + c_puct * P(a|s) * sqrt(N) / (1 + n_a)
++//
++// AlphaGo uses c_puct = 5.0 for large networks.  Our computed prior is weaker
++// than a trained policy network, so we use a smaller c_puct = 2.0 to avoid
++// over-trusting the prior.  This will be tuned once we have a trained policy.
++//
++// With c_puct=0: pure Q-based selection (ignores prior — same as UCB with Q)
++// With c_puct=∞: pure prior-based (ignores Q — pure policy without search)
++// c_puct=2.0: balanced, lets the Q-values quickly dominate after a few visits
++//             while ensuring high-prior moves get explored early.
++const PUCT_C: f32 = 2.0;
++
+ #[derive(Debug)]
+ pub struct Node {
+     pub root: bool,
+     pub parent: *mut Node,
+     pub times_visited: u32,
+ 
+-    // represents the instructions & s1/s2 moves that led to this node from the parent
+     pub instructions: StateInstructions,
+     pub s1_choice: u8,
+     pub s2_choice: u8,
+ 
+-    // represents the total score and number of visits for this node
+-    // de-coupled for s1 and s2
+     pub s1_options: Option<Vec<MoveNode>>,
+     pub s2_options: Option<Vec<MoveNode>>,
+ }
+@@ -44,39 +55,59 @@
+             s2_options: None,
+         }
+     }
+-    unsafe fn populate(&mut self, s1_options: Vec<MoveChoice>, s2_options: Vec<MoveChoice>) {
+-        let s1_options_vec: Vec<MoveNode> = s1_options
+-            .iter()
+-            .map(|x| MoveNode {
+-                move_choice: x.clone(),
++
++    unsafe fn populate(&mut self, s1_options: Vec<MoveChoice>, s2_options: Vec<MoveChoice>, state: &State) {
++        // Compute policy priors for both sides at node creation time.
++        // This is O(K) once per node; priors are frozen after creation.
++        let s1_priors = compute_move_priors(&state.side_one, &s1_options);
++        let s2_priors = compute_move_priors(&state.side_two, &s2_options);
++
++        let s1_vec: Vec<MoveNode> = s1_options.iter().zip(s1_priors.iter())
++            .map(|(mc, &prior)| MoveNode {
++                move_choice: mc.clone(),
+                 total_score: 0.0,
+                 visits: 0,
++                prior,
+             })
+             .collect();
+-        let s2_options_vec: Vec<MoveNode> = s2_options
+-            .iter()
+-            .map(|x| MoveNode {
+-                move_choice: x.clone(),
++        let s2_vec: Vec<MoveNode> = s2_options.iter().zip(s2_priors.iter())
++            .map(|(mc, &prior)| MoveNode {
++                move_choice: mc.clone(),
+                 total_score: 0.0,
+                 visits: 0,
++                prior,
+             })
+             .collect();
+ 
+-        self.s1_options = Some(s1_options_vec);
+-        self.s2_options = Some(s2_options_vec);
++        self.s1_options = Some(s1_vec);
++        self.s2_options = Some(s2_vec);
+     }
+ 
+-    pub fn maximize_ucb_for_side(&self, side_map: &[MoveNode]) -> usize {
+-        let mut choice = 0;
+-        let mut best_ucb1 = f32::MIN;
+-        for (index, node) in side_map.iter().enumerate() {
+-            let this_ucb1 = node.ucb1(self.times_visited);
+-            if this_ucb1 > best_ucb1 {
+-                best_ucb1 = this_ucb1;
+-                choice = index;
++    /// PUCT selection: argmax of Q(s,a) + c_puct * P(a|s) * sqrt(N) / (1 + n_a)
++    /// This is AlphaGo's selection rule — it balances exploitation (Q) and
++    /// exploration guided by the policy prior (P).
++    pub fn maximize_puct_for_side(&self, side_map: &[MoveNode]) -> usize {
++        let n_total = self.times_visited as f32;
++        let sqrt_n = n_total.sqrt().max(1.0);
++
++        let mut best_idx = 0;
++        let mut best_puct = f32::NEG_INFINITY;
++
++        for (i, node) in side_map.iter().enumerate() {
++            let q = if node.visits == 0 {
++                0.5  // Neutral prior Q for unvisited nodes
++            } else {
++                node.total_score / node.visits as f32
++            };
++            // PUCT bonus: higher for high-prior unvisited moves
++            let u = PUCT_C * node.prior * sqrt_n / (1.0 + node.visits as f32);
++            let puct = q + u;
++            if puct > best_puct {
++                best_puct = puct;
++                best_idx = i;
+             }
+         }
+-        choice
++        best_idx
+     }
+ 
+     pub unsafe fn selection(
+@@ -86,11 +117,11 @@
+     ) -> (*mut Node, usize, usize) {
+         if self.s1_options.is_none() {
+             let (s1_options, s2_options) = state.get_all_options();
+-            self.populate(s1_options, s2_options);
++            self.populate(s1_options, s2_options, state);
+         }
+ 
+-        let s1_mc_index = self.maximize_ucb_for_side(self.s1_options.as_ref().unwrap());
+-        let s2_mc_index = self.maximize_ucb_for_side(self.s2_options.as_ref().unwrap());
++        let s1_mc_index = self.maximize_puct_for_side(self.s1_options.as_ref().unwrap());
++        let s2_mc_index = self.maximize_puct_for_side(self.s2_options.as_ref().unwrap());
+         let key = (self as *mut Node as usize, s1_mc_index, s2_mc_index);
+         match children.get_mut(&key) {
+             Some(child_vector) => {
+@@ -111,8 +142,7 @@
+             .collect();
+         let dist = WeightedIndex::new(weights).unwrap();
+         let chosen_node = &mut (&mut *move_vector)[dist.sample(&mut rng)];
+-        let chosen_node_ptr = chosen_node as *mut Node;
+-        chosen_node_ptr
++        chosen_node as *mut Node
+     }
+ 
+     pub unsafe fn expand(
+@@ -124,7 +154,6 @@
+     ) -> *mut Node {
+         let s1_move = &self.s1_options.as_ref().unwrap()[s1_move_index].move_choice;
+         let s2_move = &self.s2_options.as_ref().unwrap()[s2_move_index].move_choice;
+-        // if the battle is over or both moves are none there is no need to expand
+         if (state.battle_is_over() != 0.0 && !self.root)
+             || (s1_move == &MoveChoice::None && s2_move == &MoveChoice::None)
+         {
+@@ -143,11 +172,6 @@
+             this_pair_vec.push(new_node);
+         }
+ 
+-        // sample a node from the new instruction list.
+-        // this is the node that the rollout will be done on.
+-        // into_boxed_slice drops the Vec's spare capacity and, more importantly,
+-        // makes it a type that cannot be resized, which ensures the node
+-        // addresses are stable for the children map keys
+         let mut boxed = this_pair_vec.into_boxed_slice();
+         let new_node_ptr = self.sample_node(&mut boxed);
+         state.apply_instructions(&(*new_node_ptr).instructions.instruction_list);
+@@ -180,6 +204,9 @@
      pub fn rollout(&mut self, state: &mut State, root_eval: &f32) -> f32 {
          let battle_is_over = state.battle_is_over();
          if battle_is_over == 0.0 {
@@ -383,7 +618,53 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
              let eval = evaluate(state);
              sigmoid(eval - root_eval)
          } else {
-@@ -298,7 +302,11 @@
+@@ -197,6 +224,9 @@
+     pub move_choice: MoveChoice,
+     pub total_score: f32,
+     pub visits: u32,
++    /// Policy prior P(a|s) for PUCT.  Computed at node creation from domain
++    /// knowledge (base_power, STAB); later replaced by a trained policy net.
++    pub prior: f32,
+ }
+ 
+ impl MoveNode {
+@@ -204,13 +234,14 @@
+         if self.visits == 0 {
+             return f32::INFINITY;
+         }
+-        let score = (self.total_score / self.visits as f32)
+-            + (2.0 * (parent_visits as f32).ln() / self.visits as f32).sqrt();
+-        score
++        (self.total_score / self.visits as f32)
++            + (2.0 * (parent_visits as f32).ln() / self.visits as f32).sqrt()
+     }
+     pub fn average_score(&self) -> f32 {
+-        let score = self.total_score / self.visits as f32;
+-        score
++        if self.visits == 0 {
++            return 0.0;
++        }
++        self.total_score / self.visits as f32
+     }
+ }
+ 
+@@ -226,8 +257,7 @@
+         if self.visits == 0 {
+             return 0.0;
+         }
+-        let score = self.total_score / self.visits as f32;
+-        score
++        self.total_score / self.visits as f32
+     }
+ }
+ 
+@@ -293,12 +323,16 @@
+ ) -> MctsResult {
+     let mut root_node = Node::new();
+     unsafe {
+-        root_node.populate(side_one_options, side_two_options);
++        root_node.populate(side_one_options, side_two_options, state);
+     }
      root_node.root = true;
      let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
  
