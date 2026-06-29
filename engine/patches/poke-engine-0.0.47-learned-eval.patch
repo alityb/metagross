@@ -1,7 +1,7 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
 +++ b/src/learned_value.rs	2026-06-29 00:00:00
-@@ -0,0 +1,578 @@
+@@ -0,0 +1,630 @@
 +use crate::choices::{Choices, MoveCategory};
 +use crate::engine::state::MoveChoice;
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
@@ -9,7 +9,7 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +use std::fs;
 +use std::sync::OnceLock;
 +
-+// Gen1-appropriate feature set (no items, no abilities, no tera, no weather/terrain)
++// Gen1 feature set — 14 features capturing what the hand eval misses
 +//
 +//  0  hp_frac_diff              side total HP fraction (s1 - s2)
 +//  1  alive_frac_diff           alive count fraction (s1 - s2)
@@ -22,8 +22,10 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +//  8  sub_diff                  s1_has_sub - s2_has_sub
 +//  9  active_stat_total_diff    active mon total stats normalized
 +// 10  team_stat_total_diff      team total stats normalized
-+// 11  type_adv                  log2(s1_best_stab_vs_s2) - log2(s2_best_stab_vs_s1)
-+const FEATURE_COUNT: usize = 12;
++// 11  damage_ratio_diff         (s1_best_dmg/s2_hp - s2_best_dmg/s1_hp) — KO proximity
++// 12  speed_diff                (s1_eff_speed - s2_eff_speed) / 500 — who goes first
++// 13  outspeeds                 +1 if s1 faster, -1 if s2 faster, 0 if tied
++const FEATURE_COUNT: usize = 14;
 +
 +#[derive(Debug)]
 +enum LearnedValueModel {
@@ -551,33 +553,83 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +        .sum::<f32>() / 6000.0
 +}
 +
-+// ── Main feature extractor: returns [f32; 12] ─────────────────────────────────
++// ── Speed helpers ─────────────────────────────────────────────────────────────
++fn speed_boost_mult(boost: i8) -> f32 {
++    match boost {
++        6=>4.0, 5=>3.5, 4=>3.0, 3=>2.5, 2=>2.0, 1=>1.5,
++        0=>1.0,
++        -1=>2.0/3.0, -2=>0.5, -3=>0.4, -4=>1.0/3.0, -5=>2.0/7.0, -6=>0.25,
++        _=>1.0,
++    }
++}
++
++fn effective_speed(side: &Side) -> f32 {
++    let active = &side.pokemon[side.active_index];
++    active.speed as f32 * speed_boost_mult(side.speed_boost)
++}
++
++/// Best estimated damage fraction vs defender's current HP.
++/// Uses base_power × type_mult as a proxy for actual damage.
++/// Returns [0, 2.0] where >1.0 means likely OHKO.
++fn best_damage_fraction(attacker: &Pokemon, defender: &Pokemon) -> f32 {
++    if defender.hp == 0 { return 0.0; }
++    let def_hp = defender.hp as f32;
++    let mut best = 0.0f32;
++    for mv in attacker.moves.into_iter() {
++        if mv.id == Choices::NONE || mv.choice.category == MoveCategory::Status { continue; }
++        if mv.choice.base_power <= 0.0 { continue; }
++        let type_mult = gen1_effective_mult(mv.choice.move_type, defender);
++        if type_mult == 0.0 { continue; }
++        // Rough damage estimate: base_power * type_mult * atk/def proxy
++        let atk = if mv.choice.category == MoveCategory::Physical {
++            attacker.attack as f32
++        } else {
++            attacker.special_attack as f32
++        };
++        let def_stat = if mv.choice.category == MoveCategory::Physical {
++            defender.defense as f32
++        } else {
++            defender.special_defense as f32
++        };
++        let dmg = mv.choice.base_power * type_mult * (atk / def_stat.max(1.0)) / 5.0;
++        if dmg > best { best = dmg; }
++    }
++    (best / def_hp.max(1.0)).clamp(0.0, 2.0)
++}
++
++// ── Main feature extractor: returns [f32; 14] ─────────────────────────────────
 +fn extract_features(state: &State) -> [f32; FEATURE_COUNT] {
 +    let s1 = &state.side_one; let s2 = &state.side_two;
 +    let a1 = &s1.pokemon[s1.active_index]; let a2 = &s2.pokemon[s2.active_index];
 +
-+    let s1_stab = gen1_stab_best_mult(a1, a2);
-+    let s2_stab = gen1_stab_best_mult(a2, a1);
-+    let s1_move = gen1_move_best_mult(a1, a2);
-+    let s2_move = gen1_move_best_mult(a2, a1);
-+    // type_adv: positive = s1 has type advantage over s2
-+    let type_adv = (log2_type_mult(s1_stab.max(s1_move)) - log2_type_mult(s2_stab.max(s2_move)))
-+        .clamp(-2.0, 2.0);
++    // Features 11-13: what the hand eval misses
++    let s1_dmg = best_damage_fraction(a1, a2);
++    let s2_dmg = best_damage_fraction(a2, a1);
++    let damage_ratio_diff = (s1_dmg - s2_dmg).clamp(-2.0, 2.0);
++
++    let spd1 = effective_speed(s1);
++    let spd2 = effective_speed(s2);
++    let speed_diff = ((spd1 - spd2) / 500.0).clamp(-1.0, 1.0);
++    let outspeeds = if spd1 > spd2 * 1.001 { 1.0f32 }
++                    else if spd2 > spd1 * 1.001 { -1.0 }
++                    else { 0.0 };
 +
 +    [
-+        side_hp_fraction(s1) - side_hp_fraction(s2),
-+        side_alive_fraction(s1) - side_alive_fraction(s2),
-+        hp_fraction(a1) - hp_fraction(a2),
-+        side_status_fraction(s2) - side_status_fraction(s1),
-+        (s1.attack_boost - s2.attack_boost) as f32 / 6.0,
-+        (s1.defense_boost - s2.defense_boost) as f32 / 6.0,
-+        (s1.special_attack_boost - s2.special_attack_boost) as f32 / 6.0,
-+        (s1.speed_boost - s2.speed_boost) as f32 / 6.0,
++        side_hp_fraction(s1) - side_hp_fraction(s2),      // 0
++        side_alive_fraction(s1) - side_alive_fraction(s2), // 1
++        hp_fraction(a1) - hp_fraction(a2),                 // 2
++        side_status_fraction(s2) - side_status_fraction(s1), // 3
++        (s1.attack_boost - s2.attack_boost) as f32 / 6.0,  // 4
++        (s1.defense_boost - s2.defense_boost) as f32 / 6.0, // 5
++        (s1.special_attack_boost - s2.special_attack_boost) as f32 / 6.0, // 6
++        (s1.speed_boost - s2.speed_boost) as f32 / 6.0,    // 7
 +        if s1.substitute_health > 0 { 1.0 } else { 0.0 }
-+            - if s2.substitute_health > 0 { 1.0 } else { 0.0 },
-+        active_stat_total(s1) - active_stat_total(s2),
-+        team_stat_total(s1) - team_stat_total(s2),
-+        type_adv,
++            - if s2.substitute_health > 0 { 1.0 } else { 0.0 }, // 8
++        active_stat_total(s1) - active_stat_total(s2),     // 9
++        team_stat_total(s1) - team_stat_total(s2),          // 10
++        damage_ratio_diff,                                  // 11 NEW: KO proximity
++        speed_diff,                                         // 12 NEW: speed advantage
++        outspeeds,                                          // 13 NEW: turn order
 +    ]
 +}
 diff -ruN a/src/lib.rs b/src/lib.rs

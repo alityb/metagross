@@ -190,8 +190,6 @@ def patch_decision_logging() -> None:
                     }
                 )
             except Exception as exc:
-                import sys as _sys4
-                print(f"[LOGGING] feature_log_failed turn={battle.turn}: {type(exc).__name__}: {exc}", file=_sys4.stderr, flush=True)
                 pending_rows.append(
                     {
                         "battle_tag": getattr(battle, "battle_tag", None),
@@ -218,11 +216,8 @@ def patch_decision_logging() -> None:
             raise
 
     async def pokemon_battle_with_labels(ps_websocket_client, pokemon_battle_type, team_dict):
-        import sys as _sys3
         start_index = len(pending_rows)
-        print(f"[LOGGING] pokemon_battle_with_labels START pending={len(pending_rows)}", file=_sys3.stderr, flush=True)
         winner = await original_pokemon_battle(ps_websocket_client, pokemon_battle_type, team_dict)
-        print(f"[LOGGING] pokemon_battle_with_labels END pending={len(pending_rows)} start={start_index} winner={winner}", file=_sys3.stderr, flush=True)
         label = 1 if winner == config.FoulPlayConfig.username else 0
         with open(output_path, "a", encoding="utf-8") as handle:
             for row in pending_rows[start_index:]:
@@ -260,7 +255,6 @@ def patch_decision_logging() -> None:
         mod = _orig_builtin_import(name, *args, **kwargs)
         if name == 'run' and hasattr(mod, 'pokemon_battle') and \
                 mod.pokemon_battle is not pokemon_battle_with_labels:
-            print(f"[LOGGING] Patching run.pokemon_battle", flush=True)
             mod.pokemon_battle = pokemon_battle_with_labels
         return mod
     _builtins.__import__ = _import_hook

@@ -13,8 +13,8 @@ from typing import Iterable, Optional
 import numpy as np
 
 
-# Gen1-appropriate feature set (12 features).
-# Must match FEATURE_COUNT and extract_features() order in
+# Gen1 feature set (14 features) — includes speed/KO features the hand eval misses.
+# Must match FEATURE_COUNT and extract_features() in
 # engine/patches/poke-engine-0.0.47-learned-eval.patch.
 FEATURE_NAMES = [
     "hp_frac_diff",                  # 0  side total HP fraction (s1 - s2)
@@ -28,7 +28,9 @@ FEATURE_NAMES = [
     "sub_diff",                      # 8  s1_has_sub - s2_has_sub
     "active_stat_total_diff",        # 9  active mon total stats normalized
     "team_stat_total_diff",          # 10 team total stats normalized
-    "type_adv",                      # 11 log2(s1_best_type_vs_s2) - log2(s2_best_type_vs_s1)
+    "damage_ratio_diff",             # 11 NEW: (s1_best_dmg/s2_hp - s2_best_dmg/s1_hp)
+    "speed_diff",                    # 12 NEW: (s1_eff_speed - s2_eff_speed) / 500
+    "outspeeds",                     # 13 NEW: +1/-1/0 turn order
 ]
 
 STAT_KEYS = {
