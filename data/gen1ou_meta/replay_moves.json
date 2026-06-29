@@ -1,0 +1,163 @@
+{
+  "tauros": {
+    "bodyslam": 768,
+    "hyperbeam": 720,
+    "earthquake": 672,
+    "blizzard": 624,
+    "fireblast": 288
+  },
+  "snorlax": {
+    "bodyslam": 860,
+    "amnesia": 573,
+    "selfdestruct": 525,
+    "rest": 478,
+    "earthquake": 430,
+    "reflect": 286
+  },
+  "chansey": {
+    "softboiled": 785,
+    "thunderwave": 742,
+    "seismictoss": 698,
+    "icebeam": 523,
+    "reflect": 261
+  },
+  "exeggutor": {
+    "psychic": 596,
+    "sleeppowder": 561,
+    "explosion": 526,
+    "doubleedge": 280,
+    "hyperbeam": 245
+  },
+  "starmie": {
+    "recover": 513,
+    "thunderbolt": 456,
+    "surf": 399,
+    "blizzard": 342,
+    "thunderwave": 228
+  },
+  "alakazam": {
+    "psychic": 364,
+    "recover": 344,
+    "thunderwave": 324,
+    "seismictoss": 243,
+    "reflect": 121
+  },
+  "gengar": {
+    "thunderbolt": 219,
+    "hypnosis": 203,
+    "explosion": 187,
+    "nightshade": 156,
+    "seismictoss": 140
+  },
+  "zapdos": {
+    "thunderbolt": 228,
+    "thunderwave": 203,
+    "drillpeck": 152,
+    "hyperbeam": 101,
+    "agility": 76
+  },
+  "jynx": {
+    "lovelykiss": 191,
+    "blizzard": 170,
+    "psychic": 149,
+    "rest": 106,
+    "bodyslam": 85
+  },
+  "rhydon": {
+    "earthquake": 187,
+    "rockslide": 166,
+    "substitute": 124,
+    "bodyslam": 104,
+    "rest": 83
+  },
+  "cloyster": {
+    "blizzard": 150,
+    "explosion": 133,
+    "clamp": 100,
+    "surf": 83,
+    "icebeam": 66
+  },
+  "jolteon": {
+    "thunderbolt": 73,
+    "thunderwave": 57,
+    "doublekick": 49,
+    "pinmissile": 41
+  },
+  "slowbro": {
+    "amnesia": 36,
+    "surf": 32,
+    "thunderwave": 28,
+    "psychic": 24,
+    "rest": 20
+  },
+  "persian": {
+    "slash": 29,
+    "thunderbolt": 22,
+    "hyperbeam": 18,
+    "bubblebeam": 14
+  },
+  "lapras": {
+    "blizzard": 30,
+    "thunderbolt": 23,
+    "bodyslam": 20,
+    "surf": 17,
+    "sing": 13
+  },
+  "golem": {
+    "earthquake": 25,
+    "rockslide": 22,
+    "explosion": 19,
+    "bodyslam": 14
+  },
+  "pinsir": {
+    "swordsdance": 17,
+    "submission": 15,
+    "hyperbeam": 12,
+    "seismictoss": 10
+  },
+  "articuno": {
+    "blizzard": 21,
+    "hyperbeam": 14,
+    "agility": 12,
+    "icebeam": 9,
+    "reflect": 7
+  },
+  "victreebel": {
+    "sleeppowder": 12,
+    "razorleaf": 10,
+    "swordsdance": 9,
+    "hyperbeam": 6
+  },
+  "hypno": {
+    "amnesia": 9,
+    "psychic": 7,
+    "thunderwave": 6,
+    "hypnosis": 5,
+    "seismictoss": 3
+  },
+  "venusaur": {
+    "sleeppowder": 8,
+    "razorleaf": 7,
+    "swordsdance": 6,
+    "hyperbeam": 4
+  },
+  "dragonite": {
+    "wrap": 6,
+    "agility": 5,
+    "blizzard": 4,
+    "thunderwave": 3,
+    "hyperbeam": 3
+  },
+  "electrode": {
+    "thunderbolt": 5,
+    "thunderwave": 4,
+    "explosion": 4,
+    "screech": 2
+  },
+  "dugtrio": {
+    "earthquake": 5,
+    "rockslide": 4,
+    "sandattack": 3,
+    "slash": 2
+  }
+}
