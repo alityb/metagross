@@ -130,13 +130,47 @@ def patch_decision_logging() -> None:
 
     import config
     import fp.run_battle as run_battle
+    import fp.search.main as search_main
     import fp.search.poke_engine_helpers as poke_engine_helpers
+
+    # Guard: don't patch twice (would cause recursion in select_and_capture)
+    if getattr(search_main, "_metagross_patched", False):
+        return
+    search_main._metagross_patched = True
 
     output_path = str(Path(output_path).resolve())
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     pending_rows = []
     original_async_pick_move = run_battle.async_pick_move
     original_pokemon_battle = run_battle.pokemon_battle
+    original_select = search_main.select_move_from_mcts_results
+
+    import threading
+    _policy_store: dict = {}
+    _store_lock = threading.Lock()
+
+    def select_and_capture(mcts_results):
+        # Capture MCTS visit distributions. select_move_from_mcts_results runs in the
+        # MAIN process after futures are collected, so no pickling required.
+        # Each element: (MctsResult, sample_chance, index)
+        try:
+            agg: dict[str, float] = {}
+            total = 0
+            for mcts_result, chance, _idx in mcts_results:
+                tv = mcts_result.total_visits
+                total += tv
+                for opt in mcts_result.side_one:
+                    move = str(opt.move_choice)
+                    frac = opt.visits / tv if tv > 0 else 0.0
+                    agg[move] = agg.get(move, 0.0) + chance * frac
+            with _store_lock:
+                if agg:
+                    _policy_store['__last__'] = {'visits': agg, 'total': total}
+        except Exception:
+            pass
+        return original_select(mcts_results)
+
+    search_main.select_move_from_mcts_results = select_and_capture
 
     async def async_pick_move_with_logging(battle):
         start_index = len(pending_rows)
@@ -156,6 +190,8 @@ def patch_decision_logging() -> None:
                     }
                 )
             except Exception as exc:
+                import sys as _sys4
+                print(f"[LOGGING] feature_log_failed turn={battle.turn}: {type(exc).__name__}: {exc}", file=_sys4.stderr, flush=True)
                 pending_rows.append(
                     {
                         "battle_tag": getattr(battle, "battle_tag", None),
@@ -166,14 +202,27 @@ def patch_decision_logging() -> None:
                     }
                 )
         try:
-            return await original_async_pick_move(battle)
+            result = await original_async_pick_move(battle)
+            # Attach MCTS visit distribution if captured
+            if pending_rows and len(pending_rows) > start_index:
+                row = pending_rows[-1]
+                if "features" in row:
+                    with _store_lock:
+                        captured = _policy_store.pop('__last__', None)
+                    if captured:
+                        row["mcts_visits"] = captured['visits']
+                        row["mcts_total"] = captured['total']
+            return result
         except Exception:
             del pending_rows[start_index:]
             raise
 
     async def pokemon_battle_with_labels(ps_websocket_client, pokemon_battle_type, team_dict):
+        import sys as _sys3
         start_index = len(pending_rows)
+        print(f"[LOGGING] pokemon_battle_with_labels START pending={len(pending_rows)}", file=_sys3.stderr, flush=True)
         winner = await original_pokemon_battle(ps_websocket_client, pokemon_battle_type, team_dict)
+        print(f"[LOGGING] pokemon_battle_with_labels END pending={len(pending_rows)} start={start_index} winner={winner}", file=_sys3.stderr, flush=True)
         label = 1 if winner == config.FoulPlayConfig.username else 0
         with open(output_path, "a", encoding="utf-8") as handle:
             for row in pending_rows[start_index:]:
@@ -184,6 +233,37 @@ def patch_decision_logging() -> None:
                     handle.write(json.dumps(row, separators=(",", ":")) + "\n")
         del pending_rows[start_index:]
         return winner
+
+    # run.py imports pokemon_battle by value: `from fp.run_battle import pokemon_battle`
+    # run_battle.py calls async_pick_move by local name (not via module attribute).
+    # The ONLY place we can intercept is at find_best_move in run_battle.py's namespace,
+    # since it's imported by value there too but we can wrap it after import.
+    #
+    # Wrap run_battle.find_best_move to capture visit distributions from MctsResults.
+    # This is safe because find_best_move runs in a ThreadPoolExecutor (same process).
+    original_find_best = run_battle.find_best_move
+
+    def find_best_move_capturing(battle):
+        """Wrap find_best_move to capture MCTS visit distribution."""
+        result = original_find_best(battle)
+        # select_and_capture already ran inside find_best_move (via our search_main patch)
+        # and stored results in _policy_store. Nothing extra to do here.
+        return result
+
+    run_battle.find_best_move = find_best_move_capturing
+
+    # Patch run.py's pokemon_battle reference after it's imported
+    import sys as _sys
+    import builtins as _builtins
+    _orig_builtin_import = _builtins.__import__
+    def _import_hook(name, *args, **kwargs):
+        mod = _orig_builtin_import(name, *args, **kwargs)
+        if name == 'run' and hasattr(mod, 'pokemon_battle') and \
+                mod.pokemon_battle is not pokemon_battle_with_labels:
+            print(f"[LOGGING] Patching run.pokemon_battle", flush=True)
+            mod.pokemon_battle = pokemon_battle_with_labels
+        return mod
+    _builtins.__import__ = _import_hook
 
     run_battle.async_pick_move = async_pick_move_with_logging
     run_battle.pokemon_battle = pokemon_battle_with_labels
@@ -207,6 +287,17 @@ def main() -> None:
 
     from run import run_foul_play
 
+    # Patch run.pokemon_battle AFTER import — run.py imports pokemon_battle by value
+    # so module-attribute patching in patch_decision_logging() doesn't affect it.
+    # We must update run.pokemon_battle directly after import.
+    if os.environ.get("METAGROSS_DECISION_LOG"):
+        import run as _run_module
+        import fp.run_battle as _rb
+        # run.py has `from fp.run_battle import pokemon_battle` — imported by value.
+        # _rb.pokemon_battle is now our wrapper; run.pokemon_battle is still the original.
+        # Force-update run.pokemon_battle to our wrapper.
+        _run_module.pokemon_battle = _rb.pokemon_battle
+    
     asyncio.run(run_foul_play())
 
 
