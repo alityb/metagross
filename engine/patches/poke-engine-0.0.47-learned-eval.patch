@@ -1,7 +1,7 @@
 diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 --- a/src/learned_value.rs	1969-12-31 16:00:00
-+++ b/src/learned_value.rs	2026-06-28 00:00:00
-@@ -0,0 +1,432 @@
++++ b/src/learned_value.rs	2026-06-29 00:00:00
+@@ -0,0 +1,578 @@
 +use crate::choices::{Choices, MoveCategory};
 +use crate::engine::state::MoveChoice;
 +use crate::state::{Pokemon, PokemonStatus, PokemonType, Side, State};
@@ -258,44 +258,190 @@ diff -ruN a/src/learned_value.rs b/src/learned_value.rs
 +    }
 +}
 +
-+/// Compute softmax prior probabilities over a list of MoveChoices for one side.
-+/// Returns probabilities summing to 1.0, indexed parallel to `choices`.
-+/// This is P(a|s) for PUCT.  Currently computed from domain knowledge;
-+/// will be replaced by a policy network in the expert-iteration phase.
-+pub fn compute_move_priors(side: &Side, choices: &[MoveChoice]) -> Vec<f32> {
++// ── Learned policy model (METAGROSS_POLICY_MODEL) ─────────────────────────────
++//
++// Format: metagross_policy_value_v1
++//   policy_dims IN H1 H2 1
++//   policy_w1 ...  policy_b1 ...
++//   policy_w2 ...  policy_b2 ...
++//   policy_w3 ...  policy_b3 SCALAR
++//
++// Input (IN=17): 12 state features || 5 move features
++//   move features: [is_status, is_physical, is_special, bp/150, 0.0]
++//
++// Output: Q-score per move; policy = softmax over all legal moves.
++// Higher Q → more promising move.
++
++const POLICY_IN: usize = FEATURE_COUNT + 5; // 12 state + 5 move
++
++#[derive(Debug)]
++struct PolicyModel {
++    hidden1: usize,
++    hidden2: usize,
++    w1: Vec<f32>, b1: Vec<f32>,
++    w2: Vec<f32>, b2: Vec<f32>,
++    w3: Vec<f32>, b3: f32,
++}
++
++static POLICY_MODEL: OnceLock<Option<PolicyModel>> = OnceLock::new();
++
++fn policy_model() -> Option<&'static PolicyModel> {
++    POLICY_MODEL.get_or_init(load_policy_model).as_ref()
++}
++
++fn load_policy_model() -> Option<PolicyModel> {
++    let path = match env::var("METAGROSS_POLICY_MODEL") {
++        Ok(p) if !p.trim().is_empty() => p,
++        _ => return None,
++    };
++    let contents = fs::read_to_string(&path)
++        .unwrap_or_else(|e| panic!("failed to read METAGROSS_POLICY_MODEL {}: {}", path, e));
++    parse_policy_model(&contents)
++        .unwrap_or_else(|e| panic!("invalid METAGROSS_POLICY_MODEL {}: {}", path, e))
++}
++
++fn parse_policy_model(contents: &str) -> Result<Option<PolicyModel>, String> {
++    let mut dims = None;
++    let mut w1 = None; let mut b1 = None;
++    let mut w2 = None; let mut b2 = None;
++    let mut w3 = None; let mut b3 = None;
++    for raw in contents.lines() {
++        let line = raw.split('#').next().unwrap_or("").trim();
++        if line.is_empty() || line.starts_with("metagross_") || line.starts_with("value_") { continue; }
++        let mut parts = line.split_whitespace();
++        match parts.next() {
++            Some("policy_dims") => {
++                let v: Vec<usize> = parts.map(|p| p.parse().unwrap_or(0)).collect();
++                if v.len() != 4 || v[0] != POLICY_IN || v[3] != 1 {
++                    return Err(format!("expected policy_dims {} H1 H2 1, got {:?}", POLICY_IN, v));
++                }
++                dims = Some((v[1], v[2]));
++            }
++            Some("policy_w1") => w1 = Some(parse_floats(parts, "policy_w1")?),
++            Some("policy_b1") => b1 = Some(parse_floats(parts, "policy_b1")?),
++            Some("policy_w2") => w2 = Some(parse_floats(parts, "policy_w2")?),
++            Some("policy_b2") => b2 = Some(parse_floats(parts, "policy_b2")?),
++            Some("policy_w3") => w3 = Some(parse_floats(parts, "policy_w3")?),
++            Some("policy_b3") => {
++                b3 = Some(parts.next().ok_or("policy_b3 missing")?
++                    .parse::<f32>().map_err(|e| e.to_string())?);
++            }
++            _ => {}
++        }
++    }
++    let (h1, h2) = match dims { Some(d) => d, None => return Ok(None) };
++    let w1 = w1.ok_or("missing policy_w1")?;
++    let b1 = b1.ok_or("missing policy_b1")?;
++    let w2 = w2.ok_or("missing policy_w2")?;
++    let b2 = b2.ok_or("missing policy_b2")?;
++    let w3 = w3.ok_or("missing policy_w3")?;
++    if w1.len() != POLICY_IN * h1 || b1.len() != h1 { return Err("policy w1/b1 shape".into()); }
++    if w2.len() != h1 * h2 || b2.len() != h2 || w3.len() != h2 { return Err("policy w2/b2/w3 shape".into()); }
++    Ok(Some(PolicyModel {
++        hidden1: h1, hidden2: h2,
++        w1, b1, w2, b2, w3, b3: b3.unwrap_or(0.0),
++    }))
++}
++
++impl PolicyModel {
++    fn forward(&self, x: &[f32; POLICY_IN]) -> f32 {
++        let h1 = self.hidden1; let h2 = self.hidden2;
++        let mut a1 = vec![0.0f32; h1];
++        for j in 0..h1 {
++            let mut z = self.b1[j];
++            for i in 0..POLICY_IN { z += x[i] * self.w1[i * h1 + j]; }
++            a1[j] = z.tanh();
++        }
++        let mut a2 = vec![0.0f32; h2];
++        for j in 0..h2 {
++            let mut z = self.b2[j];
++            for i in 0..h1 { z += a1[i] * self.w2[i * h2 + j]; }
++            a2[j] = z.tanh();
++        }
++        let mut out = self.b3;
++        for i in 0..h2 { out += a2[i] * self.w3[i]; }
++        out
++    }
++}
++
++/// Per-move features matching the Python expert_iter.py training code:
++///   [is_status, is_physical, is_special, bp/150, stab=0]
++fn move_features_for_choice(active: &Pokemon, choice: &MoveChoice) -> [f32; 5] {
++    match choice {
++        MoveChoice::Move(mv_idx) => {
++            let mv = &active.moves[mv_idx];
++            if mv.id == Choices::NONE { return [0.0; 5]; }
++            let is_status = if mv.choice.category == MoveCategory::Status { 1.0 } else { 0.0 };
++            let is_phys   = if mv.choice.category == MoveCategory::Physical { 1.0 } else { 0.0 };
++            let is_spec   = if mv.choice.category == MoveCategory::Special { 1.0 } else { 0.0 };
++            let bp_norm   = (mv.choice.base_power / 150.0).clamp(0.0, 1.0);
++            [is_status, is_phys, is_spec, bp_norm, 0.0]
++        }
++        _ => [0.0; 5],
++    }
++}
++
++
++
++/// Compute prior probabilities over legal MoveChoices for PUCT.
++/// Returns probabilities summing to 1.0.
++///
++/// When `METAGROSS_POLICY_MODEL` is set: uses the learned policy network
++///   Q(state_feats || move_feats) → score; policy = softmax(scores).
++/// Fallback: domain-knowledge sqrt-scale prior (base_power / hp).
++pub fn compute_move_priors(side: &Side, choices: &[MoveChoice], state: &State, is_s2: bool) -> Vec<f32> {
 +    if choices.is_empty() { return vec![]; }
 +    let active = &side.pokemon[side.active_index];
++
++    if let Some(pm) = policy_model() {
++        // Learned policy: score each move with the policy network
++        let state_feats = extract_features_for_side(state, is_s2);
++        let mut scores: Vec<f32> = choices.iter().map(|c| {
++            let mf = move_features_for_choice(active, c);
++            let mut inp = [0.0f32; POLICY_IN];
++            inp[..FEATURE_COUNT].copy_from_slice(&state_feats[..FEATURE_COUNT]);
++            inp[FEATURE_COUNT..].copy_from_slice(&mf);
++            pm.forward(&inp)
++        }).collect();
++        // Softmax over Q-scores (safe: subtract max for numerical stability)
++        let max_q = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
++        let exps: Vec<f32> = scores.iter().map(|q| (q - max_q).exp()).collect();
++        let sum_e: f32 = exps.iter().sum();
++        if sum_e > 0.0 {
++            return exps.iter().map(|e| e / sum_e).collect();
++        }
++    }
++
++    // Fallback: domain-knowledge sqrt-scale prior
 +    let mut scores: Vec<f32> = choices.iter().map(|c| {
 +        match c {
 +            MoveChoice::Switch(sw_idx) => {
 +                let target = &side.pokemon[*sw_idx];
-+                if target.hp == 0 { 0.001 }  // near-zero for fainted mons
-+                else {
-+                    let hp_frac = target.hp as f32 / target.maxhp.max(1) as f32;
-+                    // Switching into a healthy mon is valuable
-+                    40.0 * hp_frac
-+                }
++                if target.hp == 0 { 0.001 }
++                else { 40.0 * (target.hp as f32 / target.maxhp.max(1) as f32) }
 +            }
 +            other => prior_score_for_move(active, other).max(0.001),
 +        }
 +    }).collect();
-+
-+    // Direct proportional normalization (NO softmax/exp).
-+    // Raw scores are in [15, 225] range — softmax would collapse to degenerate
-+    // distribution (100% on highest-power move). Direct normalization gives
-+    // sensible priors: Hyper Beam ~36%, Body Slam ~19%, Status ~6%, etc.
-+    // Use sqrt-scaling to compress the spread further (more uniform exploration).
-+
-+
-+    // Sqrt-scale then normalize
 +    let sqrt_scores: Vec<f32> = scores.iter().map(|s| s.sqrt()).collect();
 +    let sum_e: f32 = sqrt_scores.iter().sum();
 +    if sum_e <= 0.0 {
-+        // Fallback: uniform
 +        let u = 1.0 / choices.len() as f32;
 +        return vec![u; choices.len()];
 +    }
 +    sqrt_scores.iter().map(|e| e / sum_e).collect()
++}
++
++/// Extract state features for compute_move_priors.
++/// For s2 (opponent side), negate the differential features so the model
++/// sees the position from the acting player's perspective.
++fn extract_features_for_side(state: &State, is_s2: bool) -> [f32; FEATURE_COUNT] {
++    let mut f = extract_features(state);
++    if is_s2 {
++        // Flip sign: model always expects "my side - opponent side" framing
++        for x in f.iter_mut() { *x = -*x; }
++    }
++    f
 +}
 +
 +// ── Gen1 type chart ────────────────────────────────────────────────────────────
@@ -502,8 +648,8 @@ diff -ruN a/src/mcts.rs b/src/mcts.rs
 +    unsafe fn populate(&mut self, s1_options: Vec<MoveChoice>, s2_options: Vec<MoveChoice>, state: &State) {
 +        // Compute policy priors for both sides at node creation time.
 +        // This is O(K) once per node; priors are frozen after creation.
-+        let s1_priors = compute_move_priors(&state.side_one, &s1_options);
-+        let s2_priors = compute_move_priors(&state.side_two, &s2_options);
++        let s1_priors = compute_move_priors(&state.side_one, &s1_options, state, false);
++        let s2_priors = compute_move_priors(&state.side_two, &s2_options, state, true);
 +
 +        let s1_vec: Vec<MoveNode> = s1_options.iter().zip(s1_priors.iter())
 +            .map(|(mc, &prior)| MoveNode {
