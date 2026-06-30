@@ -997,6 +997,10 @@ def main() -> None:
     root_dir = Path(__file__).resolve().parents[1]
     foul_play_dir = Path(os.environ.get("FOUL_PLAY_DIR", root_dir / "external" / "foul-play"))
 
+    env_password = os.environ.get("METAGROSS_SHOWDOWN_PASSWORD")
+    if env_password and "--ps-password" not in sys.argv:
+        sys.argv.extend(["--ps-password", env_password])
+
     if sys.platform == "darwin":
         try:
             mp.set_start_method("fork")

@@ -126,6 +126,8 @@ async def run_one_game(
     """
     env = dict(os.environ)
     env.pop("METAGROSS_DECISION_LOG", None)  # never log decisions during ladder measurement
+    if password:
+        env["METAGROSS_SHOWDOWN_PASSWORD"] = password
     if model_path:
         env["METAGROSS_VALUE_MODEL"] = str(Path(model_path).resolve())
     else:
@@ -144,9 +146,6 @@ async def run_one_game(
         "--search-threads", "1",
         "--log-level", "INFO",
     ]
-    if password:
-        cmd.extend(["--ps-password", password])
-
     t0 = time.time()
     record: dict = {
         "game_index": game_index,
@@ -327,7 +326,11 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Overnight ladder measurement runner")
     parser.add_argument("--username", required=True)
-    parser.add_argument("--password", default=None, help="Registered account password (enables persistent ELO)")
+    parser.add_argument(
+        "--password",
+        default=os.environ.get("METAGROSS_SHOWDOWN_PASSWORD"),
+        help="Registered account password (enables persistent ELO); defaults to METAGROSS_SHOWDOWN_PASSWORD.",
+    )
     parser.add_argument("--label", required=True, help="Short label for log (e.g. stock_foul_play)")
     parser.add_argument("--n-games", type=int, default=200)
     parser.add_argument("--search-time-ms", type=int, default=100)
