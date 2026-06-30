@@ -1,0 +1,34 @@
+{
+  "avg_value_delta": 0.19280219742900095,
+  "override_pairs": {
+    "switch vikavolt -> switch hitmonchan": 1
+  },
+  "override_rate": 0.00028735632183908046,
+  "shield_rows": 3480,
+  "summary": {
+    "agent_a": "foul_play_value_shield",
+    "agent_a_as_acceptor_games": 50,
+    "agent_a_as_acceptor_wins": 25,
+    "agent_a_as_challenger_games": 50,
+    "agent_a_as_challenger_wins": 29,
+    "agent_a_losses": 46,
+    "agent_a_wins": 54,
+    "agent_b": "foul_play",
+    "ci95_high": 0.6343919169097589,
+    "ci95_low": 0.44264860323368227,
+    "completed_games": 100,
+    "decisive_games": 100,
+    "format": "gen9randombattle",
+    "foul_play_search_time_ms": 25,
+    "mode": "h2h",
+    "n_games": 100,
+    "paired": true,
+    "server": "local",
+    "ties_or_unknown": 0,
+    "void_games": 0,
+    "voids_with_agent_a_challenger": 0,
+    "voids_with_agent_b_challenger": 0,
+    "winrate": 0.54
+  },
+  "used_shield": 1
+}

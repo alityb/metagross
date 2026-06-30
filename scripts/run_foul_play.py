@@ -392,6 +392,120 @@ def patch_tauros_action_kind_gate() -> None:
     run_battle.async_pick_move = async_pick_move_with_tauros_kind_gate
 
 
+def patch_foul_play_value_shield() -> None:
+    if os.environ.get("METAGROSS_FP_VALUE_SHIELD") != "1":
+        return
+
+    import fp.search.main as search_main
+
+    margin = float(os.environ.get("METAGROSS_FP_VALUE_SHIELD_MARGIN", "0.15"))
+    min_support = float(os.environ.get("METAGROSS_FP_VALUE_SHIELD_MIN_SUPPORT", "0.10"))
+    close_policy_frac = float(os.environ.get("METAGROSS_FP_VALUE_SHIELD_CLOSE_POLICY_FRAC", "0.75"))
+    log_path = os.environ.get("METAGROSS_FP_VALUE_SHIELD_LOG")
+
+    def final_policy_from_results(mcts_results):
+        final_policy = {}
+        for mcts_result, sample_chance, _idx in mcts_results:
+            total_visits = mcts_result.total_visits
+            options = list(mcts_result.side_one)
+            if not options:
+                continue
+            if total_visits <= 0:
+                weight = sample_chance / len(options)
+                for option in options:
+                    final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + weight
+                continue
+            for option in options:
+                final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + (
+                    sample_chance * (option.visits / total_visits)
+                )
+        return final_policy
+
+    def value_stats_from_results(mcts_results):
+        numerators = {}
+        denominators = {}
+        for mcts_result, sample_chance, _idx in mcts_results:
+            for option in mcts_result.side_one:
+                if option.visits <= 0:
+                    continue
+                move = option.move_choice
+                weight = sample_chance * option.visits
+                numerators[move] = numerators.get(move, 0.0) + weight * (option.total_score / option.visits)
+                denominators[move] = denominators.get(move, 0.0) + weight
+        return {
+            move: {
+                "avg_score": numerators[move] / denominators[move],
+                "value_weight": denominators[move],
+            }
+            for move in numerators
+            if denominators.get(move, 0.0) > 0
+        }
+
+    def choose_from_policy(policy_items):
+        if not policy_items:
+            return "no move"
+        weights = [max(weight, 0.0) for _move, weight in policy_items]
+        if sum(weights) <= 0:
+            weights = [1.0 for _move, _weight in policy_items]
+        return random.choices(policy_items, weights=weights)[0][0]
+
+    def select_with_value_shield(mcts_results):
+        final_policy = final_policy_from_results(mcts_results)
+        if not final_policy:
+            return "no move"
+
+        ranked_policy = sorted(final_policy.items(), key=lambda item: item[1], reverse=True)
+        highest_support = ranked_policy[0][1]
+        considered = [
+            item for item in ranked_policy
+            if highest_support <= 0 or item[1] >= highest_support * close_policy_frac
+        ]
+        baseline = choose_from_policy(considered)
+
+        value_stats = value_stats_from_results(mcts_results)
+        baseline_stats = value_stats.get(baseline)
+        selected = baseline
+        used_shield = False
+        best_value_move = None
+        best_value_delta = 0.0
+
+        if baseline_stats is not None:
+            candidates = []
+            for move, support in final_policy.items():
+                stats = value_stats.get(move)
+                if stats is None or support < min_support:
+                    continue
+                candidates.append((move, support, stats["avg_score"], stats["value_weight"]))
+            if candidates:
+                best_value_move, _support, best_value, _weight = max(candidates, key=lambda item: item[2])
+                best_value_delta = best_value - baseline_stats["avg_score"]
+                if best_value_move != baseline and best_value_delta >= margin:
+                    selected = best_value_move
+                    used_shield = True
+
+        if log_path:
+            Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+            row = {
+                "baseline": str(baseline),
+                "selected": str(selected),
+                "used_shield": used_shield,
+                "best_value_move": str(best_value_move) if best_value_move is not None else None,
+                "best_value_delta": best_value_delta,
+                "final_policy": {str(move): support for move, support in final_policy.items()},
+                "value_stats": {
+                    str(move): stats for move, stats in value_stats.items()
+                },
+                "margin": margin,
+                "min_support": min_support,
+                "close_policy_frac": close_policy_frac,
+            }
+            with open(log_path, "a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+        return selected
+
+    search_main.select_move_from_mcts_results = select_with_value_shield
+
+
 def patch_randbats_generator_belief() -> None:
     pool_path = os.environ.get("METAGROSS_RANDBATS_POOL")
     conditional_script = os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_SCRIPT")
@@ -894,6 +1008,7 @@ def main() -> None:
 
     patch_foul_play_protocol_bugs()
     patch_tauros_action_kind_gate()
+    patch_foul_play_value_shield()
     patch_randbats_generator_belief()
     patch_decision_logging()
 

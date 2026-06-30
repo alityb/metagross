@@ -1,0 +1,53 @@
+{
+  "games": [
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play_value_shield",
+      "agent_b": "foul_play",
+      "battle_tag": "battle-gen9randombattle-245",
+      "challenger": "agent_a",
+      "error": null,
+      "game_index": 1,
+      "void": false,
+      "winner": "agent_b",
+      "winner_username": "p0y0018116"
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play_value_shield",
+      "agent_b": "foul_play",
+      "battle_tag": "battle-gen9randombattle-246",
+      "challenger": "agent_b",
+      "error": null,
+      "game_index": 2,
+      "void": false,
+      "winner": "agent_b",
+      "winner_username": "p0x00231d3"
+    }
+  ],
+  "summary": {
+    "agent_a": "foul_play_value_shield",
+    "agent_a_as_acceptor_games": 1,
+    "agent_a_as_acceptor_wins": 0,
+    "agent_a_as_challenger_games": 1,
+    "agent_a_as_challenger_wins": 0,
+    "agent_a_losses": 2,
+    "agent_a_wins": 0,
+    "agent_b": "foul_play",
+    "ci95_high": 0.6576197724933469,
+    "ci95_low": 0.0,
+    "completed_games": 2,
+    "decisive_games": 2,
+    "format": "gen9randombattle",
+    "foul_play_search_time_ms": 25,
+    "mode": "h2h",
+    "n_games": 2,
+    "paired": true,
+    "server": "local",
+    "ties_or_unknown": 0,
+    "void_games": 0,
+    "voids_with_agent_a_challenger": 0,
+    "voids_with_agent_b_challenger": 0,
+    "winrate": 0.0
+  }
+}

@@ -37,6 +37,7 @@ AGENT_NAMES = (
     "foul_play_randbats_conditional",
     "foul_play_tauros_kind",
     "foul_play_tauros_action",
+    "foul_play_value_shield",
 )
 EXPERIMENT_FIELDS = [
     "run_id",
@@ -129,6 +130,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_randbats_conditional",
         "foul_play_tauros_kind",
         "foul_play_tauros_action",
+        "foul_play_value_shield",
     }
 
 
@@ -146,6 +148,10 @@ def is_randbats_conditional_foul_play(agent: str) -> bool:
 
 def is_tauros_kind_foul_play(agent: str) -> bool:
     return agent in {"foul_play_tauros_kind", "foul_play_tauros_action"}
+
+
+def is_value_shield_foul_play(agent: str) -> bool:
+    return agent == "foul_play_value_shield"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -304,6 +310,21 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_TAUROS_KIND_THRESHOLD", None)
         env.pop("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", None)
         env.pop("METAGROSS_TAUROS_KIND_ALLOWED_KINDS", None)
+    if is_value_shield_foul_play(agent):
+        env["METAGROSS_FP_VALUE_SHIELD"] = "1"
+        env["METAGROSS_FP_VALUE_SHIELD_MARGIN"] = str(args.value_shield_margin)
+        env["METAGROSS_FP_VALUE_SHIELD_MIN_SUPPORT"] = str(args.value_shield_min_support)
+        env["METAGROSS_FP_VALUE_SHIELD_CLOSE_POLICY_FRAC"] = str(args.value_shield_close_policy_frac)
+        if args.value_shield_log:
+            env["METAGROSS_FP_VALUE_SHIELD_LOG"] = str(Path(args.value_shield_log).resolve())
+        else:
+            env.pop("METAGROSS_FP_VALUE_SHIELD_LOG", None)
+    else:
+        env.pop("METAGROSS_FP_VALUE_SHIELD", None)
+        env.pop("METAGROSS_FP_VALUE_SHIELD_MARGIN", None)
+        env.pop("METAGROSS_FP_VALUE_SHIELD_MIN_SUPPORT", None)
+        env.pop("METAGROSS_FP_VALUE_SHIELD_CLOSE_POLICY_FRAC", None)
+        env.pop("METAGROSS_FP_VALUE_SHIELD_LOG", None)
     return env
 
 
@@ -1040,6 +1061,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="attack_or_other,boom,paralysis,recovery,sleep,switch",
         help="Comma-separated action kinds the Tauros gate may override toward.",
     )
+    parser.add_argument("--value-shield-margin", type=float, default=0.15)
+    parser.add_argument("--value-shield-min-support", type=float, default=0.10)
+    parser.add_argument("--value-shield-close-policy-frac", type=float, default=0.75)
+    parser.add_argument("--value-shield-log", default=None)
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")
     parser.add_argument("--agent-b-model", default=None,
