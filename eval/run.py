@@ -28,7 +28,14 @@ DEFAULT_FORMAT = "gen9randombattle"
 LOCAL_WEBSOCKET_URI = "ws://localhost:8000/showdown/websocket"
 LIVE_WEBSOCKET_URI = "wss://sim3.psim.us/showdown/websocket"
 SHOWDOWN_AUTH_URI = "https://play.pokemonshowdown.com/action.php?"
-AGENT_NAMES = ("random", "max_damage", "foul_play", "foul_play_learned")
+AGENT_NAMES = (
+    "random",
+    "max_damage",
+    "foul_play",
+    "foul_play_learned",
+    "foul_play_randbats_pool",
+    "foul_play_randbats_conditional",
+)
 EXPERIMENT_FIELDS = [
     "run_id",
     "date",
@@ -113,11 +120,24 @@ def make_username(role: str, game_index: int) -> str:
 
 
 def is_foul_play(agent: str) -> bool:
-    return agent in {"foul_play", "foul_play_learned"}
+    return agent in {
+        "foul_play",
+        "foul_play_learned",
+        "foul_play_randbats_pool",
+        "foul_play_randbats_conditional",
+    }
 
 
 def is_learned_foul_play(agent: str) -> bool:
     return agent == "foul_play_learned"
+
+
+def is_randbats_pool_foul_play(agent: str) -> bool:
+    return agent == "foul_play_randbats_pool"
+
+
+def is_randbats_conditional_foul_play(agent: str) -> bool:
+    return agent == "foul_play_randbats_conditional"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -244,6 +264,26 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env["METAGROSS_VALUE_MODEL"] = str(Path(model).resolve())
     else:
         env.pop("METAGROSS_VALUE_MODEL", None)
+    if is_randbats_pool_foul_play(agent):
+        if not args.randbats_belief_pool:
+            raise ValueError("foul_play_randbats_pool requires --randbats-belief-pool")
+        env["METAGROSS_RANDBATS_POOL"] = str(Path(args.randbats_belief_pool).resolve())
+    else:
+        env.pop("METAGROSS_RANDBATS_POOL", None)
+    if is_randbats_conditional_foul_play(agent):
+        env["METAGROSS_RANDBATS_CONDITIONAL_SCRIPT"] = str(
+            Path(args.randbats_conditional_script).resolve()
+        )
+        env["METAGROSS_RANDBATS_CONDITIONAL_SAMPLES"] = str(args.randbats_conditional_samples)
+        env["METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS"] = str(args.randbats_conditional_max_teams)
+        env["METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S"] = str(args.randbats_conditional_timeout_seconds)
+        env["METAGROSS_RANDBATS_FORMAT"] = args.format
+    else:
+        env.pop("METAGROSS_RANDBATS_CONDITIONAL_SCRIPT", None)
+        env.pop("METAGROSS_RANDBATS_CONDITIONAL_SAMPLES", None)
+        env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS", None)
+        env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
+        env.pop("METAGROSS_RANDBATS_FORMAT", None)
     return env
 
 
@@ -958,6 +998,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--agent-b-python", default=None,
                         help="Override Python binary for agent-b")
     parser.add_argument("--learned-value-model", default=None)
+    parser.add_argument(
+        "--randbats-belief-pool",
+        default=None,
+        help="Path to a pre-sampled Showdown randbats team pool for foul_play_randbats_pool.",
+    )
+    parser.add_argument(
+        "--randbats-conditional-script",
+        default=str(ROOT_DIR / "scripts" / "sample_conditional_randbats.cjs"),
+        help="Node script used by foul_play_randbats_conditional.",
+    )
+    parser.add_argument("--randbats-conditional-samples", type=int, default=24)
+    parser.add_argument("--randbats-conditional-max-teams", type=int, default=30000)
+    parser.add_argument("--randbats-conditional-timeout-seconds", type=float, default=8.0)
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")
     parser.add_argument("--agent-b-model", default=None,

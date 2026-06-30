@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 import asyncio
+import atexit
 import json
 import multiprocessing as mp
 import os
+import random
+import select
+import subprocess
 import sys
+import threading
 from copy import deepcopy
 from pathlib import Path
 
@@ -121,6 +126,323 @@ def extract_value_features(state) -> list[float]:
     """
     import poke_engine as _pe
     return _pe.compute_value_features(state)
+
+
+def patch_randbats_generator_belief() -> None:
+    pool_path = os.environ.get("METAGROSS_RANDBATS_POOL")
+    conditional_script = os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_SCRIPT")
+    if not pool_path and not conditional_script:
+        return
+
+    import constants
+    import fp.search.main as search_main
+    import fp.search.random_battles as random_battles
+    from data.pkmn_sets import PokemonMoveset, PokemonSet, PredictedPokemonSet
+    from fp.battle import Pokemon
+    from fp.helpers import normalize_name
+    from fp.search.helpers import populate_pkmn_from_set
+
+    root_dir = Path(__file__).resolve().parents[1]
+    format_name = os.environ.get("METAGROSS_RANDBATS_FORMAT")
+    if not format_name:
+        format_name = next(
+            (arg for idx, arg in enumerate(sys.argv) if idx > 0 and sys.argv[idx - 1] == "--pokemon-format"),
+            "gen9randombattle",
+        )
+
+    def norm(value: object) -> str:
+        return normalize_name(str(value or ""))
+
+    def ev_tuple(evs: object) -> tuple[int, int, int, int, int, int]:
+        if not isinstance(evs, dict):
+            return (85, 85, 85, 85, 85, 85)
+        return tuple(int(evs.get(stat, 85)) for stat in ("hp", "atk", "def", "spa", "spd", "spe"))  # type: ignore[return-value]
+
+    def normalize_set(raw_set: dict) -> dict:
+        moves = tuple(norm(mv) for mv in raw_set.get("moves", []))
+        return {
+            "species": norm(raw_set.get("speciesId") or raw_set.get("species")),
+            "level": int(raw_set.get("level") or 100),
+            "moves": moves,
+            "ability": norm(raw_set.get("ability") or "noability"),
+            "item": norm(raw_set.get("item") or "none"),
+            "tera_type": norm(raw_set.get("teraType") or "typeless"),
+            "evs": ev_tuple(raw_set.get("evs")),
+        }
+
+    def normalize_teams(raw_teams: list) -> list[dict]:
+        pool = []
+        for raw_team in raw_teams:
+            normalized_team = [normalize_set(raw_set) for raw_set in raw_team]
+            by_species = {raw_set["species"]: raw_set for raw_set in normalized_team}
+            if len(normalized_team) == 6 and len(by_species) == 6:
+                pool.append({"sets": normalized_team, "by_species": by_species})
+        return pool
+
+    pool = []
+    if pool_path:
+        pool_path = str(Path(pool_path).resolve())
+        payload = json.loads(Path(pool_path).read_text(encoding="utf-8"))
+        raw_teams = payload.get("teams", payload) if isinstance(payload, dict) else payload
+        if not isinstance(raw_teams, list) or not raw_teams:
+            raise RuntimeError(f"Randbats pool is empty or invalid: {pool_path}")
+        pool = normalize_teams(raw_teams)
+        if not pool:
+            raise RuntimeError(f"Randbats pool has no usable six-Pokemon teams: {pool_path}")
+
+    conditional_script_path = Path(conditional_script).resolve() if conditional_script else None
+    conditional_samples = int(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_SAMPLES", "24"))
+    conditional_max_teams = int(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS", "30000"))
+    conditional_timeout_s = float(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", "8"))
+    conditional_cache: dict[str, list[dict]] = {}
+    conditional_lock = threading.Lock()
+    conditional_proc: subprocess.Popen | None = None
+
+    def stop_conditional_sampler() -> None:
+        nonlocal conditional_proc
+        if conditional_proc is None:
+            return
+        proc = conditional_proc
+        conditional_proc = None
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+    def start_conditional_sampler() -> subprocess.Popen | None:
+        nonlocal conditional_proc
+        if conditional_script_path is None:
+            return None
+        if conditional_proc is not None and conditional_proc.poll() is None:
+            return conditional_proc
+        conditional_proc = subprocess.Popen(
+            [
+                "node",
+                str(conditional_script_path),
+                "--format",
+                format_name,
+                "--server",
+                "--samples",
+                str(conditional_samples),
+                "--max-teams",
+                str(conditional_max_teams),
+            ],
+            cwd=str(root_dir),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            bufsize=1,
+        )
+        return conditional_proc
+
+    atexit.register(stop_conditional_sampler)
+
+    original_prepare_random_battles = random_battles.prepare_random_battles
+
+    def pokemon_species_keys(pkmn: Pokemon) -> set[str]:
+        keys = {pkmn.name, pkmn.base_name, pkmn.get_species()}
+        return {key for key in keys if key}
+
+    def move_matches(known_move: str, candidate_moves: tuple[str, ...]) -> bool:
+        if known_move in candidate_moves:
+            return True
+        if known_move.startswith(constants.HIDDEN_POWER):
+            return any(move.startswith(constants.HIDDEN_POWER) for move in candidate_moves)
+        if known_move.startswith("return"):
+            return any(move.startswith("return") for move in candidate_moves)
+        return False
+
+    def set_matches_pokemon(pkmn: Pokemon, candidate: dict) -> bool:
+        if candidate["species"] not in pokemon_species_keys(pkmn):
+            return False
+        for mv in pkmn.moves:
+            if not move_matches(mv.name, candidate["moves"]):
+                return False
+        known_item = pkmn.removed_item or pkmn.item
+        if known_item not in {None, constants.UNKNOWN_ITEM} and known_item != candidate["item"]:
+            return False
+        if pkmn.ability is not None and pkmn.ability != candidate["ability"]:
+            return False
+        if pkmn.tera_type and pkmn.tera_type not in {"nothing", "typeless"}:
+            if pkmn.tera_type != candidate["tera_type"]:
+                return False
+        return True
+
+    def revealed_opponent_pokemon(battle) -> list[Pokemon]:
+        revealed = []
+        if battle.opponent.active is not None:
+            revealed.append(battle.opponent.active)
+        revealed.extend(battle.opponent.reserve)
+        return revealed
+
+    def concrete_item(pkmn: Pokemon) -> str | None:
+        item = pkmn.removed_item or pkmn.item
+        if item in {None, constants.UNKNOWN_ITEM, "none"}:
+            return None
+        return item
+
+    def concrete_tera_type(pkmn: Pokemon) -> str | None:
+        if pkmn.tera_type and pkmn.tera_type not in {"nothing", "typeless"}:
+            return pkmn.tera_type
+        return None
+
+    def constraints_for_battle(battle) -> list[dict]:
+        constraints = []
+        for pkmn in revealed_opponent_pokemon(battle):
+            constraints.append(
+                {
+                    "speciesKeys": sorted(pokemon_species_keys(pkmn)),
+                    "moves": sorted(mv.name for mv in pkmn.moves),
+                    "item": concrete_item(pkmn),
+                    "ability": pkmn.ability,
+                    "teraType": concrete_tera_type(pkmn),
+                }
+            )
+        return constraints
+
+    def constraint_signature(battle) -> str:
+        return json.dumps(constraints_for_battle(battle), sort_keys=True, separators=(",", ":"))
+
+    def conditional_pool_for_battle(battle, needed: int) -> list[dict]:
+        if conditional_script_path is None:
+            return []
+        signature = constraint_signature(battle)
+        cached = conditional_cache.get(signature)
+        if cached:
+            return cached
+        target_samples = max(needed, conditional_samples)
+        with conditional_lock:
+            proc = start_conditional_sampler()
+            if proc is None or proc.stdin is None or proc.stdout is None:
+                conditional_cache[signature] = []
+                return []
+            try:
+                proc.stdin.write(
+                    json.dumps(
+                        {
+                            "constraints": constraints_for_battle(battle),
+                            "samples": target_samples,
+                            "maxTeams": conditional_max_teams,
+                        },
+                        separators=(",", ":"),
+                    )
+                    + "\n"
+                )
+                proc.stdin.flush()
+                readable, _, _ = select.select([proc.stdout], [], [], conditional_timeout_s)
+                if not readable:
+                    stop_conditional_sampler()
+                    conditional_cache[signature] = []
+                    return []
+                line = proc.stdout.readline()
+            except (BrokenPipeError, OSError):
+                stop_conditional_sampler()
+                conditional_cache[signature] = []
+                return []
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            conditional_cache[signature] = []
+            return []
+        if payload.get("error"):
+            conditional_cache[signature] = []
+            return []
+        raw_teams = payload.get("teams", [])
+        teams = normalize_teams(raw_teams) if isinstance(raw_teams, list) else []
+        conditional_cache[signature] = teams
+        return teams
+
+    def find_candidate_for_pokemon(pkmn: Pokemon, team: dict) -> dict | None:
+        for key in pokemon_species_keys(pkmn):
+            candidate = team["by_species"].get(key)
+            if candidate is not None and set_matches_pokemon(pkmn, candidate):
+                return candidate
+        return None
+
+    def team_matches_battle(team: dict, battle) -> bool:
+        for pkmn in revealed_opponent_pokemon(battle):
+            if find_candidate_for_pokemon(pkmn, team) is None:
+                return False
+        return True
+
+    def sampled_team_for_battle(battle) -> dict | None:
+        revealed = revealed_opponent_pokemon(battle)
+        conditional_pool = conditional_pool_for_battle(battle, 1)
+        if conditional_pool:
+            return random.choice(conditional_pool)
+        if not pool:
+            return None
+        if not revealed:
+            return random.choice(pool)
+        matches = [team for team in pool if team_matches_battle(team, battle)]
+        if not matches:
+            return None
+        return random.choice(matches)
+
+    def predicted_set_from_candidate(candidate: dict) -> PredictedPokemonSet:
+        return PredictedPokemonSet(
+            pkmn_set=PokemonSet(
+                ability=candidate["ability"],
+                item=candidate["item"],
+                nature="serious",
+                evs=candidate["evs"],
+                count=1,
+                level=candidate["level"],
+                tera_type=candidate["tera_type"],
+            ),
+            pkmn_moveset=PokemonMoveset(moves=candidate["moves"]),
+        )
+
+    def populate_battle_from_team(battle, team: dict) -> bool:
+        used_species = set()
+        for pkmn in revealed_opponent_pokemon(battle):
+            candidate = find_candidate_for_pokemon(pkmn, team)
+            if candidate is None:
+                return False
+            used_species.add(candidate["species"])
+            populate_pkmn_from_set(
+                pkmn,
+                predicted_set_from_candidate(candidate),
+                source="generator_pool_revealed",
+            )
+        while len(revealed_opponent_pokemon(battle)) < 6:
+            remaining = [candidate for candidate in team["sets"] if candidate["species"] not in used_species]
+            if not remaining:
+                return False
+            candidate = remaining[0]
+            used_species.add(candidate["species"])
+            pkmn = Pokemon(candidate["species"], candidate["level"])
+            populate_pkmn_from_set(
+                pkmn,
+                predicted_set_from_candidate(candidate),
+                source="generator_pool_unrevealed",
+            )
+            battle.opponent.reserve.append(pkmn)
+        return True
+
+    def prepare_generator_pool_random_battles(battle, num_battles: int):
+        sampled_battles = []
+        fallback_count = 0
+        for _index in range(num_battles):
+            battle_copy = deepcopy(battle)
+            team = sampled_team_for_battle(battle_copy)
+            if team is None or not populate_battle_from_team(battle_copy, team):
+                fallback_count += 1
+                continue
+            battle_copy.opponent.lock_moves()
+            sampled_battles.append((battle_copy, 1 / num_battles))
+        if not sampled_battles:
+            return original_prepare_random_battles(battle, num_battles)
+        if fallback_count:
+            fallback_battles = original_prepare_random_battles(battle, fallback_count)
+            sampled_battles.extend((b, 1 / num_battles) for b, _chance in fallback_battles)
+        return sampled_battles
+
+    random_battles.prepare_random_battles = prepare_generator_pool_random_battles
+    search_main.prepare_random_battles = prepare_generator_pool_random_battles
 
 
 def patch_decision_logging() -> None:
@@ -277,6 +599,7 @@ def main() -> None:
     sys.path.insert(0, str(foul_play_dir))
 
     patch_foul_play_protocol_bugs()
+    patch_randbats_generator_belief()
     patch_decision_logging()
 
     from run import run_foul_play

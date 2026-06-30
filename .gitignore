@@ -1,6 +1,8 @@
 /.venv/
 /.venv-foul-play/
+/.venv-*/
 /external/
+/data/randbats_pools/
 *.log
 *.pid
 __pycache__/
