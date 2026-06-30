@@ -294,6 +294,13 @@ def patch_tauros_action_kind_gate() -> None:
             return "recovery"
         return "attack_or_other"
 
+    def exact_label_to_choice(label: str) -> str | None:
+        if label.startswith("move:"):
+            return label.split(":", 1)[1]
+        if label.startswith("switch:"):
+            return "switch " + label.split(":", 1)[1]
+        return None
+
     def final_policy_from_results(mcts_results):
         final_policy = {}
         for mcts_result, sample_chance, _idx in mcts_results:
@@ -334,11 +341,19 @@ def patch_tauros_action_kind_gate() -> None:
         candidates = {}
         if predicted_kind is not None and confidence >= threshold:
             highest = max(final_policy.values()) if final_policy else 0.0
-            candidates = {
-                choice: weight
-                for choice, weight in final_policy.items()
-                if choice_kind(choice) == predicted_kind and (highest <= 0 or weight >= highest * min_policy_frac)
-            }
+            exact_choice = exact_label_to_choice(str(predicted_kind))
+            if exact_choice is None:
+                candidates = {
+                    choice: weight
+                    for choice, weight in final_policy.items()
+                    if choice_kind(choice) == predicted_kind and (highest <= 0 or weight >= highest * min_policy_frac)
+                }
+            else:
+                candidates = {
+                    choice: weight
+                    for choice, weight in final_policy.items()
+                    if str(choice).lower() == exact_choice and (highest <= 0 or weight >= highest * min_policy_frac)
+                }
             if candidates:
                 selected = choose_from_policy(candidates)
                 used_gate = selected != baseline

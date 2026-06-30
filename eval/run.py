@@ -36,6 +36,7 @@ AGENT_NAMES = (
     "foul_play_randbats_pool",
     "foul_play_randbats_conditional",
     "foul_play_tauros_kind",
+    "foul_play_tauros_action",
 )
 EXPERIMENT_FIELDS = [
     "run_id",
@@ -127,6 +128,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_randbats_pool",
         "foul_play_randbats_conditional",
         "foul_play_tauros_kind",
+        "foul_play_tauros_action",
     }
 
 
@@ -143,7 +145,7 @@ def is_randbats_conditional_foul_play(agent: str) -> bool:
 
 
 def is_tauros_kind_foul_play(agent: str) -> bool:
-    return agent == "foul_play_tauros_kind"
+    return agent in {"foul_play_tauros_kind", "foul_play_tauros_action"}
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
