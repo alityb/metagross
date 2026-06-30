@@ -1,0 +1,172 @@
+{
+  "ci95": [
+    0.11186170140766566,
+    0.46870087761874407
+  ],
+  "games": 20,
+  "losses": 15,
+  "rows": [
+    {
+      "Battle ID": "4064035681",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1016.gen1ou_team",
+      "Turn Count": "27"
+    },
+    {
+      "Battle ID": "9760420569",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1028.gen1ou_team",
+      "Turn Count": "44"
+    },
+    {
+      "Battle ID": "8720959482",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "WIN",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1006.gen1ou_team",
+      "Turn Count": "59"
+    },
+    {
+      "Battle ID": "1095448621",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1014.gen1ou_team",
+      "Turn Count": "31"
+    },
+    {
+      "Battle ID": "9887451029",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1008.gen1ou_team",
+      "Turn Count": "28"
+    },
+    {
+      "Battle ID": "7431821215",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1018.gen1ou_team",
+      "Turn Count": "29"
+    },
+    {
+      "Battle ID": "0566873934",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "WIN",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1014.gen1ou_team",
+      "Turn Count": "48"
+    },
+    {
+      "Battle ID": "4783345440",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1028.gen1ou_team",
+      "Turn Count": "56"
+    },
+    {
+      "Battle ID": "0499864975",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "WIN",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1023.gen1ou_team",
+      "Turn Count": "62"
+    },
+    {
+      "Battle ID": "5622078064",
+      "Opponent Username": "fpacc",
+      "Player Username": "distilledchal",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1023.gen1ou_team",
+      "Turn Count": "48"
+    },
+    {
+      "Battle ID": "3531855797",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1025.gen1ou_team",
+      "Turn Count": "53"
+    },
+    {
+      "Battle ID": "4846296508",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1019.gen1ou_team",
+      "Turn Count": "25"
+    },
+    {
+      "Battle ID": "4587599382",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1024.gen1ou_team",
+      "Turn Count": "37"
+    },
+    {
+      "Battle ID": "6451462637",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "WIN",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1020.gen1ou_team",
+      "Turn Count": "67"
+    },
+    {
+      "Battle ID": "2048828397",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "WIN",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1021.gen1ou_team",
+      "Turn Count": "56"
+    },
+    {
+      "Battle ID": "1472423358",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1006.gen1ou_team",
+      "Turn Count": "39"
+    },
+    {
+      "Battle ID": "6972037796",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1006.gen1ou_team",
+      "Turn Count": "29"
+    },
+    {
+      "Battle ID": "2204754744",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1005.gen1ou_team",
+      "Turn Count": "34"
+    },
+    {
+      "Battle ID": "7148516740",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1016.gen1ou_team",
+      "Turn Count": "40"
+    },
+    {
+      "Battle ID": "7247225701",
+      "Opponent Username": "fpchal",
+      "Player Username": "distilledacc",
+      "Result": "LOSS",
+      "Team File": "/home/ubuntu/metagross/external/metamon_cache/teams/competitive/gen1ou/team_1016.gen1ou_team",
+      "Turn Count": "52"
+    }
+  ],
+  "winrate": 0.25,
+  "wins": 5
+}
