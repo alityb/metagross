@@ -143,6 +143,7 @@ def main() -> None:
     parser.add_argument("--metrics-out", type=Path, required=True)
     parser.add_argument("--target-field", choices=["action_kind", "action"], default="action_kind")
     parser.add_argument("--epochs", type=int, default=500)
+    parser.add_argument("--hidden-size", type=int, default=0)
     parser.add_argument("--lr", type=float, default=0.03)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--test-fraction", type=float, default=0.2)
@@ -164,7 +165,14 @@ def main() -> None:
     x_test = featurize(rows, test_idx, vocab)
     y_test = labels(rows, test_idx, classes, args.target_field)
 
-    model = torch.nn.Linear(x_train.shape[1], len(classes))
+    if args.hidden_size > 0:
+        model = torch.nn.Sequential(
+            torch.nn.Linear(x_train.shape[1], args.hidden_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(args.hidden_size, len(classes)),
+        )
+    else:
+        model = torch.nn.Linear(x_train.shape[1], len(classes))
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     for _epoch in range(args.epochs):
         opt.zero_grad(set_to_none=True)
@@ -198,14 +206,31 @@ def main() -> None:
     }
 
     args.model_out.parent.mkdir(parents=True, exist_ok=True)
-    model_payload = {
-        "classes": classes,
-        "vocab": vocab,
-        "numeric_fields": NUMERIC_FIELDS,
-        "weight": model.weight.detach().tolist(),
-        "bias": model.bias.detach().tolist(),
-        "metrics": metrics,
-    }
+    if args.hidden_size > 0:
+        first = model[0]
+        second = model[2]
+        model_payload = {
+            "model_type": "mlp_relu",
+            "classes": classes,
+            "vocab": vocab,
+            "numeric_fields": NUMERIC_FIELDS,
+            "hidden_size": args.hidden_size,
+            "w1": first.weight.detach().tolist(),
+            "b1": first.bias.detach().tolist(),
+            "w2": second.weight.detach().tolist(),
+            "b2": second.bias.detach().tolist(),
+            "metrics": metrics,
+        }
+    else:
+        model_payload = {
+            "model_type": "linear",
+            "classes": classes,
+            "vocab": vocab,
+            "numeric_fields": NUMERIC_FIELDS,
+            "weight": model.weight.detach().tolist(),
+            "bias": model.bias.detach().tolist(),
+            "metrics": metrics,
+        }
     args.model_out.write_text(json.dumps(model_payload, separators=(",", ":")) + "\n", encoding="utf-8")
     args.metrics_out.parent.mkdir(parents=True, exist_ok=True)
     args.metrics_out.write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8")

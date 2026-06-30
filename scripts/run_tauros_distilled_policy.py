@@ -162,11 +162,18 @@ def token_features(state: dict[str, Any]) -> tuple[list[str], dict[str, float]]:
 class LinearPolicy:
     def __init__(self, path: Path):
         payload = json.loads(path.read_text(encoding="utf-8"))
+        self.model_type = payload.get("model_type", "linear")
         self.classes = payload["classes"]
         self.vocab = payload["vocab"]
         self.numeric_fields = payload["numeric_fields"]
-        self.weight = payload["weight"]
-        self.bias = payload["bias"]
+        if self.model_type == "mlp_relu":
+            self.w1 = payload["w1"]
+            self.b1 = payload["b1"]
+            self.w2 = payload["w2"]
+            self.b2 = payload["b2"]
+        else:
+            self.weight = payload["weight"]
+            self.bias = payload["bias"]
 
     def logits(self, state: dict[str, Any], turn_index: int) -> dict[str, float]:
         tokens, numeric = token_features(state)
@@ -179,6 +186,12 @@ class LinearPolicy:
         offset = len(self.vocab)
         for idx, field in enumerate(self.numeric_fields):
             x[offset + idx] = float(numeric.get(field, 0.0))
+        if self.model_type == "mlp_relu":
+            hidden = [max(0.0, sum(w * value for w, value in zip(row, x)) + bias) for row, bias in zip(self.w1, self.b1)]
+            return {
+                label: sum(w * value for w, value in zip(self.w2[class_idx], hidden)) + self.b2[class_idx]
+                for class_idx, label in enumerate(self.classes)
+            }
         return {
             label: sum(w * value for w, value in zip(self.weight[class_idx], x)) + self.bias[class_idx]
             for class_idx, label in enumerate(self.classes)
