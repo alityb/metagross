@@ -118,6 +118,7 @@ async def run_one_game(
     logger: logging.Logger,
     game_index: int,
     pokemon_format: str = "gen9randombattle",
+    raw_log_dir: Optional[str] = None,
 ) -> dict:
     """
     Run one Foul Play search_ladder game via subprocess.
@@ -158,6 +159,7 @@ async def run_one_game(
         "error": None,
         "ts": datetime.now(timezone.utc).isoformat(),
     }
+    stdout_lines = []
 
     try:
         proc = await asyncio.wait_for(
@@ -170,7 +172,6 @@ async def run_one_game(
             ),
             timeout=10,
         )
-        stdout_lines = []
         while True:
             try:
                 line = await asyncio.wait_for(proc.stdout.readline(), timeout=GAME_TIMEOUT_MINUTES * 60)  # type: ignore[union-attr]
@@ -233,6 +234,24 @@ async def run_one_game(
 
     record["duration_s"] = round(time.time() - t0, 1)
 
+    if raw_log_dir:
+        raw_dir = Path(raw_log_dir)
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / f"game_{game_index:04d}.log"
+        header = {
+            "game_index": game_index,
+            "username": username,
+            "pokemon_format": pokemon_format,
+            "search_time_ms": search_time_ms,
+            "model": str(model_path) if model_path else "stock",
+            "record": record,
+        }
+        with raw_path.open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps(header, sort_keys=True) + "\n")
+            handle.write("--- raw stdout ---\n")
+            for raw_line in stdout_lines:
+                handle.write(raw_line + "\n")
+
     # Fetch GXE from the PS API (only meaningful for registered accounts
     # after Glicko-RD has converged, typically 30+ rated games).
     if not record.get("error") and password:
@@ -264,6 +283,7 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
             logger=logger,
             game_index=game_index,
             pokemon_format=getattr(args, 'pokemon_format', 'gen9randombattle'),
+            raw_log_dir=args.raw_log_dir,
         )
 
         record["username"] = args.username
@@ -337,6 +357,11 @@ def main() -> None:
     parser.add_argument("--learned-value-model", default=None)
     parser.add_argument("--pokemon-format", default="gen9randombattle")
     parser.add_argument("--log-file", required=True, help="Append-only log file path")
+    parser.add_argument(
+        "--raw-log-dir",
+        default=None,
+        help="Directory for full per-game Foul Play stdout logs.",
+    )
     parser.add_argument("--run-count-start", type=int, default=0,
                         help="Game index to start from (for resuming)")
     args = parser.parse_args()
