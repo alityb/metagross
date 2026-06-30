@@ -29,6 +29,10 @@ def count_lines(path: Path) -> int:
 
 
 def start_showdown(port: int) -> subprocess.Popen | None:
+    showdown_dir = ROOT / "external" / "pokemon-showdown"
+    for relative in ("logs/repl", "logs/modlog", "logs/ladder", "databases"):
+        (showdown_dir / relative).mkdir(parents=True, exist_ok=True)
+
     sock_check = subprocess.run(
         [
             sys.executable,
