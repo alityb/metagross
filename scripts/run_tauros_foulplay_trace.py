@@ -83,6 +83,16 @@ def terminate(proc: subprocess.Popen | None) -> None:
         proc.wait(timeout=10)
 
 
+def wait_grace(proc: subprocess.Popen | None, seconds: float) -> bool:
+    if proc is None or proc.poll() is not None:
+        return True
+    try:
+        proc.wait(timeout=seconds)
+        return True
+    except subprocess.TimeoutExpired:
+        return False
+
+
 def build_metamon_cmd(args: argparse.Namespace, username: str, opponent: str, out_dir: Path) -> list[str]:
     return [
         str(Path(args.metamon_python)),
@@ -155,6 +165,7 @@ def main() -> None:
     parser.add_argument("--foul-play-search-threads", type=int, default=1)
     parser.add_argument("--foul-play-log-level", default="INFO")
     parser.add_argument("--startup-delay-seconds", type=float, default=20.0)
+    parser.add_argument("--finish-grace-seconds", type=float, default=30.0)
     parser.add_argument("--timeout-seconds", type=int, default=3600)
     parser.add_argument("--no-start-showdown", action="store_true")
     args = parser.parse_args()
@@ -210,10 +221,12 @@ def main() -> None:
             if metamon_done and foul_done:
                 break
             if metamon_done and not foul_done:
-                terminate(foul_proc)
+                if not wait_grace(foul_proc, args.finish_grace_seconds):
+                    terminate(foul_proc)
                 break
             if foul_done and not metamon_done:
-                terminate(metamon_proc)
+                if not wait_grace(metamon_proc, args.finish_grace_seconds):
+                    terminate(metamon_proc)
                 break
             time.sleep(2)
         else:
