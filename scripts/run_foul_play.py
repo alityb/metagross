@@ -469,11 +469,37 @@ def patch_decision_logging() -> None:
     pending_rows = []
     original_async_pick_move = run_battle.async_pick_move
     original_pokemon_battle = run_battle.pokemon_battle
-    original_select = search_main.select_move_from_mcts_results
-
     import threading
     _policy_store: dict = {}
     _store_lock = threading.Lock()
+
+    def safe_select_move_from_mcts_results(mcts_results):
+        final_policy = {}
+        for mcts_result, sample_chance, _idx in mcts_results:
+            total_visits = mcts_result.total_visits
+            options = list(mcts_result.side_one)
+            if not options:
+                continue
+            if total_visits <= 0:
+                weight = sample_chance / len(options)
+                for option in options:
+                    final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + weight
+                continue
+            for option in options:
+                final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + (
+                    sample_chance * (option.visits / total_visits)
+                )
+
+        if not final_policy:
+            return "no move"
+        ranked_policy = sorted(final_policy.items(), key=lambda item: item[1], reverse=True)
+        highest = ranked_policy[0][1]
+        if highest > 0:
+            ranked_policy = [item for item in ranked_policy if item[1] >= highest * 0.75]
+        weights = [max(item[1], 0.0) for item in ranked_policy]
+        if sum(weights) <= 0:
+            weights = [1.0 for _ in ranked_policy]
+        return random.choices(ranked_policy, weights=weights)[0][0]
 
     def select_and_capture(mcts_results):
         # Capture MCTS visit distributions. select_move_from_mcts_results runs in the
@@ -494,7 +520,7 @@ def patch_decision_logging() -> None:
                     _policy_store['__last__'] = {'visits': agg, 'total': total}
         except Exception:
             pass
-        return original_select(mcts_results)
+        return safe_select_move_from_mcts_results(mcts_results)
 
     search_main.select_move_from_mcts_results = select_and_capture
 
