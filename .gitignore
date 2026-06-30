@@ -3,6 +3,7 @@
 /.venv-*/
 /external/
 /data/randbats_pools/
+/data/traces/
 *.log
 *.pid
 __pycache__/
