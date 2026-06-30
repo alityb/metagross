@@ -276,12 +276,14 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         )
         env["METAGROSS_RANDBATS_CONDITIONAL_SAMPLES"] = str(args.randbats_conditional_samples)
         env["METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS"] = str(args.randbats_conditional_max_teams)
+        env["METAGROSS_RANDBATS_CONDITIONAL_MAX_MS"] = str(args.randbats_conditional_max_ms)
         env["METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S"] = str(args.randbats_conditional_timeout_seconds)
         env["METAGROSS_RANDBATS_FORMAT"] = args.format
     else:
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_SCRIPT", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_SAMPLES", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS", None)
+        env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
         env.pop("METAGROSS_RANDBATS_FORMAT", None)
     return env
@@ -1010,6 +1012,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--randbats-conditional-samples", type=int, default=24)
     parser.add_argument("--randbats-conditional-max-teams", type=int, default=30000)
+    parser.add_argument("--randbats-conditional-max-ms", type=int, default=250)
     parser.add_argument("--randbats-conditional-timeout-seconds", type=float, default=8.0)
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")

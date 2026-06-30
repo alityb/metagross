@@ -9,6 +9,7 @@ function parseArgs(argv) {
     format: 'gen9randombattle',
     samples: 16,
     maxTeams: 20000,
+    maxMillis: 250,
     server: false,
     showdownDir: path.resolve(__dirname, '..', 'external', 'pokemon-showdown'),
   };
@@ -17,12 +18,14 @@ function parseArgs(argv) {
     if (arg === '--format') args.format = argv[++i];
     else if (arg === '--samples') args.samples = Number.parseInt(argv[++i], 10);
     else if (arg === '--max-teams') args.maxTeams = Number.parseInt(argv[++i], 10);
+    else if (arg === '--max-ms') args.maxMillis = Number.parseInt(argv[++i], 10);
     else if (arg === '--server') args.server = true;
     else if (arg === '--showdown-dir') args.showdownDir = argv[++i];
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!Number.isInteger(args.samples) || args.samples <= 0) throw new Error('--samples must be positive');
   if (!Number.isInteger(args.maxTeams) || args.maxTeams <= 0) throw new Error('--max-teams must be positive');
+  if (!Number.isInteger(args.maxMillis) || args.maxMillis <= 0) throw new Error('--max-ms must be positive');
   return args;
 }
 
@@ -99,10 +102,12 @@ function makeSampler(args) {
     const constraints = (input.constraints || []).map(normalizeConstraint);
     const targetSamples = input.samples || args.samples;
     const maxTeams = input.maxTeams || args.maxTeams;
+    const maxMillis = input.maxMillis || args.maxMillis;
+    const deadline = Date.now() + maxMillis;
 
     const accepted = [];
     let generated = 0;
-    while (accepted.length < targetSamples && generated < maxTeams) {
+    while (accepted.length < targetSamples && generated < maxTeams && Date.now() < deadline) {
       generated += 1;
       const team = Teams.getGenerator(format).getTeam();
       if (teamMatchesConstraints(team, constraints)) accepted.push(team.map(slimSet));
@@ -112,6 +117,7 @@ function makeSampler(args) {
       format: args.format,
       targetSamples,
       maxTeams,
+      maxMillis,
       generated,
       accepted: accepted.length,
       teams: accepted,

@@ -193,6 +193,7 @@ def patch_randbats_generator_belief() -> None:
     conditional_script_path = Path(conditional_script).resolve() if conditional_script else None
     conditional_samples = int(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_SAMPLES", "24"))
     conditional_max_teams = int(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_MAX_TEAMS", "30000"))
+    conditional_max_ms = int(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", "250"))
     conditional_timeout_s = float(os.environ.get("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", "8"))
     conditional_cache: dict[str, list[dict]] = {}
     conditional_lock = threading.Lock()
@@ -228,6 +229,8 @@ def patch_randbats_generator_belief() -> None:
                 str(conditional_samples),
                 "--max-teams",
                 str(conditional_max_teams),
+                "--max-ms",
+                str(conditional_max_ms),
             ],
             cwd=str(root_dir),
             stdin=subprocess.PIPE,
@@ -326,6 +329,7 @@ def patch_randbats_generator_belief() -> None:
                             "constraints": constraints_for_battle(battle),
                             "samples": target_samples,
                             "maxTeams": conditional_max_teams,
+                            "maxMillis": conditional_max_ms,
                         },
                         separators=(",", ":"),
                     )
