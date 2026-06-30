@@ -13,6 +13,12 @@ from copy import deepcopy
 from pathlib import Path
 
 
+SLEEP_MOVES = {"sleeppowder", "hypnosis", "lovelykiss", "sing", "spore"}
+PARALYSIS_MOVES = {"thunderwave", "bodyslam", "stunspore", "glare"}
+BOOM_MOVES = {"explosion", "selfdestruct"}
+RECOVERY_MOVES = {"recover", "softboiled", "rest"}
+
+
 def patch_foul_play_protocol_bugs() -> None:
     import fp.run_battle as run_battle
     import fp.battle as battle_module
@@ -126,6 +132,244 @@ def extract_value_features(state) -> list[float]:
     """
     import poke_engine as _pe
     return _pe.compute_value_features(state)
+
+
+def patch_tauros_action_kind_gate() -> None:
+    model_path = os.environ.get("METAGROSS_TAUROS_KIND_MODEL")
+    if not model_path:
+        return
+
+    import math
+    import fp.run_battle as run_battle
+    import fp.search.main as search_main
+
+    model = json.loads(Path(model_path).read_text(encoding="utf-8"))
+    classes = model["classes"]
+    vocab = model["vocab"]
+    numeric_fields = model["numeric_fields"]
+    weights = model["weight"]
+    bias = model["bias"]
+    threshold = float(os.environ.get("METAGROSS_TAUROS_KIND_THRESHOLD", "0.70"))
+    min_policy_frac = float(os.environ.get("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", "0.10"))
+    gate_log_path = os.environ.get("METAGROSS_TAUROS_KIND_LOG")
+    _current_battle = {"battle": None}
+
+    original_async_pick_move = run_battle.async_pick_move
+
+    def hp_bin(value):
+        try:
+            hp = float(value)
+        except (TypeError, ValueError):
+            return "unknown"
+        if hp <= 0:
+            return "0"
+        if hp <= 0.25:
+            return "1-25"
+        if hp <= 0.5:
+            return "26-50"
+        if hp <= 0.75:
+            return "51-75"
+        return "76-100"
+
+    def mon_name(mon):
+        return getattr(mon, "name", "none") if mon is not None else "none"
+
+    def mon_hp(mon):
+        if mon is None or getattr(mon, "max_hp", 0) == 0:
+            return 0.0
+        return max(0.0, min(1.0, mon.hp / mon.max_hp))
+
+    def mon_status(mon):
+        status = getattr(mon, "status", None)
+        return str(status).lower() if status else "none"
+
+    def mon_moves(mon):
+        return [move.name for move in getattr(mon, "moves", [])] if mon is not None else []
+
+    def alive_count(battler):
+        mons = list(getattr(battler, "reserve", []))
+        if getattr(battler, "active", None) is not None:
+            mons.append(battler.active)
+        return sum(1 for mon in mons if getattr(mon, "hp", 0) > 0)
+
+    def pre_action_bucket(battle):
+        active = battle.user.active
+        opponent = battle.opponent.active
+        active_name = mon_name(active)
+        opponent_name = mon_name(opponent)
+        active_moves = set(mon_moves(active))
+        player_alive = alive_count(battle.user)
+        opponent_alive = alive_count(battle.opponent)
+        if getattr(battle, "force_switch", False):
+            return "forced_switch"
+        if player_alive <= 2 or opponent_alive <= 2:
+            if active_name == "tauros" or opponent_name == "tauros":
+                return "tauros_endgame"
+            return "low_hp_endgame"
+        if active_moves & SLEEP_MOVES:
+            return "sleep_pressure"
+        if active_moves & PARALYSIS_MOVES:
+            return "paralysis_spread"
+        if active_moves & BOOM_MOVES:
+            return "explosion_opportunity"
+        if active_name == "chansey" and opponent_name == "chansey":
+            return "chansey_mirror"
+        if active_name == "snorlax" or opponent_name == "snorlax":
+            return "snorlax_trade"
+        if active_moves & RECOVERY_MOVES:
+            return "recovery_loop"
+        if mon_status(active) != "none":
+            return "statused_active"
+        return "other"
+
+    def token_features(battle):
+        active = battle.user.active
+        opponent = battle.opponent.active
+        active_hp = mon_hp(active)
+        opponent_hp = mon_hp(opponent)
+        player_alive = alive_count(battle.user)
+        opponent_alive = alive_count(battle.opponent)
+        active_moves = mon_moves(active)
+        opponent_moves = mon_moves(opponent)
+        tokens = [
+            f"bucket={pre_action_bucket(battle)}",
+            f"active={mon_name(active)}",
+            f"opponent={mon_name(opponent)}",
+            f"active_status={mon_status(active)}",
+            f"opponent_status={mon_status(opponent)}",
+            f"player_alive={player_alive}",
+            f"opponent_alive={opponent_alive}",
+            f"forced_switch={getattr(battle, 'force_switch', False)}",
+            f"has_sleep={bool(set(active_moves) & SLEEP_MOVES)}",
+            f"has_para={bool(set(active_moves) & PARALYSIS_MOVES)}",
+            f"has_boom={bool(set(active_moves) & BOOM_MOVES)}",
+            f"has_recovery={bool(set(active_moves) & RECOVERY_MOVES)}",
+            f"active_hp_bin={hp_bin(active_hp)}",
+            f"opponent_hp_bin={hp_bin(opponent_hp)}",
+        ]
+        tokens.extend(f"active_move={move}" for move in active_moves)
+        tokens.extend(f"opponent_move={move}" for move in opponent_moves)
+        numeric = {
+            "active_hp": active_hp,
+            "opponent_hp": opponent_hp,
+            "player_alive": player_alive,
+            "opponent_alive": opponent_alive,
+            "turn_index": getattr(battle, "turn", 0) / 200.0,
+        }
+        return tokens, numeric
+
+    def predict_kind(battle):
+        if battle is None or battle.user.active is None:
+            return None, 0.0
+        tokens, numeric = token_features(battle)
+        x = [0.0 for _ in range(len(vocab) + len(numeric_fields))]
+        for token in tokens:
+            idx = vocab.get(token)
+            if idx is not None:
+                x[idx] = 1.0
+        offset = len(vocab)
+        for i, field in enumerate(numeric_fields):
+            x[offset + i] = float(numeric.get(field, 0.0))
+        logits = []
+        for class_idx in range(len(classes)):
+            logits.append(sum(w * value for w, value in zip(weights[class_idx], x)) + bias[class_idx])
+        max_logit = max(logits)
+        exps = [math.exp(logit - max_logit) for logit in logits]
+        denom = sum(exps)
+        probs = [value / denom for value in exps]
+        best_idx = max(range(len(classes)), key=lambda idx: probs[idx])
+        return classes[best_idx], probs[best_idx]
+
+    def choice_kind(choice) -> str:
+        value = str(choice).lower()
+        if value.startswith("switch "):
+            return "switch"
+        if value in SLEEP_MOVES:
+            return "sleep"
+        if value in PARALYSIS_MOVES:
+            return "paralysis"
+        if value in BOOM_MOVES:
+            return "boom"
+        if value in RECOVERY_MOVES:
+            return "recovery"
+        return "attack_or_other"
+
+    def final_policy_from_results(mcts_results):
+        final_policy = {}
+        for mcts_result, sample_chance, _idx in mcts_results:
+            total_visits = mcts_result.total_visits
+            options = list(mcts_result.side_one)
+            if not options:
+                continue
+            if total_visits <= 0:
+                for option in options:
+                    final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + sample_chance / len(options)
+                continue
+            for option in options:
+                final_policy[option.move_choice] = final_policy.get(option.move_choice, 0.0) + (
+                    sample_chance * (option.visits / total_visits)
+                )
+        return final_policy
+
+    def choose_from_policy(final_policy):
+        ranked = sorted(final_policy.items(), key=lambda item: item[1], reverse=True)
+        if not ranked:
+            return "no move"
+        highest = ranked[0][1]
+        if highest > 0:
+            ranked = [item for item in ranked if item[1] >= highest * 0.75]
+        weights = [max(item[1], 0.0) for item in ranked]
+        if sum(weights) <= 0:
+            weights = [1.0 for _ in ranked]
+        return random.choices(ranked, weights=weights)[0][0]
+
+    def select_with_tauros_kind_gate(mcts_results):
+        final_policy = final_policy_from_results(mcts_results)
+        if not final_policy:
+            return "no move"
+        baseline = choose_from_policy(final_policy)
+        predicted_kind, confidence = predict_kind(_current_battle.get("battle"))
+        selected = baseline
+        used_gate = False
+        candidates = {}
+        if predicted_kind is not None and confidence >= threshold:
+            highest = max(final_policy.values()) if final_policy else 0.0
+            candidates = {
+                choice: weight
+                for choice, weight in final_policy.items()
+                if choice_kind(choice) == predicted_kind and (highest <= 0 or weight >= highest * min_policy_frac)
+            }
+            if candidates:
+                selected = choose_from_policy(candidates)
+                used_gate = selected != baseline
+        if gate_log_path:
+            battle = _current_battle.get("battle")
+            row = {
+                "turn": getattr(battle, "turn", None),
+                "active": mon_name(getattr(getattr(battle, "user", None), "active", None)),
+                "opponent_active": mon_name(getattr(getattr(battle, "opponent", None), "active", None)),
+                "predicted_kind": predicted_kind,
+                "confidence": confidence,
+                "baseline": str(baseline),
+                "selected": str(selected),
+                "used_gate": used_gate,
+                "final_policy": {str(choice): weight for choice, weight in final_policy.items()},
+                "candidate_policy": {str(choice): weight for choice, weight in candidates.items()},
+            }
+            Path(gate_log_path).parent.mkdir(parents=True, exist_ok=True)
+            with open(gate_log_path, "a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+        return selected
+
+    async def async_pick_move_with_tauros_kind_gate(battle):
+        _current_battle["battle"] = deepcopy(battle)
+        try:
+            return await original_async_pick_move(battle)
+        finally:
+            _current_battle["battle"] = None
+
+    search_main.select_move_from_mcts_results = select_with_tauros_kind_gate
+    run_battle.async_pick_move = async_pick_move_with_tauros_kind_gate
 
 
 def patch_randbats_generator_belief() -> None:
@@ -629,6 +873,7 @@ def main() -> None:
     sys.path.insert(0, str(foul_play_dir))
 
     patch_foul_play_protocol_bugs()
+    patch_tauros_action_kind_gate()
     patch_randbats_generator_belief()
     patch_decision_logging()
 

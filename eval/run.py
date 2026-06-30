@@ -35,6 +35,7 @@ AGENT_NAMES = (
     "foul_play_learned",
     "foul_play_randbats_pool",
     "foul_play_randbats_conditional",
+    "foul_play_tauros_kind",
 )
 EXPERIMENT_FIELDS = [
     "run_id",
@@ -125,6 +126,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_learned",
         "foul_play_randbats_pool",
         "foul_play_randbats_conditional",
+        "foul_play_tauros_kind",
     }
 
 
@@ -138,6 +140,10 @@ def is_randbats_pool_foul_play(agent: str) -> bool:
 
 def is_randbats_conditional_foul_play(agent: str) -> bool:
     return agent == "foul_play_randbats_conditional"
+
+
+def is_tauros_kind_foul_play(agent: str) -> bool:
+    return agent == "foul_play_tauros_kind"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -286,6 +292,14 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
         env.pop("METAGROSS_RANDBATS_FORMAT", None)
+    if is_tauros_kind_foul_play(agent):
+        env["METAGROSS_TAUROS_KIND_MODEL"] = str(Path(args.tauros_kind_model).resolve())
+        env["METAGROSS_TAUROS_KIND_THRESHOLD"] = str(args.tauros_kind_threshold)
+        env["METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC"] = str(args.tauros_kind_min_policy_frac)
+    else:
+        env.pop("METAGROSS_TAUROS_KIND_MODEL", None)
+        env.pop("METAGROSS_TAUROS_KIND_THRESHOLD", None)
+        env.pop("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", None)
     return env
 
 
@@ -1014,6 +1028,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--randbats-conditional-max-teams", type=int, default=30000)
     parser.add_argument("--randbats-conditional-max-ms", type=int, default=250)
     parser.add_argument("--randbats-conditional-timeout-seconds", type=float, default=8.0)
+    parser.add_argument("--tauros-kind-model", default=str(ROOT_DIR / "nets" / "checkpoints" / "tauros_action_kind_n100.json"))
+    parser.add_argument("--tauros-kind-threshold", type=float, default=0.70)
+    parser.add_argument("--tauros-kind-min-policy-frac", type=float, default=0.10)
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")
     parser.add_argument("--agent-b-model", default=None,
