@@ -88,8 +88,8 @@ def build_vocab(rows: list[dict[str, Any]], indices: list[int]) -> dict[str, int
     return {token: i for i, (token, _count) in enumerate(counts.most_common())}
 
 
-def build_classes(rows: list[dict[str, Any]]) -> list[str]:
-    return sorted({str(row["action_kind"]) for row in rows})
+def build_classes(rows: list[dict[str, Any]], target_field: str) -> list[str]:
+    return sorted({str(row[target_field]) for row in rows})
 
 
 def featurize(rows: list[dict[str, Any]], indices: list[int], vocab: dict[str, int]) -> torch.Tensor:
@@ -114,9 +114,9 @@ def featurize(rows: list[dict[str, Any]], indices: list[int], vocab: dict[str, i
     return x
 
 
-def labels(rows: list[dict[str, Any]], indices: list[int], classes: list[str]) -> torch.Tensor:
+def labels(rows: list[dict[str, Any]], indices: list[int], classes: list[str], target_field: str) -> torch.Tensor:
     class_to_idx = {label: idx for idx, label in enumerate(classes)}
-    return torch.tensor([class_to_idx[str(rows[idx]["action_kind"])] for idx in indices], dtype=torch.long)
+    return torch.tensor([class_to_idx[str(rows[idx][target_field])] for idx in indices], dtype=torch.long)
 
 
 def accuracy(logits: torch.Tensor, y: torch.Tensor) -> float:
@@ -141,6 +141,7 @@ def main() -> None:
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--model-out", type=Path, required=True)
     parser.add_argument("--metrics-out", type=Path, required=True)
+    parser.add_argument("--target-field", choices=["action_kind", "action"], default="action_kind")
     parser.add_argument("--epochs", type=int, default=500)
     parser.add_argument("--lr", type=float, default=0.03)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
@@ -149,14 +150,19 @@ def main() -> None:
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
-    rows = [row for row in load_rows(args.data) if row.get("action_kind") != "unknown"]
+    rows = []
+    for row in load_rows(args.data):
+        target = str(row.get(args.target_field))
+        if target in {"unknown", "noop"} or target.startswith("unknown:"):
+            continue
+        rows.append(row)
     train_idx, test_idx = split_by_game(rows, args.test_fraction, args.seed)
     vocab = build_vocab(rows, train_idx)
-    classes = build_classes(rows)
+    classes = build_classes(rows, args.target_field)
     x_train = featurize(rows, train_idx, vocab)
-    y_train = labels(rows, train_idx, classes)
+    y_train = labels(rows, train_idx, classes, args.target_field)
     x_test = featurize(rows, test_idx, vocab)
-    y_test = labels(rows, test_idx, classes)
+    y_test = labels(rows, test_idx, classes, args.target_field)
 
     model = torch.nn.Linear(x_train.shape[1], len(classes))
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -177,6 +183,7 @@ def main() -> None:
     class_counts = Counter(classes[int(y)] for y in y_train.tolist())
     metrics = {
         "data": str(args.data),
+        "target_field": args.target_field,
         "examples": len(rows),
         "train_examples": len(train_idx),
         "test_examples": len(test_idx),
