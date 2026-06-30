@@ -4,6 +4,7 @@
 /external/
 /data/randbats_pools/
 /data/traces/
+/data/processed/
 *.log
 *.pid
 __pycache__/
