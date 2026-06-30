@@ -1,0 +1,10 @@
+agent,bucket,count,wins,winrate
+TaurosV0,forced_switch,3,3,1.0
+TaurosV0,low_hp_endgame,5,5,1.0
+TaurosV0,paralysis_spread,26,26,1.0
+TaurosV0,sleep_pressure,47,47,1.0
+FoulPlay,foul_play_attack_or_other,69,0,0.0
+FoulPlay,foul_play_boom,1,0,0.0
+FoulPlay,foul_play_paralysis,5,0,0.0
+FoulPlay,foul_play_recovery,4,0,0.0
+FoulPlay,foul_play_sleep,3,0,0.0
