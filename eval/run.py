@@ -298,10 +298,12 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env["METAGROSS_TAUROS_KIND_MODEL"] = str(Path(args.tauros_kind_model).resolve())
         env["METAGROSS_TAUROS_KIND_THRESHOLD"] = str(args.tauros_kind_threshold)
         env["METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC"] = str(args.tauros_kind_min_policy_frac)
+        env["METAGROSS_TAUROS_KIND_ALLOWED_KINDS"] = args.tauros_kind_allowed_kinds
     else:
         env.pop("METAGROSS_TAUROS_KIND_MODEL", None)
         env.pop("METAGROSS_TAUROS_KIND_THRESHOLD", None)
         env.pop("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", None)
+        env.pop("METAGROSS_TAUROS_KIND_ALLOWED_KINDS", None)
     return env
 
 
@@ -1033,6 +1035,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--tauros-kind-model", default=str(ROOT_DIR / "nets" / "checkpoints" / "tauros_action_kind_n100.json"))
     parser.add_argument("--tauros-kind-threshold", type=float, default=0.70)
     parser.add_argument("--tauros-kind-min-policy-frac", type=float, default=0.10)
+    parser.add_argument(
+        "--tauros-kind-allowed-kinds",
+        default="attack_or_other,boom,paralysis,recovery,sleep,switch",
+        help="Comma-separated action kinds the Tauros gate may override toward.",
+    )
     parser.add_argument("--agent-a-model", default=None,
                         help="Per-slot model override for agent-a (foul_play_learned only).")
     parser.add_argument("--agent-b-model", default=None,

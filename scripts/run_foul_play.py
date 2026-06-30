@@ -151,6 +151,8 @@ def patch_tauros_action_kind_gate() -> None:
     bias = model["bias"]
     threshold = float(os.environ.get("METAGROSS_TAUROS_KIND_THRESHOLD", "0.70"))
     min_policy_frac = float(os.environ.get("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", "0.10"))
+    allowed_kinds_raw = os.environ.get("METAGROSS_TAUROS_KIND_ALLOWED_KINDS", "attack_or_other,boom,paralysis,recovery,sleep,switch")
+    allowed_kinds = {kind.strip() for kind in allowed_kinds_raw.split(",") if kind.strip()}
     gate_log_path = os.environ.get("METAGROSS_TAUROS_KIND_LOG")
     _current_battle = {"battle": None}
 
@@ -343,17 +345,19 @@ def patch_tauros_action_kind_gate() -> None:
             highest = max(final_policy.values()) if final_policy else 0.0
             exact_choice = exact_label_to_choice(str(predicted_kind))
             if exact_choice is None:
-                candidates = {
-                    choice: weight
-                    for choice, weight in final_policy.items()
-                    if choice_kind(choice) == predicted_kind and (highest <= 0 or weight >= highest * min_policy_frac)
-                }
+                if predicted_kind in allowed_kinds:
+                    candidates = {
+                        choice: weight
+                        for choice, weight in final_policy.items()
+                        if choice_kind(choice) == predicted_kind and (highest <= 0 or weight >= highest * min_policy_frac)
+                    }
             else:
-                candidates = {
-                    choice: weight
-                    for choice, weight in final_policy.items()
-                    if str(choice).lower() == exact_choice and (highest <= 0 or weight >= highest * min_policy_frac)
-                }
+                if choice_kind(exact_choice) in allowed_kinds:
+                    candidates = {
+                        choice: weight
+                        for choice, weight in final_policy.items()
+                        if str(choice).lower() == exact_choice and (highest <= 0 or weight >= highest * min_policy_frac)
+                    }
             if candidates:
                 selected = choose_from_policy(candidates)
                 used_gate = selected != baseline
@@ -370,6 +374,7 @@ def patch_tauros_action_kind_gate() -> None:
                 "used_gate": used_gate,
                 "final_policy": {str(choice): weight for choice, weight in final_policy.items()},
                 "candidate_policy": {str(choice): weight for choice, weight in candidates.items()},
+                "allowed_kinds": sorted(allowed_kinds),
             }
             Path(gate_log_path).parent.mkdir(parents=True, exist_ok=True)
             with open(gate_log_path, "a", encoding="utf-8") as handle:
