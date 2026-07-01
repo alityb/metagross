@@ -119,6 +119,7 @@ async def run_one_game(
     game_index: int,
     pokemon_format: str = "gen9randombattle",
     raw_log_dir: Optional[str] = None,
+    game_timeout_minutes: int = GAME_TIMEOUT_MINUTES,
 ) -> dict:
     """
     Run one Foul Play search_ladder game via subprocess.
@@ -160,6 +161,27 @@ async def run_one_game(
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     stdout_lines = []
+    raw_handle = None
+    if raw_log_dir:
+        raw_dir = Path(raw_log_dir)
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / f"game_{game_index:04d}.log"
+        raw_handle = raw_path.open("w", encoding="utf-8")
+        raw_handle.write(
+            json.dumps(
+                {
+                    "game_index": game_index,
+                    "username": username,
+                    "pokemon_format": pokemon_format,
+                    "search_time_ms": search_time_ms,
+                    "model": str(model_path) if model_path else "stock",
+                    "started_at": record["ts"],
+                },
+                sort_keys=True,
+            )
+            + "\n--- raw stdout ---\n"
+        )
+        raw_handle.flush()
 
     try:
         proc = await asyncio.wait_for(
@@ -174,17 +196,20 @@ async def run_one_game(
         )
         while True:
             try:
-                line = await asyncio.wait_for(proc.stdout.readline(), timeout=GAME_TIMEOUT_MINUTES * 60)  # type: ignore[union-attr]
+                line = await asyncio.wait_for(proc.stdout.readline(), timeout=game_timeout_minutes * 60)  # type: ignore[union-attr]
             except asyncio.TimeoutError:
                 proc.kill()
                 await proc.wait()
-                record["error"] = f"game_timeout_{GAME_TIMEOUT_MINUTES}min"
-                logger.error("GAME_TIMEOUT game=%d timeout after %d min", game_index, GAME_TIMEOUT_MINUTES)
+                record["error"] = f"game_timeout_{game_timeout_minutes}min"
+                logger.error("GAME_TIMEOUT game=%d timeout after %d min", game_index, game_timeout_minutes)
                 break
             if not line:
                 break
             decoded = line.decode("utf-8", errors="replace").rstrip()
             stdout_lines.append(decoded)
+            if raw_handle is not None:
+                raw_handle.write(decoded + "\n")
+                raw_handle.flush()
             # Parse useful lines
             if "Initialized battle" in decoded:
                 m = re.search(r"Initialized .+? against:\s*(.+)", decoded)
@@ -233,24 +258,10 @@ async def run_one_game(
         logger.error("Exception in game=%d: %s", game_index, exc)
 
     record["duration_s"] = round(time.time() - t0, 1)
-
-    if raw_log_dir:
-        raw_dir = Path(raw_log_dir)
-        raw_dir.mkdir(parents=True, exist_ok=True)
-        raw_path = raw_dir / f"game_{game_index:04d}.log"
-        header = {
-            "game_index": game_index,
-            "username": username,
-            "pokemon_format": pokemon_format,
-            "search_time_ms": search_time_ms,
-            "model": str(model_path) if model_path else "stock",
-            "record": record,
-        }
-        with raw_path.open("w", encoding="utf-8") as handle:
-            handle.write(json.dumps(header, sort_keys=True) + "\n")
-            handle.write("--- raw stdout ---\n")
-            for raw_line in stdout_lines:
-                handle.write(raw_line + "\n")
+    if raw_handle is not None:
+        raw_handle.write("--- parsed record ---\n")
+        raw_handle.write(json.dumps(record, sort_keys=True) + "\n")
+        raw_handle.close()
 
     # Fetch GXE from the PS API (only meaningful for registered accounts
     # after Glicko-RD has converged, typically 30+ rated games).
@@ -284,6 +295,7 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
             game_index=game_index,
             pokemon_format=getattr(args, 'pokemon_format', 'gen9randombattle'),
             raw_log_dir=args.raw_log_dir,
+            game_timeout_minutes=args.game_timeout_minutes,
         )
 
         record["username"] = args.username
@@ -361,6 +373,12 @@ def main() -> None:
         "--raw-log-dir",
         default=None,
         help="Directory for full per-game Foul Play stdout logs.",
+    )
+    parser.add_argument(
+        "--game-timeout-minutes",
+        type=int,
+        default=GAME_TIMEOUT_MINUTES,
+        help="Per-game no-output watchdog timeout in minutes.",
     )
     parser.add_argument("--run-count-start", type=int, default=0,
                         help="Game index to start from (for resuming)")
