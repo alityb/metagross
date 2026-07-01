@@ -283,8 +283,17 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
                 args.learned_value_model or "stock")
 
     target = args.run_count_start + args.n_games
-    while game_index < target:
-        logger.info("GAME_START game=%d / %d", game_index + 1, target)
+    valid_target = args.target_valid_games
+    valid_completed = 0
+    while game_index < target and (
+        valid_target is None or valid_completed < valid_target
+    ):
+        target_label = (
+            f"valid {valid_completed}/{valid_target}; attempt {game_index + 1}/{target}"
+            if valid_target is not None
+            else f"game={game_index + 1} / {target}"
+        )
+        logger.info("GAME_START %s", target_label)
 
         record = await run_one_game(
             username=args.username,
@@ -309,20 +318,21 @@ async def run_ladder(args: argparse.Namespace, logger: logging.Logger) -> None:
                 "GAME_ERROR game=%d error=%s consecutive=%d",
                 game_index, record["error"], consecutive_errors,
             )
-        if consecutive_errors >= 5 and consecutive_errors < 15:
+            if consecutive_errors >= 5 and consecutive_errors < 15:
                 backoff = min(BACKOFF_BASE * (2 ** min(consecutive_errors - 5, 5)), BACKOFF_MAX)
                 logger.error(
                     "WATCHDOG: %d consecutive errors — backing off %ds before retry",
                     consecutive_errors, backoff,
                 )
                 await asyncio.sleep(backoff)
-        if consecutive_errors >= 15:
+            if consecutive_errors >= 15:
                 logger.critical(
                     "FATAL: 15 consecutive errors, aborting. Check connection and account status."
                 )
                 break
         else:
             consecutive_errors = 0
+            valid_completed += 1
             logger.info(
                 "GAME_DONE game=%d result=%s elo=%s gxe=%s opponent=%s turns=%s dur=%ss",
                 game_index, record.get("result"), record.get("elo_after"),
@@ -382,6 +392,12 @@ def main() -> None:
     )
     parser.add_argument("--run-count-start", type=int, default=0,
                         help="Game index to start from (for resuming)")
+    parser.add_argument(
+        "--target-valid-games",
+        type=int,
+        default=None,
+        help="Stop after this many non-error games in this run, regardless of attempts.",
+    )
     args = parser.parse_args()
 
     Path(args.log_file).parent.mkdir(parents=True, exist_ok=True)
