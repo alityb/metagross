@@ -9,3 +9,4 @@
 *.pid
 __pycache__/
 .pytest_cache/
+/data/replays/

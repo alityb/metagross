@@ -218,6 +218,13 @@ def foul_play_command(
         python_bin = Path(args.agent_b_python)
     else:
         python_bin = Path(args.foul_play_python)
+    # Per-slot search budget override (for budget-scaling A/B: agent_a@X ms vs agent_b@Y ms)
+    if slot == "agent_a" and getattr(args, "agent_a_search_time_ms", None):
+        search_time_ms = args.agent_a_search_time_ms
+    elif slot == "agent_b" and getattr(args, "agent_b_search_time_ms", None):
+        search_time_ms = args.agent_b_search_time_ms
+    else:
+        search_time_ms = args.foul_play_search_time_ms
     runner = ROOT_DIR / "scripts" / "run_foul_play.py"
     cmd = [
         str(python_bin),
@@ -233,7 +240,7 @@ def foul_play_command(
         "--run-count",
         "1",
         "--search-time-ms",
-        str(args.foul_play_search_time_ms),
+        str(search_time_ms),
         "--search-parallelism",
         str(args.foul_play_search_parallelism),
         "--search-threads",
@@ -837,6 +844,28 @@ async def run_scheduled_game(
     return result
 
 
+def emit_progress(args: argparse.Namespace, result: GameResult, results: list[GameResult]) -> None:
+    """Append-only per-game progress so a crash mid-run still yields a usable partial."""
+    decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
+    wins = sum(1 for r in decisive if r.winner == "agent_a")
+    line = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "game_index": result.game_index,
+        "winner": result.winner,
+        "void": result.void,
+        "error": result.error,
+        "running_agent_a_wins": wins,
+        "running_decisive": len(decisive),
+        "running_winrate": round(wins / len(decisive), 4) if decisive else None,
+    }
+    print(f"PROGRESS {json.dumps(line, sort_keys=True)}", flush=True)
+    if getattr(args, "json_out", None):
+        progress_path = Path(str(args.json_out) + ".progress.jsonl")
+        progress_path.parent.mkdir(parents=True, exist_ok=True)
+        with progress_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(line, sort_keys=True) + "\n")
+
+
 async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResult]]:
     server_configuration = make_server_configuration(args)
     schedule = side_schedule(args.n_games, args.paired)
@@ -850,6 +879,7 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
                 args, server_configuration, index, challenger, acceptor, log_dir
             )
             results.append(result)
+            emit_progress(args, result, results)
     else:
         with tempfile.TemporaryDirectory(prefix="phase0-eval-") as temp_dir_name:
             log_dir = Path(temp_dir_name)
@@ -858,6 +888,7 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
                     args, server_configuration, index, challenger, acceptor, log_dir
                 )
                 results.append(result)
+                emit_progress(args, result, results)
 
     completed_results = [result for result in results if not result.void]
     decisive_results = [
@@ -1070,6 +1101,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--agent-b-model", default=None,
                         help="Per-slot model override for agent-b (foul_play_learned only).")
     parser.add_argument("--foul-play-search-time-ms", type=int, default=100)
+    parser.add_argument("--agent-a-search-time-ms", type=int, default=None,
+                        help="Override search budget (ms) for agent_a only; falls back to --foul-play-search-time-ms")
+    parser.add_argument("--agent-b-search-time-ms", type=int, default=None,
+                        help="Override search budget (ms) for agent_b only; falls back to --foul-play-search-time-ms")
     parser.add_argument("--foul-play-search-parallelism", type=int, default=1)
     parser.add_argument("--foul-play-search-threads", type=int, default=1)
     parser.add_argument("--foul-play-startup-delay-seconds", type=float, default=5.0)
