@@ -1,0 +1,108 @@
+2026-06-30 13:34:16,847 INFO START | label=stock_foul_play_gen9randombattle_guest | username=mg9g107bc751 | n_games=50 | search_ms=100 | model=stock
+2026-06-30 13:34:16,847 INFO GAME_START game=1 / 50
+2026-06-30 13:35:39,434 INFO GAME_DONE game=0 result=win elo=1040 gxe=None opponent=zjdhd turns=9 dur=82.6s
+2026-06-30 13:35:54,436 INFO GAME_START game=2 / 50
+2026-06-30 13:38:44,354 INFO GAME_DONE game=1 result=win elo=1078 gxe=None opponent=0632A turns=18 dur=169.9s
+2026-06-30 13:38:59,355 INFO GAME_START game=3 / 50
+2026-06-30 13:40:34,554 INFO GAME_DONE game=2 result=win elo=1109 gxe=None opponent=YooG0 turns=5 dur=95.2s
+2026-06-30 13:40:49,556 INFO GAME_START game=4 / 50
+2026-06-30 13:45:23,087 INFO GAME_DONE game=3 result=win elo=1131 gxe=None opponent=Kramutacks turns=18 dur=273.5s
+2026-06-30 13:45:38,087 INFO GAME_START game=5 / 50
+2026-06-30 13:46:38,402 INFO GAME_DONE game=4 result=win elo=1158 gxe=None opponent=gordatetona368 turns=9 dur=60.3s
+2026-06-30 13:46:53,403 INFO GAME_START game=6 / 50
+2026-06-30 13:47:29,415 INFO GAME_DONE game=5 result=win elo=1181 gxe=None opponent=vorakk turns=2 dur=36.0s
+2026-06-30 13:47:44,416 INFO GAME_START game=7 / 50
+2026-06-30 13:48:01,647 INFO GAME_DONE game=6 result=win elo=1207 gxe=None opponent=belligerence55 turns=11 dur=17.2s
+2026-06-30 13:48:16,649 INFO GAME_START game=8 / 50
+2026-06-30 13:49:09,917 INFO GAME_DONE game=7 result=win elo=1232 gxe=None opponent=bread80359 turns=3 dur=53.3s
+2026-06-30 13:49:24,918 INFO GAME_START game=9 / 50
+2026-06-30 13:49:49,707 INFO GAME_DONE game=8 result=win elo=1254 gxe=None opponent=leandro.pujols turns=1 dur=24.8s
+2026-06-30 13:50:04,708 INFO GAME_START game=10 / 50
+2026-06-30 13:52:49,591 INFO GAME_DONE game=9 result=loss elo=1233 gxe=None opponent=ghjfghjrutrtuuu turns=21 dur=164.9s
+2026-06-30 13:53:04,592 INFO GAME_START game=11 / 50
+2026-06-30 13:59:46,894 INFO GAME_DONE game=10 result=win elo=1255 gxe=None opponent=Jurassic5000 turns=20 dur=402.3s
+2026-06-30 14:00:01,895 INFO GAME_START game=12 / 50
+2026-06-30 14:05:13,829 INFO GAME_DONE game=11 result=loss elo=1230 gxe=None opponent=umphilo turns=52 dur=311.9s
+2026-06-30 14:05:28,831 INFO GAME_START game=13 / 50
+2026-06-30 14:09:10,562 INFO GAME_DONE game=12 result=win elo=1256 gxe=None opponent=exovedate turns=15 dur=221.7s
+2026-06-30 14:09:25,564 INFO GAME_START game=14 / 50
+2026-06-30 14:14:08,579 INFO GAME_DONE game=13 result=win elo=1278 gxe=None opponent=giratinapaco turns=33 dur=283.0s
+2026-06-30 14:14:23,581 INFO GAME_START game=15 / 50
+2026-06-30 14:19:33,711 INFO GAME_DONE game=14 result=win elo=1306 gxe=None opponent=Flora1409 turns=24 dur=310.1s
+2026-06-30 14:19:48,712 INFO GAME_START game=16 / 50
+2026-06-30 14:27:55,745 INFO GAME_DONE game=15 result=loss elo=1287 gxe=None opponent=faszomatszopodbe turns=42 dur=487.0s
+2026-06-30 14:28:10,746 INFO GAME_START game=17 / 50
+2026-06-30 14:30:50,070 INFO GAME_DONE game=16 result=win elo=1315 gxe=None opponent=pizza azul turns=1 dur=159.3s
+2026-06-30 14:31:05,075 INFO GAME_START game=18 / 50
+2026-06-30 14:34:00,622 INFO GAME_DONE game=17 result=win elo=1333 gxe=None opponent=misterbatracio turns=13 dur=175.5s
+2026-06-30 14:34:15,623 INFO GAME_START game=19 / 50
+2026-06-30 14:36:55,121 INFO GAME_DONE game=18 result=win elo=1355 gxe=None opponent=ClassWarWhen? turns=15 dur=159.5s
+2026-06-30 14:37:10,123 INFO GAME_START game=20 / 50
+2026-06-30 14:38:50,490 INFO GAME_DONE game=19 result=win elo=1373 gxe=None opponent=Aladoma turns=21 dur=100.4s
+2026-06-30 14:38:50,490 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_guest | games=20 | W=17 L=3 | elo=1373 | gxe=None
+2026-06-30 14:39:05,491 INFO GAME_START game=21 / 50
+2026-06-30 14:44:16,504 INFO GAME_DONE game=20 result=win elo=1392 gxe=None opponent=Ex625 turns=25 dur=311.0s
+2026-06-30 14:44:31,506 INFO GAME_START game=22 / 50
+2026-06-30 14:46:53,674 INFO GAME_DONE game=21 result=win elo=1413 gxe=None opponent=Anuar pkm turns=4 dur=142.2s
+2026-06-30 14:47:08,675 INFO GAME_START game=23 / 50
+2026-06-30 14:48:14,953 INFO GAME_DONE game=22 result=win elo=1432 gxe=None opponent=isaacami turns=7 dur=66.3s
+2026-06-30 14:48:29,955 INFO GAME_START game=24 / 50
+2026-06-30 14:52:45,406 INFO GAME_DONE game=23 result=win elo=1454 gxe=None opponent=pedro fernando turns=16 dur=255.4s
+2026-06-30 14:53:00,408 INFO GAME_START game=25 / 50
+2026-06-30 14:59:03,467 INFO GAME_DONE game=24 result=win elo=1474 gxe=None opponent=latiapickachu turns=30 dur=363.1s
+2026-06-30 14:59:18,469 INFO GAME_START game=26 / 50
+2026-06-30 14:59:28,729 WARNING GAME_ERROR game=25 error=exit_1 consecutive=1
+2026-06-30 14:59:28,729 INFO GAME_DONE game=25 result=None elo=None gxe=None opponent=None turns=None dur=10.3s
+2026-06-30 14:59:43,731 INFO GAME_START game=27 / 50
+2026-06-30 14:59:53,891 WARNING GAME_ERROR game=26 error=exit_1 consecutive=1
+2026-06-30 14:59:53,891 INFO GAME_DONE game=26 result=None elo=None gxe=None opponent=None turns=None dur=10.2s
+2026-06-30 15:00:08,892 INFO GAME_START game=28 / 50
+2026-06-30 15:00:12,063 WARNING GAME_ERROR game=27 error=exit_1 consecutive=1
+2026-06-30 15:00:12,063 INFO GAME_DONE game=27 result=None elo=None gxe=None opponent=None turns=None dur=3.2s
+2026-06-30 15:00:27,064 INFO GAME_START game=29 / 50
+2026-06-30 15:04:53,785 INFO GAME_DONE game=28 result=loss elo=1439 gxe=None opponent=Nawfel_213 turns=29 dur=266.7s
+2026-06-30 15:05:08,787 INFO GAME_START game=30 / 50
+2026-06-30 15:06:50,605 INFO GAME_DONE game=29 result=win elo=1461 gxe=None opponent=ima_ninetails turns=10 dur=101.8s
+2026-06-30 15:07:05,607 INFO GAME_START game=31 / 50
+2026-06-30 15:10:46,201 INFO GAME_DONE game=30 result=win elo=1481 gxe=None opponent=ABO00 turns=20 dur=220.6s
+2026-06-30 15:11:01,203 INFO GAME_START game=32 / 50
+2026-06-30 15:13:29,415 INFO GAME_DONE game=31 result=win elo=1500 gxe=None opponent=Tapu Kyle turns=28 dur=148.2s
+2026-06-30 15:13:44,417 INFO GAME_START game=33 / 50
+2026-06-30 15:18:45,604 INFO GAME_DONE game=32 result=win elo=1517 gxe=None opponent=Toolong Didnotread turns=13 dur=301.2s
+2026-06-30 15:19:00,605 INFO GAME_START game=34 / 50
+2026-06-30 15:25:33,074 INFO GAME_DONE game=33 result=win elo=1534 gxe=None opponent=LuisO1998 turns=23 dur=392.5s
+2026-06-30 15:25:48,079 INFO GAME_START game=35 / 50
+2026-06-30 15:28:00,082 INFO GAME_DONE game=34 result=loss elo=1511 gxe=None opponent=mimomm turns=23 dur=132.0s
+2026-06-30 15:28:15,084 INFO GAME_START game=36 / 50
+2026-06-30 15:32:45,203 INFO GAME_DONE game=35 result=loss elo=1493 gxe=None opponent=SetoKaibaHatesYou turns=23 dur=270.1s
+2026-06-30 15:33:00,205 INFO GAME_START game=37 / 50
+2026-06-30 15:36:26,610 WARNING GAME_ERROR game=36 error=exit_1 consecutive=1
+2026-06-30 15:36:26,610 INFO GAME_DONE game=36 result=None elo=None gxe=None opponent=iiHectic turns=22 dur=206.4s
+2026-06-30 15:36:41,611 INFO GAME_START game=38 / 50
+2026-06-30 15:40:49,529 INFO GAME_DONE game=37 result=loss elo=1480 gxe=None opponent=Supermancorenswet turns=26 dur=247.9s
+2026-06-30 15:41:04,531 INFO GAME_START game=39 / 50
+2026-06-30 15:43:48,436 INFO GAME_DONE game=38 result=loss elo=1463 gxe=None opponent=AlexisAMS turns=23 dur=163.9s
+2026-06-30 15:44:03,439 INFO GAME_START game=40 / 50
+2026-06-30 15:45:20,145 INFO GAME_DONE game=39 result=win elo=1486 gxe=None opponent=ashhspace turns=16 dur=76.7s
+2026-06-30 15:45:35,147 INFO GAME_START game=41 / 50
+2026-06-30 15:46:59,907 INFO GAME_DONE game=40 result=win elo=1507 gxe=None opponent=learningvgc123 turns=2 dur=84.8s
+2026-06-30 15:47:14,909 INFO GAME_START game=42 / 50
+2026-06-30 15:47:41,258 INFO GAME_DONE game=41 result=win elo=1527 gxe=None opponent=fugthepug turns=2 dur=26.3s
+2026-06-30 15:47:56,259 INFO GAME_START game=43 / 50
+2026-06-30 15:53:19,142 INFO GAME_DONE game=42 result=win elo=1545 gxe=None opponent=Drainblazor turns=24 dur=322.9s
+2026-06-30 15:53:34,144 INFO GAME_START game=44 / 50
+2026-06-30 15:54:29,524 INFO GAME_DONE game=43 result=win elo=1562 gxe=None opponent=coolguywill turns=10 dur=55.4s
+2026-06-30 15:54:29,525 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_guest | games=40 | W=32 L=8 | elo=1562 | gxe=None
+2026-06-30 15:54:44,526 INFO GAME_START game=45 / 50
+2026-06-30 15:56:51,303 INFO GAME_DONE game=44 result=win elo=1581 gxe=None opponent=Escalator2010 turns=16 dur=126.8s
+2026-06-30 15:57:06,304 INFO GAME_START game=46 / 50
+2026-06-30 15:59:24,623 INFO GAME_DONE game=45 result=win elo=1598 gxe=None opponent=DeathWing72 turns=10 dur=138.3s
+2026-06-30 15:59:39,624 INFO GAME_START game=47 / 50
+2026-06-30 16:01:50,083 INFO GAME_DONE game=46 result=win elo=1616 gxe=None opponent=ctn20 turns=23 dur=130.5s
+2026-06-30 16:02:05,085 INFO GAME_START game=48 / 50
+2026-06-30 16:05:21,632 INFO GAME_DONE game=47 result=win elo=1637 gxe=None opponent=REXUZ turns=14 dur=196.5s
+2026-06-30 16:05:36,633 INFO GAME_START game=49 / 50
+2026-06-30 16:08:53,575 INFO GAME_DONE game=48 result=loss elo=1618 gxe=None opponent=Jernigain turns=33 dur=196.9s
+2026-06-30 16:09:08,578 INFO GAME_START game=50 / 50
+2026-06-30 16:11:00,415 INFO GAME_DONE game=49 result=win elo=1637 gxe=None opponent=calvocotes turns=7 dur=111.8s
+2026-06-30 16:11:15,418 INFO FINAL SUMMARY | label=stock_foul_play_gen9randombattle_guest | completed=46 | W=37 L=9 | final_elo=1637 | final_gxe=None | errors=4

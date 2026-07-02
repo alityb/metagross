@@ -1,0 +1,289 @@
+2026-07-01 09:52:22,448 INFO START | label=stock_foul_play_gen9randombattle_registered_continuation | username=hoes_mad2873 | n_games=260 | search_ms=100 | model=stock
+2026-07-01 09:52:22,448 INFO GAME_START valid 0/140; attempt 251/510
+2026-07-01 09:57:10,265 INFO GAME_DONE game=250 result=win elo=1577 gxe=71.6 opponent=reigelado322 turns=10 dur=287.6s
+2026-07-01 09:57:25,268 INFO GAME_START valid 1/140; attempt 252/510
+2026-07-01 10:05:26,697 INFO GAME_DONE game=251 result=loss elo=1557 gxe=70.9 opponent=Benji990865 turns=47 dur=481.1s
+2026-07-01 10:05:41,700 INFO GAME_START valid 2/140; attempt 253/510
+2026-07-01 10:11:47,404 INFO GAME_DONE game=252 result=loss elo=1534 gxe=70.3 opponent=MAKELELE24/7 turns=32 dur=365.4s
+2026-07-01 10:12:02,406 INFO GAME_START valid 3/140; attempt 254/510
+2026-07-01 10:13:03,725 INFO GAME_DONE game=253 result=win elo=1552 gxe=70.8 opponent=bowsiefofinho turns=5 dur=61.0s
+2026-07-01 10:13:18,726 INFO GAME_START valid 4/140; attempt 255/510
+2026-07-01 10:16:11,463 INFO GAME_DONE game=254 result=win elo=1572 gxe=71.3 opponent=aassante10 turns=25 dur=172.4s
+2026-07-01 10:16:26,464 INFO GAME_START valid 5/140; attempt 256/510
+2026-07-01 10:21:16,358 INFO GAME_DONE game=255 result=loss elo=1554 gxe=70.7 opponent=irisowl776 turns=29 dur=289.2s
+2026-07-01 10:21:31,363 INFO GAME_START valid 6/140; attempt 257/510
+2026-07-01 10:24:33,618 INFO GAME_DONE game=256 result=win elo=1572 gxe=71.2 opponent=Znich turns=20 dur=182.0s
+2026-07-01 10:24:48,620 INFO GAME_START valid 7/140; attempt 258/510
+2026-07-01 10:33:13,094 INFO GAME_DONE game=257 result=win elo=1591 gxe=71.6 opponent=vinithepini turns=34 dur=504.1s
+2026-07-01 10:33:28,096 INFO GAME_START valid 8/140; attempt 259/510
+2026-07-01 10:36:45,652 INFO GAME_DONE game=258 result=win elo=1613 gxe=72.1 opponent=kbxe turns=25 dur=197.2s
+2026-07-01 10:37:00,655 INFO GAME_START valid 9/140; attempt 260/510
+2026-07-01 10:40:20,506 INFO GAME_DONE game=259 result=loss elo=1594 gxe=71.6 opponent=soloyac turns=24 dur=199.5s
+2026-07-01 10:40:35,509 INFO GAME_START valid 10/140; attempt 261/510
+2026-07-01 10:45:46,890 INFO GAME_DONE game=260 result=loss elo=1575 gxe=71.1 opponent=reallivepiplup turns=27 dur=311.0s
+2026-07-01 10:46:01,892 INFO GAME_START valid 11/140; attempt 262/510
+2026-07-01 10:49:56,865 INFO GAME_DONE game=261 result=loss elo=1556 gxe=70.6 opponent=lookinafool turns=54 dur=234.6s
+2026-07-01 10:50:11,866 INFO GAME_START valid 12/140; attempt 263/510
+2026-07-01 10:54:20,039 INFO GAME_DONE game=262 result=win elo=1578 gxe=71.1 opponent=goncalinho turns=35 dur=247.9s
+2026-07-01 10:54:35,040 INFO GAME_START valid 13/140; attempt 264/510
+2026-07-01 10:58:10,940 INFO GAME_DONE game=263 result=win elo=1602 gxe=71.5 opponent=Fandepandas turns=34 dur=215.7s
+2026-07-01 10:58:25,942 INFO GAME_START valid 14/140; attempt 265/510
+2026-07-01 11:01:08,823 INFO GAME_DONE game=264 result=loss elo=1581 gxe=71.0 opponent=philivanili turns=22 dur=162.7s
+2026-07-01 11:01:23,824 INFO GAME_START valid 15/140; attempt 266/510
+2026-07-01 11:03:19,813 INFO GAME_DONE game=265 result=win elo=1603 gxe=71.5 opponent=YallAreTooLucky turns=13 dur=115.7s
+2026-07-01 11:03:34,815 INFO GAME_START valid 16/140; attempt 267/510
+2026-07-01 11:06:32,065 INFO GAME_DONE game=266 result=win elo=1620 gxe=71.9 opponent=bigballerbrand23 turns=20 dur=177.0s
+2026-07-01 11:06:47,069 INFO GAME_START valid 17/140; attempt 268/510
+2026-07-01 11:08:38,797 INFO GAME_DONE game=267 result=win elo=1639 gxe=72.5 opponent=jnpr010334 turns=30 dur=111.5s
+2026-07-01 11:08:53,800 INFO GAME_START valid 18/140; attempt 269/510
+2026-07-01 11:13:04,647 INFO GAME_DONE game=268 result=win elo=1662 gxe=72.9 opponent=safasdg turns=21 dur=250.6s
+2026-07-01 11:13:19,648 INFO GAME_START valid 19/140; attempt 270/510
+2026-07-01 11:15:42,042 INFO GAME_DONE game=269 result=win elo=1680 gxe=73.4 opponent=Sean2006 turns=20 dur=142.2s
+2026-07-01 11:15:42,042 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=20 | W=13 L=7 | elo=1680 | gxe=73.4
+2026-07-01 11:15:57,034 INFO GAME_START valid 20/140; attempt 271/510
+2026-07-01 11:20:06,461 INFO GAME_DONE game=270 result=loss elo=1661 gxe=72.9 opponent=otti turns=24 dur=249.2s
+2026-07-01 11:20:21,463 INFO GAME_START valid 21/140; attempt 272/510
+2026-07-01 11:22:51,958 INFO GAME_DONE game=271 result=loss elo=1638 gxe=72.5 opponent=tehpickler turns=14 dur=150.3s
+2026-07-01 11:23:06,960 INFO GAME_START valid 22/140; attempt 273/510
+2026-07-01 11:27:54,715 INFO GAME_DONE game=272 result=win elo=1657 gxe=72.9 opponent=bobfrig turns=29 dur=287.5s
+2026-07-01 11:28:09,717 INFO GAME_START valid 23/140; attempt 274/510
+2026-07-01 11:29:22,153 INFO GAME_DONE game=273 result=win elo=1675 gxe=73.3 opponent=limpjim turns=15 dur=72.2s
+2026-07-01 11:29:37,154 INFO GAME_START valid 24/140; attempt 275/510
+2026-07-01 11:31:43,271 INFO GAME_DONE game=274 result=win elo=1693 gxe=73.7 opponent=JuneJuneJuneJune turns=29 dur=125.8s
+2026-07-01 11:31:58,274 INFO GAME_START valid 25/140; attempt 276/510
+2026-07-01 11:34:25,027 INFO GAME_DONE game=275 result=win elo=1714 gxe=74.1 opponent=Vibrator cop. turns=10 dur=146.5s
+2026-07-01 11:34:40,028 INFO GAME_START valid 26/140; attempt 277/510
+2026-07-01 11:37:18,071 INFO GAME_DONE game=276 result=win elo=1733 gxe=74.4 opponent=CoolBoiSquad turns=20 dur=157.8s
+2026-07-01 11:37:33,072 INFO GAME_START valid 27/140; attempt 278/510
+2026-07-01 11:40:00,706 INFO GAME_DONE game=277 result=win elo=1755 gxe=74.9 opponent=lilaznvert turns=16 dur=147.4s
+2026-07-01 11:40:15,708 INFO GAME_START valid 28/140; attempt 279/510
+2026-07-01 11:43:14,807 INFO GAME_DONE game=278 result=win elo=1777 gxe=75.2 opponent=Moyzimon turns=21 dur=178.8s
+2026-07-01 11:43:29,809 INFO GAME_START valid 29/140; attempt 280/510
+2026-07-01 11:45:57,455 INFO GAME_DONE game=279 result=win elo=1792 gxe=75.6 opponent=KitKitteridge turns=23 dur=147.4s
+2026-07-01 11:46:12,456 INFO GAME_START valid 30/140; attempt 281/510
+2026-07-01 11:50:18,381 INFO GAME_DONE game=280 result=win elo=1816 gxe=76.0 opponent=Tosserofsalad turns=20 dur=245.6s
+2026-07-01 11:50:33,383 INFO GAME_START valid 31/140; attempt 282/510
+2026-07-01 11:53:56,603 INFO GAME_DONE game=281 result=loss elo=1798 gxe=75.7 opponent=ToNi_ac turns=21 dur=203.0s
+2026-07-01 11:54:11,605 INFO GAME_START valid 32/140; attempt 283/510
+2026-07-01 12:03:24,559 INFO GAME_DONE game=282 result=loss elo=1777 gxe=75.3 opponent=gymleader2021 turns=34 dur=552.7s
+2026-07-01 12:03:39,560 INFO GAME_START valid 33/140; attempt 284/510
+2026-07-01 12:05:22,851 INFO GAME_DONE game=283 result=win elo=1794 gxe=75.7 opponent=progamer2 turns=13 dur=103.1s
+2026-07-01 12:05:37,852 INFO GAME_START valid 34/140; attempt 285/510
+2026-07-01 12:07:19,691 INFO GAME_DONE game=284 result=win elo=1813 gxe=76.0 opponent=doodh turns=8 dur=101.5s
+2026-07-01 12:07:34,692 INFO GAME_START valid 35/140; attempt 286/510
+2026-07-01 12:12:03,788 INFO GAME_DONE game=285 result=loss elo=1795 gxe=75.8 opponent=optimusprimate turns=22 dur=268.9s
+2026-07-01 12:12:18,789 INFO GAME_START valid 36/140; attempt 287/510
+2026-07-01 12:13:59,542 INFO GAME_DONE game=286 result=win elo=1816 gxe=76.1 opponent=Jaybullsanders turns=27 dur=100.5s
+2026-07-01 12:14:14,543 INFO GAME_START valid 37/140; attempt 288/510
+2026-07-01 12:17:10,710 INFO GAME_DONE game=287 result=loss elo=1793 gxe=75.7 opponent=LoryMoneyDeVerdad turns=23 dur=175.9s
+2026-07-01 12:17:25,711 INFO GAME_START valid 38/140; attempt 289/510
+2026-07-01 12:19:38,641 INFO GAME_DONE game=288 result=win elo=1815 gxe=76.1 opponent=jacobapollo turns=24 dur=132.7s
+2026-07-01 12:19:53,643 INFO GAME_START valid 39/140; attempt 290/510
+2026-07-01 12:21:54,005 INFO GAME_DONE game=289 result=win elo=1836 gxe=76.4 opponent=NYCHomo turns=24 dur=120.0s
+2026-07-01 12:21:54,005 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=40 | W=27 L=13 | elo=1836 | gxe=76.4
+2026-07-01 12:22:09,007 INFO GAME_START valid 40/140; attempt 291/510
+2026-07-01 12:26:19,521 INFO GAME_DONE game=290 result=win elo=1857 gxe=76.7 opponent=Chhdff turns=24 dur=250.3s
+2026-07-01 12:26:34,523 INFO GAME_START valid 41/140; attempt 292/510
+2026-07-01 12:31:26,596 INFO GAME_DONE game=291 result=loss elo=1839 gxe=76.4 opponent=Cherryfienddd turns=41 dur=291.8s
+2026-07-01 12:31:41,597 INFO GAME_START valid 42/140; attempt 293/510
+2026-07-01 12:33:02,183 INFO GAME_DONE game=292 result=win elo=1856 gxe=76.8 opponent=patobolche turns=17 dur=80.3s
+2026-07-01 12:33:17,184 INFO GAME_START valid 43/140; attempt 294/510
+2026-07-01 12:35:31,010 INFO GAME_DONE game=293 result=win elo=1877 gxe=77.1 opponent=saish turns=24 dur=133.6s
+2026-07-01 12:35:46,011 INFO GAME_START valid 44/140; attempt 295/510
+2026-07-01 12:40:28,160 INFO GAME_DONE game=294 result=win elo=1896 gxe=77.4 opponent=chocolatias turns=20 dur=281.9s
+2026-07-01 12:40:43,162 INFO GAME_START valid 45/140; attempt 296/510
+2026-07-01 12:44:57,456 INFO GAME_DONE game=295 result=win elo=1913 gxe=77.7 opponent=95bin turns=40 dur=254.1s
+2026-07-01 12:45:12,458 INFO GAME_START valid 46/140; attempt 297/510
+2026-07-01 12:47:01,189 INFO GAME_DONE game=296 result=win elo=1931 gxe=78.1 opponent=Guerreiro91 turns=22 dur=108.5s
+2026-07-01 12:47:16,192 INFO GAME_START valid 47/140; attempt 298/510
+2026-07-01 12:51:36,491 INFO GAME_DONE game=297 result=win elo=1947 gxe=78.3 opponent=DrLiebeLiebe turns=20 dur=260.1s
+2026-07-01 12:51:51,492 INFO GAME_START valid 48/140; attempt 299/510
+2026-07-01 12:54:08,412 INFO GAME_DONE game=298 result=loss elo=1923 gxe=78.1 opponent=calyforniarex turns=22 dur=136.6s
+2026-07-01 12:54:23,413 INFO GAME_START valid 49/140; attempt 300/510
+2026-07-01 13:00:36,978 INFO GAME_DONE game=299 result=loss elo=1901 gxe=77.8 opponent=LuanD turns=54 dur=373.3s
+2026-07-01 13:00:51,980 INFO GAME_START valid 50/140; attempt 301/510
+2026-07-01 13:04:10,679 INFO GAME_DONE game=300 result=loss elo=1883 gxe=77.6 opponent=pelele19 turns=41 dur=198.5s
+2026-07-01 13:04:25,680 INFO GAME_START valid 51/140; attempt 302/510
+2026-07-01 13:07:17,052 INFO GAME_DONE game=301 result=win elo=1902 gxe=77.9 opponent=erlopram turns=17 dur=171.1s
+2026-07-01 13:07:32,053 INFO GAME_START valid 52/140; attempt 303/510
+2026-07-01 13:09:06,039 INFO GAME_DONE game=302 result=win elo=1924 gxe=78.2 opponent=Ursaaa turns=14 dur=93.8s
+2026-07-01 13:09:21,041 INFO GAME_START valid 53/140; attempt 304/510
+2026-07-01 13:11:40,310 INFO GAME_DONE game=303 result=loss elo=1903 gxe=78.0 opponent=Skwiki turns=24 dur=139.0s
+2026-07-01 13:11:55,311 INFO GAME_START valid 54/140; attempt 305/510
+2026-07-01 13:13:12,281 INFO GAME_DONE game=304 result=win elo=1925 gxe=78.3 opponent=Coalpplay turns=17 dur=76.7s
+2026-07-01 13:13:27,283 INFO GAME_START valid 55/140; attempt 306/510
+2026-07-01 13:18:49,689 INFO GAME_DONE game=305 result=win elo=1942 gxe=78.5 opponent=Poopoo mcnuts turns=23 dur=322.1s
+2026-07-01 13:19:04,691 INFO GAME_START valid 56/140; attempt 307/510
+2026-07-01 13:25:24,427 INFO GAME_DONE game=306 result=win elo=1959 gxe=78.8 opponent=Emmentaler turns=66 dur=379.2s
+2026-07-01 13:25:39,428 INFO GAME_START valid 57/140; attempt 308/510
+2026-07-01 13:29:00,785 INFO GAME_DONE game=307 result=win elo=1980 gxe=79.1 opponent=goatgetaa turns=27 dur=201.0s
+2026-07-01 13:29:15,788 INFO GAME_START valid 58/140; attempt 309/510
+2026-07-01 13:38:26,342 INFO GAME_DONE game=308 result=loss elo=1961 gxe=78.8 opponent=nukeradiation77 turns=45 dur=550.3s
+2026-07-01 13:38:41,344 INFO GAME_START valid 59/140; attempt 310/510
+2026-07-01 13:40:58,896 INFO GAME_DONE game=309 result=win elo=1985 gxe=79.1 opponent=bigmannikko turns=15 dur=137.2s
+2026-07-01 13:40:58,897 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=60 | W=41 L=19 | elo=1985 | gxe=79.1
+2026-07-01 13:41:13,898 INFO GAME_START valid 60/140; attempt 311/510
+2026-07-01 13:42:24,512 INFO GAME_DONE game=310 result=win elo=2004 gxe=79.4 opponent=ronsh3355 turns=20 dur=70.4s
+2026-07-01 13:42:39,513 INFO GAME_START valid 61/140; attempt 312/510
+2026-07-01 13:46:21,538 INFO GAME_DONE game=311 result=win elo=2020 gxe=79.6 opponent=Skwiki turns=31 dur=221.7s
+2026-07-01 13:46:36,541 INFO GAME_START valid 62/140; attempt 313/510
+2026-07-01 13:49:22,357 INFO GAME_DONE game=312 result=win elo=2040 gxe=79.9 opponent=MoopMerr turns=31 dur=165.5s
+2026-07-01 13:49:37,358 INFO GAME_START valid 63/140; attempt 314/510
+2026-07-01 13:52:24,958 INFO GAME_DONE game=313 result=win elo=2063 gxe=80.2 opponent=J Edgar Goober turns=22 dur=167.4s
+2026-07-01 13:52:39,960 INFO GAME_START valid 64/140; attempt 315/510
+2026-07-01 13:55:59,080 INFO GAME_DONE game=314 result=win elo=2083 gxe=80.5 opponent=saltypear12 turns=23 dur=198.9s
+2026-07-01 13:56:14,082 INFO GAME_START valid 65/140; attempt 316/510
+2026-07-01 13:59:32,644 INFO GAME_DONE game=315 result=win elo=2107 gxe=80.7 opponent=Elpapi18 turns=22 dur=198.3s
+2026-07-01 13:59:47,646 INFO GAME_START valid 66/140; attempt 317/510
+2026-07-01 14:02:25,457 INFO GAME_DONE game=316 result=win elo=2123 gxe=81.0 opponent=ajtehpro turns=9 dur=157.6s
+2026-07-01 14:02:40,458 INFO GAME_START valid 67/140; attempt 318/510
+2026-07-01 14:06:33,853 INFO GAME_DONE game=317 result=loss elo=2098 gxe=80.8 opponent=ginigami turns=43 dur=233.1s
+2026-07-01 14:06:48,855 INFO GAME_START valid 68/140; attempt 319/510
+2026-07-01 14:11:44,396 INFO GAME_DONE game=318 result=loss elo=2075 gxe=80.8 opponent=kfdsflh turns=43 dur=295.3s
+2026-07-01 14:11:59,398 INFO GAME_START valid 69/140; attempt 320/510
+2026-07-01 14:15:05,086 INFO GAME_DONE game=319 result=loss elo=2056 gxe=None opponent=NBG453 turns=32 dur=175.6s
+2026-07-01 14:15:20,086 INFO GAME_START valid 70/140; attempt 321/510
+2026-07-01 14:18:01,399 INFO GAME_DONE game=320 result=win elo=2074 gxe=None opponent=franzy613 turns=11 dur=151.2s
+2026-07-01 14:18:16,401 INFO GAME_START valid 71/140; attempt 322/510
+2026-07-01 14:21:20,651 INFO GAME_DONE game=321 result=loss elo=2051 gxe=80.4 opponent=lv14isthebest turns=25 dur=184.0s
+2026-07-01 14:21:35,653 INFO GAME_START valid 72/140; attempt 323/510
+2026-07-01 14:26:03,736 INFO GAME_DONE game=322 result=loss elo=2031 gxe=80.2 opponent=kewlguy420 turns=60 dur=267.0s
+2026-07-01 14:26:18,737 INFO GAME_START valid 73/140; attempt 324/510
+2026-07-01 14:29:30,693 INFO GAME_DONE game=323 result=loss elo=2011 gxe=80.0 opponent=Jefejenaro turns=27 dur=190.0s
+2026-07-01 14:29:45,698 INFO GAME_START valid 74/140; attempt 325/510
+2026-07-01 14:32:18,320 INFO GAME_DONE game=324 result=loss elo=1990 gxe=None opponent=shutuprwdv turns=35 dur=142.5s
+2026-07-01 14:32:33,322 INFO GAME_START valid 75/140; attempt 326/510
+2026-07-01 14:37:52,936 INFO GAME_DONE game=325 result=win elo=2010 gxe=80.1 opponent=monkertv turns=21 dur=319.3s
+2026-07-01 14:38:07,938 INFO GAME_START valid 76/140; attempt 327/510
+2026-07-01 14:39:26,723 INFO GAME_DONE game=326 result=loss elo=1988 gxe=79.9 opponent=remzchief turns=19 dur=78.5s
+2026-07-01 14:39:41,724 INFO GAME_START valid 77/140; attempt 328/510
+2026-07-01 14:42:32,507 INFO GAME_DONE game=327 result=loss elo=1969 gxe=79.7 opponent=Marcdoof turns=20 dur=170.4s
+2026-07-01 14:42:47,509 INFO GAME_START valid 78/140; attempt 329/510
+2026-07-01 14:45:11,425 INFO GAME_DONE game=328 result=win elo=1992 gxe=80.0 opponent=CloudyEJ turns=37 dur=143.6s
+2026-07-01 14:45:26,426 INFO GAME_START valid 79/140; attempt 330/510
+2026-07-01 14:49:35,710 INFO GAME_DONE game=329 result=win elo=2012 gxe=80.2 opponent=MoopMerr turns=21 dur=249.1s
+2026-07-01 14:49:35,710 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=80 | W=52 L=28 | elo=2012 | gxe=80.2
+2026-07-01 14:49:50,712 INFO GAME_START valid 80/140; attempt 331/510
+2026-07-01 14:53:25,357 INFO GAME_DONE game=330 result=loss elo=1989 gxe=80.1 opponent=COOKiNG with STYLE turns=33 dur=214.4s
+2026-07-01 14:53:40,358 INFO GAME_START valid 81/140; attempt 332/510
+2026-07-01 14:54:22,653 INFO GAME_DONE game=331 result=win elo=2011 gxe=80.3 opponent=shutuprwdv turns=4 dur=40.8s
+2026-07-01 14:54:37,655 INFO GAME_START valid 82/140; attempt 333/510
+2026-07-01 14:55:51,849 INFO GAME_DONE game=332 result=win elo=2027 gxe=80.6 opponent=kasskouy turns=12 dur=74.0s
+2026-07-01 14:56:06,847 INFO GAME_START valid 83/140; attempt 334/510
+2026-07-01 14:58:24,274 INFO GAME_DONE game=333 result=loss elo=2010 gxe=80.4 opponent=iyggi turns=14 dur=137.1s
+2026-07-01 14:58:39,275 INFO GAME_START valid 84/140; attempt 335/510
+2026-07-01 15:02:56,038 INFO GAME_DONE game=334 result=loss elo=1996 gxe=80.2 opponent=Duerky12 turns=19 dur=256.6s
+2026-07-01 15:03:11,040 INFO GAME_START valid 85/140; attempt 336/510
+2026-07-01 15:06:59,396 INFO GAME_DONE game=335 result=win elo=2015 gxe=80.4 opponent=Cazabichosroger turns=16 dur=228.0s
+2026-07-01 15:07:14,398 INFO GAME_START valid 86/140; attempt 337/510
+2026-07-01 15:08:46,640 INFO GAME_DONE game=336 result=win elo=2039 gxe=80.7 opponent=jamaely2 turns=9 dur=92.0s
+2026-07-01 15:09:01,642 INFO GAME_START valid 87/140; attempt 338/510
+2026-07-01 15:11:19,049 INFO GAME_DONE game=337 result=loss elo=2015 gxe=80.5 opponent=kytfvb2 turns=19 dur=137.2s
+2026-07-01 15:11:34,049 INFO GAME_START valid 88/140; attempt 339/510
+2026-07-01 15:15:05,988 INFO GAME_DONE game=338 result=loss elo=1995 gxe=80.3 opponent=cam314 turns=28 dur=211.7s
+2026-07-01 15:15:20,990 INFO GAME_START valid 89/140; attempt 340/510
+2026-07-01 15:17:24,585 INFO GAME_DONE game=339 result=win elo=2016 gxe=80.5 opponent=johnn7doe turns=19 dur=123.4s
+2026-07-01 15:17:39,587 INFO GAME_START valid 90/140; attempt 341/510
+2026-07-01 15:21:12,657 INFO GAME_DONE game=340 result=loss elo=1993 gxe=80.3 opponent=renz3554 turns=56 dur=212.7s
+2026-07-01 15:21:27,659 INFO GAME_START valid 91/140; attempt 342/510
+2026-07-01 15:22:49,736 INFO GAME_DONE game=341 result=loss elo=1969 gxe=80.2 opponent=kasskouy turns=19 dur=81.8s
+2026-07-01 15:23:04,738 INFO GAME_START valid 92/140; attempt 343/510
+2026-07-01 15:23:48,141 INFO GAME_DONE game=342 result=win elo=1988 gxe=80.4 opponent=guilliman1 turns=4 dur=43.2s
+2026-07-01 15:24:03,144 INFO GAME_START valid 93/140; attempt 344/510
+2026-07-01 15:27:23,306 INFO GAME_DONE game=343 result=loss elo=1966 gxe=80.2 opponent=Luday turns=24 dur=199.9s
+2026-07-01 15:27:38,306 INFO GAME_START valid 94/140; attempt 345/510
+2026-07-01 15:31:38,143 INFO GAME_DONE game=344 result=loss elo=1946 gxe=80.0 opponent=Rhombi22 turns=31 dur=239.6s
+2026-07-01 15:31:53,144 INFO GAME_START valid 95/140; attempt 346/510
+2026-07-01 15:36:08,041 INFO GAME_DONE game=345 result=loss elo=1926 gxe=79.8 opponent=goatgetaa turns=40 dur=254.6s
+2026-07-01 15:36:23,052 INFO GAME_START valid 96/140; attempt 347/510
+2026-07-01 15:40:35,177 INFO GAME_DONE game=346 result=win elo=1945 gxe=80.0 opponent=beetlejuggler turns=39 dur=251.9s
+2026-07-01 15:40:50,178 INFO GAME_START valid 97/140; attempt 348/510
+2026-07-01 15:43:56,684 INFO GAME_DONE game=347 result=loss elo=1922 gxe=79.9 opponent=jamgu turns=28 dur=186.2s
+2026-07-01 15:44:11,685 INFO GAME_START valid 98/140; attempt 349/510
+2026-07-01 15:45:03,650 INFO GAME_DONE game=348 result=win elo=1940 gxe=80.0 opponent=calzony turns=8 dur=51.8s
+2026-07-01 15:45:18,651 INFO GAME_START valid 99/140; attempt 350/510
+2026-07-01 15:48:05,150 INFO GAME_DONE game=349 result=win elo=1960 gxe=80.2 opponent=vergarabat turns=1 dur=166.3s
+2026-07-01 15:48:05,151 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=100 | W=61 L=39 | elo=1960 | gxe=80.2
+2026-07-01 15:48:20,152 INFO GAME_START valid 100/140; attempt 351/510
+2026-07-01 15:49:03,029 INFO GAME_DONE game=350 result=loss elo=1947 gxe=80.1 opponent=notmetbh102 turns=38 dur=42.7s
+2026-07-01 15:49:18,030 INFO GAME_START valid 101/140; attempt 352/510
+2026-07-01 15:51:04,121 INFO GAME_DONE game=351 result=loss elo=1927 gxe=79.9 opponent=kasskouy turns=25 dur=105.8s
+2026-07-01 15:51:19,122 INFO GAME_START valid 102/140; attempt 353/510
+2026-07-01 15:53:37,695 INFO GAME_DONE game=352 result=win elo=1950 gxe=80.1 opponent=guilliman1 turns=18 dur=138.4s
+2026-07-01 15:53:52,698 INFO GAME_START valid 103/140; attempt 354/510
+2026-07-01 15:56:39,938 INFO GAME_DONE game=353 result=loss elo=1928 gxe=79.9 opponent=68.Ds turns=21 dur=167.0s
+2026-07-01 15:56:54,939 INFO GAME_START valid 104/140; attempt 355/510
+2026-07-01 15:58:28,909 INFO GAME_DONE game=354 result=win elo=1946 gxe=80.1 opponent=LiterallyMeWhen turns=15 dur=93.7s
+2026-07-01 15:58:43,911 INFO GAME_START valid 105/140; attempt 356/510
+2026-07-01 16:00:16,154 INFO GAME_DONE game=355 result=win elo=1966 gxe=80.3 opponent=kasskouy turns=19 dur=92.1s
+2026-07-01 16:00:31,155 INFO GAME_START valid 106/140; attempt 357/510
+2026-07-01 16:02:37,096 INFO GAME_DONE game=356 result=win elo=1983 gxe=80.5 opponent=tvstatic313 turns=8 dur=125.7s
+2026-07-01 16:02:52,098 INFO GAME_START valid 107/140; attempt 358/510
+2026-07-01 16:05:20,132 INFO GAME_DONE game=357 result=loss elo=1964 gxe=80.3 opponent=etetete turns=40 dur=147.8s
+2026-07-01 16:05:35,133 INFO GAME_START valid 108/140; attempt 359/510
+2026-07-01 16:06:10,012 INFO GAME_DONE game=358 result=win elo=1985 gxe=80.5 opponent=kasskouy turns=5 dur=34.6s
+2026-07-01 16:06:25,013 INFO GAME_START valid 109/140; attempt 360/510
+2026-07-01 16:13:32,743 INFO GAME_DONE game=359 result=loss elo=1967 gxe=80.3 opponent=Bot Cop turns=55 dur=427.0s
+2026-07-01 16:13:47,745 INFO GAME_START valid 110/140; attempt 361/510
+2026-07-01 16:18:39,555 INFO GAME_DONE game=360 result=loss elo=1946 gxe=80.2 opponent=penguinpower62 turns=35 dur=291.4s
+2026-07-01 16:18:54,556 INFO GAME_START valid 111/140; attempt 362/510
+2026-07-01 16:21:04,512 INFO GAME_DONE game=361 result=win elo=1968 gxe=80.4 opponent=Andres026 turns=27 dur=129.7s
+2026-07-01 16:21:19,513 INFO GAME_START valid 112/140; attempt 363/510
+2026-07-01 16:26:30,288 INFO GAME_DONE game=362 result=win elo=1992 gxe=80.6 opponent=nhlist turns=32 dur=310.5s
+2026-07-01 16:26:45,290 INFO GAME_START valid 113/140; attempt 364/510
+2026-07-01 16:28:46,640 INFO GAME_DONE game=363 result=win elo=2008 gxe=80.7 opponent=specialprize5 turns=11 dur=121.0s
+2026-07-01 16:29:01,642 INFO GAME_START valid 114/140; attempt 365/510
+2026-07-01 16:31:06,824 INFO GAME_DONE game=364 result=win elo=2028 gxe=80.9 opponent=TransGirlFromHell turns=25 dur=124.6s
+2026-07-01 16:31:21,826 INFO GAME_START valid 115/140; attempt 366/510
+2026-07-01 16:33:20,959 INFO GAME_DONE game=365 result=win elo=2046 gxe=81.1 opponent=johnn7doe turns=21 dur=118.8s
+2026-07-01 16:33:35,961 INFO GAME_START valid 116/140; attempt 367/510
+2026-07-01 16:34:13,615 INFO GAME_DONE game=366 result=win elo=2064 gxe=81.2 opponent=costcos_wholesales turns=6 dur=37.1s
+2026-07-01 16:34:28,620 INFO GAME_START valid 117/140; attempt 368/510
+2026-07-01 16:35:47,504 INFO GAME_DONE game=367 result=win elo=2090 gxe=81.4 opponent=forcemajor14 turns=19 dur=78.6s
+2026-07-01 16:36:02,506 INFO GAME_START valid 118/140; attempt 369/510
+2026-07-01 16:40:12,572 INFO GAME_DONE game=368 result=win elo=2108 gxe=81.6 opponent=Soul Gem turns=47 dur=249.6s
+2026-07-01 16:40:27,574 INFO GAME_START valid 119/140; attempt 370/510
+2026-07-01 16:42:33,622 INFO GAME_DONE game=369 result=loss elo=2093 gxe=81.5 opponent=Sushi4928 turns=29 dur=125.8s
+2026-07-01 16:42:33,622 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=120 | W=74 L=46 | elo=2093 | gxe=81.5
+2026-07-01 16:42:48,623 INFO GAME_START valid 120/140; attempt 371/510
+2026-07-01 16:44:46,630 INFO GAME_DONE game=370 result=win elo=2119 gxe=81.7 opponent=ixi669 turns=20 dur=117.8s
+2026-07-01 16:45:01,632 INFO GAME_START valid 121/140; attempt 372/510
+2026-07-01 16:52:09,886 INFO GAME_DONE game=371 result=win elo=2134 gxe=81.8 opponent=DIRTYSPRITE07 turns=38 dur=428.0s
+2026-07-01 16:52:24,892 INFO GAME_START valid 122/140; attempt 373/510
+2026-07-01 16:58:15,915 INFO GAME_DONE game=372 result=win elo=2153 gxe=82.0 opponent=oleicat turns=21 dur=350.8s
+2026-07-01 16:58:30,917 INFO GAME_START valid 123/140; attempt 374/510
+2026-07-01 17:01:19,153 INFO GAME_DONE game=373 result=loss elo=2134 gxe=81.9 opponent=Yassash turns=23 dur=168.0s
+2026-07-01 17:01:34,154 INFO GAME_START valid 124/140; attempt 375/510
+2026-07-01 17:03:48,910 INFO GAME_DONE game=374 result=loss elo=2114 gxe=81.7 opponent=forcemajor14 turns=34 dur=134.5s
+2026-07-01 17:04:03,913 INFO GAME_START valid 125/140; attempt 376/510
+2026-07-01 17:06:49,979 INFO GAME_DONE game=375 result=win elo=2138 gxe=81.9 opponent=MarkLemoine turns=15 dur=165.8s
+2026-07-01 17:07:04,981 INFO GAME_START valid 126/140; attempt 377/510
+2026-07-01 17:13:38,062 INFO GAME_DONE game=376 result=win elo=2156 gxe=82.1 opponent=DaFisheee turns=23 dur=392.8s
+2026-07-01 17:13:53,064 INFO GAME_START valid 127/140; attempt 378/510
+2026-07-01 17:18:17,996 INFO GAME_DONE game=377 result=win elo=2178 gxe=82.2 opponent=forcemajor14 turns=71 dur=264.6s
+2026-07-01 17:18:32,998 INFO GAME_START valid 128/140; attempt 379/510
+2026-07-01 17:23:12,067 INFO GAME_DONE game=378 result=loss elo=2158 gxe=82.1 opponent=JackieQQ turns=34 dur=278.8s
+2026-07-01 17:23:27,070 INFO GAME_START valid 129/140; attempt 380/510
+2026-07-01 17:26:50,944 INFO GAME_DONE game=379 result=win elo=2170 gxe=82.2 opponent=Cesar A Bedoya turns=25 dur=203.7s
+2026-07-01 17:27:05,945 INFO GAME_START valid 130/140; attempt 381/510
+2026-07-01 17:30:30,949 INFO GAME_DONE game=380 result=loss elo=2155 gxe=82.2 opponent=Diamonds_realm turns=30 dur=204.6s
+2026-07-01 17:30:45,952 INFO GAME_START valid 131/140; attempt 382/510
+2026-07-01 17:34:25,649 INFO GAME_DONE game=381 result=win elo=2174 gxe=82.3 opponent=PCmobile4 turns=29 dur=219.4s
+2026-07-01 17:34:40,651 INFO GAME_START valid 132/140; attempt 383/510
+2026-07-01 17:35:16,157 INFO GAME_DONE game=382 result=loss elo=2150 gxe=82.2 opponent=notmetbh102 turns=32 dur=35.3s
+2026-07-01 17:35:31,158 INFO GAME_START valid 133/140; attempt 384/510
+2026-07-01 17:37:36,510 INFO GAME_DONE game=383 result=loss elo=2139 gxe=82.1 opponent=dcenoris turns=27 dur=125.1s
+2026-07-01 17:37:51,512 INFO GAME_START valid 134/140; attempt 385/510
+2026-07-01 17:42:16,282 INFO GAME_DONE game=384 result=loss elo=2112 gxe=82.0 opponent=BlahajEnbyUwU666 turns=30 dur=264.6s
+2026-07-01 17:42:31,284 INFO GAME_START valid 135/140; attempt 386/510
+2026-07-01 17:43:19,377 INFO GAME_DONE game=385 result=win elo=2133 gxe=82.2 opponent=notmetbh102 turns=38 dur=47.9s
+2026-07-01 17:43:34,378 INFO GAME_START valid 136/140; attempt 387/510
+2026-07-01 17:47:25,506 INFO GAME_DONE game=386 result=win elo=2148 gxe=82.3 opponent=RushedRedemption turns=37 dur=230.9s
+2026-07-01 17:47:40,509 INFO GAME_START valid 137/140; attempt 388/510
+2026-07-01 17:50:46,725 INFO GAME_DONE game=387 result=win elo=2168 gxe=82.5 opponent=Noadecajou turns=31 dur=186.0s
+2026-07-01 17:51:01,733 INFO GAME_START valid 138/140; attempt 389/510
+2026-07-01 17:52:24,040 INFO GAME_DONE game=388 result=win elo=2184 gxe=82.6 opponent=Happy_Industrie turns=7 dur=82.1s
+2026-07-01 17:52:39,043 INFO GAME_START valid 139/140; attempt 390/510
+2026-07-01 17:53:34,803 INFO GAME_DONE game=389 result=win elo=2208 gxe=82.8 opponent=forcemajor14 turns=13 dur=55.5s
+2026-07-01 17:53:34,803 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered_continuation | games=140 | W=87 L=53 | elo=2208 | gxe=82.8
+2026-07-01 17:53:49,806 INFO FINAL SUMMARY | label=stock_foul_play_gen9randombattle_registered_continuation | completed=140 | W=87 L=53 | final_elo=2208 | final_gxe=82.8 | errors=0

@@ -1,0 +1,686 @@
+2026-06-30 17:05:14,105 INFO START | label=stock_foul_play_gen9randombattle_registered | username=hoes_mad2873 | n_games=246 | search_ms=100 | model=stock
+2026-06-30 17:05:14,105 INFO GAME_START game=5 / 250
+2026-06-30 17:05:40,523 INFO GAME_DONE game=4 result=win elo=1073 gxe=49.6 opponent=XxFurrito_gamerxX turns=1 dur=26.2s
+2026-06-30 17:05:55,526 INFO GAME_START game=6 / 250
+2026-06-30 17:13:03,563 INFO GAME_DONE game=5 result=win elo=1106 gxe=52.0 opponent=Mazatzal turns=21 dur=427.8s
+2026-06-30 17:13:18,564 INFO GAME_START game=7 / 250
+2026-06-30 17:14:54,672 INFO GAME_DONE game=6 result=loss elo=1080 gxe=48.7 opponent=Guest 64315 turns=20 dur=95.9s
+2026-06-30 17:15:09,674 INFO GAME_START game=8 / 250
+2026-06-30 17:18:46,550 INFO GAME_DONE game=7 result=loss elo=1061 gxe=45.4 opponent=Fuzzbukkit turns=36 dur=216.6s
+2026-06-30 17:19:01,552 INFO GAME_START game=9 / 250
+2026-06-30 17:20:55,419 INFO GAME_DONE game=8 result=win elo=1094 gxe=48.5 opponent=hoisensauce turns=3 dur=113.6s
+2026-06-30 17:21:10,420 INFO GAME_START game=10 / 250
+2026-06-30 17:24:21,844 INFO GAME_DONE game=9 result=win elo=1116 gxe=50.7 opponent=cupenudos turns=6 dur=191.1s
+2026-06-30 17:24:36,844 INFO GAME_START game=11 / 250
+2026-06-30 17:27:57,751 INFO GAME_DONE game=10 result=win elo=1139 gxe=53.3 opponent=zanentsusa turns=14 dur=200.7s
+2026-06-30 17:28:12,753 INFO GAME_START game=12 / 250
+2026-06-30 17:32:03,183 INFO GAME_DONE game=11 result=win elo=1167 gxe=54.8 opponent=mifeng8421 turns=18 dur=230.2s
+2026-06-30 17:32:18,185 INFO GAME_START game=13 / 250
+2026-06-30 17:34:09,504 INFO GAME_DONE game=12 result=win elo=1193 gxe=57.1 opponent=Nizzanzaman turns=10 dur=111.1s
+2026-06-30 17:34:24,506 INFO GAME_START game=14 / 250
+2026-06-30 17:36:57,222 INFO GAME_DONE game=13 result=win elo=1219 gxe=58.7 opponent=50gojowofo turns=19 dur=152.4s
+2026-06-30 17:37:12,225 INFO GAME_START game=15 / 250
+2026-06-30 17:39:15,686 INFO GAME_DONE game=14 result=win elo=1242 gxe=60.3 opponent=vizkiz turns=9 dur=123.2s
+2026-06-30 17:39:30,688 INFO GAME_START game=16 / 250
+2026-06-30 17:41:25,441 INFO GAME_DONE game=15 result=win elo=1269 gxe=61.5 opponent=AngelFKZ turns=14 dur=114.5s
+2026-06-30 17:41:40,443 INFO GAME_START game=17 / 250
+2026-06-30 17:47:45,151 INFO GAME_DONE game=16 result=win elo=1295 gxe=62.8 opponent=beartramble turns=21 dur=364.4s
+2026-06-30 17:48:00,153 INFO GAME_START game=18 / 250
+2026-06-30 17:54:53,668 INFO GAME_DONE game=17 result=win elo=1322 gxe=64.3 opponent=jutting1234 turns=25 dur=413.2s
+2026-06-30 17:55:08,670 INFO GAME_START game=19 / 250
+2026-06-30 17:58:53,977 INFO GAME_DONE game=18 result=win elo=1343 gxe=65.5 opponent=Mcpico turns=24 dur=225.1s
+2026-06-30 17:59:08,980 INFO GAME_START game=20 / 250
+2026-06-30 18:01:45,366 INFO GAME_DONE game=19 result=win elo=1362 gxe=66.7 opponent=Nasiadem2 turns=13 dur=156.1s
+2026-06-30 18:02:00,369 INFO GAME_START game=21 / 250
+2026-06-30 18:05:56,017 INFO GAME_DONE game=20 result=win elo=1383 gxe=68.0 opponent=Kraktus13 turns=19 dur=235.4s
+2026-06-30 18:06:11,019 INFO GAME_START game=22 / 250
+2026-06-30 18:11:26,014 INFO GAME_DONE game=21 result=win elo=1400 gxe=69.0 opponent=Rtax turns=22 dur=314.7s
+2026-06-30 18:11:41,016 INFO GAME_START game=23 / 250
+2026-06-30 18:14:43,207 INFO GAME_DONE game=22 result=loss elo=1377 gxe=67.2 opponent=yeahhhglo turns=29 dur=181.9s
+2026-06-30 18:14:58,209 INFO GAME_START game=24 / 250
+2026-06-30 18:18:38,666 INFO GAME_DONE game=23 result=loss elo=1356 gxe=65.5 opponent=morg000000 turns=18 dur=220.2s
+2026-06-30 18:18:38,666 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered | games=20 | W=16 L=4 | elo=1356 | gxe=65.5
+2026-06-30 18:18:53,668 INFO GAME_START game=25 / 250
+2026-06-30 18:23:38,953 INFO GAME_DONE game=24 result=win elo=1375 gxe=66.5 opponent=janu2hawrd turns=32 dur=285.0s
+2026-06-30 18:23:53,955 INFO GAME_START game=26 / 250
+2026-06-30 18:25:47,189 INFO GAME_DONE game=25 result=win elo=1395 gxe=67.8 opponent=tau 8 turns=19 dur=112.7s
+2026-06-30 18:26:02,191 INFO GAME_START game=27 / 250
+2026-06-30 18:32:52,830 INFO GAME_DONE game=26 result=win elo=1417 gxe=68.9 opponent=sminkbinker turns=31 dur=410.4s
+2026-06-30 18:33:07,832 INFO GAME_START game=28 / 250
+2026-06-30 18:36:15,257 INFO GAME_DONE game=27 result=win elo=1433 gxe=69.8 opponent=crazy monster drip turns=18 dur=187.2s
+2026-06-30 18:36:30,259 INFO GAME_START game=29 / 250
+2026-06-30 18:41:19,886 INFO GAME_DONE game=28 result=win elo=1453 gxe=70.8 opponent=cjw455106074 turns=40 dur=289.4s
+2026-06-30 18:41:34,888 INFO GAME_START game=30 / 250
+2026-06-30 18:44:57,837 INFO GAME_DONE game=29 result=loss elo=1431 gxe=69.3 opponent=kelebra44 turns=22 dur=202.7s
+2026-06-30 18:45:12,838 INFO GAME_START game=31 / 250
+2026-06-30 18:49:07,113 INFO GAME_DONE game=30 result=win elo=1450 gxe=70.1 opponent=Sawybean turns=31 dur=234.1s
+2026-06-30 18:49:22,114 INFO GAME_START game=32 / 250
+2026-06-30 18:53:58,822 INFO GAME_DONE game=31 result=loss elo=1430 gxe=68.9 opponent=Javiermeyang turns=31 dur=276.5s
+2026-06-30 18:54:13,824 INFO GAME_START game=33 / 250
+2026-06-30 18:57:29,465 INFO GAME_DONE game=32 result=win elo=1453 gxe=69.8 opponent=Seasss turns=28 dur=195.4s
+2026-06-30 18:57:44,467 INFO GAME_START game=34 / 250
+2026-06-30 19:02:20,576 INFO GAME_DONE game=33 result=win elo=1475 gxe=70.6 opponent=Perciusss turns=27 dur=275.9s
+2026-06-30 19:02:35,578 INFO GAME_START game=35 / 250
+2026-06-30 19:05:52,778 INFO GAME_DONE game=34 result=win elo=1492 gxe=71.4 opponent=KassZ turns=26 dur=196.9s
+2026-06-30 19:06:07,780 INFO GAME_START game=36 / 250
+2026-06-30 19:07:06,799 INFO GAME_DONE game=35 result=win elo=1511 gxe=72.1 opponent=Testitify turns=11 dur=58.8s
+2026-06-30 19:07:21,802 INFO GAME_START game=37 / 250
+2026-06-30 19:08:48,185 INFO GAME_DONE game=36 result=win elo=1532 gxe=72.6 opponent=B1gM4c turns=5 dur=86.1s
+2026-06-30 19:09:03,187 INFO GAME_START game=38 / 250
+2026-06-30 19:14:24,411 INFO GAME_DONE game=37 result=win elo=1553 gxe=73.5 opponent=Jjjeerr turns=31 dur=321.0s
+2026-06-30 19:14:39,395 INFO GAME_START game=39 / 250
+2026-06-30 19:18:50,502 INFO GAME_DONE game=38 result=loss elo=1536 gxe=72.5 opponent=zimber333 turns=25 dur=250.9s
+2026-06-30 19:19:05,503 INFO GAME_START game=40 / 250
+2026-06-30 19:23:42,020 INFO GAME_DONE game=39 result=loss elo=1516 gxe=71.7 opponent=1/2chub turns=29 dur=276.3s
+2026-06-30 19:23:57,022 INFO GAME_START game=41 / 250
+2026-06-30 19:26:31,801 INFO GAME_DONE game=40 result=loss elo=1493 gxe=70.7 opponent=Javiermeyang turns=19 dur=154.6s
+2026-06-30 19:26:46,802 INFO GAME_START game=42 / 250
+2026-06-30 19:36:58,232 INFO GAME_DONE game=41 result=loss elo=1473 gxe=69.6 opponent=bellsworn turns=45 dur=611.2s
+2026-06-30 19:37:13,234 INFO GAME_START game=43 / 250
+2026-06-30 19:39:36,471 INFO GAME_DONE game=42 result=win elo=1492 gxe=70.2 opponent=mtris turns=22 dur=143.0s
+2026-06-30 19:39:51,473 INFO GAME_START game=44 / 250
+2026-06-30 19:42:22,624 INFO GAME_DONE game=43 result=win elo=1517 gxe=71.0 opponent=kiafing turns=20 dur=150.9s
+2026-06-30 19:42:22,625 INFO CHECKPOINT | label=stock_foul_play_gen9randombattle_registered | games=40 | W=30 L=10 | elo=1517 | gxe=71.0
+2026-06-30 19:42:37,625 INFO GAME_START game=45 / 250
+2026-06-30 19:45:44,790 INFO GAME_DONE game=44 result=loss elo=1498 gxe=70.2 opponent=Bucko turns=30 dur=186.9s
+2026-06-30 19:45:59,790 INFO GAME_START game=46 / 250
+2026-06-30 19:47:37,416 INFO GAME_DONE game=45 result=win elo=1517 gxe=70.9 opponent=MoguMoguu turns=15 dur=97.4s
+2026-06-30 19:47:52,422 INFO GAME_START game=47 / 250
+2026-06-30 19:51:41,498 INFO GAME_DONE game=46 result=loss elo=1494 gxe=69.9 opponent=Terquavious turns=31 dur=228.9s
+2026-06-30 19:51:56,499 INFO GAME_START game=48 / 250
+2026-06-30 19:55:33,940 INFO GAME_DONE game=47 result=win elo=1515 gxe=70.6 opponent=nibs997 turns=28 dur=217.2s
+2026-06-30 19:55:48,942 INFO GAME_START game=49 / 250
+2026-06-30 20:02:03,174 INFO GAME_DONE game=48 result=loss elo=1494 gxe=69.8 opponent=ProbablySunsetTTV turns=29 dur=374.0s
+2026-06-30 20:02:18,176 INFO GAME_START game=50 / 250
+2026-06-30 20:08:44,632 INFO GAME_DONE game=49 result=win elo=1513 gxe=70.5 opponent=Cwiercz turns=29 dur=386.2s
+2026-06-30 20:08:59,634 INFO GAME_START game=51 / 250
+2026-06-30 20:09:43,012 INFO GAME_DONE game=50 result=win elo=1534 gxe=71.1 opponent=gonzoliffs turns=3 dur=43.2s
+2026-06-30 20:09:58,014 INFO GAME_START game=52 / 250
+2026-06-30 20:16:00,811 INFO GAME_DONE game=51 result=loss elo=1513 gxe=70.3 opponent=rzhcs turns=22 dur=362.5s
+2026-06-30 20:16:15,812 INFO GAME_START game=53 / 250
+2026-06-30 20:20:01,919 INFO GAME_DONE game=52 result=win elo=1535 gxe=71.0 opponent=havenofear turns=27 dur=225.9s
+2026-06-30 20:20:16,920 INFO GAME_START game=54 / 250
+2026-06-30 20:22:35,415 INFO GAME_DONE game=53 result=win elo=1555 gxe=71.0 opponent=brianb1995 turns=17 dur=138.3s
+2026-06-30 20:22:50,416 INFO GAME_START game=55 / 250
+2026-06-30 20:27:57,464 INFO GAME_DONE game=54 result=loss elo=1533 gxe=70.8 opponent=Valperon turns=31 dur=306.9s
+2026-06-30 20:28:12,465 INFO GAME_START game=56 / 250
+2026-06-30 20:30:41,147 INFO GAME_DONE game=55 result=loss elo=1512 gxe=70.0 opponent=shinymonkaay turns=33 dur=148.4s
+2026-06-30 20:30:56,150 INFO GAME_START game=57 / 250
+2026-06-30 20:34:16,757 INFO GAME_DONE game=56 result=win elo=1535 gxe=70.7 opponent=EVOL7N turns=13 dur=200.4s
+2026-06-30 20:34:31,759 INFO GAME_START game=58 / 250
+2026-06-30 20:36:47,362 INFO GAME_DONE game=57 result=loss elo=1517 gxe=70.7 opponent=SharkTale turns=28 dur=135.4s
+2026-06-30 20:37:02,365 INFO GAME_START game=59 / 250
+2026-06-30 20:39:35,242 INFO GAME_DONE game=58 result=win elo=1534 gxe=70.0 opponent=popoyo26 turns=18 dur=152.7s
+2026-06-30 20:39:50,246 INFO GAME_START game=60 / 250
+2026-06-30 20:41:20,729 INFO GAME_DONE game=59 result=win elo=1556 gxe=71.1 opponent=D&FB LLC turns=16 dur=90.3s
+2026-06-30 20:41:35,732 INFO GAME_START game=61 / 250
+2026-06-30 20:43:10,338 INFO GAME_DONE game=60 result=win elo=1575 gxe=71.6 opponent=supersaiyan69138 turns=11 dur=94.4s
+2026-06-30 20:43:25,340 INFO GAME_START game=62 / 250
+2026-06-30 20:43:32,474 WARNING GAME_ERROR game=61 error=exit_1 consecutive=1
+2026-06-30 20:43:32,474 INFO GAME_DONE game=61 result=None elo=None gxe=None opponent=None turns=None dur=7.1s
+2026-06-30 20:43:47,475 INFO GAME_START game=63 / 250
+2026-06-30 20:43:47,658 WARNING GAME_ERROR game=62 error=exit_1 consecutive=1
+2026-06-30 20:43:47,659 INFO GAME_DONE game=62 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:44:02,660 INFO GAME_START game=64 / 250
+2026-06-30 20:44:02,850 WARNING GAME_ERROR game=63 error=exit_1 consecutive=1
+2026-06-30 20:44:02,850 INFO GAME_DONE game=63 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:44:17,851 INFO GAME_START game=65 / 250
+2026-06-30 20:44:18,039 WARNING GAME_ERROR game=64 error=exit_1 consecutive=1
+2026-06-30 20:44:18,039 INFO GAME_DONE game=64 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:44:33,040 INFO GAME_START game=66 / 250
+2026-06-30 20:44:33,178 WARNING GAME_ERROR game=65 error=exit_1 consecutive=1
+2026-06-30 20:44:33,178 INFO GAME_DONE game=65 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:44:48,179 INFO GAME_START game=67 / 250
+2026-06-30 20:44:48,374 WARNING GAME_ERROR game=66 error=exit_1 consecutive=1
+2026-06-30 20:44:48,374 INFO GAME_DONE game=66 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:45:03,375 INFO GAME_START game=68 / 250
+2026-06-30 20:45:03,561 WARNING GAME_ERROR game=67 error=exit_1 consecutive=1
+2026-06-30 20:45:03,561 INFO GAME_DONE game=67 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:45:18,563 INFO GAME_START game=69 / 250
+2026-06-30 20:45:18,766 WARNING GAME_ERROR game=68 error=exit_1 consecutive=1
+2026-06-30 20:45:18,766 INFO GAME_DONE game=68 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:45:33,767 INFO GAME_START game=70 / 250
+2026-06-30 20:45:33,952 WARNING GAME_ERROR game=69 error=exit_1 consecutive=1
+2026-06-30 20:45:33,952 INFO GAME_DONE game=69 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:45:48,953 INFO GAME_START game=71 / 250
+2026-06-30 20:45:49,094 WARNING GAME_ERROR game=70 error=exit_1 consecutive=1
+2026-06-30 20:45:49,094 INFO GAME_DONE game=70 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:46:04,095 INFO GAME_START game=72 / 250
+2026-06-30 20:46:04,285 WARNING GAME_ERROR game=71 error=exit_1 consecutive=1
+2026-06-30 20:46:04,285 INFO GAME_DONE game=71 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:46:19,286 INFO GAME_START game=73 / 250
+2026-06-30 20:46:19,483 WARNING GAME_ERROR game=72 error=exit_1 consecutive=1
+2026-06-30 20:46:19,483 INFO GAME_DONE game=72 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:46:34,484 INFO GAME_START game=74 / 250
+2026-06-30 20:46:34,627 WARNING GAME_ERROR game=73 error=exit_1 consecutive=1
+2026-06-30 20:46:34,627 INFO GAME_DONE game=73 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:46:49,629 INFO GAME_START game=75 / 250
+2026-06-30 20:46:49,828 WARNING GAME_ERROR game=74 error=exit_1 consecutive=1
+2026-06-30 20:46:49,829 INFO GAME_DONE game=74 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:47:04,830 INFO GAME_START game=76 / 250
+2026-06-30 20:47:05,017 WARNING GAME_ERROR game=75 error=exit_1 consecutive=1
+2026-06-30 20:47:05,017 INFO GAME_DONE game=75 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:47:20,019 INFO GAME_START game=77 / 250
+2026-06-30 20:47:20,174 WARNING GAME_ERROR game=76 error=exit_1 consecutive=1
+2026-06-30 20:47:20,174 INFO GAME_DONE game=76 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:47:35,176 INFO GAME_START game=78 / 250
+2026-06-30 20:47:35,314 WARNING GAME_ERROR game=77 error=exit_1 consecutive=1
+2026-06-30 20:47:35,314 INFO GAME_DONE game=77 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:47:50,316 INFO GAME_START game=79 / 250
+2026-06-30 20:47:50,522 WARNING GAME_ERROR game=78 error=exit_1 consecutive=1
+2026-06-30 20:47:50,522 INFO GAME_DONE game=78 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:48:05,524 INFO GAME_START game=80 / 250
+2026-06-30 20:48:05,715 WARNING GAME_ERROR game=79 error=exit_1 consecutive=1
+2026-06-30 20:48:05,715 INFO GAME_DONE game=79 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:48:20,717 INFO GAME_START game=81 / 250
+2026-06-30 20:48:20,860 WARNING GAME_ERROR game=80 error=exit_1 consecutive=1
+2026-06-30 20:48:20,860 INFO GAME_DONE game=80 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:48:35,863 INFO GAME_START game=82 / 250
+2026-06-30 20:48:36,063 WARNING GAME_ERROR game=81 error=exit_1 consecutive=1
+2026-06-30 20:48:36,063 INFO GAME_DONE game=81 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:48:51,065 INFO GAME_START game=83 / 250
+2026-06-30 20:48:51,216 WARNING GAME_ERROR game=82 error=exit_1 consecutive=1
+2026-06-30 20:48:51,216 INFO GAME_DONE game=82 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:49:06,218 INFO GAME_START game=84 / 250
+2026-06-30 20:49:06,370 WARNING GAME_ERROR game=83 error=exit_1 consecutive=1
+2026-06-30 20:49:06,370 INFO GAME_DONE game=83 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:49:21,372 INFO GAME_START game=85 / 250
+2026-06-30 20:49:21,514 WARNING GAME_ERROR game=84 error=exit_1 consecutive=1
+2026-06-30 20:49:21,514 INFO GAME_DONE game=84 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:49:36,516 INFO GAME_START game=86 / 250
+2026-06-30 20:49:36,650 WARNING GAME_ERROR game=85 error=exit_1 consecutive=1
+2026-06-30 20:49:36,650 INFO GAME_DONE game=85 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:49:51,652 INFO GAME_START game=87 / 250
+2026-06-30 20:49:51,789 WARNING GAME_ERROR game=86 error=exit_1 consecutive=1
+2026-06-30 20:49:51,789 INFO GAME_DONE game=86 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:50:06,791 INFO GAME_START game=88 / 250
+2026-06-30 20:50:06,958 WARNING GAME_ERROR game=87 error=exit_1 consecutive=1
+2026-06-30 20:50:06,958 INFO GAME_DONE game=87 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:50:21,960 INFO GAME_START game=89 / 250
+2026-06-30 20:50:22,126 WARNING GAME_ERROR game=88 error=exit_1 consecutive=1
+2026-06-30 20:50:22,126 INFO GAME_DONE game=88 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:50:37,129 INFO GAME_START game=90 / 250
+2026-06-30 20:50:37,336 WARNING GAME_ERROR game=89 error=exit_1 consecutive=1
+2026-06-30 20:50:37,336 INFO GAME_DONE game=89 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:50:52,339 INFO GAME_START game=91 / 250
+2026-06-30 20:50:52,478 WARNING GAME_ERROR game=90 error=exit_1 consecutive=1
+2026-06-30 20:50:52,478 INFO GAME_DONE game=90 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:51:07,481 INFO GAME_START game=92 / 250
+2026-06-30 20:51:07,626 WARNING GAME_ERROR game=91 error=exit_1 consecutive=1
+2026-06-30 20:51:07,626 INFO GAME_DONE game=91 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:51:22,628 INFO GAME_START game=93 / 250
+2026-06-30 20:51:22,770 WARNING GAME_ERROR game=92 error=exit_1 consecutive=1
+2026-06-30 20:51:22,770 INFO GAME_DONE game=92 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:51:37,772 INFO GAME_START game=94 / 250
+2026-06-30 20:51:37,907 WARNING GAME_ERROR game=93 error=exit_1 consecutive=1
+2026-06-30 20:51:37,907 INFO GAME_DONE game=93 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:51:52,909 INFO GAME_START game=95 / 250
+2026-06-30 20:51:53,059 WARNING GAME_ERROR game=94 error=exit_1 consecutive=1
+2026-06-30 20:51:53,059 INFO GAME_DONE game=94 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:52:08,059 INFO GAME_START game=96 / 250
+2026-06-30 20:52:08,256 WARNING GAME_ERROR game=95 error=exit_1 consecutive=1
+2026-06-30 20:52:08,256 INFO GAME_DONE game=95 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:52:23,258 INFO GAME_START game=97 / 250
+2026-06-30 20:52:23,463 WARNING GAME_ERROR game=96 error=exit_1 consecutive=1
+2026-06-30 20:52:23,463 INFO GAME_DONE game=96 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:52:38,465 INFO GAME_START game=98 / 250
+2026-06-30 20:52:38,667 WARNING GAME_ERROR game=97 error=exit_1 consecutive=1
+2026-06-30 20:52:38,667 INFO GAME_DONE game=97 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:52:53,670 INFO GAME_START game=99 / 250
+2026-06-30 20:52:53,808 WARNING GAME_ERROR game=98 error=exit_1 consecutive=1
+2026-06-30 20:52:53,808 INFO GAME_DONE game=98 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:53:08,810 INFO GAME_START game=100 / 250
+2026-06-30 20:53:09,005 WARNING GAME_ERROR game=99 error=exit_1 consecutive=1
+2026-06-30 20:53:09,005 INFO GAME_DONE game=99 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:53:24,008 INFO GAME_START game=101 / 250
+2026-06-30 20:53:24,140 WARNING GAME_ERROR game=100 error=exit_1 consecutive=1
+2026-06-30 20:53:24,140 INFO GAME_DONE game=100 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:53:39,142 INFO GAME_START game=102 / 250
+2026-06-30 20:53:39,296 WARNING GAME_ERROR game=101 error=exit_1 consecutive=1
+2026-06-30 20:53:39,296 INFO GAME_DONE game=101 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:53:54,298 INFO GAME_START game=103 / 250
+2026-06-30 20:53:54,445 WARNING GAME_ERROR game=102 error=exit_1 consecutive=1
+2026-06-30 20:53:54,445 INFO GAME_DONE game=102 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:54:09,448 INFO GAME_START game=104 / 250
+2026-06-30 20:54:09,596 WARNING GAME_ERROR game=103 error=exit_1 consecutive=1
+2026-06-30 20:54:09,596 INFO GAME_DONE game=103 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:54:24,598 INFO GAME_START game=105 / 250
+2026-06-30 20:54:24,739 WARNING GAME_ERROR game=104 error=exit_1 consecutive=1
+2026-06-30 20:54:24,739 INFO GAME_DONE game=104 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:54:39,740 INFO GAME_START game=106 / 250
+2026-06-30 20:54:39,877 WARNING GAME_ERROR game=105 error=exit_1 consecutive=1
+2026-06-30 20:54:39,877 INFO GAME_DONE game=105 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:54:54,879 INFO GAME_START game=107 / 250
+2026-06-30 20:54:55,074 WARNING GAME_ERROR game=106 error=exit_1 consecutive=1
+2026-06-30 20:54:55,074 INFO GAME_DONE game=106 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:55:10,076 INFO GAME_START game=108 / 250
+2026-06-30 20:55:10,220 WARNING GAME_ERROR game=107 error=exit_1 consecutive=1
+2026-06-30 20:55:10,220 INFO GAME_DONE game=107 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:55:25,222 INFO GAME_START game=109 / 250
+2026-06-30 20:55:25,372 WARNING GAME_ERROR game=108 error=exit_1 consecutive=1
+2026-06-30 20:55:25,372 INFO GAME_DONE game=108 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:55:40,374 INFO GAME_START game=110 / 250
+2026-06-30 20:55:40,546 WARNING GAME_ERROR game=109 error=exit_1 consecutive=1
+2026-06-30 20:55:40,546 INFO GAME_DONE game=109 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:55:55,548 INFO GAME_START game=111 / 250
+2026-06-30 20:55:55,730 WARNING GAME_ERROR game=110 error=exit_1 consecutive=1
+2026-06-30 20:55:55,730 INFO GAME_DONE game=110 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 20:56:10,733 INFO GAME_START game=112 / 250
+2026-06-30 20:56:10,869 WARNING GAME_ERROR game=111 error=exit_1 consecutive=1
+2026-06-30 20:56:10,869 INFO GAME_DONE game=111 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:56:25,871 INFO GAME_START game=113 / 250
+2026-06-30 20:56:26,012 WARNING GAME_ERROR game=112 error=exit_1 consecutive=1
+2026-06-30 20:56:26,012 INFO GAME_DONE game=112 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:56:41,015 INFO GAME_START game=114 / 250
+2026-06-30 20:56:41,162 WARNING GAME_ERROR game=113 error=exit_1 consecutive=1
+2026-06-30 20:56:41,162 INFO GAME_DONE game=113 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 20:56:56,164 INFO GAME_START game=115 / 250
+2026-06-30 20:57:16,286 WARNING GAME_ERROR game=114 error=exit_1 consecutive=1
+2026-06-30 20:57:16,286 INFO GAME_DONE game=114 result=None elo=None gxe=None opponent=None turns=None dur=20.1s
+2026-06-30 20:57:31,288 INFO GAME_START game=116 / 250
+2026-06-30 21:05:41,837 ERROR GAME_TIMEOUT game=115 timeout after 8 min
+2026-06-30 21:05:41,839 WARNING GAME_ERROR game=115 error=game_timeout_8min consecutive=1
+2026-06-30 21:05:41,839 INFO GAME_DONE game=115 result=None elo=None gxe=None opponent=None turns=None dur=490.5s
+2026-06-30 21:05:56,842 INFO GAME_START game=117 / 250
+2026-06-30 21:05:57,047 WARNING GAME_ERROR game=116 error=exit_1 consecutive=1
+2026-06-30 21:05:57,047 INFO GAME_DONE game=116 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:06:12,049 INFO GAME_START game=118 / 250
+2026-06-30 21:06:12,197 WARNING GAME_ERROR game=117 error=exit_1 consecutive=1
+2026-06-30 21:06:12,197 INFO GAME_DONE game=117 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:06:27,199 INFO GAME_START game=119 / 250
+2026-06-30 21:06:27,346 WARNING GAME_ERROR game=118 error=exit_1 consecutive=1
+2026-06-30 21:06:27,346 INFO GAME_DONE game=118 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:06:42,349 INFO GAME_START game=120 / 250
+2026-06-30 21:06:42,491 WARNING GAME_ERROR game=119 error=exit_1 consecutive=1
+2026-06-30 21:06:42,491 INFO GAME_DONE game=119 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:06:57,493 INFO GAME_START game=121 / 250
+2026-06-30 21:06:57,631 WARNING GAME_ERROR game=120 error=exit_1 consecutive=1
+2026-06-30 21:06:57,631 INFO GAME_DONE game=120 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:07:12,634 INFO GAME_START game=122 / 250
+2026-06-30 21:07:12,781 WARNING GAME_ERROR game=121 error=exit_1 consecutive=1
+2026-06-30 21:07:12,781 INFO GAME_DONE game=121 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:07:27,783 INFO GAME_START game=123 / 250
+2026-06-30 21:07:27,924 WARNING GAME_ERROR game=122 error=exit_1 consecutive=1
+2026-06-30 21:07:27,924 INFO GAME_DONE game=122 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:07:42,926 INFO GAME_START game=124 / 250
+2026-06-30 21:07:43,125 WARNING GAME_ERROR game=123 error=exit_1 consecutive=1
+2026-06-30 21:07:43,125 INFO GAME_DONE game=123 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:07:58,127 INFO GAME_START game=125 / 250
+2026-06-30 21:07:58,303 WARNING GAME_ERROR game=124 error=exit_1 consecutive=1
+2026-06-30 21:07:58,303 INFO GAME_DONE game=124 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:08:13,305 INFO GAME_START game=126 / 250
+2026-06-30 21:08:13,451 WARNING GAME_ERROR game=125 error=exit_1 consecutive=1
+2026-06-30 21:08:13,451 INFO GAME_DONE game=125 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:08:28,453 INFO GAME_START game=127 / 250
+2026-06-30 21:08:28,592 WARNING GAME_ERROR game=126 error=exit_1 consecutive=1
+2026-06-30 21:08:28,592 INFO GAME_DONE game=126 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:08:43,594 INFO GAME_START game=128 / 250
+2026-06-30 21:08:43,785 WARNING GAME_ERROR game=127 error=exit_1 consecutive=1
+2026-06-30 21:08:43,785 INFO GAME_DONE game=127 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:08:58,787 INFO GAME_START game=129 / 250
+2026-06-30 21:08:58,917 WARNING GAME_ERROR game=128 error=exit_1 consecutive=1
+2026-06-30 21:08:58,917 INFO GAME_DONE game=128 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:09:13,919 INFO GAME_START game=130 / 250
+2026-06-30 21:09:14,109 WARNING GAME_ERROR game=129 error=exit_1 consecutive=1
+2026-06-30 21:09:14,109 INFO GAME_DONE game=129 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:09:29,111 INFO GAME_START game=131 / 250
+2026-06-30 21:09:29,309 WARNING GAME_ERROR game=130 error=exit_1 consecutive=1
+2026-06-30 21:09:29,309 INFO GAME_DONE game=130 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:09:44,312 INFO GAME_START game=132 / 250
+2026-06-30 21:09:44,511 WARNING GAME_ERROR game=131 error=exit_1 consecutive=1
+2026-06-30 21:09:44,511 INFO GAME_DONE game=131 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:09:59,513 INFO GAME_START game=133 / 250
+2026-06-30 21:09:59,657 WARNING GAME_ERROR game=132 error=exit_1 consecutive=1
+2026-06-30 21:09:59,657 INFO GAME_DONE game=132 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:10:14,660 INFO GAME_START game=134 / 250
+2026-06-30 21:10:14,807 WARNING GAME_ERROR game=133 error=exit_1 consecutive=1
+2026-06-30 21:10:14,807 INFO GAME_DONE game=133 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:10:29,809 INFO GAME_START game=135 / 250
+2026-06-30 21:10:29,950 WARNING GAME_ERROR game=134 error=exit_1 consecutive=1
+2026-06-30 21:10:29,950 INFO GAME_DONE game=134 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:10:44,952 INFO GAME_START game=136 / 250
+2026-06-30 21:10:45,140 WARNING GAME_ERROR game=135 error=exit_1 consecutive=1
+2026-06-30 21:10:45,140 INFO GAME_DONE game=135 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:11:00,142 INFO GAME_START game=137 / 250
+2026-06-30 21:11:00,348 WARNING GAME_ERROR game=136 error=exit_1 consecutive=1
+2026-06-30 21:11:00,348 INFO GAME_DONE game=136 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:11:15,350 INFO GAME_START game=138 / 250
+2026-06-30 21:11:15,544 WARNING GAME_ERROR game=137 error=exit_1 consecutive=1
+2026-06-30 21:11:15,544 INFO GAME_DONE game=137 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:11:30,547 INFO GAME_START game=139 / 250
+2026-06-30 21:11:30,693 WARNING GAME_ERROR game=138 error=exit_1 consecutive=1
+2026-06-30 21:11:30,694 INFO GAME_DONE game=138 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:11:45,696 INFO GAME_START game=140 / 250
+2026-06-30 21:11:45,864 WARNING GAME_ERROR game=139 error=exit_1 consecutive=1
+2026-06-30 21:11:45,864 INFO GAME_DONE game=139 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:12:00,866 INFO GAME_START game=141 / 250
+2026-06-30 21:12:01,035 WARNING GAME_ERROR game=140 error=exit_1 consecutive=1
+2026-06-30 21:12:01,035 INFO GAME_DONE game=140 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:12:16,038 INFO GAME_START game=142 / 250
+2026-06-30 21:12:16,209 WARNING GAME_ERROR game=141 error=exit_1 consecutive=1
+2026-06-30 21:12:16,210 INFO GAME_DONE game=141 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:12:31,212 INFO GAME_START game=143 / 250
+2026-06-30 21:12:31,347 WARNING GAME_ERROR game=142 error=exit_1 consecutive=1
+2026-06-30 21:12:31,347 INFO GAME_DONE game=142 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:12:46,350 INFO GAME_START game=144 / 250
+2026-06-30 21:12:46,479 WARNING GAME_ERROR game=143 error=exit_1 consecutive=1
+2026-06-30 21:12:46,479 INFO GAME_DONE game=143 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:13:01,482 INFO GAME_START game=145 / 250
+2026-06-30 21:13:01,687 WARNING GAME_ERROR game=144 error=exit_1 consecutive=1
+2026-06-30 21:13:01,687 INFO GAME_DONE game=144 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:13:16,689 INFO GAME_START game=146 / 250
+2026-06-30 21:13:16,835 WARNING GAME_ERROR game=145 error=exit_1 consecutive=1
+2026-06-30 21:13:16,835 INFO GAME_DONE game=145 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:13:31,838 INFO GAME_START game=147 / 250
+2026-06-30 21:13:31,984 WARNING GAME_ERROR game=146 error=exit_1 consecutive=1
+2026-06-30 21:13:31,984 INFO GAME_DONE game=146 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:13:46,987 INFO GAME_START game=148 / 250
+2026-06-30 21:13:47,160 WARNING GAME_ERROR game=147 error=exit_1 consecutive=1
+2026-06-30 21:13:47,160 INFO GAME_DONE game=147 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:14:02,161 INFO GAME_START game=149 / 250
+2026-06-30 21:14:02,357 WARNING GAME_ERROR game=148 error=exit_1 consecutive=1
+2026-06-30 21:14:02,357 INFO GAME_DONE game=148 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:14:17,359 INFO GAME_START game=150 / 250
+2026-06-30 21:14:17,499 WARNING GAME_ERROR game=149 error=exit_1 consecutive=1
+2026-06-30 21:14:17,499 INFO GAME_DONE game=149 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:14:32,499 INFO GAME_START game=151 / 250
+2026-06-30 21:14:32,631 WARNING GAME_ERROR game=150 error=exit_1 consecutive=1
+2026-06-30 21:14:32,631 INFO GAME_DONE game=150 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:14:47,633 INFO GAME_START game=152 / 250
+2026-06-30 21:14:47,828 WARNING GAME_ERROR game=151 error=exit_1 consecutive=1
+2026-06-30 21:14:47,828 INFO GAME_DONE game=151 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:15:02,831 INFO GAME_START game=153 / 250
+2026-06-30 21:15:03,026 WARNING GAME_ERROR game=152 error=exit_1 consecutive=1
+2026-06-30 21:15:03,026 INFO GAME_DONE game=152 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:15:18,028 INFO GAME_START game=154 / 250
+2026-06-30 21:15:18,200 WARNING GAME_ERROR game=153 error=exit_1 consecutive=1
+2026-06-30 21:15:18,201 INFO GAME_DONE game=153 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:15:33,203 INFO GAME_START game=155 / 250
+2026-06-30 21:15:33,348 WARNING GAME_ERROR game=154 error=exit_1 consecutive=1
+2026-06-30 21:15:33,348 INFO GAME_DONE game=154 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:15:48,350 INFO GAME_START game=156 / 250
+2026-06-30 21:15:48,501 WARNING GAME_ERROR game=155 error=exit_1 consecutive=1
+2026-06-30 21:15:48,501 INFO GAME_DONE game=155 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:16:03,503 INFO GAME_START game=157 / 250
+2026-06-30 21:16:03,669 WARNING GAME_ERROR game=156 error=exit_1 consecutive=1
+2026-06-30 21:16:03,669 INFO GAME_DONE game=156 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:16:18,672 INFO GAME_START game=158 / 250
+2026-06-30 21:16:18,807 WARNING GAME_ERROR game=157 error=exit_1 consecutive=1
+2026-06-30 21:16:18,807 INFO GAME_DONE game=157 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:16:33,809 INFO GAME_START game=159 / 250
+2026-06-30 21:16:33,948 WARNING GAME_ERROR game=158 error=exit_1 consecutive=1
+2026-06-30 21:16:33,948 INFO GAME_DONE game=158 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:16:48,951 INFO GAME_START game=160 / 250
+2026-06-30 21:16:49,103 WARNING GAME_ERROR game=159 error=exit_1 consecutive=1
+2026-06-30 21:16:49,104 INFO GAME_DONE game=159 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:17:04,106 INFO GAME_START game=161 / 250
+2026-06-30 21:17:04,305 WARNING GAME_ERROR game=160 error=exit_1 consecutive=1
+2026-06-30 21:17:04,305 INFO GAME_DONE game=160 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:17:19,307 INFO GAME_START game=162 / 250
+2026-06-30 21:17:19,451 WARNING GAME_ERROR game=161 error=exit_1 consecutive=1
+2026-06-30 21:17:19,451 INFO GAME_DONE game=161 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:17:34,454 INFO GAME_START game=163 / 250
+2026-06-30 21:17:34,598 WARNING GAME_ERROR game=162 error=exit_1 consecutive=1
+2026-06-30 21:17:34,598 INFO GAME_DONE game=162 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:17:49,601 INFO GAME_START game=164 / 250
+2026-06-30 21:17:49,751 WARNING GAME_ERROR game=163 error=exit_1 consecutive=1
+2026-06-30 21:17:49,751 INFO GAME_DONE game=163 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:18:04,753 INFO GAME_START game=165 / 250
+2026-06-30 21:18:04,894 WARNING GAME_ERROR game=164 error=exit_1 consecutive=1
+2026-06-30 21:18:04,894 INFO GAME_DONE game=164 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:18:19,897 INFO GAME_START game=166 / 250
+2026-06-30 21:18:20,111 WARNING GAME_ERROR game=165 error=exit_1 consecutive=1
+2026-06-30 21:18:20,111 INFO GAME_DONE game=165 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:18:35,114 INFO GAME_START game=167 / 250
+2026-06-30 21:18:35,262 WARNING GAME_ERROR game=166 error=exit_1 consecutive=1
+2026-06-30 21:18:35,262 INFO GAME_DONE game=166 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:18:50,264 INFO GAME_START game=168 / 250
+2026-06-30 21:18:50,411 WARNING GAME_ERROR game=167 error=exit_1 consecutive=1
+2026-06-30 21:18:50,411 INFO GAME_DONE game=167 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:19:05,413 INFO GAME_START game=169 / 250
+2026-06-30 21:19:05,614 WARNING GAME_ERROR game=168 error=exit_1 consecutive=1
+2026-06-30 21:19:05,614 INFO GAME_DONE game=168 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:19:20,616 INFO GAME_START game=170 / 250
+2026-06-30 21:19:20,755 WARNING GAME_ERROR game=169 error=exit_1 consecutive=1
+2026-06-30 21:19:20,755 INFO GAME_DONE game=169 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:19:35,757 INFO GAME_START game=171 / 250
+2026-06-30 21:19:35,917 WARNING GAME_ERROR game=170 error=exit_1 consecutive=1
+2026-06-30 21:19:35,917 INFO GAME_DONE game=170 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:19:50,919 INFO GAME_START game=172 / 250
+2026-06-30 21:19:51,051 WARNING GAME_ERROR game=171 error=exit_1 consecutive=1
+2026-06-30 21:19:51,051 INFO GAME_DONE game=171 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:20:06,053 INFO GAME_START game=173 / 250
+2026-06-30 21:20:06,188 WARNING GAME_ERROR game=172 error=exit_1 consecutive=1
+2026-06-30 21:20:06,188 INFO GAME_DONE game=172 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:20:21,191 INFO GAME_START game=174 / 250
+2026-06-30 21:20:21,338 WARNING GAME_ERROR game=173 error=exit_1 consecutive=1
+2026-06-30 21:20:21,338 INFO GAME_DONE game=173 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:20:36,340 INFO GAME_START game=175 / 250
+2026-06-30 21:20:36,485 WARNING GAME_ERROR game=174 error=exit_1 consecutive=1
+2026-06-30 21:20:36,485 INFO GAME_DONE game=174 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:20:51,488 INFO GAME_START game=176 / 250
+2026-06-30 21:20:51,636 WARNING GAME_ERROR game=175 error=exit_1 consecutive=1
+2026-06-30 21:20:51,636 INFO GAME_DONE game=175 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:21:06,638 INFO GAME_START game=177 / 250
+2026-06-30 21:21:06,783 WARNING GAME_ERROR game=176 error=exit_1 consecutive=1
+2026-06-30 21:21:06,783 INFO GAME_DONE game=176 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:21:21,785 INFO GAME_START game=178 / 250
+2026-06-30 21:21:21,931 WARNING GAME_ERROR game=177 error=exit_1 consecutive=1
+2026-06-30 21:21:21,931 INFO GAME_DONE game=177 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:21:36,933 INFO GAME_START game=179 / 250
+2026-06-30 21:21:37,066 WARNING GAME_ERROR game=178 error=exit_1 consecutive=1
+2026-06-30 21:21:37,066 INFO GAME_DONE game=178 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:21:52,069 INFO GAME_START game=180 / 250
+2026-06-30 21:21:52,216 WARNING GAME_ERROR game=179 error=exit_1 consecutive=1
+2026-06-30 21:21:52,216 INFO GAME_DONE game=179 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:22:07,218 INFO GAME_START game=181 / 250
+2026-06-30 21:22:07,365 WARNING GAME_ERROR game=180 error=exit_1 consecutive=1
+2026-06-30 21:22:07,365 INFO GAME_DONE game=180 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:22:22,367 INFO GAME_START game=182 / 250
+2026-06-30 21:22:22,518 WARNING GAME_ERROR game=181 error=exit_1 consecutive=1
+2026-06-30 21:22:22,518 INFO GAME_DONE game=181 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:22:37,520 INFO GAME_START game=183 / 250
+2026-06-30 21:22:37,672 WARNING GAME_ERROR game=182 error=exit_1 consecutive=1
+2026-06-30 21:22:37,672 INFO GAME_DONE game=182 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:22:52,674 INFO GAME_START game=184 / 250
+2026-06-30 21:22:52,812 WARNING GAME_ERROR game=183 error=exit_1 consecutive=1
+2026-06-30 21:22:52,813 INFO GAME_DONE game=183 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:23:07,815 INFO GAME_START game=185 / 250
+2026-06-30 21:23:07,957 WARNING GAME_ERROR game=184 error=exit_1 consecutive=1
+2026-06-30 21:23:07,957 INFO GAME_DONE game=184 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:23:22,959 INFO GAME_START game=186 / 250
+2026-06-30 21:23:23,094 WARNING GAME_ERROR game=185 error=exit_1 consecutive=1
+2026-06-30 21:23:23,094 INFO GAME_DONE game=185 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:23:38,097 INFO GAME_START game=187 / 250
+2026-06-30 21:23:38,300 WARNING GAME_ERROR game=186 error=exit_1 consecutive=1
+2026-06-30 21:23:38,300 INFO GAME_DONE game=186 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:23:53,301 INFO GAME_START game=188 / 250
+2026-06-30 21:23:53,444 WARNING GAME_ERROR game=187 error=exit_1 consecutive=1
+2026-06-30 21:23:53,444 INFO GAME_DONE game=187 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:24:08,446 INFO GAME_START game=189 / 250
+2026-06-30 21:24:08,597 WARNING GAME_ERROR game=188 error=exit_1 consecutive=1
+2026-06-30 21:24:08,597 INFO GAME_DONE game=188 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:24:23,598 INFO GAME_START game=190 / 250
+2026-06-30 21:24:23,748 WARNING GAME_ERROR game=189 error=exit_1 consecutive=1
+2026-06-30 21:24:23,748 INFO GAME_DONE game=189 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:24:38,750 INFO GAME_START game=191 / 250
+2026-06-30 21:24:38,906 WARNING GAME_ERROR game=190 error=exit_1 consecutive=1
+2026-06-30 21:24:38,906 INFO GAME_DONE game=190 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:24:53,908 INFO GAME_START game=192 / 250
+2026-06-30 21:24:54,045 WARNING GAME_ERROR game=191 error=exit_1 consecutive=1
+2026-06-30 21:24:54,045 INFO GAME_DONE game=191 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:25:09,047 INFO GAME_START game=193 / 250
+2026-06-30 21:25:09,186 WARNING GAME_ERROR game=192 error=exit_1 consecutive=1
+2026-06-30 21:25:09,186 INFO GAME_DONE game=192 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:25:24,188 INFO GAME_START game=194 / 250
+2026-06-30 21:25:24,326 WARNING GAME_ERROR game=193 error=exit_1 consecutive=1
+2026-06-30 21:25:24,326 INFO GAME_DONE game=193 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:25:39,329 INFO GAME_START game=195 / 250
+2026-06-30 21:25:39,474 WARNING GAME_ERROR game=194 error=exit_1 consecutive=1
+2026-06-30 21:25:39,474 INFO GAME_DONE game=194 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:25:54,476 INFO GAME_START game=196 / 250
+2026-06-30 21:25:54,622 WARNING GAME_ERROR game=195 error=exit_1 consecutive=1
+2026-06-30 21:25:54,622 INFO GAME_DONE game=195 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:26:09,625 INFO GAME_START game=197 / 250
+2026-06-30 21:26:09,774 WARNING GAME_ERROR game=196 error=exit_1 consecutive=1
+2026-06-30 21:26:09,774 INFO GAME_DONE game=196 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:26:24,776 INFO GAME_START game=198 / 250
+2026-06-30 21:26:24,928 WARNING GAME_ERROR game=197 error=exit_1 consecutive=1
+2026-06-30 21:26:24,928 INFO GAME_DONE game=197 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:26:39,930 INFO GAME_START game=199 / 250
+2026-06-30 21:26:40,130 WARNING GAME_ERROR game=198 error=exit_1 consecutive=1
+2026-06-30 21:26:40,130 INFO GAME_DONE game=198 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:26:55,133 INFO GAME_START game=200 / 250
+2026-06-30 21:26:55,268 WARNING GAME_ERROR game=199 error=exit_1 consecutive=1
+2026-06-30 21:26:55,268 INFO GAME_DONE game=199 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:27:10,269 INFO GAME_START game=201 / 250
+2026-06-30 21:27:10,412 WARNING GAME_ERROR game=200 error=exit_1 consecutive=1
+2026-06-30 21:27:10,412 INFO GAME_DONE game=200 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:27:25,414 INFO GAME_START game=202 / 250
+2026-06-30 21:27:25,557 WARNING GAME_ERROR game=201 error=exit_1 consecutive=1
+2026-06-30 21:27:25,557 INFO GAME_DONE game=201 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:27:40,559 INFO GAME_START game=203 / 250
+2026-06-30 21:27:40,705 WARNING GAME_ERROR game=202 error=exit_1 consecutive=1
+2026-06-30 21:27:40,705 INFO GAME_DONE game=202 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:27:55,708 INFO GAME_START game=204 / 250
+2026-06-30 21:27:55,849 WARNING GAME_ERROR game=203 error=exit_1 consecutive=1
+2026-06-30 21:27:55,850 INFO GAME_DONE game=203 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:28:10,852 INFO GAME_START game=205 / 250
+2026-06-30 21:28:10,992 WARNING GAME_ERROR game=204 error=exit_1 consecutive=1
+2026-06-30 21:28:10,992 INFO GAME_DONE game=204 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:28:25,994 INFO GAME_START game=206 / 250
+2026-06-30 21:28:26,162 WARNING GAME_ERROR game=205 error=exit_1 consecutive=1
+2026-06-30 21:28:26,162 INFO GAME_DONE game=205 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:28:41,164 INFO GAME_START game=207 / 250
+2026-06-30 21:28:41,288 WARNING GAME_ERROR game=206 error=exit_1 consecutive=1
+2026-06-30 21:28:41,288 INFO GAME_DONE game=206 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:28:56,290 INFO GAME_START game=208 / 250
+2026-06-30 21:28:56,420 WARNING GAME_ERROR game=207 error=exit_1 consecutive=1
+2026-06-30 21:28:56,420 INFO GAME_DONE game=207 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:29:11,422 INFO GAME_START game=209 / 250
+2026-06-30 21:29:11,577 WARNING GAME_ERROR game=208 error=exit_1 consecutive=1
+2026-06-30 21:29:11,577 INFO GAME_DONE game=208 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:29:26,579 INFO GAME_START game=210 / 250
+2026-06-30 21:29:26,720 WARNING GAME_ERROR game=209 error=exit_1 consecutive=1
+2026-06-30 21:29:26,720 INFO GAME_DONE game=209 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:29:41,723 INFO GAME_START game=211 / 250
+2026-06-30 21:29:41,875 WARNING GAME_ERROR game=210 error=exit_1 consecutive=1
+2026-06-30 21:29:41,875 INFO GAME_DONE game=210 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:29:56,877 INFO GAME_START game=212 / 250
+2026-06-30 21:29:57,020 WARNING GAME_ERROR game=211 error=exit_1 consecutive=1
+2026-06-30 21:29:57,020 INFO GAME_DONE game=211 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:30:12,023 INFO GAME_START game=213 / 250
+2026-06-30 21:30:12,221 WARNING GAME_ERROR game=212 error=exit_1 consecutive=1
+2026-06-30 21:30:12,221 INFO GAME_DONE game=212 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:30:27,223 INFO GAME_START game=214 / 250
+2026-06-30 21:30:27,364 WARNING GAME_ERROR game=213 error=exit_1 consecutive=1
+2026-06-30 21:30:27,364 INFO GAME_DONE game=213 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:30:42,366 INFO GAME_START game=215 / 250
+2026-06-30 21:30:42,510 WARNING GAME_ERROR game=214 error=exit_1 consecutive=1
+2026-06-30 21:30:42,510 INFO GAME_DONE game=214 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:30:57,513 INFO GAME_START game=216 / 250
+2026-06-30 21:30:57,655 WARNING GAME_ERROR game=215 error=exit_1 consecutive=1
+2026-06-30 21:30:57,655 INFO GAME_DONE game=215 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:31:12,658 INFO GAME_START game=217 / 250
+2026-06-30 21:31:12,806 WARNING GAME_ERROR game=216 error=exit_1 consecutive=1
+2026-06-30 21:31:12,806 INFO GAME_DONE game=216 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:31:27,809 INFO GAME_START game=218 / 250
+2026-06-30 21:31:27,952 WARNING GAME_ERROR game=217 error=exit_1 consecutive=1
+2026-06-30 21:31:27,952 INFO GAME_DONE game=217 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:31:42,955 INFO GAME_START game=219 / 250
+2026-06-30 21:31:43,151 WARNING GAME_ERROR game=218 error=exit_1 consecutive=1
+2026-06-30 21:31:43,151 INFO GAME_DONE game=218 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:31:58,153 INFO GAME_START game=220 / 250
+2026-06-30 21:31:58,288 WARNING GAME_ERROR game=219 error=exit_1 consecutive=1
+2026-06-30 21:31:58,288 INFO GAME_DONE game=219 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:32:13,290 INFO GAME_START game=221 / 250
+2026-06-30 21:32:13,429 WARNING GAME_ERROR game=220 error=exit_1 consecutive=1
+2026-06-30 21:32:13,429 INFO GAME_DONE game=220 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:32:28,430 INFO GAME_START game=222 / 250
+2026-06-30 21:32:28,563 WARNING GAME_ERROR game=221 error=exit_1 consecutive=1
+2026-06-30 21:32:28,563 INFO GAME_DONE game=221 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:32:43,565 INFO GAME_START game=223 / 250
+2026-06-30 21:32:43,758 WARNING GAME_ERROR game=222 error=exit_1 consecutive=1
+2026-06-30 21:32:43,758 INFO GAME_DONE game=222 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:32:58,760 INFO GAME_START game=224 / 250
+2026-06-30 21:32:58,904 WARNING GAME_ERROR game=223 error=exit_1 consecutive=1
+2026-06-30 21:32:58,904 INFO GAME_DONE game=223 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:33:13,907 INFO GAME_START game=225 / 250
+2026-06-30 21:33:14,058 WARNING GAME_ERROR game=224 error=exit_1 consecutive=1
+2026-06-30 21:33:14,058 INFO GAME_DONE game=224 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:33:29,061 INFO GAME_START game=226 / 250
+2026-06-30 21:33:29,200 WARNING GAME_ERROR game=225 error=exit_1 consecutive=1
+2026-06-30 21:33:29,200 INFO GAME_DONE game=225 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:33:44,202 INFO GAME_START game=227 / 250
+2026-06-30 21:33:44,340 WARNING GAME_ERROR game=226 error=exit_1 consecutive=1
+2026-06-30 21:33:44,340 INFO GAME_DONE game=226 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:33:59,342 INFO GAME_START game=228 / 250
+2026-06-30 21:33:59,479 WARNING GAME_ERROR game=227 error=exit_1 consecutive=1
+2026-06-30 21:33:59,479 INFO GAME_DONE game=227 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:34:14,481 INFO GAME_START game=229 / 250
+2026-06-30 21:34:14,631 WARNING GAME_ERROR game=228 error=exit_1 consecutive=1
+2026-06-30 21:34:14,631 INFO GAME_DONE game=228 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:34:29,633 INFO GAME_START game=230 / 250
+2026-06-30 21:34:29,780 WARNING GAME_ERROR game=229 error=exit_1 consecutive=1
+2026-06-30 21:34:29,780 INFO GAME_DONE game=229 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:34:44,782 INFO GAME_START game=231 / 250
+2026-06-30 21:34:44,925 WARNING GAME_ERROR game=230 error=exit_1 consecutive=1
+2026-06-30 21:34:44,925 INFO GAME_DONE game=230 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:34:59,927 INFO GAME_START game=232 / 250
+2026-06-30 21:35:00,103 WARNING GAME_ERROR game=231 error=exit_1 consecutive=1
+2026-06-30 21:35:00,103 INFO GAME_DONE game=231 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:35:15,105 INFO GAME_START game=233 / 250
+2026-06-30 21:35:15,266 WARNING GAME_ERROR game=232 error=exit_1 consecutive=1
+2026-06-30 21:35:15,266 INFO GAME_DONE game=232 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:35:30,268 INFO GAME_START game=234 / 250
+2026-06-30 21:35:30,472 WARNING GAME_ERROR game=233 error=exit_1 consecutive=1
+2026-06-30 21:35:30,473 INFO GAME_DONE game=233 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:35:45,475 INFO GAME_START game=235 / 250
+2026-06-30 21:35:45,652 WARNING GAME_ERROR game=234 error=exit_1 consecutive=1
+2026-06-30 21:35:45,652 INFO GAME_DONE game=234 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:36:00,655 INFO GAME_START game=236 / 250
+2026-06-30 21:36:00,846 WARNING GAME_ERROR game=235 error=exit_1 consecutive=1
+2026-06-30 21:36:00,846 INFO GAME_DONE game=235 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:36:15,847 INFO GAME_START game=237 / 250
+2026-06-30 21:36:16,050 WARNING GAME_ERROR game=236 error=exit_1 consecutive=1
+2026-06-30 21:36:16,050 INFO GAME_DONE game=236 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:36:31,052 INFO GAME_START game=238 / 250
+2026-06-30 21:36:31,228 WARNING GAME_ERROR game=237 error=exit_1 consecutive=1
+2026-06-30 21:36:31,228 INFO GAME_DONE game=237 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:36:46,230 INFO GAME_START game=239 / 250
+2026-06-30 21:36:46,417 WARNING GAME_ERROR game=238 error=exit_1 consecutive=1
+2026-06-30 21:36:46,417 INFO GAME_DONE game=238 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:37:01,420 INFO GAME_START game=240 / 250
+2026-06-30 21:37:01,608 WARNING GAME_ERROR game=239 error=exit_1 consecutive=1
+2026-06-30 21:37:01,608 INFO GAME_DONE game=239 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:37:16,610 INFO GAME_START game=241 / 250
+2026-06-30 21:37:16,805 WARNING GAME_ERROR game=240 error=exit_1 consecutive=1
+2026-06-30 21:37:16,805 INFO GAME_DONE game=240 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:37:31,807 INFO GAME_START game=242 / 250
+2026-06-30 21:37:31,941 WARNING GAME_ERROR game=241 error=exit_1 consecutive=1
+2026-06-30 21:37:31,941 INFO GAME_DONE game=241 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:37:46,943 INFO GAME_START game=243 / 250
+2026-06-30 21:37:47,083 WARNING GAME_ERROR game=242 error=exit_1 consecutive=1
+2026-06-30 21:37:47,083 INFO GAME_DONE game=242 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:38:02,086 INFO GAME_START game=244 / 250
+2026-06-30 21:38:02,270 WARNING GAME_ERROR game=243 error=exit_1 consecutive=1
+2026-06-30 21:38:02,270 INFO GAME_DONE game=243 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:38:17,272 INFO GAME_START game=245 / 250
+2026-06-30 21:38:17,416 WARNING GAME_ERROR game=244 error=exit_1 consecutive=1
+2026-06-30 21:38:17,416 INFO GAME_DONE game=244 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:38:32,419 INFO GAME_START game=246 / 250
+2026-06-30 21:38:32,564 WARNING GAME_ERROR game=245 error=exit_1 consecutive=1
+2026-06-30 21:38:32,564 INFO GAME_DONE game=245 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:38:47,566 INFO GAME_START game=247 / 250
+2026-06-30 21:38:47,710 WARNING GAME_ERROR game=246 error=exit_1 consecutive=1
+2026-06-30 21:38:47,710 INFO GAME_DONE game=246 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:39:02,712 INFO GAME_START game=248 / 250
+2026-06-30 21:39:02,912 WARNING GAME_ERROR game=247 error=exit_1 consecutive=1
+2026-06-30 21:39:02,912 INFO GAME_DONE game=247 result=None elo=None gxe=None opponent=None turns=None dur=0.2s
+2026-06-30 21:39:17,915 INFO GAME_START game=249 / 250
+2026-06-30 21:39:18,058 WARNING GAME_ERROR game=248 error=exit_1 consecutive=1
+2026-06-30 21:39:18,058 INFO GAME_DONE game=248 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:39:33,060 INFO GAME_START game=250 / 250
+2026-06-30 21:39:33,195 WARNING GAME_ERROR game=249 error=exit_1 consecutive=1
+2026-06-30 21:39:33,195 INFO GAME_DONE game=249 result=None elo=None gxe=None opponent=None turns=None dur=0.1s
+2026-06-30 21:39:48,197 INFO FINAL SUMMARY | label=stock_foul_play_gen9randombattle_registered | completed=57 | W=40 L=17 | final_elo=1575 | final_gxe=71.6 | errors=189
