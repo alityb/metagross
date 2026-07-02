@@ -1,0 +1,27 @@
+{
+  "agent": "Kakuna",
+  "ci95": [
+    0.0,
+    0.6576
+  ],
+  "completed": 2,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "kakuna_losses": 2,
+  "kakuna_wins": 0,
+  "n_games_requested": 2,
+  "phaseA_kakuna_acceptor": {
+    "losses": 1,
+    "n": 1,
+    "wins": 0
+  },
+  "phaseB_kakuna_challenger": {
+    "losses": 1,
+    "n": 1,
+    "wins": 0
+  },
+  "run_id": "g1_kakuna_vs_fp_smoke_n2",
+  "ties_or_unknown": 0,
+  "ts": "2026-07-02T07:25:25.987761+00:00",
+  "winrate_kakuna": 0.0
+}

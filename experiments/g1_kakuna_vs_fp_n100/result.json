@@ -1,0 +1,27 @@
+{
+  "agent": "Kakuna",
+  "ci95": [
+    0.2014,
+    0.3749
+  ],
+  "completed": 100,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "kakuna_losses": 72,
+  "kakuna_wins": 28,
+  "n_games_requested": 100,
+  "phaseA_kakuna_acceptor": {
+    "losses": 35,
+    "n": 50,
+    "wins": 15
+  },
+  "phaseB_kakuna_challenger": {
+    "losses": 37,
+    "n": 50,
+    "wins": 13
+  },
+  "run_id": "g1_kakuna_zeroshot_vs_stock_fp_n100",
+  "ties_or_unknown": 0,
+  "ts": "2026-07-02T07:40:15.480565+00:00",
+  "winrate_kakuna": 0.28
+}

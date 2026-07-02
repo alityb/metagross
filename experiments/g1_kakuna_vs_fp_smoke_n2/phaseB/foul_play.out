@@ -1,0 +1,1358 @@
+INFO     Logging in (local server bypass)...
+INFO     Successfully logged in
+INFO     Waiting for a gen9randombattle challenge
+INFO     Initialized battle-gen9randombattle-418 against: kakg1b
+INFO     Loaded from cache: /Users/alityb/projects/metagross/external/foul-play/data/pkmn_sets_cache/gen9randombattle.json
+INFO     Opponent has switched - clearing the last used move
+INFO     blastoise switched in, adding intimidate to impossible abilities
+INFO     blastoise switched in, adding pressure to impossible abilities
+INFO     blastoise switched in, adding neutralizinggas to impossible abilities
+INFO     blastoise switched in, adding sandstream to impossible abilities
+INFO     blastoise switched in, adding drought to impossible abilities
+INFO     blastoise switched in, adding drizzle to impossible abilities
+INFO     blastoise switched in, adding snowwarning to impossible abilities
+INFO     blastoise switched in, adding boosterenergy to impossible items
+INFO     blastoise switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 1
+INFO     Sampling battle 0
+INFO     	      blastoise      torrent    whiteherb [earthquake, hydropump, icebeam, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       medicham    purepower  choicescarf [closecombat, poisonjab, trick, zenheadbutt] ttype=fighting
+INFO     	       chimecho     levitate    leftovers [encore, psychicnoise, recover, thunderwave] ttype=poison
+INFO     	     oinkologne     thickfat    leftovers [curse, doubleedge, highhorsepower, lashout] ttype=ground
+INFO     	        moltres    flamebody heavydutyboots [bravebird, fireblast, roost, scorchingsands] ttype=dragon
+INFO     	     copperajah   heavymetal   choiceband [heatcrash, heavyslam, stoneedge, supercellslam] ttype=fire
+INFO     Sampling battle 1
+INFO     	      blastoise      torrent    whiteherb [earthquake, hydropump, icebeam, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	         gengar   cursedbody  choicespecs [focusblast, shadowball, sludgewave, trick] ttype=ghost
+INFO     	        yanmega   tintedlens  choicespecs [airslash, bugbuzz, gigadrain, uturn] ttype=bug
+INFO     	        manaphy    hydration    leftovers [energyball, hydropump, icebeam, tailglow] ttype=grass
+INFO     	    arceusgrass    multitype  meadowplate [calmmind, fireblast, judgment, recover] ttype=fire
+INFO     	      tyranitar   sandstream    leftovers [knockoff, stealthrock, stoneedge, thunderwave] ttype=rock
+INFO     Sampling battle 2
+INFO     	      blastoise      torrent    whiteherb [hydropump, icebeam, shellsmash, terablast] ttype=grass
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        bruxish    strongjaw  choicescarf [crunch, icefang, psychicfangs, wavecrash] ttype=psychic
+INFO     	    ironjugulis   quarkdrive  choicespecs [darkpulse, hurricane, hydropump, uturn] ttype=flying
+INFO     	      terrakion    justified      lifeorb [closecombat, earthquake, stoneedge, swordsdance] ttype=ground
+INFO     	    ironvaliant   quarkdrive      lifeorb [calmmind, closecombat, moonblast, psychic] ttype=steel
+INFO     	        glaceon      icebody heavydutyboots [freezedry, mudshot, protect, wish] ttype=ground
+INFO     Sampling battle 3
+INFO     	      blastoise      torrent    whiteherb [hydropump, icebeam, shellsmash, terablast] ttype=grass
+INFO     Sampling 5 unrevealed pokemon
+INFO     	 oricoriopompom       dancer heavydutyboots [hurricane, quiverdance, revelationdance, roost] ttype=ground
+INFO     	     baxcalibur thermalexchange heavydutyboots [dragondance, earthquake, glaiverush, iciclecrash] ttype=dragon
+INFO     	    arceussteel    multitype    ironplate [earthquake, judgment, recover, willowisp] ttype=ghost
+INFO     	       dragalge adaptability    leftovers [dracometeor, focusblast, sludgewave, toxicspikes] ttype=fighting
+INFO     	    brutebonnet protosynthesis    leftovers [crunch, seedbomb, spore, suckerpunch] ttype=dark
+INFO     Searching for a move using MCTS...
+INFO     Sampling 4 battles at 50ms each
+INFO     Iterations 0: 21000
+INFO     Iterations 1: 19000
+INFO     Iterations 2: 21000
+INFO     Iterations 3: 23000
+INFO     Policy 0: sludgewave visited 61.81% avg_score=0.555 sample_chance_multiplier=0.25
+INFO     Policy 1: sludgewave visited 69.58% avg_score=0.58 sample_chance_multiplier=0.25
+INFO     Policy 2: sludgewave visited 73.91% avg_score=0.632 sample_chance_multiplier=0.25
+INFO     Policy 3: sludgewave visited 62.1% avg_score=0.592 sample_chance_multiplier=0.25
+INFO     Considered Choices:
+INFO     	66.85%: sludgewave
+INFO     Choice: sludgewave
+INFO     Updated blastoise's min speed to 128
+INFO     blastoise using shellsmash makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     blastoise used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting blastoise's last used move: shellsmash
+INFO     blastoise's defense was unboosted by 1 to -1
+INFO     blastoise's special-defense was unboosted by 1 to -1
+INFO     blastoise's attack was boosted by 2 to 2
+INFO     blastoise's special-attack was boosted by 2 to 2
+INFO     blastoise's speed was boosted by 2 to 2
+INFO     Removing blastoise's item: whiteherb
+INFO     Setting blastoise's removed item to whiteherb
+INFO     Setting blastoise's defense boost to 0
+INFO     Setting blastoise's special-defense boost to 0
+INFO     dragalge already has the move sludgewave. Decrementing the PP by 1
+INFO     dragalge used a poison move, removing poisongem from possible items
+INFO     Setting dragalge's last used move: sludgewave
+INFO     dragalge used a damaging move - not guessing lifeorb anymore
+INFO     dragalge did 48.0% damage to blastoise with sludgewave
+INFO     blastoise has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 2
+INFO     Sampling battle 0
+INFO     	      blastoise      torrent         None [earthquake, hydropump, icebeam, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        avalugg       sturdy heavydutyboots [avalanche, bodypress, curse, recover] ttype=fighting
+INFO     	       frosmoth    icescales heavydutyboots [bugbuzz, hurricane, icebeam, quiverdance] ttype=water
+INFO     	      cinderace       libero heavydutyboots [courtchange, gunkshot, highjumpkick, pyroball] ttype=fighting
+INFO     	     mabosstiff     stakeout  choicescarf [crunch, playrough, psychicfangs, wildcharge] ttype=dark
+INFO     	        lucario   innerfocus      lifeorb [flashcannon, focusblast, nastyplot, vacuumwave] ttype=fighting
+INFO     Sampling battle 1
+INFO     	      blastoise      torrent         None [hydropump, icebeam, shellsmash, terablast] ttype=grass
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        ambipom   technician    silkscarf [doubleedge, fakeout, knockoff, lowkick] ttype=normal
+INFO     	        kingdra       sniper     lumberry [dragondance, ironhead, outrage, wavecrash] ttype=steel
+INFO     	ogerponhearthflame  moldbreaker hearthflamemask [ivycudgel, powerwhip, swordsdance, trailblaze] ttype=fire
+INFO     	        flareon         guts     toxicorb [facade, flareblitz, quickattack, trailblaze] ttype=normal
+INFO     	   arceusground    multitype   earthplate [calmmind, fireblast, judgment, recover] ttype=dragon
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 43000
+INFO     Iterations 1: 52000
+INFO     Policy 0: dracometeor visited 61.93% avg_score=0.803 sample_chance_multiplier=0.5
+INFO     Policy 1: dracometeor visited 49.45% avg_score=0.814 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	55.692%: dracometeor
+INFO     Choice: dracometeor
+INFO     Updated blastoise's min speed to 128
+INFO     blastoise terastallized. Tera type: electric, Original types: ['water']
+INFO     blastoise used two different moves - it cannot have a choice item
+INFO     blastoise used a ice move, removing icegem from possible items
+INFO     Setting blastoise's last used move: icebeam
+INFO     blastoise used a damaging move - not guessing lifeorb anymore
+INFO     blastoise did 65.12% damage to dragalge with icebeam
+INFO     dragalge already has the move dracometeor. Decrementing the PP by 1
+INFO     dragalge used a dragon move, removing dragongem from possible items
+INFO     Setting dragalge's last used move: dracometeor
+INFO     dragalge used a damaging move - not guessing lifeorb anymore
+INFO     dragalge did 52.0% damage to blastoise with dracometeor
+INFO     dragalge's special-attack was unboosted by 2 to -2
+INFO     Setting dragalge's item to: leftovers
+INFO     blastoise has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     rayquaza switched in, adding intimidate to impossible abilities
+INFO     rayquaza switched in, adding pressure to impossible abilities
+INFO     rayquaza switched in, adding neutralizinggas to impossible abilities
+INFO     rayquaza switched in, adding sandstream to impossible abilities
+INFO     rayquaza switched in, adding drought to impossible abilities
+INFO     rayquaza switched in, adding drizzle to impossible abilities
+INFO     rayquaza switched in, adding snowwarning to impossible abilities
+INFO     rayquaza switched in, adding boosterenergy to impossible items
+INFO     rayquaza switched in, adding airballoon to impossible items
+INFO     Setting rayquaza's ability to airlock
+INFO     
+INFO     Turn: 3
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	         swalot   liquidooze    leftovers [encore, knockoff, sludgebomb, thunderwave] ttype=dark
+INFO     	      serperior     contrary      lifeorb [dragonpulse, glare, leafstorm, synthesis] ttype=grass
+INFO     	      munkidori   toxicchain      lifeorb [focusblast, nastyplot, psyshock, sludgewave] ttype=fighting
+INFO     	       ampharos       static  assaultvest [dazzlinggleam, focusblast, thunderbolt, voltswitch] ttype=fairy
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	 arceusfighting    multitype    fistplate [bodypress, irondefense, recover, shadowball] ttype=steel
+INFO     	       reshiram   turboblaze heavydutyboots [dragondance, flareblitz, outrage, stoneedge] ttype=fire
+INFO     	            muk  poisontouch    leftovers [drainpunch, haze, knockoff, poisonjab] ttype=dark
+INFO     	     misdreavus     levitate     eviolite [calmmind, drainingkiss, shadowball, willowisp] ttype=fairy
+INFO     Sampling battle 2
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	          lugia   multiscale heavydutyboots [aeroblast, calmmind, earthpower, recover] ttype=steel
+INFO     	         deoxys     pressure      lifeorb [extremespeed, knockoff, psychoboost, superpower] ttype=psychic
+INFO     	       ampharos       static  choicespecs [dazzlinggleam, focusblast, thunderbolt, voltswitch] ttype=electric
+INFO     	          arbok   intimidate      lifeorb [earthquake, glare, gunkshot, knockoff] ttype=ground
+INFO     Sampling battle 3
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, morningsun, sunsteelstrike] ttype=steel
+INFO     	     misdreavus     levitate     eviolite [calmmind, drainingkiss, shadowball, willowisp] ttype=fairy
+INFO     	    sandyshocks protosynthesis    leftovers [earthpower, spikes, stealthrock, thunderbolt] ttype=ground
+INFO     	        milotic  competitive    leftovers [dragontail, icebeam, recover, scald] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 4 battles at 50ms each
+INFO     Iterations 0: 18000
+INFO     Iterations 1: 30000
+INFO     Iterations 2: 30000
+INFO     Iterations 3: 32000
+INFO     Policy 0: switch glaceon visited 62.96% avg_score=0.589 sample_chance_multiplier=0.25
+INFO     Policy 1: switch glaceon visited 61.65% avg_score=0.57 sample_chance_multiplier=0.25
+INFO     Policy 2: switch glaceon visited 75.58% avg_score=0.6 sample_chance_multiplier=0.25
+INFO     Policy 3: switch glaceon visited 67.98% avg_score=0.589 sample_chance_multiplier=0.25
+INFO     Considered Choices:
+INFO     	67.041%: switch glaceon
+INFO     Choice: switch glaceon
+INFO     glaceon switched in, adding intimidate to impossible abilities
+INFO     glaceon switched in, adding pressure to impossible abilities
+INFO     glaceon switched in, adding neutralizinggas to impossible abilities
+INFO     glaceon switched in, adding sandstream to impossible abilities
+INFO     glaceon switched in, adding drought to impossible abilities
+INFO     glaceon switched in, adding drizzle to impossible abilities
+INFO     glaceon switched in, adding snowwarning to impossible abilities
+INFO     glaceon switched in, adding boosterenergy to impossible items
+INFO     glaceon switched in, adding airballoon to impossible items
+INFO     rayquaza used a ground move, removing groundgem from possible items
+INFO     Setting rayquaza's last used move: earthquake
+INFO     rayquaza used a damaging move - not guessing lifeorb anymore
+INFO     rayquaza did 18.91% damage to glaceon with earthquake
+INFO     
+INFO     Turn: 4
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	   arceusflying    multitype     skyplate [calmmind, earthpower, judgment, recover] ttype=ground
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	       orthworm   eartheater    leftovers [bodypress, heavyslam, shedtail, spikes] ttype=ghost
+INFO     	      gardevoir        trace  choicescarf [focusblast, moonblast, psychic, trick] ttype=fighting
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      indeedeef psychicsurge  choicespecs [dazzlinggleam, hypervoice, psychic, shadowball] ttype=fairy
+INFO     	      kingambit supremeoverlord    leftovers [ironhead, kowtowcleave, suckerpunch, swordsdance] ttype=dark
+INFO     	         dodrio    earlybird   choiceband [bravebird, doubleedge, knockoff, quickattack] ttype=flying
+INFO     	     irontreads   quarkdrive  assaultvest [earthquake, ironhead, knockoff, voltswitch] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 54000
+INFO     Iterations 1: 69000
+INFO     Policy 0: freezedry visited 44.85% avg_score=0.54 sample_chance_multiplier=0.5
+INFO     Policy 1: freezedry visited 35.21% avg_score=0.475 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	40.03%: freezedry
+INFO     Choice: freezedry
+INFO     Opponent has switched - clearing the last used move
+INFO     galvantula switched in, adding intimidate to impossible abilities
+INFO     galvantula switched in, adding pressure to impossible abilities
+INFO     galvantula switched in, adding neutralizinggas to impossible abilities
+INFO     galvantula switched in, adding sandstream to impossible abilities
+INFO     galvantula switched in, adding drought to impossible abilities
+INFO     galvantula switched in, adding drizzle to impossible abilities
+INFO     galvantula switched in, adding snowwarning to impossible abilities
+INFO     galvantula switched in, adding boosterenergy to impossible items
+INFO     galvantula switched in, adding airballoon to impossible items
+INFO     glaceon already has the move freezedry. Decrementing the PP by 1
+INFO     glaceon used a ice move, removing icegem from possible items
+INFO     Setting glaceon's last used move: freezedry
+INFO     glaceon used a damaging move - not guessing lifeorb anymore
+INFO     glaceon did 60.0% damage to galvantula with freezedry
+INFO     galvantula has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 5
+INFO     Sampling battle 0
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        diancie    clearbody  assaultvest [bodypress, diamondstorm, earthpower, moonblast] ttype=fighting
+INFO     	     masquerain   intimidate heavydutyboots [hurricane, hydropump, stickyweb, stunspore] ttype=ground
+INFO     	     conkeldurr         guts     flameorb [closecombat, facade, knockoff, machpunch] ttype=normal
+INFO     Sampling battle 1
+INFO     	     galvantula compoundeyes    focussash [bugbuzz, energyball, stickyweb, thunder] ttype=electric
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	         golurk      noguard   choiceband [dynamicpunch, earthquake, poltergeist, stoneedge] ttype=ground
+INFO     	   zoroarkhisui     illusion      lifeorb [bittermalice, flamethrower, hypervoice, nastyplot] ttype=normal
+INFO     	       tsareena queenlymajesty  assaultvest [highjumpkick, knockoff, powerwhip, rapidspin] ttype=steel
+INFO     Sampling battle 2
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	    arceuswater    multitype  splashplate [icebeam, judgment, recover, willowisp] ttype=steel
+INFO     	         goodra    sapsipper  assaultvest [dracometeor, dragontail, fireblast, sludgebomb] ttype=fire
+INFO     	       sunflora  chlorophyll      lifeorb [earthpower, solarbeam, sunnyday, weatherball] ttype=fire
+INFO     Sampling battle 3
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=fairy
+INFO     	      farigiraf    sapsipper    leftovers [bodyslam, protect, psychicnoise, wish] ttype=fairy
+INFO     	       frosmoth    icescales heavydutyboots [gigadrain, hurricane, icebeam, quiverdance] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 4 battles at 50ms each
+INFO     Iterations 0: 28000
+INFO     Iterations 1: 34000
+INFO     Iterations 2: 31000
+INFO     Iterations 3: 37000
+INFO     Policy 0: calmmind visited 32.95% avg_score=0.364 sample_chance_multiplier=0.25
+INFO     Policy 1: freezedry visited 40.04% avg_score=0.44 sample_chance_multiplier=0.25
+INFO     Policy 2: freezedry visited 51.72% avg_score=0.474 sample_chance_multiplier=0.25
+INFO     Policy 3: freezedry visited 56.72% avg_score=0.409 sample_chance_multiplier=0.25
+INFO     Considered Choices:
+INFO     	43.758%: freezedry
+INFO     Choice: freezedry
+INFO     Updated galvantula's min speed to 176
+INFO     galvantula used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting galvantula's last used move: stickyweb
+INFO     Incremented side condition stickyweb to 1 for glaceon
+INFO     glaceon already has the move freezedry. Decrementing the PP by 1
+INFO     glaceon used a ice move, removing icegem from possible items
+INFO     Setting glaceon's last used move: freezedry
+INFO     glaceon used a damaging move - not guessing lifeorb anymore
+INFO     glaceon did 40.0% damage to galvantula with freezedry
+INFO     galvantula has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     golurk switched in, adding intimidate to impossible abilities
+INFO     golurk switched in, adding pressure to impossible abilities
+INFO     golurk switched in, adding neutralizinggas to impossible abilities
+INFO     golurk switched in, adding sandstream to impossible abilities
+INFO     golurk switched in, adding drought to impossible abilities
+INFO     golurk switched in, adding drizzle to impossible abilities
+INFO     golurk switched in, adding snowwarning to impossible abilities
+INFO     golurk switched in, adding boosterenergy to impossible items
+INFO     golurk switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 6
+INFO     Sampling battle 0
+INFO     	         golurk      noguard      lifeorb [dynamicpunch, earthquake, poltergeist, stealthrock] ttype=ground
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	     wigglytuff  competitive    leftovers [dazzlinggleam, knockoff, protect, wish] ttype=poison
+INFO     	        haxorus  moldbreaker   loadeddice [earthquake, ironhead, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	         golurk      noguard      lifeorb [dynamicpunch, earthquake, poltergeist, stealthrock] ttype=fighting
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       granbull   intimidate    leftovers [earthquake, playrough, roar, thunderwave] ttype=ground
+INFO     	      bastiodon   soundproof  chestoberry [bodypress, foulplay, irondefense, rest] ttype=fighting
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 56000
+INFO     Iterations 1: 58000
+INFO     Policy 0: freezedry visited 72.99% avg_score=0.494 sample_chance_multiplier=0.5
+INFO     Policy 1: freezedry visited 68.46% avg_score=0.47 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	70.724%: freezedry
+INFO     Choice: freezedry
+INFO     Updated golurk's max speed to 176
+INFO     glaceon already has the move freezedry. Decrementing the PP by 1
+INFO     glaceon used a ice move, removing icegem from possible items
+INFO     Setting glaceon's last used move: freezedry
+INFO     glaceon used a damaging move - not guessing lifeorb anymore
+INFO     glaceon did 80.0% damage to golurk with freezedry
+INFO     golurk used a fighting move, removing fightinggem from possible items
+INFO     Setting golurk's last used move: dynamicpunch
+INFO     golurk used a damaging move - not guessing lifeorb anymore
+INFO     golurk did 80.0% damage to glaceon with dynamicpunch
+INFO     Starting the volatile status confusion on glaceon
+INFO     glaceon got confused, no longer guessing lumberry
+INFO     golurk has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 7
+INFO     Sampling battle 0
+INFO     	         golurk      noguard   choiceband [dynamicpunch, earthquake, poltergeist, stoneedge] ttype=ghost
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        zoroark     illusion  choicespecs [darkpulse, flamethrower, focusblast, sludgebomb] ttype=poison
+INFO     	         klefki    prankster    leftovers [magnetrise, playrough, spikes, thunderwave] ttype=water
+INFO     Sampling battle 1
+INFO     	         golurk      noguard   choiceband [dynamicpunch, earthquake, poltergeist, stoneedge] ttype=fighting
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         zarude    leafguard    leftovers [knockoff, powerwhip, swordsdance, synthesis] ttype=dark
+INFO     	        florges   flowerveil    leftovers [calmmind, moonblast, protect, wish] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 41000
+INFO     Iterations 1: 69000
+INFO     Policy 0: freezedry visited 58.02% avg_score=0.476 sample_chance_multiplier=0.5
+INFO     Policy 1: freezedry visited 41.97% avg_score=0.415 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	49.998%: freezedry
+INFO     Choice: freezedry
+INFO     glaceon already has the move freezedry. Decrementing the PP by 1
+INFO     glaceon used a ice move, removing icegem from possible items
+INFO     Setting glaceon's last used move: freezedry
+INFO     glaceon used a damaging move - not guessing lifeorb anymore
+INFO     glaceon did 20.0% damage to golurk with freezedry
+INFO     golurk has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     moltresgalar switched in, adding intimidate to impossible abilities
+INFO     moltresgalar switched in, adding pressure to impossible abilities
+INFO     moltresgalar switched in, adding neutralizinggas to impossible abilities
+INFO     moltresgalar switched in, adding sandstream to impossible abilities
+INFO     moltresgalar switched in, adding drought to impossible abilities
+INFO     moltresgalar switched in, adding drizzle to impossible abilities
+INFO     moltresgalar switched in, adding snowwarning to impossible abilities
+INFO     moltresgalar switched in, adding boosterenergy to impossible items
+INFO     moltresgalar switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 8
+INFO     Sampling battle 0
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        carbink    clearbody  chestoberry [bodypress, irondefense, moonblast, rest] ttype=fighting
+INFO     Sampling battle 1
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       clefable   magicguard      lifeorb [fireblast, moonblast, moonlight, thunderwave] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 68000
+INFO     Iterations 1: 77000
+INFO     Policy 0: freezedry visited 40.37% avg_score=0.291 sample_chance_multiplier=0.5
+INFO     Policy 1: freezedry visited 42.88% avg_score=0.289 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	41.626%: freezedry
+INFO     Choice: freezedry
+INFO     Updated moltresgalar's min speed to 176
+INFO     moltresgalar used a flying move, removing flyinggem from possible items
+INFO     Setting moltresgalar's last used move: hurricane
+INFO     moltresgalar used a damaging move - not guessing lifeorb anymore
+INFO     moltresgalar did 1.09% damage to glaceon with hurricane
+INFO     Sampling battle 0
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	     eelektross     levitate  assaultvest [discharge, gigadrain, knockoff, uturn] ttype=poison
+INFO     Sampling battle 1
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Sampling 1 unrevealed pokemon
+INFO     	      mightyena   intimidate  assaultvest [crunch, playrough, poisonfang, superfang] ttype=fairy
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 71000
+INFO     Iterations 1: 71000
+INFO     Policy 0: switch gougingfire visited 77.36% avg_score=0.364 sample_chance_multiplier=0.5
+INFO     Policy 1: switch gougingfire visited 68.15% avg_score=0.338 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	72.752%: switch gougingfire
+INFO     Choice: switch gougingfire
+INFO     gougingfire switched in, adding intimidate to impossible abilities
+INFO     gougingfire switched in, adding pressure to impossible abilities
+INFO     gougingfire switched in, adding neutralizinggas to impossible abilities
+INFO     gougingfire switched in, adding sandstream to impossible abilities
+INFO     gougingfire switched in, adding drought to impossible abilities
+INFO     gougingfire switched in, adding drizzle to impossible abilities
+INFO     gougingfire switched in, adding snowwarning to impossible abilities
+INFO     gougingfire switched in, adding boosterenergy to impossible items
+INFO     gougingfire switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 9
+INFO     Sampling battle 0
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	      magnezone     analytic  choicescarf [bodypress, flashcannon, thunderbolt, voltswitch] ttype=flying
+INFO     Sampling battle 1
+INFO     	   moltresgalar      berserk weaknesspolicy [agility, fierywrath, hurricane, nastyplot] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        luvdisc    swiftswim heavydutyboots [endeavor, substitute, surf, whirlpool] ttype=ghost
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 66000
+INFO     Iterations 1: 76000
+INFO     Policy 0: heatcrash visited 46.59% avg_score=0.371 sample_chance_multiplier=0.5
+INFO     Policy 1: heatcrash visited 69.24% avg_score=0.556 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	57.919%: heatcrash
+INFO     Choice: heatcrash
+INFO     Updated moltresgalar's min speed to 178
+INFO     moltresgalar used two different moves - it cannot have a choice item
+INFO     moltresgalar using nastyplot makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     moltresgalar used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting moltresgalar's last used move: nastyplot
+INFO     moltresgalar's special-attack was boosted by 2 to 2
+INFO     gougingfire already has the move heatcrash. Decrementing the PP by 1
+INFO     gougingfire used a fire move, removing firegem from possible items
+INFO     Setting gougingfire's last used move: heatcrash
+INFO     gougingfire used a damaging move - not guessing lifeorb anymore
+INFO     gougingfire did 40.0% damage to moltresgalar with heatcrash
+INFO     moltresgalar has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 10
+INFO     Sampling battle 0
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        kingdra    swiftswim     lumberry [dragondance, outrage, waterfall, wavecrash] ttype=water
+INFO     Sampling battle 1
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, morningsun, sunsteelstrike] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 62000
+INFO     Iterations 1: 62000
+INFO     Policy 0: dragondance visited 68.8% avg_score=0.521 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 43.57% avg_score=0.352 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	56.19%: dragondance
+INFO     Choice: dragondance
+INFO     Updated moltresgalar's min speed to 178
+INFO     moltresgalar used two different moves - it cannot have a choice item
+INFO     moltresgalar used a dark move, removing darkgem from possible items
+INFO     Setting moltresgalar's last used move: fierywrath
+INFO     moltresgalar used a damaging move - not guessing lifeorb anymore
+INFO     moltresgalar did 69.67999999999999% damage to gougingfire with fierywrath
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 1
+INFO     gougingfire's speed was boosted by 1 to 1
+INFO     moltresgalar has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 11
+INFO     Sampling battle 0
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	   basculegionf adaptability  choicespecs [flipturn, hydropump, icebeam, shadowball] ttype=water
+INFO     Sampling battle 1
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       oranguru   innerfocus      lifeorb [hypervoice, nastyplot, psyshock, thunderbolt] ttype=electric
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 54000
+INFO     Iterations 1: 63000
+INFO     Policy 0: outrage visited 70.55% avg_score=0.589 sample_chance_multiplier=0.5
+INFO     Policy 1: heatcrash visited 56.18% avg_score=0.614 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	52.876%: outrage
+INFO     Choice: outrage
+INFO     gougingfire already has the move outrage. Decrementing the PP by 1
+INFO     gougingfire used a dragon move, removing dragongem from possible items
+INFO     Adding lockedmove to gougingfire
+INFO     Setting gougingfire's last used move: outrage
+INFO     gougingfire used a damaging move - not guessing lifeorb anymore
+INFO     gougingfire did 60.0% damage to moltresgalar with outrage
+INFO     Incremented lockedmove for user to 1
+INFO     moltresgalar has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     dachsbun switched in, adding intimidate to impossible abilities
+INFO     dachsbun switched in, adding pressure to impossible abilities
+INFO     dachsbun switched in, adding neutralizinggas to impossible abilities
+INFO     dachsbun switched in, adding sandstream to impossible abilities
+INFO     dachsbun switched in, adding drought to impossible abilities
+INFO     dachsbun switched in, adding drizzle to impossible abilities
+INFO     dachsbun switched in, adding snowwarning to impossible abilities
+INFO     dachsbun switched in, adding boosterenergy to impossible items
+INFO     dachsbun switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 12
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [bodypress, playrough, protect, wish] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [bodypress, playrough, protect, wish] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 58000
+INFO     Iterations 1: 63000
+INFO     Policy 0: outrage visited 88.53% avg_score=0.13 sample_chance_multiplier=0.5
+INFO     Policy 1: outrage visited 76.7% avg_score=0.103 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	82.618%: outrage
+INFO     Choice: outrage
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move outrage. Decrementing the PP by 1
+INFO     gougingfire used a dragon move, removing dragongem from possible items
+INFO     Adding lockedmove to gougingfire
+INFO     Setting gougingfire's last used move: outrage
+INFO     gougingfire used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     Incremented lockedmove for user to 2
+INFO     
+INFO     Turn: 13
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [bodypress, playrough, protect, wish] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 48000
+INFO     Iterations 1: 53000
+INFO     Policy 0: morningsun visited 75.9% avg_score=0.261 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 81.65% avg_score=0.271 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	78.775%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     Incremented lockedmove for user to 3
+INFO     
+INFO     Turn: 14
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [bodypress, playrough, protect, wish] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 49000
+INFO     Iterations 1: 68000
+INFO     Policy 0: dragondance visited 41.75% avg_score=0.384 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance-tera visited 63.75% avg_score=0.457 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	39.062%: dragondance-tera
+INFO     	35.32%: dragondance
+INFO     Choice: dragondance-tera
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire terastallized. Tera type: fairy, Original types: ['fire', 'dragon']
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 2
+INFO     gougingfire's speed was boosted by 1 to 2
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Starting the volatile status yawn on gougingfire
+INFO     Incremented lockedmove for user to 4
+INFO     gougingfire had yawn at the end of the turn, changed duration from 0 to 1
+INFO     
+INFO     Turn: 15
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 44000
+INFO     Iterations 1: 59000
+INFO     Policy 0: morningsun visited 69.9% avg_score=0.343 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 73.99% avg_score=0.335 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	71.944%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Removing the volatile status yawn from gougingfire
+INFO     Setting gougingfire's yawn duration to 0
+INFO     gougingfire got status: slp
+INFO     No longer guessing lumberry because gougingfire got status slp
+INFO     Incremented lockedmove for user to 5
+INFO     
+INFO     Turn: 16
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 61000
+INFO     Iterations 1: 64000
+INFO     Policy 0: morningsun visited 33.72% avg_score=0.44 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 32.68% avg_score=0.437 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	31.663%: dragondance
+INFO     	30.886%: morningsun
+INFO     	27.998%: heatcrash
+INFO     Choice: heatcrash
+INFO     Opponent has switched - clearing the last used move
+INFO     Setting rayquaza's ability to airlock
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 1
+INFO     Incremented lockedmove for user to 6
+INFO     
+INFO     Turn: 17
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 15000
+INFO     Iterations 1: 64000
+INFO     Policy 0: dragondance visited 34.16% avg_score=0.569 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 49.35% avg_score=0.543 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	41.757%: dragondance
+INFO     Choice: dragondance
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 2
+INFO     rayquaza already has the move earthquake. Decrementing the PP by 1
+INFO     rayquaza used a ground move, removing groundgem from possible items
+INFO     Setting rayquaza's last used move: earthquake
+INFO     rayquaza used a damaging move - not guessing lifeorb anymore
+INFO     rayquaza did 24.55% damage to gougingfire with earthquake
+INFO     Incremented lockedmove for user to 7
+INFO     
+INFO     Turn: 18
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 61000
+INFO     Iterations 1: 63000
+INFO     Policy 0: dragondance visited 60.17% avg_score=0.609 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 57.71% avg_score=0.607 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	58.941%: dragondance
+INFO     Choice: dragondance
+INFO     Opponent has switched - clearing the last used move
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 3
+INFO     Incremented lockedmove for user to 8
+INFO     
+INFO     Turn: 19
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 49000
+INFO     Iterations 1: 57000
+INFO     Policy 0: dragondance visited 47.84% avg_score=0.508 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 47.2% avg_score=0.495 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	46.517%: dragondance
+INFO     	45.506%: morningsun
+INFO     Choice: dragondance
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire is being cured of sleep, setting rest_turns & sleep_turns to 0
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 3
+INFO     gougingfire's speed was boosted by 1 to 3
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Starting the volatile status yawn on gougingfire
+INFO     Incremented lockedmove for user to 9
+INFO     gougingfire had yawn at the end of the turn, changed duration from 0 to 1
+INFO     
+INFO     Turn: 20
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 50000
+INFO     Iterations 1: 58000
+INFO     Policy 0: morningsun visited 78.27% avg_score=0.348 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 80.86% avg_score=0.347 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	79.569%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Removing the volatile status yawn from gougingfire
+INFO     Setting gougingfire's yawn duration to 0
+INFO     gougingfire got status: slp
+INFO     No longer guessing lumberry because gougingfire got status slp
+INFO     Incremented lockedmove for user to 10
+INFO     
+INFO     Turn: 21
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 59000
+INFO     Iterations 1: 64000
+INFO     Policy 0: morningsun visited 31.99% avg_score=0.439 sample_chance_multiplier=0.5
+INFO     Policy 1: heatcrash visited 30.73% avg_score=0.437 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	31.065%: morningsun
+INFO     	29.864%: dragondance
+INFO     	29.727%: heatcrash
+INFO     Choice: heatcrash
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 1
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 29.599999999999998% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 11
+INFO     
+INFO     Turn: 22
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 62000
+INFO     Iterations 1: 71000
+INFO     Policy 0: dragondance visited 60.84% avg_score=0.527 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 52.74% avg_score=0.523 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	56.791%: dragondance
+INFO     Choice: dragondance
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 2
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 31.77% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 12
+INFO     
+INFO     Turn: 23
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 59000
+INFO     Iterations 1: 68000
+INFO     Policy 0: morningsun visited 80.9% avg_score=0.57 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 78.41% avg_score=0.557 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	79.658%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire is being cured of sleep, setting rest_turns & sleep_turns to 0
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     Incremented lockedmove for user to 13
+INFO     
+INFO     Turn: 24
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 59000
+INFO     Iterations 1: 65000
+INFO     Policy 0: dragondance visited 45.77% avg_score=0.407 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 45.44% avg_score=0.4 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	45.605%: dragondance
+INFO     	43.768%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Starting the volatile status yawn on gougingfire
+INFO     Incremented lockedmove for user to 14
+INFO     gougingfire had yawn at the end of the turn, changed duration from 0 to 1
+INFO     
+INFO     Turn: 25
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 57000
+INFO     Iterations 1: 66000
+INFO     Policy 0: dragondance visited 66.51% avg_score=0.349 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 65.29% avg_score=0.342 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	65.9%: dragondance
+INFO     Choice: dragondance
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 4
+INFO     gougingfire's speed was boosted by 1 to 4
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 30.320000000000004% damage to gougingfire with playrough
+INFO     gougingfire's attack was unboosted by 1 to 3
+INFO     Removing the volatile status yawn from gougingfire
+INFO     Setting gougingfire's yawn duration to 0
+INFO     gougingfire got status: slp
+INFO     No longer guessing lumberry because gougingfire got status slp
+INFO     Incremented lockedmove for user to 15
+INFO     
+INFO     Turn: 26
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 62000
+INFO     Iterations 1: 68000
+INFO     Policy 0: heatcrash visited 40.55% avg_score=0.367 sample_chance_multiplier=0.5
+INFO     Policy 1: heatcrash visited 39.23% avg_score=0.363 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	39.888%: heatcrash
+INFO     	36.389%: dragondance
+INFO     Choice: dragondance
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 1
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Incremented lockedmove for user to 16
+INFO     
+INFO     Turn: 27
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 61000
+INFO     Iterations 1: 69000
+INFO     Policy 0: dragondance visited 69.05% avg_score=0.497 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 66.99% avg_score=0.496 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	68.02%: dragondance
+INFO     Choice: dragondance
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 2
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: wish
+INFO     dachsbun used wish - expecting 127.0 health of recovery next turn
+INFO     Incremented lockedmove for user to 17
+INFO     Decrementing wish to 1 for the opponent
+INFO     
+INFO     Turn: 28
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 60000
+INFO     Iterations 1: 68000
+INFO     Policy 0: morningsun visited 50.16% avg_score=0.542 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 50.38% avg_score=0.533 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	50.27%: morningsun
+INFO     	42.111%: dragondance
+INFO     Choice: morningsun
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 3
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 30.320000000000004% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 18
+INFO     Decrementing wish to 0 for the opponent
+INFO     
+INFO     Turn: 29
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 52000
+INFO     Iterations 1: 62000
+INFO     Policy 0: morningsun visited 75.8% avg_score=0.437 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 77.14% avg_score=0.417 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	76.468%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire is being cured of sleep, setting rest_turns & sleep_turns to 0
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 30.69% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 19
+INFO     
+INFO     Turn: 30
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 62000
+INFO     Iterations 1: 68000
+INFO     Policy 0: morningsun visited 60.84% avg_score=0.44 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 59.08% avg_score=0.431 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	59.957%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Starting the volatile status yawn on gougingfire
+INFO     Incremented lockedmove for user to 20
+INFO     gougingfire had yawn at the end of the turn, changed duration from 0 to 1
+INFO     
+INFO     Turn: 31
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 61000
+INFO     Iterations 1: 66000
+INFO     Policy 0: dragondance visited 50.54% avg_score=0.308 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 50.42% avg_score=0.304 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	50.476%: dragondance
+INFO     Choice: dragondance
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 4
+INFO     gougingfire's speed was boosted by 1 to 5
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 30.69% damage to gougingfire with playrough
+INFO     Removing the volatile status yawn from gougingfire
+INFO     Setting gougingfire's yawn duration to 0
+INFO     gougingfire got status: slp
+INFO     No longer guessing lumberry because gougingfire got status slp
+INFO     Incremented lockedmove for user to 21
+INFO     
+INFO     Turn: 32
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 51000
+INFO     Iterations 1: 69000
+INFO     Policy 0: heatcrash visited 35.7% avg_score=0.272 sample_chance_multiplier=0.5
+INFO     Policy 1: heatcrash visited 35.72% avg_score=0.257 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	35.707%: heatcrash
+INFO     	34.37%: dragondance
+INFO     Choice: heatcrash
+INFO     gougingfire got 'cant' from sleep
+INFO     Incrementing gougingfire's sleep_turns to 1
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 29.24% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 22
+INFO     
+INFO     Turn: 33
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 60000
+INFO     Iterations 1: 66000
+INFO     Policy 0: morningsun visited 31.21% avg_score=0.187 sample_chance_multiplier=0.5
+INFO     Policy 1: dragondance visited 31.27% avg_score=0.188 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	30.971%: dragondance
+INFO     	30.236%: morningsun
+INFO     	26.987%: heatcrash
+INFO     Choice: dragondance
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire is being cured of sleep, setting rest_turns & sleep_turns to 0
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 5
+INFO     gougingfire's speed was boosted by 1 to 6
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 32.49% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 23
+INFO     
+INFO     Turn: 34
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 60000
+INFO     Iterations 1: 67000
+INFO     Policy 0: morningsun visited 58.17% avg_score=0.117 sample_chance_multiplier=0.5
+INFO     Policy 1: morningsun visited 62.15% avg_score=0.121 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	60.163%: morningsun
+INFO     Choice: morningsun
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move morningsun. Decrementing the PP by 1
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: morningsun
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 32.49% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 24
+INFO     
+INFO     Turn: 35
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 63000
+INFO     Iterations 1: 64000
+INFO     Policy 0: dragondance visited 44.84% avg_score=0.096 sample_chance_multiplier=0.5
+INFO     Policy 1: outrage visited 55.13% avg_score=0.083 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	46.881%: outrage
+INFO     	36.272%: dragondance
+INFO     Choice: outrage
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move outrage. Decrementing the PP by 1
+INFO     gougingfire used a dragon move, removing dragongem from possible items
+INFO     Adding lockedmove to gougingfire
+INFO     Setting gougingfire's last used move: outrage
+INFO     gougingfire used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun already has the move yawn. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dachsbun's last used move: yawn
+INFO     Starting the volatile status yawn on gougingfire
+INFO     Incremented lockedmove for user to 25
+INFO     gougingfire had yawn at the end of the turn, changed duration from 0 to 1
+INFO     
+INFO     Turn: 36
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=dragon
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 50000
+INFO     Iterations 1: 41000
+INFO     Policy 0: outrage visited 41.94% avg_score=0.078 sample_chance_multiplier=0.5
+INFO     Policy 1: outrage visited 38.3% avg_score=0.067 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	40.12%: outrage
+INFO     	36.086%: dragondance
+INFO     Choice: dragondance
+INFO     Updated dachsbun's max speed to 267
+INFO     gougingfire already has the move dragondance. Decrementing the PP by 1
+INFO     gougingfire using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     gougingfire used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting gougingfire's last used move: dragondance
+INFO     gougingfire's attack was boosted by 1 to 6
+INFO     gougingfire's speed was boosted by 0 to 6
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used two different moves - it cannot have a choice item
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 24.91% damage to gougingfire with playrough
+INFO     Incremented lockedmove for user to 26
+INFO     Removed yawn volatile from gougingfire
+INFO     gougingfire had yawn at the end of the turn, changed duration from 1 to 0
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 49000
+INFO     Iterations 1: 50000
+INFO     Policy 0: switch dragalge visited 92.44% avg_score=0.577 sample_chance_multiplier=0.5
+INFO     Policy 1: switch dragalge visited 92.77% avg_score=0.577 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	92.607%: switch dragalge
+INFO     Choice: switch dragalge
+INFO     dragalge switched in, adding intimidate to impossible abilities
+INFO     dragalge switched in, adding pressure to impossible abilities
+INFO     dragalge switched in, adding neutralizinggas to impossible abilities
+INFO     dragalge switched in, adding sandstream to impossible abilities
+INFO     dragalge switched in, adding drought to impossible abilities
+INFO     dragalge switched in, adding drizzle to impossible abilities
+INFO     dragalge switched in, adding snowwarning to impossible abilities
+INFO     dragalge switched in, adding boosterenergy to impossible items
+INFO     dragalge switched in, adding airballoon to impossible items
+INFO     dragalge's speed was unboosted by 1 to -1
+INFO     
+INFO     Turn: 37
+INFO     Sampling battle 0
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Sampling battle 1
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 37000
+INFO     Iterations 1: 49000
+INFO     Policy 0: sludgewave visited 60.2% avg_score=0.664 sample_chance_multiplier=0.5
+INFO     Policy 1: sludgewave visited 73.2% avg_score=0.71 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	66.702%: sludgewave
+INFO     Choice: sludgewave
+INFO     Updated dachsbun's min speed to 85
+INFO     dachsbun already has the move playrough. Decrementing the PP by 1
+INFO     dachsbun used a fairy move, removing fairygem from possible items
+INFO     Setting dachsbun's last used move: playrough
+INFO     dachsbun used a damaging move - not guessing lifeorb anymore
+INFO     dachsbun did 34.11% damage to dragalge with playrough
+INFO     dragalge already has the move sludgewave. Decrementing the PP by 1
+INFO     dragalge used a poison move, removing poisongem from possible items
+INFO     Setting dragalge's last used move: sludgewave
+INFO     dragalge used a damaging move - not guessing lifeorb anymore
+INFO     dragalge did 100.0% damage to dachsbun with sludgewave
+INFO     Setting dragalge's item to: leftovers
+INFO     dachsbun has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     Setting rayquaza's ability to airlock
+INFO     
+INFO     Turn: 38
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, earthquake, extremespeed, swordsdance] ttype=normal
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 381000
+INFO     Iterations 1: 389000
+INFO     Policy 0: dracometeor visited 99.82% avg_score=0.968 sample_chance_multiplier=0.5
+INFO     Policy 1: dracometeor visited 99.83% avg_score=0.915 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	99.83%: dracometeor
+INFO     Choice: dracometeor
+INFO     Updated rayquaza's min speed to 85
+INFO     rayquaza already has the move earthquake. Decrementing the PP by 1
+INFO     rayquaza used a ground move, removing groundgem from possible items
+INFO     Setting rayquaza's last used move: earthquake
+INFO     rayquaza used a damaging move - not guessing lifeorb anymore
+INFO     rayquaza did 13.18% damage to dragalge with earthquake
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=flying
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock heavydutyboots [dragonascent, dragondance, earthquake, outrage] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 379000
+INFO     Iterations 1: 313000
+INFO     Policy 0: switch inteleon visited 99.96% avg_score=0.994 sample_chance_multiplier=0.5
+INFO     Policy 1: switch inteleon visited 99.96% avg_score=0.994 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	99.96%: switch inteleon
+INFO     Choice: switch inteleon
+INFO     inteleon switched in, adding intimidate to impossible abilities
+INFO     inteleon switched in, adding pressure to impossible abilities
+INFO     inteleon switched in, adding neutralizinggas to impossible abilities
+INFO     inteleon switched in, adding sandstream to impossible abilities
+INFO     inteleon switched in, adding drought to impossible abilities
+INFO     inteleon switched in, adding drizzle to impossible abilities
+INFO     inteleon switched in, adding snowwarning to impossible abilities
+INFO     inteleon switched in, adding boosterenergy to impossible items
+INFO     inteleon switched in, adding airballoon to impossible items
+INFO     inteleon's speed was unboosted by 1 to -1
+INFO     
+INFO     Turn: 39
+INFO     Sampling battle 0
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     Sampling battle 1
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=flying
+INFO     Searching for a move using MCTS...
+INFO     Sampling 2 battles at 100ms each
+INFO     Iterations 0: 429000
+INFO     Iterations 1: 549000
+INFO     Policy 0: icebeam visited 99.89% avg_score=0.997 sample_chance_multiplier=0.5
+INFO     Policy 1: icebeam visited 99.92% avg_score=0.997 sample_chance_multiplier=0.5
+INFO     Considered Choices:
+INFO     	99.907%: icebeam
+INFO     Choice: icebeam
+INFO     Winner: fpg1b
+INFO     Won with team: None
+INFO     W: 1	L: 0

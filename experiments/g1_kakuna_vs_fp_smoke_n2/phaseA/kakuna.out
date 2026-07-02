@@ -1,0 +1,37 @@
+KAKUNA_RUNNER format alias registered: gen9randombattle -> gen9ou
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+KAKUNA_RUNNER loading agent=Kakuna model_name=kakuna default_checkpoint=34 requested_checkpoint=None
+
+
+ 		 AMAGO v3.4.0
+            	 -------------------------
+            	 Agent: MultiTaskAgent
+            		 Max Sequence Length: 128
+            		 TstepEncoder Type: MetamonPerceiverTstepEncoder
+            		 TrajEncoder Type: TformerTrajEncoder
+            		 Total Parameters: 142,688,528
+            		 Offline Loss Weight: 1.0
+            		 Online Loss Weight: 0.25
+            		 Mixed Precision: NO
+            		 Checkpoint Path: /Users/alityb/projects/metagross/external/metamon_cache/pretrained_models/models--jakegrigsby--metamon/snapshots/ac8e88e7da8dc2a2b85176d88f81fd8854b1445b/kakuna/kakuna/ckpts
+            	 Environment:
+            		 DummyAsyncVectorEnv(Gym Env x 1)
+            		 Exploration Type: None
+            	 Dataset: DoNothingDataset
+            	 Accelerate Processes: 1 
+
+
+Checkpoint validated: 642 keys, 142,832,563 params (model) == 142,832,563 params (ckpt)
+Challenge mode (acceptor): kakg1a vs fpg1a for 1 battles
+Made Challenge Env (acceptor): kakg1a vs fpg1a
+  Turn    2. | [●●●●●●][110/239hp]    gliscor -   zangoose [100%hp][●]  Turn    3. | [●●●●●●][110/239hp]    gliscor -    altaria [100%hp][●●]  Turn    4. | [●●●●●●][110/239hp]    gliscor -    altaria [ 94%hp][●●]  Turn    5. | [●●●●●●][110/239hp]    gliscor -    altaria [ 82%hp][●●]  Turn    6. | [●●●●●●][110/239hp]    gliscor -    altaria [ 57%hp][●●]  Turn    7. | [●●●●●●][110/239hp]    gliscor -    altaria [ 33%hp][●●]  Turn    7. | [⦻●●●●●][  0/  0hp]    gliscor -    altaria [  0%hp][●⦻]  Turn    8. | [⦻●●●●●][258/258hp] sandaconda - grimmsnarl [100%hp][●⦻●]  Turn    9. | [⦻●●●●●][258/258hp] sandaconda -     luxray [100%hp][●⦻●●]  Turn   10. | [⦻●●●●●][105/258hp] sandaconda -     luxray [ 55%hp][●⦻●●]  Turn   10. | [⦻⦻●●●●][  0/  0hp] sandaconda -     luxray [ 49%hp][●⦻●●]  Turn   11. | [⦻⦻●●●●][240/240hp]     scizor -     luxray [ 49%hp][●⦻●●]  Turn   12. | [⦻⦻●●●●][ 59/240hp]     scizor -     luxray [ 43%hp][●⦻●●]  Turn   13. | [⦻⦻●●●●][ 35/240hp]     scizor -  revavroom [ 63%hp][●⦻●●●]  Turn   13. | [⦻⦻⦻●●●][  0/  0hp]     scizor -  revavroom [ 15%hp][●⦻●●●]  Turn   14. | [⦻⦻⦻●●●][243/243hp]     pawmot -  revavroom [ 15%hp][●⦻●●●]  Turn   15. | [⦻⦻⦻●●●][243/243hp]     pawmot - grimmsnarl [100%hp][●⦻●●⦻]  Turn   15. | [⦻⦻⦻●⦻●][  0/  0hp]     pawmot - grimmsnarl [ 99%hp][●⦻●●⦻]  Turn   16. | [⦻⦻⦻●⦻●][309/309hp]   braviary - grimmsnarl [ 99%hp][●⦻●●⦻]  Turn   17. | [⦻⦻⦻●⦻●][309/309hp]   braviary - grimmsnarl [100%hp][●⦻●●⦻]  Turn   18. | [⦻⦻⦻●⦻●][309/309hp]   braviary - grimmsnarl [100%hp][●⦻●●⦻]  Turn   19. | [⦻⦻⦻●⦻●][145/309hp]   braviary -   zangoose [100%hp][●⦻⦻●⦻]  Turn   19. | [⦻⦻⦻⦻⦻●][  0/  0hp]   braviary -   zangoose [  0%hp][⦻⦻⦻●⦻]  Turn   20. | [⦻⦻⦻⦻⦻●][292/292hp]     veluza -  piloswine [100%hp][⦻⦻⦻●⦻●]  Turn   21. | [⦻⦻⦻⦻⦻●][176/292hp]     veluza -  piloswine [ 45%hp][⦻⦻⦻●⦻●]  Turn   22. | [⦻⦻⦻⦻⦻●][176/292hp]     veluza -     luxray [ 43%hp][⦻⦻⦻●⦻⦻]  Turn   22. | [⦻⦻⦻⦻⦻⦻][  0/292hp]     veluza -     luxray [ 43%hp][⦻⦻⦻●⦻⦻]
+KAKUNA_RUNNER final results: {
+  "Average Total Return (Across All Env Names)": -2.400000048801303,
+  "Average Total Return in psladder_kakg1a": -2.400000048801303,
+  "Average Valid Actions in psladder_kakg1a": 1.0,
+  "Average Win Rate in psladder_kakg1a": 0.0,
+  "Bottom Quintile Total Return in psladder_kakg1a": -2.400000048801303
+}

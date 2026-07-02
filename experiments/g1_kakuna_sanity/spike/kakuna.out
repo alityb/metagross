@@ -1,0 +1,37 @@
+KAKUNA_RUNNER format alias registered: gen9randombattle -> gen9ou
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+KAKUNA_RUNNER loading agent=Kakuna model_name=kakuna default_checkpoint=34 requested_checkpoint=None
+
+
+ 		 AMAGO v3.4.0
+            	 -------------------------
+            	 Agent: MultiTaskAgent
+            		 Max Sequence Length: 128
+            		 TstepEncoder Type: MetamonPerceiverTstepEncoder
+            		 TrajEncoder Type: TformerTrajEncoder
+            		 Total Parameters: 142,688,528
+            		 Offline Loss Weight: 1.0
+            		 Online Loss Weight: 0.25
+            		 Mixed Precision: NO
+            		 Checkpoint Path: /Users/alityb/projects/metagross/external/metamon_cache/pretrained_models/models--jakegrigsby--metamon/snapshots/ac8e88e7da8dc2a2b85176d88f81fd8854b1445b/kakuna/kakuna/ckpts
+            	 Environment:
+            		 DummyAsyncVectorEnv(Gym Env x 1)
+            		 Exploration Type: None
+            	 Dataset: DoNothingDataset
+            	 Accelerate Processes: 1 
+
+
+Checkpoint validated: 642 keys, 142,832,563 params (model) == 142,832,563 params (ckpt)
+Challenge mode (acceptor): kakg1spike vs randg1spike for 1 battles
+Made Challenge Env (acceptor): kakg1spike vs randg1spike
+  Turn    2. | [●●●●●●][291/291hp]  garganacl -   camerupt [ 78%hp][●●]  Turn    3. | [●●●●●●][201/291hp]  garganacl -   camerupt [ 71%hp][●●]  Turn    4. | [●●●●●●][171/291hp]  garganacl -   camerupt [ 10%hp][●●]  Turn    5. | [●●●●●●][284/291hp]  garganacl -   camerupt [  4%hp][●●]  Turn    6. | [●●●●●●][291/291hp]  garganacl -    slaking [100%hp][●●●]  Turn    7. | [●●●●●●][231/291hp]  garganacl - raichualol [100%hp][●●⦻]  Turn    8. | [●●●●●●][171/291hp]  garganacl - raichualol [ 45%hp][●●⦻]  Turn    9. | [●●●●●●][291/291hp]  garganacl -    manaphy [100%hp][●●⦻●]  Turn   10. | [●●●●●●][269/291hp]  garganacl -    manaphy [ 67%hp][●●⦻●]  Turn   11. | [●●●●●●][287/291hp]  garganacl -   swampert [ 39%hp][●●⦻●●]  Turn   12. | [●●●●●●][291/291hp]  garganacl -    manaphy [ 67%hp][●●⦻●●⦻]  Turn   13. | [●●●●●●][291/291hp]  garganacl -   swampert [ 39%hp][●●⦻⦻●⦻]  Turn   14. | [●●●●●●][199/291hp]  garganacl - raichualol [ 45%hp][●●⦻⦻⦻⦻]  Turn   15. | [●●●●●●][ 75/291hp]  garganacl -   camerupt [  4%hp][⦻●⦻⦻⦻⦻]  Turn   16. | [●●●●●●][205/291hp]  garganacl -   camerupt [ 10%hp][⦻●⦻⦻⦻⦻]  Turn   16. | [●●●●●●][205/291hp]  garganacl -   camerupt [  0%hp][⦻⦻⦻⦻⦻⦻]
+KAKUNA_RUNNER final results: {
+  "Average Total Return (Across All Env Names)": 213.36447349749506,
+  "Average Total Return in psladder_kakg1spike": 213.36447349749506,
+  "Average Valid Actions in psladder_kakg1spike": 1.0,
+  "Average Win Rate in psladder_kakg1spike": 1.0,
+  "Bottom Quintile Total Return in psladder_kakg1spike": 213.36447349749506
+}
