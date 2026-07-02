@@ -66,6 +66,36 @@ train() {
   find "$SCRATCH/ckpts" -name "policy_epoch_*.pt" | sort
 }
 
+probe() {
+  # STEP 0: throughput probe — short run, reports steps/sec + projected hours
+  cd "$SCRATCH"
+  nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv
+  PYTHONPATH="$SCRATCH/repo" ./venv/bin/python "$SCRATCH/repo/scripts/run_finetune_variant.py" \
+    --variant base --probe \
+    --dataset-config "$SCRATCH/randbats_bc.yaml" \
+    --save-dir "$SCRATCH/ckpts" 2>&1 | tee "$SCRATCH/probe.log"
+  grep -E "THROUGHPUT|PROJECTION" "$SCRATCH/probe.log"
+  nvidia-smi --query-gpu=memory.used --format=csv,noheader
+}
+
+sweep() {
+  # STEP 1: ablation matrix — small-scale screen runs, one variable each.
+  # Requires the repo dir (train/ + scripts/) rsynced to $SCRATCH/repo.
+  cd "$SCRATCH"
+  for VARIANT in base A_rating B_klanchor C_binary D_hlgauss ALL; do
+    echo "=== SWEEP VARIANT $VARIANT ==="
+    PYTHONPATH="$SCRATCH/repo" ./venv/bin/python "$SCRATCH/repo/scripts/run_finetune_variant.py" \
+      --variant "$VARIANT" \
+      --dataset-config "$SCRATCH/randbats_bc.yaml" \
+      --save-dir "$SCRATCH/ckpts" \
+      --epochs "${SWEEP_EPOCHS:-2}" --steps-per-epoch "${SWEEP_STEPS:-500}" \
+      --batch-size "$BATCH" 2>&1 | tee "$SCRATCH/sweep_$VARIANT.log" \
+      || echo "FATAL variant $VARIANT failed; continuing"
+  done
+  echo "SWEEP DONE; checkpoints:"
+  find "$SCRATCH/ckpts" -name "policy_epoch_*.pt" | sort
+}
+
 cleanup() {
   rm -rf "$SCRATCH"
   echo "CLEANUP DONE; residue check:"

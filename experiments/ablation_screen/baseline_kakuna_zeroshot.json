@@ -1,0 +1,10 @@
+{
+  "games": 200,
+  "heldout_dir": "data/parsed_replays_heldout",
+  "min_rating": 2000,
+  "model": "Kakuna@ckpt34",
+  "steps": 5642,
+  "top1": 0.4316,
+  "top3": 0.7715,
+  "ts": "2026-07-02T20:17:26.428728+00:00"
+}
