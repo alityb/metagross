@@ -31,6 +31,10 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--save-results-to", required=True)
     parser.add_argument("--save-trajectories-to", default=None)
+    parser.add_argument("--local-run-dir", default=None,
+                        help="Load a LocalFinetunedModel from this --save_dir instead of the HF pretrained")
+    parser.add_argument("--local-run-name", default=None)
+    parser.add_argument("--local-base-model", default="Kakuna")
     args = parser.parse_args()
 
     os.environ.setdefault("WANDB_MODE", "disabled")
@@ -45,11 +49,28 @@ def main() -> None:
     from metamon.rl.pretrained import get_pretrained_model
     from metamon.rl.evaluate.__main__ import pretrained_vs_challenge
 
-    pretrained_model = get_pretrained_model(args.agent)
-    print(f"KAKUNA_RUNNER loading agent={args.agent} "
-          f"model_name={pretrained_model.model_name} "
-          f"default_checkpoint={pretrained_model.default_checkpoint} "
-          f"requested_checkpoint={args.checkpoint}", flush=True)
+    if args.local_run_dir:
+        from metamon.rl.pretrained import LocalFinetunedModel, get_pretrained_model_names
+        import metamon.rl.pretrained as _pt
+
+        base_cls = getattr(_pt, args.local_base_model)
+        if args.checkpoint is None:
+            raise ValueError("--checkpoint is required with --local-run-dir")
+        pretrained_model = LocalFinetunedModel(
+            base_model=base_cls,
+            amago_ckpt_dir=args.local_run_dir,
+            model_name=args.local_run_name,
+            default_checkpoint=args.checkpoint,
+        )
+        print(f"KAKUNA_RUNNER loading LOCAL finetuned model run={args.local_run_name} "
+              f"dir={args.local_run_dir} checkpoint={args.checkpoint} "
+              f"base={args.local_base_model}", flush=True)
+    else:
+        pretrained_model = get_pretrained_model(args.agent)
+        print(f"KAKUNA_RUNNER loading agent={args.agent} "
+              f"model_name={pretrained_model.model_name} "
+              f"default_checkpoint={pretrained_model.default_checkpoint} "
+              f"requested_checkpoint={args.checkpoint}", flush=True)
 
     results = pretrained_vs_challenge(
         pretrained_model=pretrained_model,
