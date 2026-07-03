@@ -29,12 +29,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 VARIANTS = {
-    "base": {"gin": None, "rating": False, "kl": False},
-    "A_rating": {"gin": None, "rating": True, "kl": False},
-    "B_klanchor": {"gin": "metagross_B_klanchor.gin", "rating": False, "kl": True},
-    "C_binary": {"gin": "metagross_C_binary.gin", "rating": False, "kl": False},
-    "D_hlgauss": {"gin": "metagross_D_hlgauss.gin", "rating": False, "kl": False},
-    "ALL": {"gin": "metagross_ALL.gin", "rating": True, "kl": True},
+    "base": {"gin": None, "rating": False, "kl": False, "binary": False},
+    "A_rating": {"gin": None, "rating": True, "kl": False, "binary": False},
+    "B_klanchor": {"gin": "metagross_B_klanchor.gin", "rating": False, "kl": True, "binary": False},
+    "C_binary": {"gin": "metagross_C_binary.gin", "rating": False, "kl": False, "binary": True},
+    "D_hlgauss": {"gin": "metagross_D_hlgauss.gin", "rating": False, "kl": False, "binary": False},
+    "ALL": {"gin": "metagross_ALL.gin", "rating": True, "kl": True, "binary": False},
 }
 
 
@@ -61,6 +61,9 @@ def main() -> None:
     if spec["kl"]:
         from train.finetune_toggles import install_kl_agent
         install_kl_agent()
+    if spec["binary"]:
+        from train.finetune_toggles import install_binary_filter
+        install_binary_filter()
 
     # gin files live in the repo (train/gins) and are copied next to metamon's
     # own configs so relative resolution works

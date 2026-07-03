@@ -67,6 +67,8 @@ def main() -> None:
     experiment = model.initialize_agent(checkpoint=args.checkpoint, log=False)
     agent = experiment.policy
     agent.eval()
+    device = next(agent.parameters()).device
+    print(f"SCREEN device: {device}", flush=True)
 
     dset = ParsedReplayDataset(
         dset_root=args.heldout_dir,
@@ -105,9 +107,9 @@ def main() -> None:
                 continue
             if band_token_id is not None:
                 rl_data.obs["text_tokens"][:, 0] = band_token_id
-            obs = {k: v.unsqueeze(0) for k, v in rl_data.obs.items()}
-            rl2s = rl_data.rl2s.unsqueeze(0)
-            time_idxs = rl_data.time_idxs.unsqueeze(0).squeeze(-1)
+            obs = {k: v.unsqueeze(0).to(device) for k, v in rl_data.obs.items()}
+            rl2s = rl_data.rl2s.unsqueeze(0).to(device)
+            time_idxs = rl_data.time_idxs.unsqueeze(0).squeeze(-1).to(device)
             traj_emb, _ = agent.get_state_embedding(
                 obs=obs, rl2s=rl2s, time_idxs=time_idxs, hidden_state=None
             )
@@ -115,7 +117,7 @@ def main() -> None:
                 traj_emb,
                 straight_from_obs={k: obs[k] for k in agent.pass_obs_keys_to_actor},
             )
-            probs = dists.probs[0, :, -1, :]  # [T+1, A] at inference gamma
+            probs = dists.probs[0, :, -1, :].cpu()  # [T+1, A] at inference gamma
             probs = probs[:T]
             # mask illegal actions, renormalize
             illegal = rl_data.obs["illegal_actions"][:T].bool()

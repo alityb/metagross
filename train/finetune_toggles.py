@@ -85,6 +85,34 @@ def install_rating_conditioning() -> None:
           f"(bands={[(lo, hi, w) for lo, hi, w in RATING_BANDS]})", flush=True)
 
 
+def install_binary_filter() -> None:
+    """Register a binary advantage filter (1[A>0]) with the object API the
+    MetamonFinetuneAgent expects (seq_enabled / set_mask), so ONLY the filter
+    shape changes vs the IS/exp baseline."""
+    import gin
+    import metamon.rl.custom_agent as ca
+
+    class BinaryAdvantageFilter:
+        seq_enabled = False
+
+        def __init__(self, threshold: float = 0.0, floor: float = 1e-7):
+            self.threshold = threshold
+            self.floor = floor
+            self._mask = None
+
+        def set_mask(self, mask):
+            self._mask = None  # mask handled by the agent's loss masking
+
+        def __call__(self, adv):
+            return (adv > self.threshold).float().clamp_min(self.floor)
+
+    gin.external_configurable(
+        BinaryAdvantageFilter, name="BinaryAdvantageFilter", module="custom_agent"
+    )
+    ca.BinaryAdvantageFilter = BinaryAdvantageFilter
+    print("TOGGLE_C binary advantage filter installed", flush=True)
+
+
 def install_kl_agent() -> None:
     """Define KLAnchoredFinetuneAgent, register it with gin under
     custom_agent.KLAnchoredFinetuneAgent, and expose it on the module."""

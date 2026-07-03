@@ -20,8 +20,8 @@ agent.MultiTaskAgent.online_coeff = 0.0
 agent.Agent.offline_coeff = 1.0
 agent.MultiTaskAgent.offline_coeff = 1.0
 
-agent.Agent.fbc_filter_func = @agent.binary_filter
-agent.MultiTaskAgent.fbc_filter_func = @agent.binary_filter
+agent.Agent.fbc_filter_func = @custom_agent.BinaryAdvantageFilter()
+agent.MultiTaskAgent.fbc_filter_func = @custom_agent.BinaryAdvantageFilter()
 
 custom_agent.MetamonFinetuneAgent.bc_coeff = 1.0
 custom_agent.MetamonFinetuneAgent.tortoise_tau = 0.005
