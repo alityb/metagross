@@ -47,7 +47,29 @@ while true; do
     --username "$USERNAME" \
     --battle-format gen9randombattle \
     --total-battles "$remaining" \
-    --out-dir "$OUT_DIR" >> "$OUT_DIR/runner.out" 2>&1
+    --out-dir "$OUT_DIR" >> "$OUT_DIR/runner.out" 2>&1 &
+  runner_pid=$!
+  # Stall watchdog: poke-env's ladder loop can die silently (swallowed
+  # exception in POKE_LOOP) leaving a healthy-looking process that never
+  # searches. If no new game for STALL_MINUTES, kill and relaunch.
+  STALL_MINUTES="${STALL_MINUTES:-12}"
+  last_count=$(count_games)
+  last_change=$(date +%s)
+  while kill -0 "$runner_pid" 2>/dev/null; do
+    sleep 60
+    now_count=$(count_games)
+    if [ "$now_count" -ne "$last_count" ]; then
+      last_count=$now_count
+      last_change=$(date +%s)
+    elif [ $(( $(date +%s) - last_change )) -ge $(( STALL_MINUTES * 60 )) ]; then
+      log "FATAL stall: no new game in ${STALL_MINUTES}m at $now_count games; killing runner"
+      kill "$runner_pid" 2>/dev/null
+      sleep 10
+      kill -9 "$runner_pid" 2>/dev/null
+      break
+    fi
+  done
+  wait "$runner_pid" 2>/dev/null
   rc=$?
   log "runner exited rc=$rc at $(count_games) games; backing off"
   restarts=$((restarts+1))

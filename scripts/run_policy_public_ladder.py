@@ -115,6 +115,7 @@ def main() -> None:
             checkpoint=args.checkpoint,
             action_temperature=args.temperature,
             save_results_to=str(out_dir),
+            save_trajectories_to=str(out_dir / "trajectories"),
         )
         print("LADDER_RUNNER final results: "
               + json.dumps(results, indent=2, sort_keys=True, default=str), flush=True)

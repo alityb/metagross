@@ -1,1 +1,11 @@
 2026-07-03T05:24:03Z LAUNCH attempt=1 done=0 remaining=130
+Terminated: 15             METAMON_CACHE_DIR="$PWD/external/metamon_cache" WANDB_MODE=disabled TORCHDYNAMO_DISABLE=1 ACCELERATE_USE_CPU=true caffeinate -i .venv-metamon/bin/python scripts/run_policy_public_ladder.py --local-run-dir "$RUN_DIR" --local-run-name "$RUN_NAME" --checkpoint "$CKPT" --username "$USERNAME" --battle-format gen9randombattle --total-battles "$remaining" --out-dir "$OUT_DIR" >> "$OUT_DIR/runner.out" 2>&1
+2026-07-03T08:00:33Z runner exited rc=143 at 46 games; backing off
+2026-07-03T08:01:03Z LAUNCH attempt=2 done=46 remaining=84
+2026-07-03T08:33:30Z LAUNCH attempt=1 done=47 remaining=83
+2026-07-03T13:49:37Z runner exited rc=0 at 130 games; backing off
+2026-07-03T13:50:07Z TARGET REACHED: 130 games
+2026-07-03T13:50:07Z FINAL ratings tail:
+{"ts": "2026-07-03T13:46:36.899239+00:00", "elo": 1247.7054226384478, "gxe": 49.9, "rpr": 1499.3021705539172, "rprd": 31.20736380039774, "w": 66, "l": 64}
+{"ts": "2026-07-03T13:48:07.141006+00:00", "elo": 1247.7054226384478, "gxe": 49.9, "rpr": 1499.3021705539172, "rprd": 31.20736380039774, "w": 66, "l": 64}
+{"ts": "2026-07-03T13:48:21.722695+00:00", "elo": 1247.7054226384478, "gxe": 49.9, "rpr": 1499.3021705539172, "rprd": 31.20736380039774, "w": 66, "l": 64}
