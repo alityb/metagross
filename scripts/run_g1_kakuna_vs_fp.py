@@ -109,6 +109,12 @@ def run_phase(
         "--total-battles", str(n_games),
         "--save-results-to", str(phase_dir),
     ]
+    if args.local_run_dir:
+        kak_cmd.extend([
+            "--local-run-dir", args.local_run_dir,
+            "--local-run-name", args.local_run_name,
+            "--checkpoint", str(args.checkpoint),
+        ])
     fp_mode = "challenge_user" if kakuna_role == "acceptor" else "accept_challenge"
     fp_cmd = [
         str(ROOT / ".venv-foul-play" / "bin" / "python"),
@@ -216,6 +222,9 @@ def run_phase(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--agent", default="Kakuna")
+    parser.add_argument("--local-run-dir", default=None)
+    parser.add_argument("--local-run-name", default=None)
+    parser.add_argument("--checkpoint", type=int, default=None)
     parser.add_argument("--format", default="gen9randombattle")
     parser.add_argument("--n-games", type=int, default=100)
     parser.add_argument("--foul-play-search-time-ms", type=int, default=100)

@@ -11,3 +11,4 @@ __pycache__/
 .pytest_cache/
 /data/replays/
 /data/parsed_replays/
+/nets/checkpoints/randbats_full/

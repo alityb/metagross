@@ -1,0 +1,39 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+LADDER_RUNNER loading LOCAL model run=randbats_base ckpt=2 base=Kakuna
+RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+
+
+ 		 AMAGO v3.4.0
+            	 -------------------------
+            	 Agent: MultiTaskAgent
+            		 Max Sequence Length: 128
+            		 TstepEncoder Type: MetamonPerceiverTstepEncoder
+            		 TrajEncoder Type: TformerTrajEncoder
+            		 Total Parameters: 142,688,528
+            		 Offline Loss Weight: 1.0
+            		 Online Loss Weight: 0.25
+            		 Mixed Precision: NO
+            		 Checkpoint Path: /Users/alityb/projects/metagross/nets/checkpoints/randbats_full/randbats_base/randbats_base/ckpts
+            	 Environment:
+            		 DummyAsyncVectorEnv(Gym Env x 1)
+            		 Exploration Type: None
+            	 Dataset: DoNothingDataset
+            	 Accelerate Processes: 1 
+
+
+Checkpoint validated: 642 keys, 142,832,563 params (model) == 142,832,563 params (ckpt)
+Laddering for 130 battles
+Made Public Showdown Ladder Env
+  Turn    2. | [●●●●●●][251/251hp]      lokix -       uxie [100%hp][●]  Turn    3. | [●●●●●●][155/251hp]      lokix -  toxicroak [ 59%hp][●●]  Turn    4. | [●●●●●●][268/268hp] archaludon -  toxicroak [ 59%hp][●●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn    5. | [●●●●●●][154/268hp] archaludon -  toxicroak [ 21%hp][●●]  Turn    6. | [●●●●●●][ 20/268hp] archaludon -     dialga [100%hp][●⦻●]  Turn    7. | [●●●●●●][ 20/268hp] archaludon -     dialga [ 16%hp][●⦻●]  Turn    8. | [●●●●●●][ 20/268hp] archaludon - oinkologne [ 29%hp][●⦻●●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn    9. | [●●●●●●][ 20/268hp] archaludon - zaciancrow [100%hp][●⦻●⦻●]  Turn   10. | [●●●●●●][204/275hp]  magmortar - zaciancrow [100%hp][●⦻●⦻●]  Turn   11. | [●●●●●●][ 82/275hp]  magmortar -     dialga [ 16%hp][●⦻●⦻⦻]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn   12. | [●●●●●●][ 82/275hp]  magmortar -    palafin [100%hp][●⦻⦻⦻⦻●]  Turn   13. | [●●●●●●][ 10/275hp]  magmortar -       uxie [ 80%hp][●⦻⦻⦻⦻●]  Turn   13. | [●●●●●⦻][  0/  0hp]  magmortar -       uxie [ 86%hp][●⦻⦻⦻⦻●]  Turn   14. | [●●●●●⦻][270/270hp] slitherwin -       uxie [ 86%hp][●⦻⦻⦻⦻●]  Turn   15. | [●●●●●⦻][162/270hp] slitherwin -       uxie [ 92%hp][●⦻⦻⦻⦻●]  Turn   16. | [●●●●●⦻][155/251hp]      lokix -       uxie [ 99%hp][●⦻⦻⦻⦻●]  Turn   17. | [●●●●●⦻][155/251hp]      lokix -       uxie [ 42%hp][●⦻⦻⦻⦻●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn   18. | [●●●●●⦻][ 61/251hp]      lokix - palafinher [100%hp][●⦻⦻⦻⦻●]  Turn   18. | [⦻●●●●⦻][  0/  0hp]      lokix - palafinher [100%hp][●⦻⦻⦻⦻●]  Turn   19. | [⦻●●●●⦻][162/270hp] slitherwin - palafinher [100%hp][●⦻⦻⦻⦻●]  Turn   20. | [⦻●●●●⦻][  2/270hp] slitherwin - palafinher [ 49%hp][●⦻⦻⦻⦻●]  Turn   21. | [⦻●●●●⦻][203/271hp]   jumpluff - palafinher [ 49%hp][●⦻⦻⦻⦻●]  Turn   21. | [⦻●●●●⦻][132/271hp]   jumpluff - palafinher [ 36%hp][●⦻⦻⦻⦻●]  Turn   22. | [⦻●●●●⦻][270/270hp] roaringmoo - palafinher [ 36%hp][●⦻⦻⦻⦻●]  Turn   23. | [⦻●●●●⦻][189/270hp] roaringmoo - palafinher [ 36%hp][●⦻⦻⦻⦻●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn   24. | [⦻●●●●⦻][101/270hp] roaringmoo -       uxie [ 42%hp][●⦻⦻⦻⦻⦻]  Turn   24. | [⦻●●●●⦻][101/270hp] roaringmoo -       uxie [  0%hp][⦻⦻⦻⦻⦻⦻]
+  Turn    2. | [●●●●●●][238/238hp] whimsicott -  toxicroak [ 88%hp][●●]  Turn    3. | [●●●●●●][296/296hp]  palossand -  toxicroak [ 66%hp][●●]  Turn    4. | [●●●●●●][296/296hp]  palossand -    calyrex [100%hp][●●]  Turn    5. | [●●●●●●][259/296hp]  palossand -    calyrex [ 57%hp][●●]  Turn    6. | [●●●●●●][146/243hp]   pelipper -    calyrex [ 77%hp][●●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn    6. | [●●●●●●][ 71/243hp]   pelipper -    calyrex [ 18%hp][●●]  Turn    7. | [●●●●●●][284/284hp]  sudowoodo -    calyrex [ 24%hp][●●]  Turn    8. | [●●●●●●][284/284hp]  sudowoodo -  terrakion [ 94%hp][⦻●●]  Turn    9. | [●●●●●●][ 48/256hp]   hawlucha -  terrakion [ 94%hp][⦻●●]  Turn    9. | [●●●●⦻●][  0/  0hp]   hawlucha -  terrakion [  1%hp][⦻●●]  Turn   10. | [●●●●⦻●][259/296hp]  palossand -  terrakion [  1%hp][⦻●●]  Turn   11. | [●●●●⦻●][296/296hp]  palossand -  terrakion [  1%hp][⦻●●]  Turn   12. | [●●●●⦻●][245/296hp]  palossand -  terrakion [  1%hp][⦻●●]  Turn   13. | [●●●●⦻●][296/296hp]  palossand -  terrakion [  1%hp][⦻●●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn   14. | [●●●●⦻●][250/296hp]  palossand -    banette [ 88%hp][⦻●⦻●]  Turn   14. | [●⦻●●⦻●][  0/  0hp]  palossand -    banette [ 78%hp][⦻●⦻●]  Turn   15. | [●⦻●●⦻●][ 71/243hp]   pelipper -    banette [ 78%hp][⦻●⦻●]  Turn   16. | [●⦻●●⦻●][  7/243hp]   pelipper -  toxicroak [ 60%hp][⦻●⦻⦻]  Turn   16. | [●⦻⦻●⦻●][  0/  0hp]   pelipper -  toxicroak [ 63%hp][⦻●⦻⦻]  Turn   17. | [●⦻⦻●⦻●][284/284hp]  sudowoodo -  toxicroak [ 63%hp][⦻●⦻⦻]  Turn   18. | [●⦻⦻●⦻●][ 34/284hp]  sudowoodo -     latios [ 88%hp][⦻⦻⦻⦻●]  Turn   19. | [●⦻⦻●⦻●][219/238hp] whimsicott -     latios [ 88%hp][⦻⦻⦻⦻●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>
+  Turn   20. | [●⦻⦻●⦻●][233/238hp] whimsicott -  rotomheat [ 84%hp][⦻⦻⦻⦻●●]  Turn   21. | [●⦻⦻●⦻●][224/238hp] whimsicott -  rotomheat [ 71%hp][⦻⦻⦻⦻●●]  Turn   22. | [●⦻⦻●⦻●][192/238hp] whimsicott -  rotomheat [ 59%hp][⦻⦻⦻⦻●●]  Turn   23. | [●⦻⦻●⦻●][192/238hp] whimsicott -     latios [ 76%hp][⦻⦻⦻⦻●●]  Turn   24. | [●⦻⦻●⦻●][192/238hp] whimsicott -     latios [ 16%hp][⦻⦻⦻⦻●●]  Turn   25. | [●⦻⦻●⦻●][192/238hp] whimsicott -  rotomheat [ 43%hp][⦻⦻⦻⦻●●]  Turn   26. | [●⦻⦻●⦻●][133/238hp] whimsicott -  rotomheat [ 43%hp][⦻⦻⦻⦻●●]  Turn   27. | [●⦻⦻●⦻●][ 74/238hp] whimsicott -  rotomheat [ 43%hp][⦻⦻⦻⦻●●]RATING_POLL_WARN <HTTPError 403: 'Forbidden'>

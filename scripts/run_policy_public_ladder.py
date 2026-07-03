@@ -27,7 +27,8 @@ def poll_ratings(username: str, fmt: str, out_path: Path, stop: threading.Event,
     url = f"https://pokemonshowdown.com/users/{username.lower()}.json"
     while not stop.is_set():
         try:
-            with urllib.request.urlopen(url, timeout=20) as r:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (metagross ladder monitor)"})
+            with urllib.request.urlopen(req, timeout=20) as r:
                 data = json.loads(r.read().decode())
             rating = (data.get("ratings") or {}).get(fmt) or {}
             line = {
