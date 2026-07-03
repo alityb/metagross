@@ -1,0 +1,31 @@
+starting game=1 challenger=agent_a(foul_play_root_priors) acceptor=agent_b(foul_play)
+game=1 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 1, "running_agent_a_wins": 1, "running_decisive": 1, "running_winrate": 1.0, "ts": "2026-07-03T17:53:03.733855+00:00", "void": false, "winner": "agent_a"}
+starting game=2 challenger=agent_b(foul_play) acceptor=agent_a(foul_play_root_priors)
+game=2 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 2, "running_agent_a_wins": 2, "running_decisive": 2, "running_winrate": 1.0, "ts": "2026-07-03T17:53:19.532298+00:00", "void": false, "winner": "agent_a"}
+{
+  "agent_a": "foul_play_root_priors",
+  "agent_a_as_acceptor_games": 1,
+  "agent_a_as_acceptor_wins": 1,
+  "agent_a_as_challenger_games": 1,
+  "agent_a_as_challenger_wins": 1,
+  "agent_a_losses": 0,
+  "agent_a_wins": 2,
+  "agent_b": "foul_play",
+  "ci95_high": 1.0,
+  "ci95_low": 0.34238022750665303,
+  "completed_games": 2,
+  "decisive_games": 2,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "mode": "h2h",
+  "n_games": 2,
+  "paired": true,
+  "server": "local",
+  "ties_or_unknown": 0,
+  "void_games": 0,
+  "voids_with_agent_a_challenger": 0,
+  "voids_with_agent_b_challenger": 0,
+  "winrate": 1.0
+}

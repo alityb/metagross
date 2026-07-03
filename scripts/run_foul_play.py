@@ -392,6 +392,149 @@ def patch_tauros_action_kind_gate() -> None:
     run_battle.async_pick_move = async_pick_move_with_tauros_kind_gate
 
 
+_PRIOR_STATE = {"priors": None, "cpuct": 2.0}
+
+
+def _mcts_with_root_priors(state_str, search_time_ms, index):
+    """Module-level (picklable/forkable) MCTS runner that applies the current
+    turn's root priors. Replaces fp.search.main.get_result_from_mcts."""
+    import poke_engine
+
+    state = poke_engine.State.from_string(state_str)
+    priors = _PRIOR_STATE.get("priors")
+    kwargs = {}
+    if priors:
+        kwargs["s1_priors"] = priors
+        kwargs["c_puct"] = _PRIOR_STATE.get("cpuct", 2.0)
+    from config import FoulPlayConfig
+
+    res = poke_engine.monte_carlo_tree_search(
+        state, search_time_ms, threads=FoulPlayConfig.search_threads, **kwargs
+    )
+    return res
+
+
+def patch_root_priors() -> None:
+    """METAGROSS_PRIOR_SERVER=<url>: fetch per-turn root priors from the prior
+    server and pass them into the (patched) poke-engine MCTS. Also tees every
+    incoming protocol message to the server so it can track battle state."""
+    server_url = os.environ.get("METAGROSS_PRIOR_SERVER")
+    if not server_url:
+        return
+    import logging as _logging
+    logger = _logging.getLogger("fp.root_priors")
+    import queue
+    import threading
+    import urllib.request as _url
+
+    _PRIOR_STATE["cpuct"] = float(os.environ.get("METAGROSS_CPUCT", "2.0"))
+    tee_q: "queue.Queue" = queue.Queue(maxsize=10000)
+
+    def _post(path: str, payload: dict, timeout: float = 5.0):
+        body = json.dumps(payload).encode()
+        req = _url.Request(f"{server_url}{path}", data=body,
+                           headers={"Content-Type": "application/json"})
+        return _url.urlopen(req, timeout=timeout)
+
+    def tee_worker():
+        while True:
+            tag, lines = tee_q.get()
+            try:
+                _post("/lines", {"tag": tag, "lines": lines})
+            except Exception:
+                pass
+
+    threading.Thread(target=tee_worker, daemon=True).start()
+
+    # 1) tee incoming protocol messages
+    from fp.websocket_client import PSWebsocketClient
+
+    original_receive = PSWebsocketClient.receive_message
+
+    async def receive_with_tee(self):
+        message = await original_receive(self)
+        try:
+            if message.startswith(">battle-"):
+                lines = message.split("\n")
+                tag = lines[0].lstrip(">").strip()
+                tee_q.put_nowait((tag, lines[1:]))
+        except Exception:
+            pass
+        return message
+
+    PSWebsocketClient.receive_message = receive_with_tee
+
+    # 2) swap the MCTS runner for the priors-aware one
+    import fp.search.main as search_main
+
+    search_main.get_result_from_mcts = _mcts_with_root_priors
+
+    # 3) fetch priors before each search
+    import fp.run_battle as run_battle_module
+
+    original_find_best_move = search_main.find_best_move
+
+    def find_best_move_with_priors(battle):
+        _PRIOR_STATE["priors"] = None
+        try:
+            tag = getattr(battle, "battle_tag", None)
+            if tag:
+                # let the tee queue drain so the server has seen this turn's
+                # messages (incl. the request) before we ask for priors
+                import time as _time
+                deadline = _time.monotonic() + 2.0
+                while not tee_q.empty() and _time.monotonic() < deadline:
+                    _time.sleep(0.05)
+                full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
+                with _url.urlopen(
+                    f"{server_url}/priors?tag={full_tag}", timeout=10
+                ) as resp:
+                    data = json.loads(resp.read())
+                priors = data.get("priors") or {}
+                if priors:
+                    _PRIOR_STATE["priors"] = [(k, float(v)) for k, v in priors.items()]
+                    logger.info("root priors ({}): {}".format(
+                        len(priors),
+                        {k: round(v, 3) for k, v in sorted(priors.items(), key=lambda kv: -kv[1])[:4]},
+                    ))
+        except Exception as exc:
+            logger.warning(f"prior fetch failed, searching without priors: {exc!r}")
+        return original_find_best_move(battle)
+
+    search_main.find_best_move = find_best_move_with_priors
+    run_battle_module.find_best_move = find_best_move_with_priors
+    logger.info(f"root-priors patch active (server={server_url}, c_puct={_PRIOR_STATE['cpuct']})")
+
+
+def patch_state_dump() -> None:
+    """METAGROSS_STATE_DUMP=<path>: append every root poke-engine state string
+    (one JSON line per decision) — used for hybrid prior development/testing."""
+    dump_path = os.environ.get("METAGROSS_STATE_DUMP")
+    if not dump_path:
+        return
+    from fp.search import poke_engine_helpers
+
+    original = poke_engine_helpers.battle_to_poke_engine_state
+
+    def battle_to_state_with_dump(battle, *args, **kwargs):
+        state = original(battle, *args, **kwargs)
+        try:
+            with open(dump_path, "a", encoding="utf-8") as handle:
+                handle.write(json.dumps({"state": state.to_string()}) + "\n")
+        except Exception:
+            pass
+        return state
+
+    poke_engine_helpers.battle_to_poke_engine_state = battle_to_state_with_dump
+    # standard_battles/random_battles import by value
+    import fp.search.standard_battles as _sb
+    import fp.search.random_battles as _rb
+    import fp.search.main as _sm
+    for mod in (_sb, _rb, _sm):
+        if hasattr(mod, "battle_to_poke_engine_state"):
+            mod.battle_to_poke_engine_state = battle_to_state_with_dump
+
+
 def patch_foul_play_value_shield() -> None:
     if os.environ.get("METAGROSS_FP_VALUE_SHIELD") != "1":
         return
@@ -1013,6 +1156,8 @@ def main() -> None:
     patch_foul_play_protocol_bugs()
     patch_tauros_action_kind_gate()
     patch_foul_play_value_shield()
+    patch_state_dump()
+    patch_root_priors()
     patch_randbats_generator_belief()
     patch_decision_logging()
 

@@ -38,6 +38,7 @@ AGENT_NAMES = (
     "foul_play_tauros_kind",
     "foul_play_tauros_action",
     "foul_play_value_shield",
+    "foul_play_root_priors",
 )
 EXPERIMENT_FIELDS = [
     "run_id",
@@ -131,6 +132,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_tauros_kind",
         "foul_play_tauros_action",
         "foul_play_value_shield",
+        "foul_play_root_priors",
     }
 
 
@@ -307,6 +309,12 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
         env.pop("METAGROSS_RANDBATS_FORMAT", None)
+    if agent == "foul_play_root_priors":
+        env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
+        env["METAGROSS_CPUCT"] = str(args.cpuct)
+    else:
+        env.pop("METAGROSS_PRIOR_SERVER", None)
+        env.pop("METAGROSS_CPUCT", None)
     if is_tauros_kind_foul_play(agent):
         env["METAGROSS_TAUROS_KIND_MODEL"] = str(Path(args.tauros_kind_model).resolve())
         env["METAGROSS_TAUROS_KIND_THRESHOLD"] = str(args.tauros_kind_threshold)
@@ -1070,6 +1078,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--agent-b-python", default=None,
                         help="Override Python binary for agent-b")
     parser.add_argument("--learned-value-model", default=None)
+    parser.add_argument("--prior-server-url", default="http://127.0.0.1:8977")
+    parser.add_argument("--cpuct", type=float, default=2.0)
     parser.add_argument(
         "--randbats-belief-pool",
         default=None,
