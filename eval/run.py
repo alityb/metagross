@@ -39,6 +39,7 @@ AGENT_NAMES = (
     "foul_play_tauros_action",
     "foul_play_value_shield",
     "foul_play_root_priors",
+    "foul_play_root_priors_opp",
 )
 EXPERIMENT_FIELDS = [
     "run_id",
@@ -133,6 +134,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_tauros_action",
         "foul_play_value_shield",
         "foul_play_root_priors",
+        "foul_play_root_priors_opp",
     }
 
 
@@ -309,7 +311,7 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
         env.pop("METAGROSS_RANDBATS_FORMAT", None)
-    if agent == "foul_play_root_priors":
+    if agent in ("foul_play_root_priors", "foul_play_root_priors_opp"):
         env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
         env["METAGROSS_CPUCT"] = str(args.cpuct)
     else:

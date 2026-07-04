@@ -406,6 +406,9 @@ def _mcts_with_root_priors(state_str, search_time_ms, index):
     if priors:
         kwargs["s1_priors"] = priors
         kwargs["c_puct"] = _PRIOR_STATE.get("cpuct", 2.0)
+    opp_priors = _PRIOR_STATE.get("opp_priors")
+    if opp_priors:
+        kwargs["s2_priors"] = opp_priors
     from config import FoulPlayConfig
 
     res = poke_engine.monte_carlo_tree_search(
@@ -476,6 +479,7 @@ def patch_root_priors() -> None:
 
     def find_best_move_with_priors(battle):
         _PRIOR_STATE["priors"] = None
+        _PRIOR_STATE["opp_priors"] = None
         try:
             tag = getattr(battle, "battle_tag", None)
             if tag:
@@ -491,11 +495,18 @@ def patch_root_priors() -> None:
                 ) as resp:
                     data = json.loads(resp.read())
                 priors = data.get("priors") or {}
+                opp_priors = data.get("opp_priors") or {}
                 if priors:
                     _PRIOR_STATE["priors"] = [(k, float(v)) for k, v in priors.items()]
                     logger.info("root priors ({}): {}".format(
                         len(priors),
                         {k: round(v, 3) for k, v in sorted(priors.items(), key=lambda kv: -kv[1])[:4]},
+                    ))
+                if opp_priors:
+                    _PRIOR_STATE["opp_priors"] = [(k, float(v)) for k, v in opp_priors.items()]
+                    logger.info("opp priors ({}): {}".format(
+                        len(opp_priors),
+                        {k: round(v, 3) for k, v in sorted(opp_priors.items(), key=lambda kv: -kv[1])[:4]},
                     ))
         except Exception as exc:
             logger.warning(f"prior fetch failed, searching without priors: {exc!r}")
@@ -1152,6 +1163,9 @@ def main() -> None:
 
     os.chdir(foul_play_dir)
     sys.path.insert(0, str(foul_play_dir))
+
+    if os.environ.get("METAGROSS_PRIOR_SERVER"):
+        print(f"DEBUG PRIOR_SERVER={os.environ['METAGROSS_PRIOR_SERVER']}", file=sys.stderr, flush=True)
 
     patch_foul_play_protocol_bugs()
     patch_tauros_action_kind_gate()

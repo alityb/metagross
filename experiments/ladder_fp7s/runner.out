@@ -30,3 +30,29 @@
 2026-07-03 23:04:22,763 INFO GAME_START game=15 / 130
 2026-07-03 23:06:25,375 INFO GAME_DONE game=14 result=win elo=1242 gxe=61.7 opponent=Uh oh oh no turns=6 dur=122.4s
 2026-07-03 23:06:40,371 INFO GAME_START game=16 / 130
+2026-07-04 14:38:06,901 INFO START | label=fp7s_8par | username=metagrossfp7s | n_games=115 | search_ms=7000 | model=stock
+2026-07-04 14:38:06,902 INFO GAME_START game=16 / 130
+2026-07-04 14:44:01,791 INFO GAME_DONE game=15 result=win elo=1244 gxe=60.7 opponent=hex121o turns=16 dur=354.6s
+2026-07-04 14:44:16,793 INFO GAME_START game=17 / 130
+2026-07-04 14:52:52,737 INFO GAME_DONE game=16 result=win elo=1268 gxe=62.3 opponent=daveywaveey turns=19 dur=515.6s
+2026-07-04 14:53:07,738 INFO GAME_START game=18 / 130
+2026-07-04 14:59:53,753 INFO GAME_DONE game=17 result=win elo=1290 gxe=63.5 opponent=dvevr3v3v turns=20 dur=405.7s
+2026-07-04 15:00:08,754 INFO GAME_START game=19 / 130
+2026-07-04 15:10:30,045 INFO GAME_DONE game=18 result=loss elo=1261 gxe=61.4 opponent=shadowby2002 turns=32 dur=620.9s
+2026-07-04 15:10:45,046 INFO GAME_START game=20 / 130
+2026-07-04 15:18:23,665 INFO GAME_DONE game=19 result=win elo=1285 gxe=62.8 opponent=ashhcatchthem turns=16 dur=458.3s
+2026-07-04 15:18:38,666 INFO GAME_START game=21 / 130
+2026-07-04 15:22:53,994 INFO GAME_DONE game=20 result=win elo=1308 gxe=63.9 opponent=bratman18 turns=7 dur=255.1s
+2026-07-04 15:23:08,996 INFO GAME_START game=22 / 130
+2026-07-04 15:28:17,689 INFO GAME_DONE game=21 result=win elo=1329 gxe=65.1 opponent=goatman666 turns=12 dur=308.4s
+2026-07-04 15:28:32,690 INFO GAME_START game=23 / 130
+2026-07-04 15:31:25,312 INFO GAME_DONE game=22 result=win elo=1350 gxe=66.1 opponent=janSawa turns=7 dur=172.3s
+2026-07-04 15:31:40,314 INFO GAME_START game=24 / 130
+2026-07-04 15:36:29,415 INFO GAME_DONE game=23 result=win elo=1368 gxe=67.2 opponent=Wedler turns=12 dur=288.9s
+2026-07-04 15:36:44,423 INFO GAME_START game=25 / 130
+2026-07-04 15:41:42,772 INFO GAME_DONE game=24 result=win elo=1387 gxe=68.1 opponent=amegaolmega turns=12 dur=298.1s
+2026-07-04 15:41:57,773 INFO GAME_START game=26 / 130
+2026-07-04 15:47:45,582 INFO GAME_DONE game=25 result=win elo=1406 gxe=68.7 opponent=nerdytable turns=16 dur=347.6s
+2026-07-04 15:48:00,584 INFO GAME_START game=27 / 130
+2026-07-04 16:04:45,399 INFO GAME_DONE game=26 result=win elo=1423 gxe=69.6 opponent=dsscqzc turns=65 dur=1004.6s
+2026-07-04 16:05:00,401 INFO GAME_START game=28 / 130

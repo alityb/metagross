@@ -223,9 +223,158 @@ class BattleSession:
             priors[name] = float(probs[idx])
         return {
             "priors": priors,
+            "opp_priors": self.compute_opponent_priors(),
             "probs": [float(p) for p in probs],
             "turn": T,
         }
+
+    def compute_opponent_priors(self) -> dict:
+        """Compute priors for the OPPONENT's moves from the opponent's POV.
+
+        FP's modeled opponent currently sees our full team (mirror assumption).
+        We bias the opponent's action distribution toward what a human would do,
+        using the same 142M policy evaluated from the opponent's perspective.
+
+        The opponent's POV = same game with sides swapped. We build a flipped
+        UniversalState and run the policy on it. The opponent's legal moves
+        are their active mon's moves + switches; we map those to engine move
+        strings in the opponent's option order.
+        """
+        import numpy as np
+        import torch
+        from metamon.interface import UniversalState, UniversalAction, consistent_move_order, consistent_pokemon_order
+
+        try:
+            state = UniversalState.from_Battle(self.battle)
+            # flip: opponent becomes "us", we become "them"
+            flipped = self._flip_state(state)
+            obs = self.server.obs_space.state_to_obs(flipped)
+            # opponent's legal actions from the flipped battle
+            illegal = np.ones(13, dtype=bool)
+            opp_battle = self._make_opp_battle()
+            if opp_battle is not None:
+                try:
+                    for a in UniversalAction.definitely_valid_actions(flipped, opp_battle):
+                        illegal[a] = False
+                except Exception:
+                    illegal[:] = False
+            else:
+                illegal[:] = False
+            obs = dict(obs)
+            obs["illegal_actions"] = illegal
+
+            # single-step inference (no history for opponent — we don't track
+            # their action/reward sequence; this is a stateless prior).
+            # state_to_obs returns 1D arrays for a single state.
+            # The transformer requires T>=2, so pad with a blank first step.
+            tt = obs["text_tokens"]  # (L,)
+            nn = obs["numbers"]      # (N,)
+            tt = np.stack([np.zeros_like(tt), tt])  # (2, L)
+            nn = np.stack([np.zeros_like(nn), nn])  # (2, N)
+            T = 2
+            ill_opp = np.ones((T, 13), dtype=bool)
+            ill_opp[-1] = illegal  # only the real step has the mask
+            text = torch.tensor(tt, dtype=torch.int32).unsqueeze(0)  # [1, 2, L]
+            numbers = torch.tensor(nn, dtype=torch.float32).unsqueeze(0)
+            ill_t = torch.tensor(ill_opp).unsqueeze(0)  # [1, 2, A]
+            rl2s = torch.zeros((1, T, 14))
+            time_idxs = torch.arange(T).long().unsqueeze(0)
+            obs_batch = {"text_tokens": text, "numbers": numbers, "illegal_actions": ill_t}
+
+            agent = self.server.agent
+            with torch.no_grad():
+                emb, _ = agent.get_state_embedding(
+                    obs=obs_batch, rl2s=rl2s, time_idxs=time_idxs, hidden_state=None
+                )
+                dists = agent.actor(
+                    emb,
+                    straight_from_obs={
+                        k: obs_batch[k] for k in agent.pass_obs_keys_to_actor
+                    },
+                )
+                probs = dists.probs[0, -1, -1, :].cpu().numpy()  # last (real) step
+
+            probs = probs * (~illegal)
+            if probs.sum() <= 0:
+                probs = (~illegal).astype(float)
+            probs = probs / probs.sum()
+
+            # map to opponent's engine move strings
+            opp_name_table: dict[str, int] = {}
+            try:
+                opp_active = self.battle.opponent_active_pokemon
+                opp_moves = consistent_move_order(
+                    list(opp_active.moves.values())
+                ) if opp_active else []
+            except Exception:
+                opp_moves = []
+            try:
+                opp_bench = consistent_pokemon_order(
+                    [p for p in self.battle.opponent_team.values() if not p.fainted and not p.active]
+                )
+            except Exception:
+                opp_bench = []
+            for i, mv in enumerate(opp_moves[:4]):
+                opp_name_table[mv.id] = i
+                opp_name_table[f"{mv.id}-tera"] = i + 9
+            for i, p in enumerate(opp_bench[:5]):
+                opp_name_table[f"switch {norm(p.name)}"] = i + 4
+
+            opp_priors = {}
+            for name, idx in opp_name_table.items():
+                opp_priors[name] = float(probs[idx])
+            return opp_priors
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"WARN opponent priors failed: {e!r}", flush=True)
+            return {}
+
+    def _flip_state(self, state):
+        """Swap player/opponent in a UniversalState for opponent-POV inference."""
+        from metamon.interface import UniversalState
+        # UniversalState fields: player_team, opponent_team, active_pokemon,
+        # opponent_active_pokemon, etc. — swap them
+        flipped = UniversalState.__new__(UniversalState)
+        for attr in dir(state):
+            if attr.startswith("_"):
+                continue
+            try:
+                val = getattr(state, attr)
+                setattr(flipped, attr, val)
+            except Exception:
+                pass
+        # swap player/opponent fields
+        if hasattr(state, "player_team"):
+            flipped.player_team = state.opponent_team
+            flipped.opponent_team = state.player_team
+        if hasattr(state, "active_pokemon"):
+            flipped.active_pokemon = state.opponent_active_pokemon
+            flipped.opponent_active_pokemon = state.active_pokemon
+        if hasattr(state, "player_side_conditions"):
+            flipped.player_side_conditions = state.opponent_side_conditions
+            flipped.opponent_side_conditions = state.player_side_conditions
+        return flipped
+
+    def _make_opp_battle(self):
+        """Create a minimal battle-like object for opponent legal-action check."""
+        # The opponent's legal actions = their active mon's moves + switches
+        # We can use the original battle but swap team/opponent_team refs
+        class OppBattleView:
+            pass
+        view = OppBattleView()
+        try:
+            view.active_pokemon = self.battle.opponent_active_pokemon
+            view.team = self.battle.opponent_team
+            view.opponent_active_pokemon = self.battle.active_pokemon
+            view.opponent_team = self.battle.team
+            view.force_switch = False
+            view.reviving = False
+            view.can_tera = True
+            view.battle_tag = self.battle._battle_tag
+        except Exception:
+            return None
+        return view
 
 
 class PriorServer:
