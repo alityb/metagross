@@ -1,0 +1,32 @@
+2026-07-03 21:10:39,945 INFO START | label=fp7s_8par | username=metagrossfp7s | n_games=130 | search_ms=7000 | model=stock
+2026-07-03 21:10:39,945 INFO GAME_START game=1 / 130
+2026-07-03 21:14:04,082 INFO GAME_DONE game=0 result=win elo=1043 gxe=55.0 opponent=bhtgrvfed turns=7 dur=202.1s
+2026-07-03 21:14:19,084 INFO GAME_START game=2 / 130
+2026-07-03 21:22:56,795 INFO GAME_DONE game=1 result=loss elo=1028 gxe=50.0 opponent=Jfjskdbdjs turns=28 dur=516.4s
+2026-07-03 21:23:11,797 INFO GAME_START game=3 / 130
+2026-07-03 21:31:46,187 INFO GAME_DONE game=2 result=win elo=1061 gxe=54.2 opponent=Bcfdffhhjhhh turns=24 dur=514.1s
+2026-07-03 21:32:01,189 INFO GAME_START game=4 / 130
+2026-07-03 21:41:41,376 INFO GAME_DONE game=3 result=loss elo=1045 gxe=50.0 opponent=gdytfvjyhb turns=23 dur=580.0s
+2026-07-03 21:41:56,377 INFO GAME_START game=5 / 130
+2026-07-03 21:52:31,595 INFO GAME_DONE game=4 result=win elo=1079 gxe=53.5 opponent=Fafcffg turns=34 dur=634.9s
+2026-07-03 21:52:46,596 INFO GAME_START game=6 / 130
+2026-07-03 22:02:01,023 INFO GAME_DONE game=5 result=loss elo=1056 gxe=48.5 opponent=pinklvrlulu turns=22 dur=554.1s
+2026-07-03 22:02:16,024 INFO GAME_START game=7 / 130
+2026-07-03 22:04:11,288 INFO GAME_DONE game=6 result=win elo=1090 gxe=51.1 opponent=806.tyy turns=4 dur=115.0s
+2026-07-03 22:04:26,290 INFO GAME_START game=8 / 130
+2026-07-03 22:14:19,843 INFO GAME_DONE game=7 result=win elo=1117 gxe=53.8 opponent=Aqua_6087 turns=22 dur=593.2s
+2026-07-03 22:14:34,845 INFO GAME_START game=9 / 130
+2026-07-03 22:21:00,050 INFO GAME_DONE game=8 result=loss elo=1093 gxe=50.4 opponent=KonstipatedKleavor turns=21 dur=384.8s
+2026-07-03 22:21:15,052 INFO GAME_START game=10 / 130
+2026-07-03 22:31:54,620 INFO GAME_DONE game=9 result=win elo=1120 gxe=52.6 opponent=hdhdhdhdgx turns=26 dur=639.3s
+2026-07-03 22:32:09,623 INFO GAME_START game=11 / 130
+2026-07-03 22:40:47,779 INFO GAME_DONE game=10 result=win elo=1145 gxe=54.9 opponent=pokewerbo turns=26 dur=517.8s
+2026-07-03 22:41:02,781 INFO GAME_START game=12 / 130
+2026-07-03 22:53:04,242 INFO GAME_DONE game=11 result=win elo=1168 gxe=57.0 opponent=hihihhahuehue turns=47 dur=721.1s
+2026-07-03 22:53:19,244 INFO GAME_START game=13 / 130
+2026-07-03 22:58:28,250 INFO GAME_DONE game=12 result=win elo=1191 gxe=58.9 opponent=BGM0910 turns=16 dur=308.6s
+2026-07-03 22:58:43,252 INFO GAME_START game=14 / 130
+2026-07-03 23:04:07,762 INFO GAME_DONE game=13 result=win elo=1220 gxe=60.3 opponent=quangu turns=11 dur=324.3s
+2026-07-03 23:04:22,763 INFO GAME_START game=15 / 130
+2026-07-03 23:06:25,375 INFO GAME_DONE game=14 result=win elo=1242 gxe=61.7 opponent=Uh oh oh no turns=6 dur=122.4s
+2026-07-03 23:06:40,371 INFO GAME_START game=16 / 130
