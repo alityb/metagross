@@ -476,6 +476,9 @@ def patch_belief_aware_eval() -> None:
                         our_name = config.FoulPlayConfig.username
                         if player_name != our_name:
                             _opp_player_id[0] = parts[2]  # "p1" or "p2"
+                        else:
+                            # WE are this player; opponent is the other
+                            _opp_player_id[0] = "p2" if parts[2] == "p1" else "p1"
                     # opponent switch-in: |switch|pXa: Name|Species, L84
                     if msg_type == "switch" and len(parts) >= 4:
                         ident = parts[2]

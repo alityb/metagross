@@ -117,3 +117,8 @@
 2026-07-04 21:23:09,184 INFO GAME_START game=56 / 130
 2026-07-04 21:24:43,914 INFO GAME_DONE game=55 result=win elo=1472 gxe=68.3 opponent=borp! likes cheese turns=4 dur=93.8s
 2026-07-04 21:24:58,915 INFO GAME_START game=57 / 130
+2026-07-04 21:33:36,884 INFO GAME_DONE game=56 result=loss elo=1450 gxe=67.4 opponent=Hobophobia turns=26 dur=517.7s
+2026-07-04 21:33:51,886 INFO GAME_START game=58 / 130
+2026-07-04 21:39:59,797 INFO GAME_DONE game=57 result=win elo=1472 gxe=67.9 opponent=Kyurem the kaiju turns=19 dur=367.6s
+2026-07-04 21:39:59,798 INFO CHECKPOINT | label=fp7s_8par | games=40 | W=28 L=12 | elo=1472 | gxe=67.9
+2026-07-04 21:40:14,799 INFO GAME_START game=59 / 130
