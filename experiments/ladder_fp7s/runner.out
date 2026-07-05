@@ -78,3 +78,14 @@
 2026-07-04 18:56:28,277 INFO GAME_START game=37 / 130
 2026-07-04 19:00:29,895 INFO GAME_DONE game=36 result=win elo=1454 gxe=69.0 opponent=londring turns=7 dur=241.4s
 2026-07-04 19:00:44,898 INFO GAME_START game=38 / 130
+2026-07-04 19:06:49,485 INFO GAME_DONE game=37 result=win elo=1473 gxe=69.8 opponent=eljugoaaron turns=19 dur=364.4s
+2026-07-04 19:06:49,485 INFO CHECKPOINT | label=fp7s_8par | games=20 | W=18 L=2 | elo=1473 | gxe=69.8
+2026-07-04 19:07:04,486 INFO GAME_START game=39 / 130
+2026-07-04 19:13:35,311 INFO GAME_DONE game=38 result=win elo=1493 gxe=70.6 opponent=Kumabear876 turns=19 dur=390.4s
+2026-07-04 19:13:50,313 INFO GAME_START game=40 / 130
+2026-07-04 19:20:28,455 INFO GAME_DONE game=39 result=win elo=1511 gxe=71.3 opponent=hyperbuboy turns=22 dur=397.8s
+2026-07-04 19:20:43,456 INFO GAME_START game=41 / 130
+2026-07-04 19:28:52,787 INFO GAME_DONE game=40 result=win elo=1532 gxe=71.9 opponent=hj78 turns=26 dur=488.1s
+2026-07-04 19:29:07,788 INFO GAME_START game=42 / 130
+2026-07-04 19:44:29,583 INFO GAME_DONE game=41 result=win elo=1550 gxe=72.5 opponent=Aarondogg turns=45 dur=921.5s
+2026-07-04 19:44:44,585 INFO GAME_START game=43 / 130

@@ -417,6 +417,138 @@ def _mcts_with_root_priors(state_str, search_time_ms, index):
     return res
 
 
+def patch_belief_aware_eval() -> None:
+    """METAGROSS_BELIEF_EVAL=1: wire the live belief tracker into FP's eval.
+
+    Computes threat scores from the generator-pool belief over opponent sets
+    and injects them into the poke-engine state before each MCTS call.
+    The Rust eval uses these for an uncertainty-aware threat penalty.
+    """
+    if os.environ.get("METAGROSS_BELIEF_EVAL") != "1":
+        return
+
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from belief.live_belief import BeliefTracker
+
+    pool_path = os.environ.get(
+        "METAGROSS_RANDBATS_POOL",
+        str(Path(__file__).resolve().parents[1] / "data" / "randbats_pools" / "gen9randombattle_pool_50000.json"),
+    )
+    tracker = BeliefTracker(pool_path=pool_path)
+    print(f"BELIEF_EVAL: tracker initialized from {pool_path}", file=_sys.stderr, flush=True)
+
+    # Track the current battle's opponent species → species_key mapping
+    # (Showdown uses display names; we need normalized keys)
+    import re as _re
+
+    def _norm(s):
+        return _re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+    # Tee protocol lines to the belief tracker
+    from fp.websocket_client import PSWebsocketClient
+
+    original_receive = PSWebsocketClient.receive_message
+
+    async def receive_with_belief(self):
+        message = await original_receive(self)
+        try:
+            if message.startswith(">battle-"):
+                lines = message.split("\n")
+                for line in lines[1:]:
+                    if not line.startswith("|"):
+                        continue
+                    parts = line.split("|")
+                    if len(parts) < 3:
+                        continue
+                    msg_type = parts[1]
+                    # opponent switch-in: |switch|p2a: Name|Species, L84
+                    if msg_type == "switch" and len(parts) >= 4:
+                        ident = parts[2]
+                        if ident.startswith("p2"):
+                            species_raw = parts[3].split(",")[0]
+                            level = 82  # default; will be corrected if we can parse
+                            try:
+                                level_str = parts[3].split(",")[1].strip()
+                                level = int(level_str.replace("L", "").replace("l", ""))
+                            except (IndexError, ValueError):
+                                pass
+                            tracker.on_opponent_switch_in(species_raw, level)
+                    # opponent move: |move|p2a: Name|MoveName|...
+                    elif msg_type == "move" and len(parts) >= 4:
+                        ident = parts[2]
+                        if ident.startswith("p2"):
+                            tracker.on_opponent_move(
+                                parts[3].split(",")[0] if "," in parts[3] else parts[3],
+                                parts[3],
+                            )
+                    # ability reveal: |-ability|p2a: Name|AbilityName
+                    elif msg_type == "ability" and len(parts) >= 4:
+                        ident = parts[2]
+                        if ident.startswith("p2"):
+                            tracker.on_opponent_ability(parts[2].split(":")[-1].strip(), parts[3])
+                    # item reveal: |-item|p2a: Name|ItemName
+                    elif msg_type == "item" and len(parts) >= 4:
+                        ident = parts[2]
+                        if ident.startswith("p2"):
+                            tracker.on_opponent_item(parts[2].split(":")[-1].strip(), parts[3])
+                    # tera: |-terastallize|p2a: Name|Type
+                    elif msg_type == "terastallize" and len(parts) >= 4:
+                        ident = parts[2]
+                        if ident.startswith("p2"):
+                            tracker.on_opponent_tera(parts[2].split(":")[-1].strip(), parts[3])
+        except Exception:
+            pass
+        return message
+
+    PSWebsocketClient.receive_message = receive_with_belief
+
+    # Inject belief scores into state strings in the PARENT process.
+    # find_best_move runs in the parent; it calls prepare_random_battles which
+    # creates the determinized state strings, then submits them to a
+    # ProcessPoolExecutor. We wrap find_best_move to inject belief into the
+    # battle object's states before they're serialized.
+    #
+    # The simplest picklable approach: store belief scores as attributes on
+    # the battle object (which is deepcopied into each determinized world),
+    # then have the MCTS runner read them. But poke_engine states don't carry
+    # Python attributes. Instead, we modify the state STRING after
+    # prepare_random_battles returns by intercepting at the
+    # battle_to_poke_engine_state level.
+    import fp.search.poke_engine_helpers as _peh
+    import poke_engine
+
+    _original_btpes = _peh.battle_to_poke_engine_state
+
+    def _btpes_with_belief(battle, *args, **kwargs):
+        state = _original_btpes(battle, *args, **kwargs)
+        try:
+            beliefs = tracker.get_all_beliefs()
+            s1_threat = 0.0
+            scout_value = 0.0
+            for species_key, belief in beliefs.items():
+                remaining = belief.get("possible_remaining_moves", {})
+                if remaining:
+                    max_prob = max(remaining.values()) if remaining else 0.0
+                    s1_threat = max(s1_threat, max_prob)
+                    scout_value += 0.1
+            scout_value = min(scout_value, 1.0)
+            if s1_threat > 0 or scout_value > 0:
+                poke_engine.set_belief(state, s1_threat, 0.0, scout_value)
+        except Exception:
+            pass
+        return state
+
+    _peh.battle_to_poke_engine_state = _btpes_with_belief
+    import fp.search.random_battles as _rb
+    import fp.search.standard_battles as _sb
+    import fp.search.main as _sm
+    for mod in (_rb, _sb, _sm):
+        if hasattr(mod, "battle_to_poke_engine_state"):
+            mod.battle_to_poke_engine_state = _btpes_with_belief
+    print("BELIEF_EVAL: patches active", file=_sys.stderr, flush=True)
+
+
 def patch_root_priors() -> None:
     """METAGROSS_PRIOR_SERVER=<url>: fetch per-turn root priors from the prior
     server and pass them into the (patched) poke-engine MCTS. Also tees every
@@ -1171,6 +1303,7 @@ def main() -> None:
     patch_tauros_action_kind_gate()
     patch_foul_play_value_shield()
     patch_state_dump()
+    patch_belief_aware_eval()
     patch_root_priors()
     patch_randbats_generator_belief()
     patch_decision_logging()
