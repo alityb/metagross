@@ -450,6 +450,8 @@ def patch_belief_aware_eval() -> None:
 
     original_receive = PSWebsocketClient.receive_message
 
+    _opp_player_id = ["p2"]  # mutable default; updated from |player| line
+
     async def receive_with_belief(self):
         message = await original_receive(self)
         try:
@@ -465,10 +467,19 @@ def patch_belief_aware_eval() -> None:
                     # reset tracker on new battle
                     if msg_type == "start":
                         tracker.reset()
-                    # opponent switch-in: |switch|p2a: Name|Species, L84
+                        _opp_player_id[0] = "p2"  # reset to default
+                    # detect opponent player ID from |player| lines
+                    # |player|p1|Username|rating| or |player|p2|Username|rating|
+                    # The opponent is whoever is NOT us
+                    if msg_type == "player" and len(parts) >= 4:
+                        player_name = parts[3]
+                        our_name = config.FoulPlayConfig.username
+                        if player_name != our_name:
+                            _opp_player_id[0] = parts[2]  # "p1" or "p2"
+                    # opponent switch-in: |switch|pXa: Name|Species, L84
                     if msg_type == "switch" and len(parts) >= 4:
                         ident = parts[2]
-                        if ident.startswith("p2"):
+                        if ident.startswith(_opp_player_id[0]):
                             species_raw = parts[3].split(",")[0]
                             level = 82  # default; will be corrected if we can parse
                             try:
@@ -477,28 +488,28 @@ def patch_belief_aware_eval() -> None:
                             except (IndexError, ValueError):
                                 pass
                             tracker.on_opponent_switch_in(species_raw, level)
-                    # opponent move: |move|p2a: Name|MoveName|...
+                    # opponent move: |move|pXa: Name|MoveName|...
                     elif msg_type == "move" and len(parts) >= 4:
                         ident = parts[2]
-                        if ident.startswith("p2"):
+                        if ident.startswith(_opp_player_id[0]):
                             tracker.on_opponent_move(
                                 parts[3].split(",")[0] if "," in parts[3] else parts[3],
                                 parts[3],
                             )
-                    # ability reveal: |-ability|p2a: Name|AbilityName
+                    # ability reveal: |-ability|pXa: Name|AbilityName
                     elif msg_type == "ability" and len(parts) >= 4:
                         ident = parts[2]
-                        if ident.startswith("p2"):
+                        if ident.startswith(_opp_player_id[0]):
                             tracker.on_opponent_ability(parts[2].split(":")[-1].strip(), parts[3])
-                    # item reveal: |-item|p2a: Name|ItemName
+                    # item reveal: |-item|pXa: Name|ItemName
                     elif msg_type == "item" and len(parts) >= 4:
                         ident = parts[2]
-                        if ident.startswith("p2"):
+                        if ident.startswith(_opp_player_id[0]):
                             tracker.on_opponent_item(parts[2].split(":")[-1].strip(), parts[3])
-                    # tera: |-terastallize|p2a: Name|Type
+                    # tera: |-terastallize|pXa: Name|Type
                     elif msg_type == "terastallize" and len(parts) >= 4:
                         ident = parts[2]
-                        if ident.startswith("p2"):
+                        if ident.startswith(_opp_player_id[0]):
                             tracker.on_opponent_tera(parts[2].split(":")[-1].strip(), parts[3])
         except Exception:
             pass
