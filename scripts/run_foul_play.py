@@ -461,6 +461,7 @@ def patch_belief_aware_eval() -> None:
                     if not line.startswith("|"):
                         continue
                     parts = line.split("|")
+
                     if len(parts) < 3:
                         continue
                     msg_type = parts[1]
@@ -479,6 +480,7 @@ def patch_belief_aware_eval() -> None:
                         else:
                             # WE are this player; opponent is the other
                             _opp_player_id[0] = "p2" if parts[2] == "p1" else "p1"
+
                     # opponent switch-in: |switch|pXa: Name|Species, L84
                     if msg_type == "switch" and len(parts) >= 4:
                         ident = parts[2]
