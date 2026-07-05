@@ -462,6 +462,9 @@ def patch_belief_aware_eval() -> None:
                     if len(parts) < 3:
                         continue
                     msg_type = parts[1]
+                    # reset tracker on new battle
+                    if msg_type == "start":
+                        tracker.reset()
                     # opponent switch-in: |switch|p2a: Name|Species, L84
                     if msg_type == "switch" and len(parts) >= 4:
                         ident = parts[2]

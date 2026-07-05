@@ -156,6 +156,12 @@ class BeliefTracker:
         # per-battle state
         self._opponent_mons: dict[str, OpponentBelief] = {}  # key = species_key
         self._seen_species_order: list[str] = []
+        self._pool_path = pool_path
+
+    def reset(self):
+        """Clear all per-battle state (call when a new battle starts)."""
+        self._opponent_mons = {}
+        self._seen_species_order = []
 
     def on_opponent_switch_in(self, species: str, level: int):
         key = norm(species)

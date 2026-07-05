@@ -89,3 +89,5 @@
 2026-07-04 19:29:07,788 INFO GAME_START game=42 / 130
 2026-07-04 19:44:29,583 INFO GAME_DONE game=41 result=win elo=1550 gxe=72.5 opponent=Aarondogg turns=45 dur=921.5s
 2026-07-04 19:44:44,585 INFO GAME_START game=43 / 130
+2026-07-04 19:55:50,893 INFO GAME_DONE game=42 result=loss elo=1528 gxe=71.6 opponent=Baruk69 turns=44 dur=666.0s
+2026-07-04 19:56:05,895 INFO GAME_START game=44 / 130
