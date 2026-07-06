@@ -1,0 +1,31 @@
+starting game=1 challenger=agent_a(foul_play_belief_threat) acceptor=agent_b(foul_play)
+game=1 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0x001c43a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0x001c43a.log", "game_index": 1, "running_agent_a_wins": 0, "running_decisive": 0, "running_winrate": null, "ts": "2026-07-05T05:18:50.000673+00:00", "void": true, "winner": null}
+starting game=2 challenger=agent_b(foul_play) acceptor=agent_a(foul_play_belief_threat)
+game=2 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0y0029715.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0y0029715.log", "game_index": 2, "running_agent_a_wins": 0, "running_decisive": 0, "running_winrate": null, "ts": "2026-07-05T05:18:55.007133+00:00", "void": true, "winner": null}
+{
+  "agent_a": "foul_play_belief_threat",
+  "agent_a_as_acceptor_games": 0,
+  "agent_a_as_acceptor_wins": 0,
+  "agent_a_as_challenger_games": 0,
+  "agent_a_as_challenger_wins": 0,
+  "agent_a_losses": 0,
+  "agent_a_wins": 0,
+  "agent_b": "foul_play",
+  "ci95_high": 0.0,
+  "ci95_low": 0.0,
+  "completed_games": 0,
+  "decisive_games": 0,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "mode": "h2h",
+  "n_games": 2,
+  "paired": true,
+  "server": "local",
+  "ties_or_unknown": 0,
+  "void_games": 2,
+  "voids_with_agent_a_challenger": 1,
+  "voids_with_agent_b_challenger": 1,
+  "winrate": 0.0
+}

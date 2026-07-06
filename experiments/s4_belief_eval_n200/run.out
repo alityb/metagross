@@ -1,1 +1,625 @@
 starting game=1 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=1 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 1, "running_agent_a_wins": 0, "running_decisive": 1, "running_winrate": 0.0, "ts": "2026-07-05T04:55:44.178118+00:00", "void": false, "winner": "agent_b"}
+starting game=2 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=2 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 2, "running_agent_a_wins": 0, "running_decisive": 2, "running_winrate": 0.0, "ts": "2026-07-05T04:55:59.545231+00:00", "void": false, "winner": "agent_b"}
+starting game=3 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=3 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 3, "running_agent_a_wins": 0, "running_decisive": 3, "running_winrate": 0.0, "ts": "2026-07-05T04:56:12.308468+00:00", "void": false, "winner": "agent_b"}
+starting game=4 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=4 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 4, "running_agent_a_wins": 1, "running_decisive": 4, "running_winrate": 0.25, "ts": "2026-07-05T04:56:25.085537+00:00", "void": false, "winner": "agent_a"}
+starting game=5 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=5 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 5, "running_agent_a_wins": 1, "running_decisive": 5, "running_winrate": 0.2, "ts": "2026-07-05T04:56:50.315629+00:00", "void": false, "winner": "agent_b"}
+starting game=6 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=6 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 6, "running_agent_a_wins": 2, "running_decisive": 6, "running_winrate": 0.3333, "ts": "2026-07-05T04:57:09.154207+00:00", "void": false, "winner": "agent_a"}
+starting game=7 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=7 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 7, "running_agent_a_wins": 3, "running_decisive": 7, "running_winrate": 0.4286, "ts": "2026-07-05T04:57:27.313185+00:00", "void": false, "winner": "agent_a"}
+starting game=8 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=8 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 8, "running_agent_a_wins": 4, "running_decisive": 8, "running_winrate": 0.5, "ts": "2026-07-05T04:57:48.976108+00:00", "void": false, "winner": "agent_a"}
+starting game=9 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=9 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 9, "running_agent_a_wins": 4, "running_decisive": 9, "running_winrate": 0.4444, "ts": "2026-07-05T04:58:03.757965+00:00", "void": false, "winner": "agent_b"}
+starting game=10 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=10 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 10, "running_agent_a_wins": 5, "running_decisive": 10, "running_winrate": 0.5, "ts": "2026-07-05T04:58:18.557718+00:00", "void": false, "winner": "agent_a"}
+starting game=11 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=11 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 11, "running_agent_a_wins": 6, "running_decisive": 11, "running_winrate": 0.5455, "ts": "2026-07-05T04:58:32.311293+00:00", "void": false, "winner": "agent_a"}
+starting game=12 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=12 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 12, "running_agent_a_wins": 7, "running_decisive": 12, "running_winrate": 0.5833, "ts": "2026-07-05T04:58:45.462574+00:00", "void": false, "winner": "agent_a"}
+starting game=13 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=13 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 13, "running_agent_a_wins": 7, "running_decisive": 13, "running_winrate": 0.5385, "ts": "2026-07-05T04:59:01.255151+00:00", "void": false, "winner": "agent_b"}
+starting game=14 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=14 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 14, "running_agent_a_wins": 7, "running_decisive": 14, "running_winrate": 0.5, "ts": "2026-07-05T04:59:17.111996+00:00", "void": false, "winner": "agent_b"}
+starting game=15 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=15 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 15, "running_agent_a_wins": 8, "running_decisive": 15, "running_winrate": 0.5333, "ts": "2026-07-05T04:59:33.405947+00:00", "void": false, "winner": "agent_a"}
+starting game=16 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=16 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 16, "running_agent_a_wins": 8, "running_decisive": 16, "running_winrate": 0.5, "ts": "2026-07-05T04:59:48.767812+00:00", "void": false, "winner": "agent_b"}
+starting game=17 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=17 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 17, "running_agent_a_wins": 9, "running_decisive": 17, "running_winrate": 0.5294, "ts": "2026-07-05T05:00:01.495265+00:00", "void": false, "winner": "agent_a"}
+starting game=18 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=18 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 18, "running_agent_a_wins": 10, "running_decisive": 18, "running_winrate": 0.5556, "ts": "2026-07-05T05:00:14.749193+00:00", "void": false, "winner": "agent_a"}
+starting game=19 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=19 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 19, "running_agent_a_wins": 11, "running_decisive": 19, "running_winrate": 0.5789, "ts": "2026-07-05T05:00:31.576547+00:00", "void": false, "winner": "agent_a"}
+starting game=20 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=20 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 20, "running_agent_a_wins": 12, "running_decisive": 20, "running_winrate": 0.6, "ts": "2026-07-05T05:00:47.469166+00:00", "void": false, "winner": "agent_a"}
+starting game=21 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=21 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 21, "running_agent_a_wins": 12, "running_decisive": 21, "running_winrate": 0.5714, "ts": "2026-07-05T05:01:08.662987+00:00", "void": false, "winner": "agent_b"}
+starting game=22 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=22 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 22, "running_agent_a_wins": 13, "running_decisive": 22, "running_winrate": 0.5909, "ts": "2026-07-05T05:01:23.916770+00:00", "void": false, "winner": "agent_a"}
+starting game=23 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=23 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 23, "running_agent_a_wins": 14, "running_decisive": 23, "running_winrate": 0.6087, "ts": "2026-07-05T05:01:43.189728+00:00", "void": false, "winner": "agent_a"}
+starting game=24 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=24 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 24, "running_agent_a_wins": 14, "running_decisive": 24, "running_winrate": 0.5833, "ts": "2026-07-05T05:01:59.308002+00:00", "void": false, "winner": "agent_b"}
+starting game=25 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=25 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 25, "running_agent_a_wins": 14, "running_decisive": 25, "running_winrate": 0.56, "ts": "2026-07-05T05:02:17.513271+00:00", "void": false, "winner": "agent_b"}
+starting game=26 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=26 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 26, "running_agent_a_wins": 14, "running_decisive": 26, "running_winrate": 0.5385, "ts": "2026-07-05T05:02:39.298129+00:00", "void": false, "winner": "agent_b"}
+starting game=27 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=27 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 27, "running_agent_a_wins": 14, "running_decisive": 27, "running_winrate": 0.5185, "ts": "2026-07-05T05:02:54.977184+00:00", "void": false, "winner": "agent_b"}
+starting game=28 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=28 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 28, "running_agent_a_wins": 15, "running_decisive": 28, "running_winrate": 0.5357, "ts": "2026-07-05T05:03:09.632007+00:00", "void": false, "winner": "agent_a"}
+starting game=29 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=29 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 29, "running_agent_a_wins": 16, "running_decisive": 29, "running_winrate": 0.5517, "ts": "2026-07-05T05:03:25.807486+00:00", "void": false, "winner": "agent_a"}
+starting game=30 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=30 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 30, "running_agent_a_wins": 17, "running_decisive": 30, "running_winrate": 0.5667, "ts": "2026-07-05T05:03:41.081958+00:00", "void": false, "winner": "agent_a"}
+starting game=31 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=31 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 31, "running_agent_a_wins": 18, "running_decisive": 31, "running_winrate": 0.5806, "ts": "2026-07-05T05:03:56.180562+00:00", "void": false, "winner": "agent_a"}
+starting game=32 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=32 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 32, "running_agent_a_wins": 19, "running_decisive": 32, "running_winrate": 0.5938, "ts": "2026-07-05T05:04:08.720955+00:00", "void": false, "winner": "agent_a"}
+starting game=33 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=33 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 33, "running_agent_a_wins": 19, "running_decisive": 33, "running_winrate": 0.5758, "ts": "2026-07-05T05:04:27.289727+00:00", "void": false, "winner": "agent_b"}
+starting game=34 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=34 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 34, "running_agent_a_wins": 20, "running_decisive": 34, "running_winrate": 0.5882, "ts": "2026-07-05T05:04:40.275292+00:00", "void": false, "winner": "agent_a"}
+starting game=35 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=35 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 35, "running_agent_a_wins": 20, "running_decisive": 35, "running_winrate": 0.5714, "ts": "2026-07-05T05:04:55.603487+00:00", "void": false, "winner": "agent_b"}
+starting game=36 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=36 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 36, "running_agent_a_wins": 20, "running_decisive": 36, "running_winrate": 0.5556, "ts": "2026-07-05T05:05:22.717695+00:00", "void": false, "winner": "agent_b"}
+starting game=37 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=37 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 37, "running_agent_a_wins": 20, "running_decisive": 37, "running_winrate": 0.5405, "ts": "2026-07-05T05:05:35.562656+00:00", "void": false, "winner": "agent_b"}
+starting game=38 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=38 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 38, "running_agent_a_wins": 20, "running_decisive": 38, "running_winrate": 0.5263, "ts": "2026-07-05T05:05:52.610803+00:00", "void": false, "winner": "agent_b"}
+starting game=39 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=39 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 39, "running_agent_a_wins": 21, "running_decisive": 39, "running_winrate": 0.5385, "ts": "2026-07-05T05:06:09.335904+00:00", "void": false, "winner": "agent_a"}
+starting game=40 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=40 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 40, "running_agent_a_wins": 22, "running_decisive": 40, "running_winrate": 0.55, "ts": "2026-07-05T05:06:24.737580+00:00", "void": false, "winner": "agent_a"}
+starting game=41 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=41 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 41, "running_agent_a_wins": 23, "running_decisive": 41, "running_winrate": 0.561, "ts": "2026-07-05T05:06:44.756085+00:00", "void": false, "winner": "agent_a"}
+starting game=42 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=42 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 42, "running_agent_a_wins": 23, "running_decisive": 42, "running_winrate": 0.5476, "ts": "2026-07-05T05:06:59.334815+00:00", "void": false, "winner": "agent_b"}
+starting game=43 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=43 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 43, "running_agent_a_wins": 23, "running_decisive": 43, "running_winrate": 0.5349, "ts": "2026-07-05T05:07:19.078378+00:00", "void": false, "winner": "agent_b"}
+starting game=44 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=44 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 44, "running_agent_a_wins": 24, "running_decisive": 44, "running_winrate": 0.5455, "ts": "2026-07-05T05:07:36.334966+00:00", "void": false, "winner": "agent_a"}
+starting game=45 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=45 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 45, "running_agent_a_wins": 25, "running_decisive": 45, "running_winrate": 0.5556, "ts": "2026-07-05T05:07:51.883691+00:00", "void": false, "winner": "agent_a"}
+starting game=46 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=46 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 46, "running_agent_a_wins": 25, "running_decisive": 46, "running_winrate": 0.5435, "ts": "2026-07-05T05:08:02.755858+00:00", "void": false, "winner": "agent_b"}
+starting game=47 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=47 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 47, "running_agent_a_wins": 26, "running_decisive": 47, "running_winrate": 0.5532, "ts": "2026-07-05T05:08:17.440010+00:00", "void": false, "winner": "agent_a"}
+starting game=48 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=48 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 48, "running_agent_a_wins": 27, "running_decisive": 48, "running_winrate": 0.5625, "ts": "2026-07-05T05:08:32.653956+00:00", "void": false, "winner": "agent_a"}
+starting game=49 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=49 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 49, "running_agent_a_wins": 28, "running_decisive": 49, "running_winrate": 0.5714, "ts": "2026-07-05T05:08:47.547022+00:00", "void": false, "winner": "agent_a"}
+starting game=50 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=50 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 50, "running_agent_a_wins": 29, "running_decisive": 50, "running_winrate": 0.58, "ts": "2026-07-05T05:08:59.735259+00:00", "void": false, "winner": "agent_a"}
+starting game=51 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=51 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 51, "running_agent_a_wins": 29, "running_decisive": 51, "running_winrate": 0.5686, "ts": "2026-07-05T05:09:15.133355+00:00", "void": false, "winner": "agent_b"}
+starting game=52 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=52 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 52, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:34.167241+00:00", "void": false, "winner": "agent_b"}
+starting game=53 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=53 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0531652.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0531652.log", "game_index": 53, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:39.282309+00:00", "void": true, "winner": null}
+starting game=54 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=54 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y05443bf.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y05443bf.log", "game_index": 54, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:44.288085+00:00", "void": true, "winner": null}
+starting game=55 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=55 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x055baac.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x055baac.log", "game_index": 55, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:49.408375+00:00", "void": true, "winner": null}
+starting game=56 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=56 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y05670a9.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y05670a9.log", "game_index": 56, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:54.414872+00:00", "void": true, "winner": null}
+starting game=57 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=57 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x057544d.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x057544d.log", "game_index": 57, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:09:59.574296+00:00", "void": true, "winner": null}
+starting game=58 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=58 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0583ae7.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0583ae7.log", "game_index": 58, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:04.580086+00:00", "void": true, "winner": null}
+starting game=59 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=59 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x05958f7.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x05958f7.log", "game_index": 59, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:09.726838+00:00", "void": true, "winner": null}
+starting game=60 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=60 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0600239.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0600239.log", "game_index": 60, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:14.733556+00:00", "void": true, "winner": null}
+starting game=61 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=61 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x061da3a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x061da3a.log", "game_index": 61, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:19.863765+00:00", "void": true, "winner": null}
+starting game=62 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=62 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y06252c1.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y06252c1.log", "game_index": 62, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:24.870320+00:00", "void": true, "winner": null}
+starting game=63 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=63 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0634bae.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0634bae.log", "game_index": 63, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:30.009084+00:00", "void": true, "winner": null}
+starting game=64 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=64 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y064851f.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y064851f.log", "game_index": 64, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:35.020886+00:00", "void": true, "winner": null}
+starting game=65 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=65 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0655b4b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0655b4b.log", "game_index": 65, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:40.188874+00:00", "void": true, "winner": null}
+starting game=66 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=66 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y066da6b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y066da6b.log", "game_index": 66, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:45.199772+00:00", "void": true, "winner": null}
+starting game=67 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=67 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x06744c9.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x06744c9.log", "game_index": 67, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:50.347102+00:00", "void": true, "winner": null}
+starting game=68 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=68 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0687d64.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0687d64.log", "game_index": 68, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:10:55.357039+00:00", "void": true, "winner": null}
+starting game=69 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=69 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x069b1b6.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x069b1b6.log", "game_index": 69, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:00.488130+00:00", "void": true, "winner": null}
+starting game=70 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=70 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y070769b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y070769b.log", "game_index": 70, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:05.494595+00:00", "void": true, "winner": null}
+starting game=71 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=71 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x071c844.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x071c844.log", "game_index": 71, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:10.638198+00:00", "void": true, "winner": null}
+starting game=72 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=72 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y072afbe.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y072afbe.log", "game_index": 72, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:15.647962+00:00", "void": true, "winner": null}
+starting game=73 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=73 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0733e23.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0733e23.log", "game_index": 73, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:20.797135+00:00", "void": true, "winner": null}
+starting game=74 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=74 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y074069b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y074069b.log", "game_index": 74, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:25.806224+00:00", "void": true, "winner": null}
+starting game=75 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=75 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0751c1b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0751c1b.log", "game_index": 75, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:30.963093+00:00", "void": true, "winner": null}
+starting game=76 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=76 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y076e702.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y076e702.log", "game_index": 76, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:35.969978+00:00", "void": true, "winner": null}
+starting game=77 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=77 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x077fe2e.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x077fe2e.log", "game_index": 77, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:41.095610+00:00", "void": true, "winner": null}
+starting game=78 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=78 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0788f73.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0788f73.log", "game_index": 78, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:46.101200+00:00", "void": true, "winner": null}
+starting game=79 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=79 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x079fd94.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x079fd94.log", "game_index": 79, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:51.254645+00:00", "void": true, "winner": null}
+starting game=80 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=80 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0808be2.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0808be2.log", "game_index": 80, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:11:56.263025+00:00", "void": true, "winner": null}
+starting game=81 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=81 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x081edf8.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x081edf8.log", "game_index": 81, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:01.409198+00:00", "void": true, "winner": null}
+starting game=82 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=82 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y082c4cb.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y082c4cb.log", "game_index": 82, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:06.418242+00:00", "void": true, "winner": null}
+starting game=83 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=83 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0831a20.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0831a20.log", "game_index": 83, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:11.536153+00:00", "void": true, "winner": null}
+starting game=84 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=84 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y084156a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y084156a.log", "game_index": 84, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:16.542130+00:00", "void": true, "winner": null}
+starting game=85 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=85 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x08548f7.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x08548f7.log", "game_index": 85, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:21.675447+00:00", "void": true, "winner": null}
+starting game=86 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=86 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y086a656.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y086a656.log", "game_index": 86, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:26.680990+00:00", "void": true, "winner": null}
+starting game=87 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=87 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0870b3f.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0870b3f.log", "game_index": 87, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:31.829050+00:00", "void": true, "winner": null}
+starting game=88 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=88 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0888cbc.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0888cbc.log", "game_index": 88, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:36.851842+00:00", "void": true, "winner": null}
+starting game=89 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=89 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x08967c9.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x08967c9.log", "game_index": 89, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:41.990819+00:00", "void": true, "winner": null}
+starting game=90 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=90 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y090a463.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y090a463.log", "game_index": 90, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:46.999523+00:00", "void": true, "winner": null}
+starting game=91 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=91 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0919e34.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x0919e34.log", "game_index": 91, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:52.118548+00:00", "void": true, "winner": null}
+starting game=92 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=92 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0923706.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0923706.log", "game_index": 92, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:12:57.123976+00:00", "void": true, "winner": null}
+starting game=93 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=93 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x093b582.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x093b582.log", "game_index": 93, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:02.238910+00:00", "void": true, "winner": null}
+starting game=94 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=94 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y094684c.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y094684c.log", "game_index": 94, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:07.244099+00:00", "void": true, "winner": null}
+starting game=95 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=95 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x095fb5a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x095fb5a.log", "game_index": 95, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:12.366463+00:00", "void": true, "winner": null}
+starting game=96 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=96 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y096645f.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y096645f.log", "game_index": 96, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:17.371635+00:00", "void": true, "winner": null}
+starting game=97 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=97 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x09764eb.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x09764eb.log", "game_index": 97, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:22.514084+00:00", "void": true, "winner": null}
+starting game=98 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=98 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0988980.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y0988980.log", "game_index": 98, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:27.519828+00:00", "void": true, "winner": null}
+starting game=99 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=99 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x099b6dc.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x099b6dc.log", "game_index": 99, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:32.707461+00:00", "void": true, "winner": null}
+starting game=100 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=100 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1003301.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1003301.log", "game_index": 100, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:37.716349+00:00", "void": true, "winner": null}
+starting game=101 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=101 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1011efe.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1011efe.log", "game_index": 101, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:42.889135+00:00", "void": true, "winner": null}
+starting game=102 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=102 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y102fa00.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y102fa00.log", "game_index": 102, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:47.895866+00:00", "void": true, "winner": null}
+starting game=103 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=103 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1032f30.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1032f30.log", "game_index": 103, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:53.046530+00:00", "void": true, "winner": null}
+starting game=104 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=104 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y104fa29.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y104fa29.log", "game_index": 104, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:13:58.052450+00:00", "void": true, "winner": null}
+starting game=105 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=105 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x105d16e.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x105d16e.log", "game_index": 105, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:03.189098+00:00", "void": true, "winner": null}
+starting game=106 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=106 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y106024d.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y106024d.log", "game_index": 106, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:08.194936+00:00", "void": true, "winner": null}
+starting game=107 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=107 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x10721ef.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x10721ef.log", "game_index": 107, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:13.317245+00:00", "void": true, "winner": null}
+starting game=108 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=108 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1089014.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1089014.log", "game_index": 108, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:18.324016+00:00", "void": true, "winner": null}
+starting game=109 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=109 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1095605.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1095605.log", "game_index": 109, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:23.458570+00:00", "void": true, "winner": null}
+starting game=110 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=110 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y110d822.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y110d822.log", "game_index": 110, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:28.465448+00:00", "void": true, "winner": null}
+starting game=111 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=111 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1117dd2.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1117dd2.log", "game_index": 111, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:33.599432+00:00", "void": true, "winner": null}
+starting game=112 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=112 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y112b53a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y112b53a.log", "game_index": 112, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:38.605550+00:00", "void": true, "winner": null}
+starting game=113 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=113 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x11338bc.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x11338bc.log", "game_index": 113, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:43.750864+00:00", "void": true, "winner": null}
+starting game=114 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=114 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1146bfc.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1146bfc.log", "game_index": 114, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:48.756588+00:00", "void": true, "winner": null}
+starting game=115 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=115 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x115bb16.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x115bb16.log", "game_index": 115, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:53.920397+00:00", "void": true, "winner": null}
+starting game=116 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=116 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1163504.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1163504.log", "game_index": 116, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:14:58.926802+00:00", "void": true, "winner": null}
+starting game=117 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=117 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1171069.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1171069.log", "game_index": 117, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:04.048532+00:00", "void": true, "winner": null}
+starting game=118 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=118 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1189193.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1189193.log", "game_index": 118, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:09.054166+00:00", "void": true, "winner": null}
+starting game=119 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=119 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x119d216.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x119d216.log", "game_index": 119, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:14.228940+00:00", "void": true, "winner": null}
+starting game=120 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=120 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y120f4bf.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y120f4bf.log", "game_index": 120, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:19.234706+00:00", "void": true, "winner": null}
+starting game=121 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=121 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1212097.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1212097.log", "game_index": 121, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:24.357066+00:00", "void": true, "winner": null}
+starting game=122 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=122 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y122e2c8.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y122e2c8.log", "game_index": 122, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:29.362746+00:00", "void": true, "winner": null}
+starting game=123 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=123 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x123daa5.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x123daa5.log", "game_index": 123, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:34.567928+00:00", "void": true, "winner": null}
+starting game=124 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=124 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y12459ff.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y12459ff.log", "game_index": 124, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:39.575549+00:00", "void": true, "winner": null}
+starting game=125 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=125 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x12549d3.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x12549d3.log", "game_index": 125, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:44.692354+00:00", "void": true, "winner": null}
+starting game=126 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=126 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1264aec.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1264aec.log", "game_index": 126, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:49.697972+00:00", "void": true, "winner": null}
+starting game=127 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=127 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x127a8f9.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x127a8f9.log", "game_index": 127, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:54.851001+00:00", "void": true, "winner": null}
+starting game=128 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=128 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y128e3a8.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y128e3a8.log", "game_index": 128, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:15:59.860152+00:00", "void": true, "winner": null}
+starting game=129 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=129 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x129cb7a.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x129cb7a.log", "game_index": 129, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:05.016491+00:00", "void": true, "winner": null}
+starting game=130 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=130 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1303b89.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1303b89.log", "game_index": 130, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:10.023129+00:00", "void": true, "winner": null}
+starting game=131 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=131 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x131f7bd.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x131f7bd.log", "game_index": 131, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:15.138252+00:00", "void": true, "winner": null}
+starting game=132 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=132 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1329130.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1329130.log", "game_index": 132, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:20.143809+00:00", "void": true, "winner": null}
+starting game=133 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=133 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1331fbe.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1331fbe.log", "game_index": 133, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:25.285966+00:00", "void": true, "winner": null}
+starting game=134 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=134 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1346119.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1346119.log", "game_index": 134, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:30.291951+00:00", "void": true, "winner": null}
+starting game=135 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=135 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1358cbf.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1358cbf.log", "game_index": 135, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:35.419899+00:00", "void": true, "winner": null}
+starting game=136 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=136 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y13618d9.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y13618d9.log", "game_index": 136, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:40.425915+00:00", "void": true, "winner": null}
+starting game=137 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=137 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x137aa4b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x137aa4b.log", "game_index": 137, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:45.561851+00:00", "void": true, "winner": null}
+starting game=138 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=138 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y138bc1b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y138bc1b.log", "game_index": 138, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:50.568799+00:00", "void": true, "winner": null}
+starting game=139 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=139 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x139bd6b.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x139bd6b.log", "game_index": 139, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:16:55.694224+00:00", "void": true, "winner": null}
+starting game=140 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=140 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y140f0d0.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y140f0d0.log", "game_index": 140, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:00.700167+00:00", "void": true, "winner": null}
+starting game=141 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=141 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1414c62.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1414c62.log", "game_index": 141, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:05.858048+00:00", "void": true, "winner": null}
+starting game=142 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=142 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y142370e.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y142370e.log", "game_index": 142, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:10.864934+00:00", "void": true, "winner": null}
+starting game=143 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=143 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x14349aa.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x14349aa.log", "game_index": 143, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:16.028256+00:00", "void": true, "winner": null}
+starting game=144 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=144 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y14412c6.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y14412c6.log", "game_index": 144, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:21.033927+00:00", "void": true, "winner": null}
+starting game=145 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=145 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x145f625.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x145f625.log", "game_index": 145, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:26.161323+00:00", "void": true, "winner": null}
+starting game=146 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=146 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y14604b6.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y14604b6.log", "game_index": 146, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:31.166830+00:00", "void": true, "winner": null}
+starting game=147 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=147 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x14780f3.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x14780f3.log", "game_index": 147, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:36.307973+00:00", "void": true, "winner": null}
+starting game=148 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=148 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1480769.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1480769.log", "game_index": 148, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:41.313259+00:00", "void": true, "winner": null}
+starting game=149 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=149 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1493f88.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1493f88.log", "game_index": 149, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:46.474521+00:00", "void": true, "winner": null}
+starting game=150 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=150 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1503856.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1503856.log", "game_index": 150, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:51.480854+00:00", "void": true, "winner": null}
+starting game=151 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=151 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x151b693.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x151b693.log", "game_index": 151, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:17:56.601221+00:00", "void": true, "winner": null}
+starting game=152 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=152 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1527868.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1527868.log", "game_index": 152, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:01.607029+00:00", "void": true, "winner": null}
+starting game=153 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=153 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1534806.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1534806.log", "game_index": 153, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:06.726719+00:00", "void": true, "winner": null}
+starting game=154 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=154 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y15428b3.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y15428b3.log", "game_index": 154, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:11.736970+00:00", "void": true, "winner": null}
+starting game=155 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=155 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x155c742.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x155c742.log", "game_index": 155, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:16.879684+00:00", "void": true, "winner": null}
+starting game=156 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=156 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y156da19.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y156da19.log", "game_index": 156, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:21.888646+00:00", "void": true, "winner": null}
+starting game=157 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=157 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x157ff7f.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x157ff7f.log", "game_index": 157, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:27.036848+00:00", "void": true, "winner": null}
+starting game=158 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=158 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y158531e.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y158531e.log", "game_index": 158, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:32.045149+00:00", "void": true, "winner": null}
+starting game=159 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=159 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x159e7e5.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x159e7e5.log", "game_index": 159, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:37.177254+00:00", "void": true, "winner": null}
+starting game=160 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=160 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1608e88.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1608e88.log", "game_index": 160, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:42.182717+00:00", "void": true, "winner": null}
+starting game=161 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=161 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1618038.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1618038.log", "game_index": 161, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:47.314795+00:00", "void": true, "winner": null}
+starting game=162 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=162 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y162ccf5.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y162ccf5.log", "game_index": 162, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:52.322186+00:00", "void": true, "winner": null}
+starting game=163 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=163 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1633dec.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x1633dec.log", "game_index": 163, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:18:57.445224+00:00", "void": true, "winner": null}
+starting game=164 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=164 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y164c620.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y164c620.log", "game_index": 164, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:02.451204+00:00", "void": true, "winner": null}
+starting game=165 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=165 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x16537d4.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x16537d4.log", "game_index": 165, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:07.564948+00:00", "void": true, "winner": null}
+starting game=166 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=166 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y166e028.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y166e028.log", "game_index": 166, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:12.570666+00:00", "void": true, "winner": null}
+starting game=167 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=167 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x16793eb.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x16793eb.log", "game_index": 167, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:17.691769+00:00", "void": true, "winner": null}
+starting game=168 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=168 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1689194.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1689194.log", "game_index": 168, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:22.697529+00:00", "void": true, "winner": null}
+starting game=169 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=169 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x169ad4d.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x169ad4d.log", "game_index": 169, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:27.814131+00:00", "void": true, "winner": null}
+starting game=170 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=170 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1709208.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1709208.log", "game_index": 170, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:32.819287+00:00", "void": true, "winner": null}
+starting game=171 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=171 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x171b784.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x171b784.log", "game_index": 171, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:37.936940+00:00", "void": true, "winner": null}
+starting game=172 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=172 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1728a66.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1728a66.log", "game_index": 172, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:42.942887+00:00", "void": true, "winner": null}
+starting game=173 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=173 challenger=agent_a acceptor=agent_b void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x173adbf.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0x173adbf.log", "game_index": 173, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:48.095039+00:00", "void": true, "winner": null}
+starting game=174 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=174 challenger=agent_b acceptor=agent_a void=true error=FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1742e7c.log
+PROGRESS {"error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-gswjr5s0/p0y1742e7c.log", "game_index": 174, "running_agent_a_wins": 29, "running_decisive": 52, "running_winrate": 0.5577, "ts": "2026-07-05T05:19:53.101343+00:00", "void": true, "winner": null}
+starting game=175 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=175 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 175, "running_agent_a_wins": 29, "running_decisive": 53, "running_winrate": 0.5472, "ts": "2026-07-05T05:20:07.158416+00:00", "void": false, "winner": "agent_b"}
+starting game=176 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=176 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 176, "running_agent_a_wins": 30, "running_decisive": 54, "running_winrate": 0.5556, "ts": "2026-07-05T05:20:20.154498+00:00", "void": false, "winner": "agent_a"}
+starting game=177 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=177 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 177, "running_agent_a_wins": 30, "running_decisive": 55, "running_winrate": 0.5455, "ts": "2026-07-05T05:20:38.159688+00:00", "void": false, "winner": "agent_b"}
+starting game=178 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=178 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 178, "running_agent_a_wins": 31, "running_decisive": 56, "running_winrate": 0.5536, "ts": "2026-07-05T05:20:49.797384+00:00", "void": false, "winner": "agent_a"}
+starting game=179 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=179 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 179, "running_agent_a_wins": 32, "running_decisive": 57, "running_winrate": 0.5614, "ts": "2026-07-05T05:21:05.931948+00:00", "void": false, "winner": "agent_a"}
+starting game=180 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=180 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 180, "running_agent_a_wins": 32, "running_decisive": 58, "running_winrate": 0.5517, "ts": "2026-07-05T05:21:22.007850+00:00", "void": false, "winner": "agent_b"}
+starting game=181 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=181 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 181, "running_agent_a_wins": 33, "running_decisive": 59, "running_winrate": 0.5593, "ts": "2026-07-05T05:21:44.584111+00:00", "void": false, "winner": "agent_a"}
+starting game=182 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=182 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 182, "running_agent_a_wins": 33, "running_decisive": 60, "running_winrate": 0.55, "ts": "2026-07-05T05:22:06.778840+00:00", "void": false, "winner": "agent_b"}
+starting game=183 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=183 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 183, "running_agent_a_wins": 34, "running_decisive": 61, "running_winrate": 0.5574, "ts": "2026-07-05T05:22:23.903661+00:00", "void": false, "winner": "agent_a"}
+starting game=184 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=184 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 184, "running_agent_a_wins": 35, "running_decisive": 62, "running_winrate": 0.5645, "ts": "2026-07-05T05:22:42.234427+00:00", "void": false, "winner": "agent_a"}
+starting game=185 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=185 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 185, "running_agent_a_wins": 35, "running_decisive": 63, "running_winrate": 0.5556, "ts": "2026-07-05T05:22:59.132099+00:00", "void": false, "winner": "agent_b"}
+starting game=186 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=186 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 186, "running_agent_a_wins": 36, "running_decisive": 64, "running_winrate": 0.5625, "ts": "2026-07-05T05:23:13.826043+00:00", "void": false, "winner": "agent_a"}
+starting game=187 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=187 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 187, "running_agent_a_wins": 36, "running_decisive": 65, "running_winrate": 0.5538, "ts": "2026-07-05T05:23:29.898667+00:00", "void": false, "winner": "agent_b"}
+starting game=188 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=188 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 188, "running_agent_a_wins": 36, "running_decisive": 66, "running_winrate": 0.5455, "ts": "2026-07-05T05:23:50.692736+00:00", "void": false, "winner": "agent_b"}
+starting game=189 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=189 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 189, "running_agent_a_wins": 37, "running_decisive": 67, "running_winrate": 0.5522, "ts": "2026-07-05T05:24:04.152731+00:00", "void": false, "winner": "agent_a"}
+starting game=190 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=190 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 190, "running_agent_a_wins": 37, "running_decisive": 68, "running_winrate": 0.5441, "ts": "2026-07-05T05:24:17.547092+00:00", "void": false, "winner": "agent_b"}
+starting game=191 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=191 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 191, "running_agent_a_wins": 38, "running_decisive": 69, "running_winrate": 0.5507, "ts": "2026-07-05T05:24:32.428828+00:00", "void": false, "winner": "agent_a"}
+starting game=192 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=192 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 192, "running_agent_a_wins": 39, "running_decisive": 70, "running_winrate": 0.5571, "ts": "2026-07-05T05:24:44.805675+00:00", "void": false, "winner": "agent_a"}
+starting game=193 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=193 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 193, "running_agent_a_wins": 40, "running_decisive": 71, "running_winrate": 0.5634, "ts": "2026-07-05T05:24:57.317750+00:00", "void": false, "winner": "agent_a"}
+starting game=194 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=194 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 194, "running_agent_a_wins": 40, "running_decisive": 72, "running_winrate": 0.5556, "ts": "2026-07-05T05:25:16.040698+00:00", "void": false, "winner": "agent_b"}
+starting game=195 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=195 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 195, "running_agent_a_wins": 41, "running_decisive": 73, "running_winrate": 0.5616, "ts": "2026-07-05T05:25:31.157580+00:00", "void": false, "winner": "agent_a"}
+starting game=196 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=196 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 196, "running_agent_a_wins": 42, "running_decisive": 74, "running_winrate": 0.5676, "ts": "2026-07-05T05:25:48.270251+00:00", "void": false, "winner": "agent_a"}
+starting game=197 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=197 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 197, "running_agent_a_wins": 43, "running_decisive": 75, "running_winrate": 0.5733, "ts": "2026-07-05T05:26:02.009458+00:00", "void": false, "winner": "agent_a"}
+starting game=198 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=198 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 198, "running_agent_a_wins": 44, "running_decisive": 76, "running_winrate": 0.5789, "ts": "2026-07-05T05:26:18.490107+00:00", "void": false, "winner": "agent_a"}
+starting game=199 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=199 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 199, "running_agent_a_wins": 45, "running_decisive": 77, "running_winrate": 0.5844, "ts": "2026-07-05T05:26:34.860443+00:00", "void": false, "winner": "agent_a"}
+starting game=200 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=200 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 200, "running_agent_a_wins": 45, "running_decisive": 78, "running_winrate": 0.5769, "ts": "2026-07-05T05:26:48.956817+00:00", "void": false, "winner": "agent_b"}
+{
+  "agent_a": "foul_play",
+  "agent_a_as_acceptor_games": 39,
+  "agent_a_as_acceptor_wins": 23,
+  "agent_a_as_challenger_games": 39,
+  "agent_a_as_challenger_wins": 22,
+  "agent_a_losses": 33,
+  "agent_a_wins": 45,
+  "agent_b": "foul_play",
+  "ci95_high": 0.6804093965182452,
+  "ci95_low": 0.4662155558337249,
+  "completed_games": 78,
+  "decisive_games": 78,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "mode": "h2h",
+  "n_games": 200,
+  "paired": true,
+  "server": "local",
+  "ties_or_unknown": 0,
+  "void_games": 122,
+  "voids_with_agent_a_challenger": 61,
+  "voids_with_agent_b_challenger": 61,
+  "winrate": 0.5769230769230769
+}

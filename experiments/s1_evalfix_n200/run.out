@@ -1,0 +1,625 @@
+starting game=1 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=1 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 1, "running_agent_a_wins": 1, "running_decisive": 1, "running_winrate": 1.0, "ts": "2026-07-05T06:35:45.326618+00:00", "void": false, "winner": "agent_a"}
+starting game=2 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=2 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 2, "running_agent_a_wins": 1, "running_decisive": 2, "running_winrate": 0.5, "ts": "2026-07-05T06:36:13.634715+00:00", "void": false, "winner": "agent_b"}
+starting game=3 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=3 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 3, "running_agent_a_wins": 1, "running_decisive": 3, "running_winrate": 0.3333, "ts": "2026-07-05T06:36:27.078084+00:00", "void": false, "winner": "agent_b"}
+starting game=4 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=4 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 4, "running_agent_a_wins": 2, "running_decisive": 4, "running_winrate": 0.5, "ts": "2026-07-05T06:36:45.789282+00:00", "void": false, "winner": "agent_a"}
+starting game=5 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=5 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 5, "running_agent_a_wins": 3, "running_decisive": 5, "running_winrate": 0.6, "ts": "2026-07-05T06:37:00.607078+00:00", "void": false, "winner": "agent_a"}
+starting game=6 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=6 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 6, "running_agent_a_wins": 3, "running_decisive": 6, "running_winrate": 0.5, "ts": "2026-07-05T06:37:23.678287+00:00", "void": false, "winner": "agent_b"}
+starting game=7 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=7 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 7, "running_agent_a_wins": 4, "running_decisive": 7, "running_winrate": 0.5714, "ts": "2026-07-05T06:37:37.197176+00:00", "void": false, "winner": "agent_a"}
+starting game=8 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=8 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 8, "running_agent_a_wins": 4, "running_decisive": 8, "running_winrate": 0.5, "ts": "2026-07-05T06:37:52.848056+00:00", "void": false, "winner": "agent_b"}
+starting game=9 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=9 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 9, "running_agent_a_wins": 4, "running_decisive": 9, "running_winrate": 0.4444, "ts": "2026-07-05T06:38:18.986887+00:00", "void": false, "winner": "agent_b"}
+starting game=10 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=10 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 10, "running_agent_a_wins": 4, "running_decisive": 10, "running_winrate": 0.4, "ts": "2026-07-05T06:38:38.689900+00:00", "void": false, "winner": "agent_b"}
+starting game=11 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=11 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 11, "running_agent_a_wins": 4, "running_decisive": 11, "running_winrate": 0.3636, "ts": "2026-07-05T06:38:52.152006+00:00", "void": false, "winner": "agent_b"}
+starting game=12 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=12 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 12, "running_agent_a_wins": 5, "running_decisive": 12, "running_winrate": 0.4167, "ts": "2026-07-05T06:39:09.107652+00:00", "void": false, "winner": "agent_a"}
+starting game=13 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=13 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 13, "running_agent_a_wins": 6, "running_decisive": 13, "running_winrate": 0.4615, "ts": "2026-07-05T06:39:26.270284+00:00", "void": false, "winner": "agent_a"}
+starting game=14 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=14 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 14, "running_agent_a_wins": 7, "running_decisive": 14, "running_winrate": 0.5, "ts": "2026-07-05T06:39:39.736685+00:00", "void": false, "winner": "agent_a"}
+starting game=15 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=15 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 15, "running_agent_a_wins": 7, "running_decisive": 15, "running_winrate": 0.4667, "ts": "2026-07-05T06:39:58.984705+00:00", "void": false, "winner": "agent_b"}
+starting game=16 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=16 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 16, "running_agent_a_wins": 8, "running_decisive": 16, "running_winrate": 0.5, "ts": "2026-07-05T06:40:13.492951+00:00", "void": false, "winner": "agent_a"}
+starting game=17 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=17 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 17, "running_agent_a_wins": 8, "running_decisive": 17, "running_winrate": 0.4706, "ts": "2026-07-05T06:40:29.585500+00:00", "void": false, "winner": "agent_b"}
+starting game=18 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=18 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 18, "running_agent_a_wins": 9, "running_decisive": 18, "running_winrate": 0.5, "ts": "2026-07-05T06:40:55.924537+00:00", "void": false, "winner": "agent_a"}
+starting game=19 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=19 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 19, "running_agent_a_wins": 10, "running_decisive": 19, "running_winrate": 0.5263, "ts": "2026-07-05T06:41:11.850677+00:00", "void": false, "winner": "agent_a"}
+starting game=20 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=20 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 20, "running_agent_a_wins": 10, "running_decisive": 20, "running_winrate": 0.5, "ts": "2026-07-05T06:41:25.462366+00:00", "void": false, "winner": "agent_b"}
+starting game=21 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=21 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 21, "running_agent_a_wins": 10, "running_decisive": 21, "running_winrate": 0.4762, "ts": "2026-07-05T06:41:54.764937+00:00", "void": false, "winner": "agent_b"}
+starting game=22 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=22 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 22, "running_agent_a_wins": 10, "running_decisive": 22, "running_winrate": 0.4545, "ts": "2026-07-05T06:42:09.179309+00:00", "void": false, "winner": "agent_b"}
+starting game=23 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=23 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 23, "running_agent_a_wins": 11, "running_decisive": 23, "running_winrate": 0.4783, "ts": "2026-07-05T06:42:23.127821+00:00", "void": false, "winner": "agent_a"}
+starting game=24 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=24 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 24, "running_agent_a_wins": 12, "running_decisive": 24, "running_winrate": 0.5, "ts": "2026-07-05T06:42:39.462079+00:00", "void": false, "winner": "agent_a"}
+starting game=25 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=25 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 25, "running_agent_a_wins": 13, "running_decisive": 25, "running_winrate": 0.52, "ts": "2026-07-05T06:42:54.116414+00:00", "void": false, "winner": "agent_a"}
+starting game=26 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=26 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 26, "running_agent_a_wins": 13, "running_decisive": 26, "running_winrate": 0.5, "ts": "2026-07-05T06:43:10.585025+00:00", "void": false, "winner": "agent_b"}
+starting game=27 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=27 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 27, "running_agent_a_wins": 13, "running_decisive": 27, "running_winrate": 0.4815, "ts": "2026-07-05T06:43:24.355466+00:00", "void": false, "winner": "agent_b"}
+starting game=28 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=28 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 28, "running_agent_a_wins": 13, "running_decisive": 28, "running_winrate": 0.4643, "ts": "2026-07-05T06:43:42.715284+00:00", "void": false, "winner": "agent_b"}
+starting game=29 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=29 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 29, "running_agent_a_wins": 13, "running_decisive": 29, "running_winrate": 0.4483, "ts": "2026-07-05T06:43:58.529949+00:00", "void": false, "winner": "agent_b"}
+starting game=30 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=30 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 30, "running_agent_a_wins": 14, "running_decisive": 30, "running_winrate": 0.4667, "ts": "2026-07-05T06:44:14.997491+00:00", "void": false, "winner": "agent_a"}
+starting game=31 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=31 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 31, "running_agent_a_wins": 14, "running_decisive": 31, "running_winrate": 0.4516, "ts": "2026-07-05T06:44:30.502935+00:00", "void": false, "winner": "agent_b"}
+starting game=32 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=32 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 32, "running_agent_a_wins": 14, "running_decisive": 32, "running_winrate": 0.4375, "ts": "2026-07-05T06:44:45.284235+00:00", "void": false, "winner": "agent_b"}
+starting game=33 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=33 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 33, "running_agent_a_wins": 14, "running_decisive": 33, "running_winrate": 0.4242, "ts": "2026-07-05T06:45:01.196278+00:00", "void": false, "winner": "agent_b"}
+starting game=34 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=34 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 34, "running_agent_a_wins": 15, "running_decisive": 34, "running_winrate": 0.4412, "ts": "2026-07-05T06:45:16.106662+00:00", "void": false, "winner": "agent_a"}
+starting game=35 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=35 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 35, "running_agent_a_wins": 15, "running_decisive": 35, "running_winrate": 0.4286, "ts": "2026-07-05T06:45:34.975488+00:00", "void": false, "winner": "agent_b"}
+starting game=36 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=36 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 36, "running_agent_a_wins": 15, "running_decisive": 36, "running_winrate": 0.4167, "ts": "2026-07-05T06:45:51.724510+00:00", "void": false, "winner": "agent_b"}
+starting game=37 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=37 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 37, "running_agent_a_wins": 16, "running_decisive": 37, "running_winrate": 0.4324, "ts": "2026-07-05T06:46:10.382608+00:00", "void": false, "winner": "agent_a"}
+starting game=38 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=38 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 38, "running_agent_a_wins": 16, "running_decisive": 38, "running_winrate": 0.4211, "ts": "2026-07-05T06:46:29.587433+00:00", "void": false, "winner": "agent_b"}
+starting game=39 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=39 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 39, "running_agent_a_wins": 16, "running_decisive": 39, "running_winrate": 0.4103, "ts": "2026-07-05T06:46:45.193223+00:00", "void": false, "winner": "agent_b"}
+starting game=40 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=40 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 40, "running_agent_a_wins": 17, "running_decisive": 40, "running_winrate": 0.425, "ts": "2026-07-05T06:46:59.019026+00:00", "void": false, "winner": "agent_a"}
+starting game=41 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=41 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 41, "running_agent_a_wins": 17, "running_decisive": 41, "running_winrate": 0.4146, "ts": "2026-07-05T06:47:15.373887+00:00", "void": false, "winner": "agent_b"}
+starting game=42 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=42 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 42, "running_agent_a_wins": 18, "running_decisive": 42, "running_winrate": 0.4286, "ts": "2026-07-05T06:47:27.981988+00:00", "void": false, "winner": "agent_a"}
+starting game=43 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=43 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 43, "running_agent_a_wins": 18, "running_decisive": 43, "running_winrate": 0.4186, "ts": "2026-07-05T06:47:40.196312+00:00", "void": false, "winner": "agent_b"}
+starting game=44 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=44 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 44, "running_agent_a_wins": 18, "running_decisive": 44, "running_winrate": 0.4091, "ts": "2026-07-05T06:48:01.600078+00:00", "void": false, "winner": "agent_b"}
+starting game=45 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=45 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 45, "running_agent_a_wins": 18, "running_decisive": 45, "running_winrate": 0.4, "ts": "2026-07-05T06:48:16.653301+00:00", "void": false, "winner": "agent_b"}
+starting game=46 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=46 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 46, "running_agent_a_wins": 19, "running_decisive": 46, "running_winrate": 0.413, "ts": "2026-07-05T06:48:29.764823+00:00", "void": false, "winner": "agent_a"}
+starting game=47 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=47 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 47, "running_agent_a_wins": 20, "running_decisive": 47, "running_winrate": 0.4255, "ts": "2026-07-05T06:48:46.138440+00:00", "void": false, "winner": "agent_a"}
+starting game=48 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=48 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 48, "running_agent_a_wins": 21, "running_decisive": 48, "running_winrate": 0.4375, "ts": "2026-07-05T06:49:02.026590+00:00", "void": false, "winner": "agent_a"}
+starting game=49 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=49 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 49, "running_agent_a_wins": 22, "running_decisive": 49, "running_winrate": 0.449, "ts": "2026-07-05T06:49:18.279670+00:00", "void": false, "winner": "agent_a"}
+starting game=50 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=50 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 50, "running_agent_a_wins": 22, "running_decisive": 50, "running_winrate": 0.44, "ts": "2026-07-05T06:49:35.852671+00:00", "void": false, "winner": "agent_b"}
+starting game=51 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=51 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 51, "running_agent_a_wins": 23, "running_decisive": 51, "running_winrate": 0.451, "ts": "2026-07-05T06:49:53.718147+00:00", "void": false, "winner": "agent_a"}
+starting game=52 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=52 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 52, "running_agent_a_wins": 23, "running_decisive": 52, "running_winrate": 0.4423, "ts": "2026-07-05T06:50:08.953783+00:00", "void": false, "winner": "agent_b"}
+starting game=53 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=53 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 53, "running_agent_a_wins": 23, "running_decisive": 53, "running_winrate": 0.434, "ts": "2026-07-05T06:50:27.460552+00:00", "void": false, "winner": "agent_b"}
+starting game=54 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=54 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 54, "running_agent_a_wins": 23, "running_decisive": 54, "running_winrate": 0.4259, "ts": "2026-07-05T06:50:41.192312+00:00", "void": false, "winner": "agent_b"}
+starting game=55 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=55 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 55, "running_agent_a_wins": 23, "running_decisive": 55, "running_winrate": 0.4182, "ts": "2026-07-05T06:51:14.876451+00:00", "void": false, "winner": "agent_b"}
+starting game=56 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=56 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 56, "running_agent_a_wins": 24, "running_decisive": 56, "running_winrate": 0.4286, "ts": "2026-07-05T06:51:29.239921+00:00", "void": false, "winner": "agent_a"}
+starting game=57 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=57 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 57, "running_agent_a_wins": 24, "running_decisive": 57, "running_winrate": 0.4211, "ts": "2026-07-05T06:51:48.099329+00:00", "void": false, "winner": "agent_b"}
+starting game=58 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=58 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 58, "running_agent_a_wins": 25, "running_decisive": 58, "running_winrate": 0.431, "ts": "2026-07-05T06:52:03.159317+00:00", "void": false, "winner": "agent_a"}
+starting game=59 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=59 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 59, "running_agent_a_wins": 26, "running_decisive": 59, "running_winrate": 0.4407, "ts": "2026-07-05T06:52:17.899817+00:00", "void": false, "winner": "agent_a"}
+starting game=60 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=60 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 60, "running_agent_a_wins": 27, "running_decisive": 60, "running_winrate": 0.45, "ts": "2026-07-05T06:52:31.150024+00:00", "void": false, "winner": "agent_a"}
+starting game=61 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=61 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 61, "running_agent_a_wins": 28, "running_decisive": 61, "running_winrate": 0.459, "ts": "2026-07-05T06:52:51.336294+00:00", "void": false, "winner": "agent_a"}
+starting game=62 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=62 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 62, "running_agent_a_wins": 29, "running_decisive": 62, "running_winrate": 0.4677, "ts": "2026-07-05T06:53:09.859691+00:00", "void": false, "winner": "agent_a"}
+starting game=63 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=63 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 63, "running_agent_a_wins": 30, "running_decisive": 63, "running_winrate": 0.4762, "ts": "2026-07-05T06:53:31.437423+00:00", "void": false, "winner": "agent_a"}
+starting game=64 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=64 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 64, "running_agent_a_wins": 31, "running_decisive": 64, "running_winrate": 0.4844, "ts": "2026-07-05T06:53:46.726091+00:00", "void": false, "winner": "agent_a"}
+starting game=65 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=65 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 65, "running_agent_a_wins": 32, "running_decisive": 65, "running_winrate": 0.4923, "ts": "2026-07-05T06:54:00.868907+00:00", "void": false, "winner": "agent_a"}
+starting game=66 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=66 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 66, "running_agent_a_wins": 32, "running_decisive": 66, "running_winrate": 0.4848, "ts": "2026-07-05T06:54:17.112352+00:00", "void": false, "winner": "agent_b"}
+starting game=67 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=67 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 67, "running_agent_a_wins": 32, "running_decisive": 67, "running_winrate": 0.4776, "ts": "2026-07-05T06:54:30.315845+00:00", "void": false, "winner": "agent_b"}
+starting game=68 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=68 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 68, "running_agent_a_wins": 32, "running_decisive": 68, "running_winrate": 0.4706, "ts": "2026-07-05T06:54:50.750999+00:00", "void": false, "winner": "agent_b"}
+starting game=69 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=69 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 69, "running_agent_a_wins": 32, "running_decisive": 69, "running_winrate": 0.4638, "ts": "2026-07-05T06:55:02.732427+00:00", "void": false, "winner": "agent_b"}
+starting game=70 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=70 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 70, "running_agent_a_wins": 32, "running_decisive": 70, "running_winrate": 0.4571, "ts": "2026-07-05T06:55:20.437657+00:00", "void": false, "winner": "agent_b"}
+starting game=71 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=71 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 71, "running_agent_a_wins": 32, "running_decisive": 71, "running_winrate": 0.4507, "ts": "2026-07-05T06:55:35.545144+00:00", "void": false, "winner": "agent_b"}
+starting game=72 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=72 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 72, "running_agent_a_wins": 33, "running_decisive": 72, "running_winrate": 0.4583, "ts": "2026-07-05T06:55:48.294051+00:00", "void": false, "winner": "agent_a"}
+starting game=73 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=73 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 73, "running_agent_a_wins": 34, "running_decisive": 73, "running_winrate": 0.4658, "ts": "2026-07-05T07:01:03.439663+00:00", "void": false, "winner": "agent_a"}
+starting game=74 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=74 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 74, "running_agent_a_wins": 34, "running_decisive": 74, "running_winrate": 0.4595, "ts": "2026-07-05T07:01:24.102751+00:00", "void": false, "winner": "agent_b"}
+starting game=75 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=75 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 75, "running_agent_a_wins": 34, "running_decisive": 75, "running_winrate": 0.4533, "ts": "2026-07-05T07:01:39.672552+00:00", "void": false, "winner": "agent_b"}
+starting game=76 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=76 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 76, "running_agent_a_wins": 35, "running_decisive": 76, "running_winrate": 0.4605, "ts": "2026-07-05T07:01:54.915473+00:00", "void": false, "winner": "agent_a"}
+starting game=77 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=77 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 77, "running_agent_a_wins": 36, "running_decisive": 77, "running_winrate": 0.4675, "ts": "2026-07-05T07:02:09.432838+00:00", "void": false, "winner": "agent_a"}
+starting game=78 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=78 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 78, "running_agent_a_wins": 36, "running_decisive": 78, "running_winrate": 0.4615, "ts": "2026-07-05T07:02:24.205650+00:00", "void": false, "winner": "agent_b"}
+starting game=79 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=79 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 79, "running_agent_a_wins": 36, "running_decisive": 79, "running_winrate": 0.4557, "ts": "2026-07-05T07:02:40.171908+00:00", "void": false, "winner": "agent_b"}
+starting game=80 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=80 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 80, "running_agent_a_wins": 36, "running_decisive": 80, "running_winrate": 0.45, "ts": "2026-07-05T07:03:00.001729+00:00", "void": false, "winner": "agent_b"}
+starting game=81 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=81 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 81, "running_agent_a_wins": 36, "running_decisive": 81, "running_winrate": 0.4444, "ts": "2026-07-05T07:03:17.561191+00:00", "void": false, "winner": "agent_b"}
+starting game=82 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=82 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 82, "running_agent_a_wins": 37, "running_decisive": 82, "running_winrate": 0.4512, "ts": "2026-07-05T07:03:31.340969+00:00", "void": false, "winner": "agent_a"}
+starting game=83 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=83 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 83, "running_agent_a_wins": 37, "running_decisive": 83, "running_winrate": 0.4458, "ts": "2026-07-05T07:03:45.902983+00:00", "void": false, "winner": "agent_b"}
+starting game=84 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=84 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 84, "running_agent_a_wins": 38, "running_decisive": 84, "running_winrate": 0.4524, "ts": "2026-07-05T07:03:59.314003+00:00", "void": false, "winner": "agent_a"}
+starting game=85 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=85 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 85, "running_agent_a_wins": 38, "running_decisive": 85, "running_winrate": 0.4471, "ts": "2026-07-05T07:04:16.729379+00:00", "void": false, "winner": "agent_b"}
+starting game=86 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=86 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 86, "running_agent_a_wins": 39, "running_decisive": 86, "running_winrate": 0.4535, "ts": "2026-07-05T07:04:32.067955+00:00", "void": false, "winner": "agent_a"}
+starting game=87 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=87 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 87, "running_agent_a_wins": 39, "running_decisive": 87, "running_winrate": 0.4483, "ts": "2026-07-05T07:04:56.744028+00:00", "void": false, "winner": "agent_b"}
+starting game=88 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=88 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 88, "running_agent_a_wins": 40, "running_decisive": 88, "running_winrate": 0.4545, "ts": "2026-07-05T07:05:10.932040+00:00", "void": false, "winner": "agent_a"}
+starting game=89 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=89 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 89, "running_agent_a_wins": 40, "running_decisive": 89, "running_winrate": 0.4494, "ts": "2026-07-05T07:05:25.758265+00:00", "void": false, "winner": "agent_b"}
+starting game=90 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=90 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 90, "running_agent_a_wins": 41, "running_decisive": 90, "running_winrate": 0.4556, "ts": "2026-07-05T07:05:41.438573+00:00", "void": false, "winner": "agent_a"}
+starting game=91 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=91 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 91, "running_agent_a_wins": 42, "running_decisive": 91, "running_winrate": 0.4615, "ts": "2026-07-05T07:05:55.573252+00:00", "void": false, "winner": "agent_a"}
+starting game=92 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=92 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 92, "running_agent_a_wins": 43, "running_decisive": 92, "running_winrate": 0.4674, "ts": "2026-07-05T07:06:08.593916+00:00", "void": false, "winner": "agent_a"}
+starting game=93 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=93 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 93, "running_agent_a_wins": 44, "running_decisive": 93, "running_winrate": 0.4731, "ts": "2026-07-05T07:06:25.840706+00:00", "void": false, "winner": "agent_a"}
+starting game=94 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=94 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 94, "running_agent_a_wins": 45, "running_decisive": 94, "running_winrate": 0.4787, "ts": "2026-07-05T07:06:42.882938+00:00", "void": false, "winner": "agent_a"}
+starting game=95 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=95 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 95, "running_agent_a_wins": 45, "running_decisive": 95, "running_winrate": 0.4737, "ts": "2026-07-05T07:06:58.293268+00:00", "void": false, "winner": "agent_b"}
+starting game=96 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=96 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 96, "running_agent_a_wins": 46, "running_decisive": 96, "running_winrate": 0.4792, "ts": "2026-07-05T07:07:12.711462+00:00", "void": false, "winner": "agent_a"}
+starting game=97 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=97 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 97, "running_agent_a_wins": 47, "running_decisive": 97, "running_winrate": 0.4845, "ts": "2026-07-05T07:07:29.690792+00:00", "void": false, "winner": "agent_a"}
+starting game=98 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=98 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 98, "running_agent_a_wins": 47, "running_decisive": 98, "running_winrate": 0.4796, "ts": "2026-07-05T07:07:42.588313+00:00", "void": false, "winner": "agent_b"}
+starting game=99 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=99 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 99, "running_agent_a_wins": 47, "running_decisive": 99, "running_winrate": 0.4747, "ts": "2026-07-05T07:08:00.281129+00:00", "void": false, "winner": "agent_b"}
+starting game=100 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=100 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 100, "running_agent_a_wins": 47, "running_decisive": 100, "running_winrate": 0.47, "ts": "2026-07-05T07:08:18.270924+00:00", "void": false, "winner": "agent_b"}
+starting game=101 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=101 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 101, "running_agent_a_wins": 48, "running_decisive": 101, "running_winrate": 0.4752, "ts": "2026-07-05T07:08:32.535811+00:00", "void": false, "winner": "agent_a"}
+starting game=102 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=102 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 102, "running_agent_a_wins": 48, "running_decisive": 102, "running_winrate": 0.4706, "ts": "2026-07-05T07:08:49.524237+00:00", "void": false, "winner": "agent_b"}
+starting game=103 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=103 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 103, "running_agent_a_wins": 49, "running_decisive": 103, "running_winrate": 0.4757, "ts": "2026-07-05T07:09:02.010927+00:00", "void": false, "winner": "agent_a"}
+starting game=104 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=104 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 104, "running_agent_a_wins": 49, "running_decisive": 104, "running_winrate": 0.4712, "ts": "2026-07-05T07:09:15.475767+00:00", "void": false, "winner": "agent_b"}
+starting game=105 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=105 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 105, "running_agent_a_wins": 50, "running_decisive": 105, "running_winrate": 0.4762, "ts": "2026-07-05T07:09:30.928875+00:00", "void": false, "winner": "agent_a"}
+starting game=106 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=106 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 106, "running_agent_a_wins": 51, "running_decisive": 106, "running_winrate": 0.4811, "ts": "2026-07-05T07:09:54.608854+00:00", "void": false, "winner": "agent_a"}
+starting game=107 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=107 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 107, "running_agent_a_wins": 51, "running_decisive": 107, "running_winrate": 0.4766, "ts": "2026-07-05T07:10:10.597429+00:00", "void": false, "winner": "agent_b"}
+starting game=108 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=108 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 108, "running_agent_a_wins": 52, "running_decisive": 108, "running_winrate": 0.4815, "ts": "2026-07-05T07:10:30.835067+00:00", "void": false, "winner": "agent_a"}
+starting game=109 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=109 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 109, "running_agent_a_wins": 53, "running_decisive": 109, "running_winrate": 0.4862, "ts": "2026-07-05T07:10:47.382373+00:00", "void": false, "winner": "agent_a"}
+starting game=110 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=110 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 110, "running_agent_a_wins": 53, "running_decisive": 110, "running_winrate": 0.4818, "ts": "2026-07-05T07:11:02.420393+00:00", "void": false, "winner": "agent_b"}
+starting game=111 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=111 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 111, "running_agent_a_wins": 54, "running_decisive": 111, "running_winrate": 0.4865, "ts": "2026-07-05T07:11:18.045432+00:00", "void": false, "winner": "agent_a"}
+starting game=112 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=112 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 112, "running_agent_a_wins": 54, "running_decisive": 112, "running_winrate": 0.4821, "ts": "2026-07-05T07:11:33.703185+00:00", "void": false, "winner": "agent_b"}
+starting game=113 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=113 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 113, "running_agent_a_wins": 55, "running_decisive": 113, "running_winrate": 0.4867, "ts": "2026-07-05T07:11:49.739260+00:00", "void": false, "winner": "agent_a"}
+starting game=114 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=114 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 114, "running_agent_a_wins": 55, "running_decisive": 114, "running_winrate": 0.4825, "ts": "2026-07-05T07:12:05.859427+00:00", "void": false, "winner": "agent_b"}
+starting game=115 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=115 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 115, "running_agent_a_wins": 56, "running_decisive": 115, "running_winrate": 0.487, "ts": "2026-07-05T07:12:22.300098+00:00", "void": false, "winner": "agent_a"}
+starting game=116 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=116 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 116, "running_agent_a_wins": 57, "running_decisive": 116, "running_winrate": 0.4914, "ts": "2026-07-05T07:12:37.203596+00:00", "void": false, "winner": "agent_a"}
+starting game=117 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=117 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 117, "running_agent_a_wins": 57, "running_decisive": 117, "running_winrate": 0.4872, "ts": "2026-07-05T07:12:51.653208+00:00", "void": false, "winner": "agent_b"}
+starting game=118 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=118 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 118, "running_agent_a_wins": 58, "running_decisive": 118, "running_winrate": 0.4915, "ts": "2026-07-05T07:13:03.458737+00:00", "void": false, "winner": "agent_a"}
+starting game=119 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=119 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 119, "running_agent_a_wins": 58, "running_decisive": 119, "running_winrate": 0.4874, "ts": "2026-07-05T07:13:17.396028+00:00", "void": false, "winner": "agent_b"}
+starting game=120 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=120 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 120, "running_agent_a_wins": 58, "running_decisive": 120, "running_winrate": 0.4833, "ts": "2026-07-05T07:13:36.515952+00:00", "void": false, "winner": "agent_b"}
+starting game=121 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=121 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 121, "running_agent_a_wins": 58, "running_decisive": 121, "running_winrate": 0.4793, "ts": "2026-07-05T07:13:53.106134+00:00", "void": false, "winner": "agent_b"}
+starting game=122 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=122 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 122, "running_agent_a_wins": 58, "running_decisive": 122, "running_winrate": 0.4754, "ts": "2026-07-05T07:14:08.545553+00:00", "void": false, "winner": "agent_b"}
+starting game=123 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=123 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 123, "running_agent_a_wins": 58, "running_decisive": 123, "running_winrate": 0.4715, "ts": "2026-07-05T07:14:27.670001+00:00", "void": false, "winner": "agent_b"}
+starting game=124 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=124 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 124, "running_agent_a_wins": 58, "running_decisive": 124, "running_winrate": 0.4677, "ts": "2026-07-05T07:14:42.803811+00:00", "void": false, "winner": "agent_b"}
+starting game=125 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=125 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 125, "running_agent_a_wins": 58, "running_decisive": 125, "running_winrate": 0.464, "ts": "2026-07-05T07:14:57.905340+00:00", "void": false, "winner": "agent_b"}
+starting game=126 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=126 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 126, "running_agent_a_wins": 59, "running_decisive": 126, "running_winrate": 0.4683, "ts": "2026-07-05T07:15:13.692545+00:00", "void": false, "winner": "agent_a"}
+starting game=127 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=127 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 127, "running_agent_a_wins": 60, "running_decisive": 127, "running_winrate": 0.4724, "ts": "2026-07-05T07:15:33.179765+00:00", "void": false, "winner": "agent_a"}
+starting game=128 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=128 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 128, "running_agent_a_wins": 60, "running_decisive": 128, "running_winrate": 0.4688, "ts": "2026-07-05T07:15:50.986256+00:00", "void": false, "winner": "agent_b"}
+starting game=129 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=129 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 129, "running_agent_a_wins": 60, "running_decisive": 129, "running_winrate": 0.4651, "ts": "2026-07-05T07:16:06.087645+00:00", "void": false, "winner": "agent_b"}
+starting game=130 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=130 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 130, "running_agent_a_wins": 61, "running_decisive": 130, "running_winrate": 0.4692, "ts": "2026-07-05T07:16:19.104922+00:00", "void": false, "winner": "agent_a"}
+starting game=131 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=131 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 131, "running_agent_a_wins": 61, "running_decisive": 131, "running_winrate": 0.4656, "ts": "2026-07-05T07:16:33.288071+00:00", "void": false, "winner": "agent_b"}
+starting game=132 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=132 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 132, "running_agent_a_wins": 61, "running_decisive": 132, "running_winrate": 0.4621, "ts": "2026-07-05T07:16:52.166959+00:00", "void": false, "winner": "agent_b"}
+starting game=133 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=133 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 133, "running_agent_a_wins": 61, "running_decisive": 133, "running_winrate": 0.4586, "ts": "2026-07-05T07:17:06.345262+00:00", "void": false, "winner": "agent_b"}
+starting game=134 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=134 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 134, "running_agent_a_wins": 61, "running_decisive": 134, "running_winrate": 0.4552, "ts": "2026-07-05T07:17:19.512097+00:00", "void": false, "winner": "agent_b"}
+starting game=135 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=135 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 135, "running_agent_a_wins": 61, "running_decisive": 135, "running_winrate": 0.4519, "ts": "2026-07-05T07:17:34.349680+00:00", "void": false, "winner": "agent_b"}
+starting game=136 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=136 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 136, "running_agent_a_wins": 62, "running_decisive": 136, "running_winrate": 0.4559, "ts": "2026-07-05T07:17:50.089583+00:00", "void": false, "winner": "agent_a"}
+starting game=137 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=137 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 137, "running_agent_a_wins": 62, "running_decisive": 137, "running_winrate": 0.4526, "ts": "2026-07-05T07:18:04.043022+00:00", "void": false, "winner": "agent_b"}
+starting game=138 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=138 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 138, "running_agent_a_wins": 63, "running_decisive": 138, "running_winrate": 0.4565, "ts": "2026-07-05T07:18:18.877381+00:00", "void": false, "winner": "agent_a"}
+starting game=139 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=139 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 139, "running_agent_a_wins": 64, "running_decisive": 139, "running_winrate": 0.4604, "ts": "2026-07-05T07:18:34.837326+00:00", "void": false, "winner": "agent_a"}
+starting game=140 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=140 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 140, "running_agent_a_wins": 64, "running_decisive": 140, "running_winrate": 0.4571, "ts": "2026-07-05T07:18:54.173769+00:00", "void": false, "winner": "agent_b"}
+starting game=141 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=141 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 141, "running_agent_a_wins": 65, "running_decisive": 141, "running_winrate": 0.461, "ts": "2026-07-05T07:19:12.915930+00:00", "void": false, "winner": "agent_a"}
+starting game=142 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=142 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 142, "running_agent_a_wins": 65, "running_decisive": 142, "running_winrate": 0.4577, "ts": "2026-07-05T07:19:28.441836+00:00", "void": false, "winner": "agent_b"}
+starting game=143 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=143 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 143, "running_agent_a_wins": 65, "running_decisive": 143, "running_winrate": 0.4545, "ts": "2026-07-05T07:19:44.241288+00:00", "void": false, "winner": "agent_b"}
+starting game=144 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=144 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 144, "running_agent_a_wins": 65, "running_decisive": 144, "running_winrate": 0.4514, "ts": "2026-07-05T07:20:01.406587+00:00", "void": false, "winner": "agent_b"}
+starting game=145 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=145 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 145, "running_agent_a_wins": 66, "running_decisive": 145, "running_winrate": 0.4552, "ts": "2026-07-05T07:20:19.159684+00:00", "void": false, "winner": "agent_a"}
+starting game=146 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=146 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 146, "running_agent_a_wins": 67, "running_decisive": 146, "running_winrate": 0.4589, "ts": "2026-07-05T07:20:49.314849+00:00", "void": false, "winner": "agent_a"}
+starting game=147 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=147 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 147, "running_agent_a_wins": 67, "running_decisive": 147, "running_winrate": 0.4558, "ts": "2026-07-05T07:21:06.481077+00:00", "void": false, "winner": "agent_b"}
+starting game=148 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=148 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 148, "running_agent_a_wins": 68, "running_decisive": 148, "running_winrate": 0.4595, "ts": "2026-07-05T07:21:19.517601+00:00", "void": false, "winner": "agent_a"}
+starting game=149 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=149 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 149, "running_agent_a_wins": 68, "running_decisive": 149, "running_winrate": 0.4564, "ts": "2026-07-05T07:21:34.050317+00:00", "void": false, "winner": "agent_b"}
+starting game=150 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=150 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 150, "running_agent_a_wins": 68, "running_decisive": 150, "running_winrate": 0.4533, "ts": "2026-07-05T07:21:52.160948+00:00", "void": false, "winner": "agent_b"}
+starting game=151 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=151 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 151, "running_agent_a_wins": 68, "running_decisive": 151, "running_winrate": 0.4503, "ts": "2026-07-05T07:22:08.407117+00:00", "void": false, "winner": "agent_b"}
+starting game=152 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=152 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 152, "running_agent_a_wins": 69, "running_decisive": 152, "running_winrate": 0.4539, "ts": "2026-07-05T07:22:21.628092+00:00", "void": false, "winner": "agent_a"}
+starting game=153 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=153 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 153, "running_agent_a_wins": 69, "running_decisive": 153, "running_winrate": 0.451, "ts": "2026-07-05T07:22:40.736910+00:00", "void": false, "winner": "agent_b"}
+starting game=154 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=154 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 154, "running_agent_a_wins": 70, "running_decisive": 154, "running_winrate": 0.4545, "ts": "2026-07-05T07:22:54.174030+00:00", "void": false, "winner": "agent_a"}
+starting game=155 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=155 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 155, "running_agent_a_wins": 71, "running_decisive": 155, "running_winrate": 0.4581, "ts": "2026-07-05T07:23:06.609815+00:00", "void": false, "winner": "agent_a"}
+starting game=156 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=156 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 156, "running_agent_a_wins": 72, "running_decisive": 156, "running_winrate": 0.4615, "ts": "2026-07-05T07:23:26.354849+00:00", "void": false, "winner": "agent_a"}
+starting game=157 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=157 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 157, "running_agent_a_wins": 72, "running_decisive": 157, "running_winrate": 0.4586, "ts": "2026-07-05T07:23:47.598039+00:00", "void": false, "winner": "agent_b"}
+starting game=158 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=158 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 158, "running_agent_a_wins": 72, "running_decisive": 158, "running_winrate": 0.4557, "ts": "2026-07-05T07:24:00.560813+00:00", "void": false, "winner": "agent_b"}
+starting game=159 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=159 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 159, "running_agent_a_wins": 72, "running_decisive": 159, "running_winrate": 0.4528, "ts": "2026-07-05T07:24:14.713303+00:00", "void": false, "winner": "agent_b"}
+starting game=160 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=160 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 160, "running_agent_a_wins": 72, "running_decisive": 160, "running_winrate": 0.45, "ts": "2026-07-05T07:24:30.282510+00:00", "void": false, "winner": "agent_b"}
+starting game=161 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=161 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 161, "running_agent_a_wins": 72, "running_decisive": 161, "running_winrate": 0.4472, "ts": "2026-07-05T07:24:45.148134+00:00", "void": false, "winner": "agent_b"}
+starting game=162 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=162 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 162, "running_agent_a_wins": 72, "running_decisive": 162, "running_winrate": 0.4444, "ts": "2026-07-05T07:24:59.923896+00:00", "void": false, "winner": "agent_b"}
+starting game=163 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=163 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 163, "running_agent_a_wins": 73, "running_decisive": 163, "running_winrate": 0.4479, "ts": "2026-07-05T07:25:17.498815+00:00", "void": false, "winner": "agent_a"}
+starting game=164 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=164 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 164, "running_agent_a_wins": 73, "running_decisive": 164, "running_winrate": 0.4451, "ts": "2026-07-05T07:25:38.059088+00:00", "void": false, "winner": "agent_b"}
+starting game=165 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=165 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 165, "running_agent_a_wins": 73, "running_decisive": 165, "running_winrate": 0.4424, "ts": "2026-07-05T07:25:55.082184+00:00", "void": false, "winner": "agent_b"}
+starting game=166 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=166 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 166, "running_agent_a_wins": 73, "running_decisive": 166, "running_winrate": 0.4398, "ts": "2026-07-05T07:26:12.971133+00:00", "void": false, "winner": "agent_b"}
+starting game=167 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=167 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 167, "running_agent_a_wins": 73, "running_decisive": 167, "running_winrate": 0.4371, "ts": "2026-07-05T07:26:39.674113+00:00", "void": false, "winner": "agent_b"}
+starting game=168 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=168 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 168, "running_agent_a_wins": 74, "running_decisive": 168, "running_winrate": 0.4405, "ts": "2026-07-05T07:26:59.045454+00:00", "void": false, "winner": "agent_a"}
+starting game=169 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=169 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 169, "running_agent_a_wins": 74, "running_decisive": 169, "running_winrate": 0.4379, "ts": "2026-07-05T07:27:13.242304+00:00", "void": false, "winner": "agent_b"}
+starting game=170 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=170 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 170, "running_agent_a_wins": 74, "running_decisive": 170, "running_winrate": 0.4353, "ts": "2026-07-05T07:27:27.414581+00:00", "void": false, "winner": "agent_b"}
+starting game=171 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=171 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 171, "running_agent_a_wins": 75, "running_decisive": 171, "running_winrate": 0.4386, "ts": "2026-07-05T07:27:51.256332+00:00", "void": false, "winner": "agent_a"}
+starting game=172 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=172 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 172, "running_agent_a_wins": 76, "running_decisive": 172, "running_winrate": 0.4419, "ts": "2026-07-05T07:28:08.077502+00:00", "void": false, "winner": "agent_a"}
+starting game=173 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=173 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 173, "running_agent_a_wins": 76, "running_decisive": 173, "running_winrate": 0.4393, "ts": "2026-07-05T07:28:19.399411+00:00", "void": false, "winner": "agent_b"}
+starting game=174 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=174 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 174, "running_agent_a_wins": 77, "running_decisive": 174, "running_winrate": 0.4425, "ts": "2026-07-05T07:28:34.475903+00:00", "void": false, "winner": "agent_a"}
+starting game=175 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=175 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 175, "running_agent_a_wins": 78, "running_decisive": 175, "running_winrate": 0.4457, "ts": "2026-07-05T07:28:50.573496+00:00", "void": false, "winner": "agent_a"}
+starting game=176 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=176 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 176, "running_agent_a_wins": 78, "running_decisive": 176, "running_winrate": 0.4432, "ts": "2026-07-05T07:29:05.997079+00:00", "void": false, "winner": "agent_b"}
+starting game=177 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=177 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 177, "running_agent_a_wins": 78, "running_decisive": 177, "running_winrate": 0.4407, "ts": "2026-07-05T07:29:22.422577+00:00", "void": false, "winner": "agent_b"}
+starting game=178 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=178 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 178, "running_agent_a_wins": 79, "running_decisive": 178, "running_winrate": 0.4438, "ts": "2026-07-05T07:29:37.095455+00:00", "void": false, "winner": "agent_a"}
+starting game=179 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=179 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 179, "running_agent_a_wins": 79, "running_decisive": 179, "running_winrate": 0.4413, "ts": "2026-07-05T07:29:50.768819+00:00", "void": false, "winner": "agent_b"}
+starting game=180 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=180 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 180, "running_agent_a_wins": 80, "running_decisive": 180, "running_winrate": 0.4444, "ts": "2026-07-05T07:30:07.908104+00:00", "void": false, "winner": "agent_a"}
+starting game=181 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=181 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 181, "running_agent_a_wins": 81, "running_decisive": 181, "running_winrate": 0.4475, "ts": "2026-07-05T07:30:24.180580+00:00", "void": false, "winner": "agent_a"}
+starting game=182 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=182 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 182, "running_agent_a_wins": 82, "running_decisive": 182, "running_winrate": 0.4505, "ts": "2026-07-05T07:30:41.069470+00:00", "void": false, "winner": "agent_a"}
+starting game=183 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=183 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 183, "running_agent_a_wins": 82, "running_decisive": 183, "running_winrate": 0.4481, "ts": "2026-07-05T07:31:02.203522+00:00", "void": false, "winner": "agent_b"}
+starting game=184 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=184 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 184, "running_agent_a_wins": 82, "running_decisive": 184, "running_winrate": 0.4457, "ts": "2026-07-05T07:31:21.138342+00:00", "void": false, "winner": "agent_b"}
+starting game=185 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=185 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 185, "running_agent_a_wins": 82, "running_decisive": 185, "running_winrate": 0.4432, "ts": "2026-07-05T07:31:37.674804+00:00", "void": false, "winner": "agent_b"}
+starting game=186 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=186 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 186, "running_agent_a_wins": 83, "running_decisive": 186, "running_winrate": 0.4462, "ts": "2026-07-05T07:31:56.956831+00:00", "void": false, "winner": "agent_a"}
+starting game=187 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=187 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 187, "running_agent_a_wins": 83, "running_decisive": 187, "running_winrate": 0.4439, "ts": "2026-07-05T07:32:13.149672+00:00", "void": false, "winner": "agent_b"}
+starting game=188 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=188 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 188, "running_agent_a_wins": 84, "running_decisive": 188, "running_winrate": 0.4468, "ts": "2026-07-05T07:32:29.190753+00:00", "void": false, "winner": "agent_a"}
+starting game=189 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=189 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 189, "running_agent_a_wins": 84, "running_decisive": 189, "running_winrate": 0.4444, "ts": "2026-07-05T07:32:46.249679+00:00", "void": false, "winner": "agent_b"}
+starting game=190 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=190 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 190, "running_agent_a_wins": 84, "running_decisive": 190, "running_winrate": 0.4421, "ts": "2026-07-05T07:33:01.156607+00:00", "void": false, "winner": "agent_b"}
+starting game=191 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=191 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 191, "running_agent_a_wins": 84, "running_decisive": 191, "running_winrate": 0.4398, "ts": "2026-07-05T07:33:30.909933+00:00", "void": false, "winner": "agent_b"}
+starting game=192 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=192 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 192, "running_agent_a_wins": 85, "running_decisive": 192, "running_winrate": 0.4427, "ts": "2026-07-05T07:33:45.935819+00:00", "void": false, "winner": "agent_a"}
+starting game=193 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=193 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 193, "running_agent_a_wins": 85, "running_decisive": 193, "running_winrate": 0.4404, "ts": "2026-07-05T07:33:59.788913+00:00", "void": false, "winner": "agent_b"}
+starting game=194 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=194 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 194, "running_agent_a_wins": 86, "running_decisive": 194, "running_winrate": 0.4433, "ts": "2026-07-05T07:34:12.021299+00:00", "void": false, "winner": "agent_a"}
+starting game=195 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=195 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 195, "running_agent_a_wins": 87, "running_decisive": 195, "running_winrate": 0.4462, "ts": "2026-07-05T07:34:26.501630+00:00", "void": false, "winner": "agent_a"}
+starting game=196 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=196 challenger=agent_b acceptor=agent_a winner=agent_a
+PROGRESS {"error": null, "game_index": 196, "running_agent_a_wins": 88, "running_decisive": 196, "running_winrate": 0.449, "ts": "2026-07-05T07:34:40.862286+00:00", "void": false, "winner": "agent_a"}
+starting game=197 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=197 challenger=agent_a acceptor=agent_b winner=agent_a
+PROGRESS {"error": null, "game_index": 197, "running_agent_a_wins": 89, "running_decisive": 197, "running_winrate": 0.4518, "ts": "2026-07-05T07:34:58.291608+00:00", "void": false, "winner": "agent_a"}
+starting game=198 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=198 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 198, "running_agent_a_wins": 89, "running_decisive": 198, "running_winrate": 0.4495, "ts": "2026-07-05T07:35:12.701530+00:00", "void": false, "winner": "agent_b"}
+starting game=199 challenger=agent_a(foul_play) acceptor=agent_b(foul_play)
+game=199 challenger=agent_a acceptor=agent_b winner=agent_b
+PROGRESS {"error": null, "game_index": 199, "running_agent_a_wins": 89, "running_decisive": 199, "running_winrate": 0.4472, "ts": "2026-07-05T07:35:31.266555+00:00", "void": false, "winner": "agent_b"}
+starting game=200 challenger=agent_b(foul_play) acceptor=agent_a(foul_play)
+game=200 challenger=agent_b acceptor=agent_a winner=agent_b
+PROGRESS {"error": null, "game_index": 200, "running_agent_a_wins": 89, "running_decisive": 200, "running_winrate": 0.445, "ts": "2026-07-05T07:36:05.655122+00:00", "void": false, "winner": "agent_b"}
+{
+  "agent_a": "foul_play",
+  "agent_a_as_acceptor_games": 100,
+  "agent_a_as_acceptor_wins": 51,
+  "agent_a_as_challenger_games": 100,
+  "agent_a_as_challenger_wins": 38,
+  "agent_a_losses": 111,
+  "agent_a_wins": 89,
+  "agent_b": "foul_play",
+  "ci95_high": 0.5142669758719658,
+  "ci95_low": 0.3778060100295335,
+  "completed_games": 200,
+  "decisive_games": 200,
+  "format": "gen9randombattle",
+  "foul_play_search_time_ms": 100,
+  "mode": "h2h",
+  "n_games": 200,
+  "paired": true,
+  "server": "local",
+  "ties_or_unknown": 0,
+  "void_games": 0,
+  "voids_with_agent_a_challenger": 0,
+  "voids_with_agent_b_challenger": 0,
+  "winrate": 0.445
+}

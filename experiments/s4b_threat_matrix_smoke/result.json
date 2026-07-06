@@ -1,0 +1,53 @@
+{
+  "games": [
+    {
+      "acceptor": "agent_b",
+      "agent_a": "foul_play_belief_threat",
+      "agent_b": "foul_play",
+      "battle_tag": null,
+      "challenger": "agent_a",
+      "error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0x001c43a.log",
+      "game_index": 1,
+      "void": true,
+      "winner": null,
+      "winner_username": null
+    },
+    {
+      "acceptor": "agent_a",
+      "agent_a": "foul_play_belief_threat",
+      "agent_b": "foul_play",
+      "battle_tag": null,
+      "challenger": "agent_b",
+      "error": "FoulPlayError: Foul Play exited with code 1; log=/var/folders/p9/gh5frnt56_l4t03p8dl_fq3m0000gn/T/phase0-eval-7wjk4_a1/p0y0029715.log",
+      "game_index": 2,
+      "void": true,
+      "winner": null,
+      "winner_username": null
+    }
+  ],
+  "summary": {
+    "agent_a": "foul_play_belief_threat",
+    "agent_a_as_acceptor_games": 0,
+    "agent_a_as_acceptor_wins": 0,
+    "agent_a_as_challenger_games": 0,
+    "agent_a_as_challenger_wins": 0,
+    "agent_a_losses": 0,
+    "agent_a_wins": 0,
+    "agent_b": "foul_play",
+    "ci95_high": 0.0,
+    "ci95_low": 0.0,
+    "completed_games": 0,
+    "decisive_games": 0,
+    "format": "gen9randombattle",
+    "foul_play_search_time_ms": 100,
+    "mode": "h2h",
+    "n_games": 2,
+    "paired": true,
+    "server": "local",
+    "ties_or_unknown": 0,
+    "void_games": 2,
+    "voids_with_agent_a_challenger": 1,
+    "voids_with_agent_b_challenger": 1,
+    "winrate": 0.0
+  }
+}
