@@ -1089,6 +1089,14 @@ async def run_ladder(args: argparse.Namespace) -> dict[str, object]:
                 proc, log_path, log_file, args.game_timeout_seconds * args.n_games
             )
             result = {"agent": args.agent, "username": args.username, "output_tail": output[-4000:]}
+            # extract W/L from output
+            import re as _re
+            wl_match = _re.findall(r"W:\s+(\d+)\s+L:\s+(\d+)", output)
+            if wl_match:
+                w, l = wl_match[-1]
+                result["wins"] = int(w)
+                result["losses"] = int(l)
+                print(f"LADDER DONE: {args.username} W={w} L={l}", flush=True)
         else:
             with tempfile.TemporaryDirectory(prefix="phase0-ladder-") as temp_dir_name:
                 proc, log_path, log_file = await start_foul_play(
@@ -1126,6 +1134,31 @@ async def run_ladder(args: argparse.Namespace) -> dict[str, object]:
     return result
 
 
+def _append_ladder_row(args: argparse.Namespace, result: dict) -> None:
+    """Append a ladder run row to the experiment log."""
+    path = Path(args.append_experiment_log)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # fetch live ratings
+    ratings = fetch_ladder_rating(args.username, args.format)
+    row = {
+        "run_id": args.run_id,
+        "date": datetime.now(timezone.utc).date().isoformat(),
+        "phase": args.phase,
+        "format": args.format,
+        "change (ONE var)": args.change_name,
+        "baseline": f"ladder_{args.agent}",
+        "N_games": str(result.get("wins", 0) + result.get("losses", 0)),
+        "winrate": f"{result.get('wins', 0) / max(1, result.get('wins', 0) + result.get('losses', 0)):.4f}",
+        "CI95": "",
+        "ladder_elo": str(ratings.get("elo", "")),
+        "gxe": str(ratings.get("gxe", "")),
+        "belief_brier": "",
+        "decision(advance/iterate/rollback)": args.decision
+        if hasattr(args, "decision") else "",
+    }
+    _write_csv_row(path, row)
+
+
 def append_experiment_row(args: argparse.Namespace, summary: EvalSummary) -> None:
     path = Path(args.append_experiment_log)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1156,9 +1189,13 @@ def append_experiment_row(args: argparse.Namespace, summary: EvalSummary) -> Non
             f"voids_agent_b_challenger={summary.voids_with_agent_b_challenger}"
         ),
     }
+    _write_csv_row(path, row)
+
+
+def _write_csv_row(path: Path, row: dict) -> None:
     with path.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=EXPERIMENT_FIELDS)
-        if not file_exists or path.stat().st_size == 0:
+        if not path.exists() or path.stat().st_size == 0:
             writer.writeheader()
         writer.writerow(row)
 
@@ -1266,6 +1303,8 @@ async def async_main(args: argparse.Namespace) -> None:
         print(json.dumps(result, indent=2, sort_keys=True))
         if args.json_out:
             write_json(args.json_out, result)
+        if args.append_experiment_log and "wins" in result:
+            _append_ladder_row(args, result)
         return
 
     summary, results = await run_h2h(args)

@@ -637,37 +637,28 @@ def patch_belief_aware_eval() -> None:
 
 def patch_root_priors() -> None:
     """METAGROSS_PRIOR_SERVER=<url>: fetch per-turn root priors from the prior
-    server and pass them into the (patched) poke-engine MCTS. Also tees every
-    incoming protocol message to the server so it can track battle state."""
+    server and pass them into the (patched) poke-engine MCTS. Also sends every
+    incoming protocol message to the server so it can track battle state.
+
+    Uses synchronous HTTP POST inside the async receive (no background thread)
+    to avoid fork-deadlock when FP spawns multiprocessing workers."""
     server_url = os.environ.get("METAGROSS_PRIOR_SERVER")
     if not server_url:
         return
     import logging as _logging
     logger = _logging.getLogger("fp.root_priors")
-    import queue
-    import threading
     import urllib.request as _url
 
     _PRIOR_STATE["cpuct"] = float(os.environ.get("METAGROSS_CPUCT", "2.0"))
-    tee_q: "queue.Queue" = queue.Queue(maxsize=10000)
 
-    def _post(path: str, payload: dict, timeout: float = 5.0):
+    def _post_sync(path: str, payload: dict, timeout: float = 5.0):
+        """Synchronous POST — called from async context via run_in_executor."""
         body = json.dumps(payload).encode()
         req = _url.Request(f"{server_url}{path}", data=body,
                            headers={"Content-Type": "application/json"})
         return _url.urlopen(req, timeout=timeout)
 
-    def tee_worker():
-        while True:
-            tag, lines = tee_q.get()
-            try:
-                _post("/lines", {"tag": tag, "lines": lines})
-            except Exception:
-                pass
-
-    threading.Thread(target=tee_worker, daemon=True).start()
-
-    # 1) tee incoming protocol messages
+    # 1) send incoming protocol messages to prior server (no background thread)
     from fp.websocket_client import PSWebsocketClient
 
     original_receive = PSWebsocketClient.receive_message
@@ -678,7 +669,14 @@ def patch_root_priors() -> None:
             if message.startswith(">battle-"):
                 lines = message.split("\n")
                 tag = lines[0].lstrip(">").strip()
-                tee_q.put_nowait((tag, lines[1:]))
+                # synchronous POST in a thread executor — no daemon thread
+                # that would deadlock on fork
+                import asyncio as _a
+                loop = _a.get_event_loop()
+                await loop.run_in_executor(
+                    None, _post_sync, "/lines",
+                    {"tag": tag, "lines": lines[1:]}
+                )
         except Exception:
             pass
         return message
@@ -701,12 +699,8 @@ def patch_root_priors() -> None:
         try:
             tag = getattr(battle, "battle_tag", None)
             if tag:
-                # let the tee queue drain so the server has seen this turn's
-                # messages (incl. the request) before we ask for priors
-                import time as _time
-                deadline = _time.monotonic() + 2.0
-                while not tee_q.empty() and _time.monotonic() < deadline:
-                    _time.sleep(0.05)
+                # messages are sent synchronously in receive_with_tee now,
+                # so the server has already seen this turn's data
                 full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
                 with _url.urlopen(
                     f"{server_url}/priors?tag={full_tag}", timeout=10

@@ -246,8 +246,12 @@ class BattleSession:
 
         try:
             state = UniversalState.from_Battle(self.battle)
+            if not state.active_pokemon or not state.opponent_active_pokemon:
+                return {}
             # flip: opponent becomes "us", we become "them"
             flipped = self._flip_state(state)
+            if not flipped.active_pokemon:
+                return {}
             obs = self.server.obs_space.state_to_obs(flipped)
             # opponent's legal actions from the flipped battle
             illegal = np.ones(13, dtype=bool)
@@ -283,16 +287,21 @@ class BattleSession:
 
             agent = self.server.agent
             with torch.no_grad():
-                emb, _ = agent.get_state_embedding(
-                    obs=obs_batch, rl2s=rl2s, time_idxs=time_idxs, hidden_state=None
-                )
-                dists = agent.actor(
-                    emb,
-                    straight_from_obs={
-                        k: obs_batch[k] for k in agent.pass_obs_keys_to_actor
-                    },
-                )
-                probs = dists.probs[0, -1, -1, :].cpu().numpy()  # last (real) step
+                try:
+                    emb, _ = agent.get_state_embedding(
+                        obs=obs_batch, rl2s=rl2s, time_idxs=time_idxs, hidden_state=None
+                    )
+                    dists = agent.actor(
+                        emb,
+                        straight_from_obs={
+                            k: obs_batch[k] for k in agent.pass_obs_keys_to_actor
+                        },
+                    )
+                    probs = dists.probs[0, -1, -1, :].cpu().numpy()
+                except (ValueError, RuntimeError) as e:
+                    if "not enough values" in str(e) or "shape" in str(e).lower():
+                        return {}
+                    raise
 
             probs = probs * (~illegal)
             if probs.sum() <= 0:
