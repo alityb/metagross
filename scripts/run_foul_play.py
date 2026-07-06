@@ -438,6 +438,12 @@ def patch_belief_aware_eval() -> None:
     tracker = BeliefTracker(pool_path=pool_path)
     print(f"BELIEF_EVAL: tracker initialized from {pool_path}", file=_sys.stderr, flush=True)
 
+    _belief_log = None
+    _blog_path = os.environ.get("METAGROSS_BELIEF_LOG")
+    if _blog_path:
+        _belief_log = open(_blog_path, "w", buffering=1)
+        _belief_log.write(f"# belief log started\n# pool={pool_path}\n")
+
     # Track the current battle's opponent species → species_key mapping
     # (Showdown uses display names; we need normalized keys)
     import re as _re
@@ -539,23 +545,84 @@ def patch_belief_aware_eval() -> None:
 
     _original_btpes = _peh.battle_to_poke_engine_state
 
+    # move id -> (type, category, base_power), from FP's own move data
+    from data import all_move_json as _amj
+    _move_info = {}
+    for _mid, _m in _amj.items():
+        _move_info[_norm(_mid)] = (
+            (_m.get("type") or "").lower(),
+            _m.get("category", "") or "",
+            _m.get("basePower", 0) or 0,
+        )
+
+    _dbg = {"injections": 0, "errors": 0, "calls": 0}
+
     def _btpes_with_belief(battle, *args, **kwargs):
         state = _original_btpes(battle, *args, **kwargs)
         try:
-            beliefs = tracker.get_all_beliefs()
-            s1_threat = 0.0
-            scout_value = 0.0
-            for species_key, belief in beliefs.items():
-                remaining = belief.get("possible_remaining_moves", {})
-                if remaining:
-                    max_prob = max(remaining.values()) if remaining else 0.0
-                    s1_threat = max(s1_threat, max_prob)
-                    scout_value += 0.1
-            scout_value = min(scout_value, 1.0)
-            if s1_threat > 0 or scout_value > 0:
-                poke_engine.set_belief(state, s1_threat, 0.0, scout_value)
-        except Exception:
-            pass
+            _dbg["calls"] += 1
+            if _dbg["calls"] == 1:
+                opp_ids = [state.side_two.pokemon[j].id for j in range(6)]
+                s1_ids = [state.side_one.pokemon[i].id for i in range(6)]
+                tracker_keys = list(tracker._opponent_mons.keys())
+                print(
+                    f"BELIEF_EVAL: first btpes call. tracker_mons={tracker_keys} "
+                    f"opp_ids={opp_ids} our_ids={s1_ids}",
+                    file=_sys.stderr, flush=True,
+                )
+            # orientation guard: side_one must be us
+            if kwargs.get("swap") or (args and args[0]):
+                return state
+            # our mons' current types, straight from the engine state so the
+            # matrix indices are guaranteed to match engine indices
+            s1_types = []
+            for i in range(6):
+                p = state.side_one.pokemon[i]
+                s1_types.append(tuple(
+                    t.lower() for t in p.types
+                    if t and t.lower() != "typeless"
+                ))
+            flat = [0.0] * 36
+            any_threat = False
+            for j in range(6):
+                opp_key = _norm(state.side_two.pokemon[j].id)
+                belief_obj = tracker._opponent_mons.get(opp_key)
+                if belief_obj is None:
+                    continue  # unrevealed/sampled mon: no belief, no term
+                for i in range(6):
+                    if not s1_types[i]:
+                        continue
+                    tp = belief_obj.unrevealed_threat_prob(s1_types[i], _move_info)
+                    if tp > 0.0:
+                        flat[i * 6 + j] = tp
+                        any_threat = True
+            if any_threat:
+                poke_engine.set_threat_matrix(state, flat)
+                _dbg["injections"] += 1
+                if _belief_log:
+                    s1_ids = [state.side_one.pokemon[i].id for i in range(6)]
+                    s2_ids = [state.side_two.pokemon[j].id for j in range(6)]
+                    revealed = {k: sorted(v.revealed_moves) for k, v in tracker._opponent_mons.items()}
+                    _belief_log.write(
+                        f"inject#{_dbg['injections']} turn~{_dbg['calls']}\n"
+                        f"  s1={s1_ids}\n  s2={s2_ids}\n"
+                        f"  revealed={revealed}\n"
+                        f"  matrix={flat}\n"
+                    )
+                if _dbg["injections"] == 1:
+                    print(
+                        f"BELIEF_EVAL: first threat matrix injected: {flat}",
+                        file=_sys.stderr, flush=True,
+                    )
+        except Exception as e:
+            _dbg["errors"] += 1
+            if _dbg["errors"] == 1:
+                import traceback
+                print(
+                    f"BELIEF_EVAL: threat matrix injection FAILED: {e}\n"
+                    + traceback.format_exc(),
+                    file=_sys.stderr, flush=True,
+                )
         return state
 
     _peh.battle_to_poke_engine_state = _btpes_with_belief
@@ -645,8 +712,14 @@ def patch_root_priors() -> None:
                     f"{server_url}/priors?tag={full_tag}", timeout=10
                 ) as resp:
                     data = json.loads(resp.read())
-                priors = data.get("priors") or {}
+                opp_only = os.environ.get("METAGROSS_OPP_PRIORS_ONLY") == "1"
+                if opp_only:
+                    priors = {}
+                else:
+                    priors = data.get("priors") or {}
                 opp_priors = data.get("opp_priors") or {}
+                if opp_only and (data.get("priors") or {}):
+                    logger.info("opp-only mode: discarding %d s1 priors", len(data.get("priors") or {}))
                 if priors:
                     _PRIOR_STATE["priors"] = [(k, float(v)) for k, v in priors.items()]
                     logger.info("root priors ({}): {}".format(
@@ -1317,6 +1390,7 @@ def main() -> None:
 
     if os.environ.get("METAGROSS_PRIOR_SERVER"):
         print(f"DEBUG PRIOR_SERVER={os.environ['METAGROSS_PRIOR_SERVER']}", file=sys.stderr, flush=True)
+        print(f"DEBUG OPP_PRIORS_ONLY={os.environ.get('METAGROSS_OPP_PRIORS_ONLY', 'not set')}", file=sys.stderr, flush=True)
 
     patch_foul_play_protocol_bugs()
     patch_tauros_action_kind_gate()
