@@ -462,19 +462,25 @@ def patch_belief_aware_eval() -> None:
     and injects them into the poke-engine state before each MCTS call.
     The Rust eval uses these for an uncertainty-aware threat penalty.
     """
-    if os.environ.get("METAGROSS_BELIEF_EVAL") != "1":
+    if os.environ.get("METAGROSS_BELIEF_EVAL") != "1" and os.environ.get("METAGROSS_WINCON_EVAL") != "1":
         return
 
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-    from belief.live_belief import BeliefTracker
 
-    pool_path = os.environ.get(
-        "METAGROSS_RANDBATS_POOL",
-        str(Path(__file__).resolve().parents[2] / "data" / "randbats_pools" / "gen9randombattle_pool_50000.json"),
-    )
-    tracker = BeliefTracker(pool_path=pool_path)
-    print(f"BELIEF_EVAL: tracker initialized from {pool_path}", file=_sys.stderr, flush=True)
+    _wincon_only = os.environ.get("METAGROSS_WINCON_EVAL") == "1" and os.environ.get("METAGROSS_BELIEF_EVAL") != "1"
+
+    if _wincon_only:
+        tracker = None
+        print("WINCON_EVAL: wincon matrix only (no belief tracker)", file=_sys.stderr, flush=True)
+    else:
+        from belief.live_belief import BeliefTracker
+        pool_path = os.environ.get(
+            "METAGROSS_RANDBATS_POOL",
+            str(Path(__file__).resolve().parents[2] / "data" / "randbats_pools" / "gen9randombattle_pool_50000.json"),
+        )
+        tracker = BeliefTracker(pool_path=pool_path)
+        print(f"BELIEF_EVAL: tracker initialized from {pool_path}", file=_sys.stderr, flush=True)
 
     _belief_log = None
     _blog_path = os.environ.get("METAGROSS_BELIEF_LOG")
@@ -694,6 +700,13 @@ def patch_belief_aware_eval() -> None:
                 )
             # orientation guard: side_one must be us
             if kwargs.get("swap") or (args and args[0]):
+                return state
+            # win-condition matrix (always computed, doesn't need tracker)
+            wincon = _compute_wincon_matrix(state)
+            if any(v != 0.0 for v in wincon):
+                poke_engine.set_wincon_matrix(state, wincon)
+            # belief threat matrix (only if tracker is active)
+            if tracker is None:
                 return state
             # our mons' current types, straight from the engine state so the
             # matrix indices are guaranteed to match engine indices

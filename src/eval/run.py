@@ -39,6 +39,7 @@ AGENT_NAMES = (
     "foul_play_tauros_action",
     "foul_play_value_shield",
     "foul_play_belief_threat",
+    "foul_play_wincon",
     "foul_play_opp_priors",
     "foul_play_root_priors",
     "foul_play_root_priors_opp",
@@ -178,6 +179,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_tauros_action",
         "foul_play_value_shield",
         "foul_play_belief_threat",
+        "foul_play_wincon",
         "foul_play_opp_priors",
         "foul_play_root_priors",
         "foul_play_root_priors_opp",
@@ -210,6 +212,10 @@ def is_belief_threat_foul_play(agent: str) -> bool:
 
 def is_opp_priors_foul_play(agent: str) -> bool:
     return agent == "foul_play_opp_priors"
+
+
+def is_wincon_foul_play(agent: str) -> bool:
+    return agent == "foul_play_wincon"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -388,8 +394,11 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_TAUROS_KIND_ALLOWED_KINDS", None)
     if is_belief_threat_foul_play(agent):
         env["METAGROSS_BELIEF_EVAL"] = "1"
+    elif is_wincon_foul_play(agent):
+        env["METAGROSS_WINCON_EVAL"] = "1"
     else:
         env.pop("METAGROSS_BELIEF_EVAL", None)
+        env.pop("METAGROSS_WINCON_EVAL", None)
     if is_value_shield_foul_play(agent):
         env["METAGROSS_FP_VALUE_SHIELD"] = "1"
         env["METAGROSS_FP_VALUE_SHIELD_MARGIN"] = str(args.value_shield_margin)
