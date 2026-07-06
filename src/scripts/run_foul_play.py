@@ -397,10 +397,48 @@ _PRIOR_STATE = {"priors": None, "cpuct": 2.0}
 
 def _mcts_with_root_priors(state_str, search_time_ms, index):
     """Module-level (picklable/forkable) MCTS runner that applies the current
-    turn's root priors. Replaces fp.search.main.get_result_from_mcts."""
+    turn's root priors. Replaces fp.search.main.get_result_from_mcts.
+
+    Endgame override: when the alive mon count is low (≤3 each side) and
+    branching is small (≤50 joint options), switch from MCTS to iterative
+    deepening expectiminimax (exact alpha-beta search). This solves stall
+    wars and endgame matchups that MCTS can't see within the horizon.
+    """
     import poke_engine
 
     state = poke_engine.State.from_string(state_str)
+
+    # endgame detection: count alive mons and options
+    s1_alive = sum(1 for p in state.side_one.pokemon if p.hp > 0)
+    s2_alive = sum(1 for p in state.side_two.pokemon if p.hp > 0)
+    use_endgame_solver = False  # disabled: depth 3-4 doesn't reach terminal in randbats endgames
+
+    if use_endgame_solver:
+        try:
+            id_result = poke_engine.id(state, search_time_ms)
+            from poke_engine import MctsResult, MctsSideResult
+            s1_moves = id_result.s1
+            s2_moves = id_result.s2
+            matrix = id_result.matrix
+            depth = id_result.depth_searched
+            n_s2 = len(s2_moves)
+            import sys as _sys
+            print(f"ENDGAME_SOLVER: s1={s1_alive} s2={s2_alive} depth={depth} s1_opts={len(s1_moves)} s2_opts={n_s2}", file=_sys.stderr, flush=True)
+            side_one = []
+            for i, mv in enumerate(s1_moves):
+                row = [matrix[i * n_s2 + j] for j in range(n_s2)]
+                safest = min(row) if row else 0.0
+                side_one.append(MctsSideResult(move_choice=mv, total_score=safest, visits=1))
+            side_two = []
+            for j, mv in enumerate(s2_moves):
+                col = [matrix[i * n_s2 + j] for i in range(len(s1_moves))]
+                worst = max(col) if col else 0.0
+                side_two.append(MctsSideResult(move_choice=mv, total_score=worst, visits=1))
+            return MctsResult(side_one=side_one, side_two=side_two, total_visits=1)
+        except Exception as e:
+            import sys as _sys
+            print(f"ENDGAME_SOLVER: failed, falling back to MCTS: {e}", file=_sys.stderr, flush=True)
+
     priors = _PRIOR_STATE.get("priors")
     kwargs = {}
     if priors:
@@ -555,6 +593,90 @@ def patch_belief_aware_eval() -> None:
             _m.get("basePower", 0) or 0,
         )
 
+    # recovery move ids (same set as Rust has_recovery_move)
+    _recovery_moves = {
+        "recover", "softboiled", "roost", "synthesis", "milkdrink", "slackoff",
+        "moonlight", "rest", "healorder", "wish", "shoreup", "lifedew",
+        "junglehealing", "purify",
+    }
+
+    # type chart (same as belief/live_belief.py)
+    from belief.live_belief import TYPE_CHART, effectiveness
+
+    def _rough_damage_pct(atk_types, atk_stats, atk_moves, def_types, def_stats, def_maxhp, def_level=100):
+        """Approximate best damage % our mon can do to their mon in one turn."""
+        atk_attack, atk_spattack = atk_stats
+        def_defense, def_spdefense = def_stats
+        best = 0.0
+        for mv_id, mv_type, mv_cat, mv_bp in atk_moves:
+            if mv_cat == "Status" or mv_bp <= 0:
+                if mv_id in ("seismictoss", "nightshade"):
+                    # fixed damage = level
+                    mult = effectiveness(mv_type, def_types)
+                    if mult == 0:
+                        continue
+                    pct = atk_stats[4] / max(def_maxhp, 1) * 100.0  # use level from atk_stats
+                    best = max(best, pct)
+                continue
+            mult = effectiveness(mv_type, def_types)
+            if mult == 0:
+                continue
+            is_phys = mv_cat == "Physical"
+            atk = atk_attack if is_phys else atk_spattack
+            defn = def_defense if is_phys else def_spdefense
+            if defn <= 0:
+                continue
+            stab = 1.5 if mv_type in atk_types else 1.0
+            dmg = 42.0 * mv_bp * stab * mult * atk / defn / 50.0
+            pct = dmg / max(def_maxhp, 1) * 100.0
+            best = max(best, pct)
+        return best
+
+    def _has_recovery(moves):
+        return any(mv_id in _recovery_moves for mv_id, *_ in moves)
+
+    def _compute_wincon_matrix(state):
+        """6x6 matrix: positive = our mon i beats their mon j in damage race, negative = loses."""
+        flat = [0.0] * 36
+        for i in range(6):
+            our = state.side_one.pokemon[i]
+            if our.hp <= 0:
+                continue
+            our_types = tuple(t.lower() for t in our.types if t and t.lower() != "typeless")
+            our_stats = (our.attack, our.special_attack, our.defense, our.special_defense, our.level)
+            our_moves = []
+            for mv in our.moves:
+                mn = _norm(mv.id)
+                info = _move_info.get(mn)
+                if info:
+                    our_moves.append((mn, info[0], info[1], info[2]))
+            our_heal = 33.0 if _has_recovery(our_moves) else 0.0
+
+            for j in range(6):
+                their = state.side_two.pokemon[j]
+                if their.hp <= 0:
+                    continue
+                their_types = tuple(t.lower() for t in their.types if t and t.lower() != "typeless")
+                their_stats = (their.attack, their.special_attack, their.defense, their.special_defense, their.level)
+                their_moves = []
+                for mv in their.moves:
+                    mn = _norm(mv.id)
+                    info = _move_info.get(mn)
+                    if info:
+                        their_moves.append((mn, info[0], info[1], info[2]))
+                their_heal = 33.0 if _has_recovery(their_moves) else 0.0
+
+                our_dmg = _rough_damage_pct(our_types, our_stats, our_moves, their_types, (their_stats[2], their_stats[3]), their.maxhp)
+                their_dmg = _rough_damage_pct(their_types, their_stats, their_moves, our_types, (our_stats[2], our_stats[3]), our.maxhp)
+                our_net = our_dmg - their_heal
+                their_net = their_dmg - our_heal
+                # +1 if we win the race, -1 if we lose, 0 if neutral
+                if our_net > 0 and their_net <= 0:
+                    flat[i * 6 + j] = 1.0
+                elif our_net <= 0 and their_net > 0:
+                    flat[i * 6 + j] = -1.0
+        return flat
+
     _dbg = {"injections": 0, "errors": 0, "calls": 0}
 
     def _btpes_with_belief(battle, *args, **kwargs):
@@ -599,21 +721,15 @@ def patch_belief_aware_eval() -> None:
             if any_threat:
                 poke_engine.set_threat_matrix(state, flat)
                 _dbg["injections"] += 1
-                if _belief_log:
-                    s1_ids = [state.side_one.pokemon[i].id for i in range(6)]
-                    s2_ids = [state.side_two.pokemon[j].id for j in range(6)]
-                    revealed = {k: sorted(v.revealed_moves) for k, v in tracker._opponent_mons.items()}
-                    _belief_log.write(
-                        f"inject#{_dbg['injections']} turn~{_dbg['calls']}\n"
-                        f"  s1={s1_ids}\n  s2={s2_ids}\n"
-                        f"  revealed={revealed}\n"
-                        f"  matrix={flat}\n"
-                    )
                 if _dbg["injections"] == 1:
                     print(
                         f"BELIEF_EVAL: first threat matrix injected: {flat}",
                         file=_sys.stderr, flush=True,
                     )
+            # win-condition matrix: separate channel from threat matrix
+            wincon = _compute_wincon_matrix(state)
+            if any(v != 0.0 for v in wincon):
+                poke_engine.set_wincon_matrix(state, wincon)
         except Exception as e:
             _dbg["errors"] += 1
             if _dbg["errors"] == 1:
