@@ -12,3 +12,4 @@ __pycache__/
 /data/replays/
 /data/parsed_replays/
 /nets/checkpoints/randbats_full/
+.ladder_credentials
