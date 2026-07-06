@@ -1,2 +1,0 @@
-sanity kakuna pid 59723
-peer pid 67707
