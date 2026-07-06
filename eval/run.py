@@ -38,6 +38,8 @@ AGENT_NAMES = (
     "foul_play_tauros_kind",
     "foul_play_tauros_action",
     "foul_play_value_shield",
+    "foul_play_belief_threat",
+    "foul_play_opp_priors",
     "foul_play_root_priors",
     "foul_play_root_priors_opp",
 )
@@ -98,6 +100,10 @@ class EvalSummary:
     agent_a_as_acceptor_games: int
     voids_with_agent_a_challenger: int
     voids_with_agent_b_challenger: int
+    sprt_decision: str
+    sprt_llr: float
+    scorer_gate_passed: bool
+    scorer_gate_message: str
 
 
 class FoulPlayError(RuntimeError):
@@ -113,6 +119,44 @@ def wilson_ci(wins: int, n: int, z: float = 1.959963984540054) -> tuple[float, f
     center = (phat + z * z / (2.0 * n)) / denominator
     half_width = z * math.sqrt((phat * (1.0 - phat) + z * z / (4.0 * n)) / n) / denominator
     return max(0.0, center - half_width), min(1.0, center + half_width)
+
+
+def sprt_llr(wins: int, losses: int, p0: float, p1: float) -> float:
+    """Log-likelihood ratio for H1(p1) vs H0(p0) after wins/losses."""
+    if wins + losses == 0:
+        return 0.0
+    return wins * math.log(p1 / p0) + losses * math.log((1.0 - p1) / (1.0 - p0))
+
+
+def sprt_check(wins: int, losses: int, p0: float, p1: float,
+               alpha: float = 0.05, beta: float = 0.05) -> str:
+    """Returns 'accept_h1' (effect real), 'accept_h0' (no effect), or 'continue'."""
+    upper = math.log((1.0 - beta) / alpha)
+    lower = math.log(beta / (1.0 - alpha))
+    llr = sprt_llr(wins, losses, p0, p1)
+    if llr >= upper:
+        return "accept_h1"
+    if llr <= lower:
+        return "accept_h0"
+    return "continue"
+
+
+def scorer_gate_check(wins: int, losses: int, voids: int) -> tuple[bool, str]:
+    """§6.3 powered self-play scorer gate. Returns (passed, message)."""
+    n = wins + losses
+    if n < 100:
+        return False, f"insufficient decisive games: {n} < 100"
+    wr = wins / n
+    ci_low, ci_high = wilson_ci(wins, n)
+    if not (0.45 <= wr <= 0.55):
+        return False, f"winrate {wr:.4f} outside [0.45, 0.55]"
+    if not (ci_low <= 0.50 <= ci_high):
+        return False, f"CI [{ci_low:.4f}, {ci_high:.4f}] does not contain 0.50"
+    if not (ci_low >= 0.40 and ci_high <= 0.60):
+        return False, f"CI [{ci_low:.4f}, {ci_high:.44}] not contained in [0.40, 0.60]"
+    if voids > 0:
+        return False, f"{voids} void games (check for unexplained ties/unknowns)"
+    return True, f"PASS: wr={wr:.4f} CI=[{ci_low:.4f}, {ci_high:.4f}] n={n} voids={voids}"
 
 
 def normalize_user_id(username: str) -> str:
@@ -133,6 +177,8 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_tauros_kind",
         "foul_play_tauros_action",
         "foul_play_value_shield",
+        "foul_play_belief_threat",
+        "foul_play_opp_priors",
         "foul_play_root_priors",
         "foul_play_root_priors_opp",
     }
@@ -156,6 +202,14 @@ def is_tauros_kind_foul_play(agent: str) -> bool:
 
 def is_value_shield_foul_play(agent: str) -> bool:
     return agent == "foul_play_value_shield"
+
+
+def is_belief_threat_foul_play(agent: str) -> bool:
+    return agent == "foul_play_belief_threat"
+
+
+def is_opp_priors_foul_play(agent: str) -> bool:
+    return agent == "foul_play_opp_priors"
 
 
 def agent_for_slot(args: argparse.Namespace, slot: str) -> str:
@@ -242,7 +296,7 @@ def foul_play_command(
         "--pokemon-format",
         args.format,
         "--run-count",
-        "1",
+        str(getattr(args, "n_games", 1) if bot_mode == "search_ladder" else 1),
         "--search-time-ms",
         str(search_time_ms),
         "--search-parallelism",
@@ -314,9 +368,14 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
     if agent in ("foul_play_root_priors", "foul_play_root_priors_opp"):
         env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
         env["METAGROSS_CPUCT"] = str(args.cpuct)
+    elif is_opp_priors_foul_play(agent):
+        env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
+        env["METAGROSS_CPUCT"] = str(args.cpuct)
+        env["METAGROSS_OPP_PRIORS_ONLY"] = "1"
     else:
         env.pop("METAGROSS_PRIOR_SERVER", None)
         env.pop("METAGROSS_CPUCT", None)
+        env.pop("METAGROSS_OPP_PRIORS_ONLY", None)
     if is_tauros_kind_foul_play(agent):
         env["METAGROSS_TAUROS_KIND_MODEL"] = str(Path(args.tauros_kind_model).resolve())
         env["METAGROSS_TAUROS_KIND_THRESHOLD"] = str(args.tauros_kind_threshold)
@@ -327,6 +386,10 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_TAUROS_KIND_THRESHOLD", None)
         env.pop("METAGROSS_TAUROS_KIND_MIN_POLICY_FRAC", None)
         env.pop("METAGROSS_TAUROS_KIND_ALLOWED_KINDS", None)
+    if is_belief_threat_foul_play(agent):
+        env["METAGROSS_BELIEF_EVAL"] = "1"
+    else:
+        env.pop("METAGROSS_BELIEF_EVAL", None)
     if is_value_shield_foul_play(agent):
         env["METAGROSS_FP_VALUE_SHIELD"] = "1"
         env["METAGROSS_FP_VALUE_SHIELD_MARGIN"] = str(args.value_shield_margin)
@@ -858,6 +921,7 @@ def emit_progress(args: argparse.Namespace, result: GameResult, results: list[Ga
     """Append-only per-game progress so a crash mid-run still yields a usable partial."""
     decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
     wins = sum(1 for r in decisive if r.winner == "agent_a")
+    losses = sum(1 for r in decisive if r.winner == "agent_b")
     line = {
         "ts": datetime.now(timezone.utc).isoformat(),
         "game_index": result.game_index,
@@ -868,6 +932,13 @@ def emit_progress(args: argparse.Namespace, result: GameResult, results: list[Ga
         "running_decisive": len(decisive),
         "running_winrate": round(wins / len(decisive), 4) if decisive else None,
     }
+    if getattr(args, "sprt_h1", None):
+        p0 = args.sprt_h0
+        p1 = args.sprt_h1
+        llr = sprt_llr(wins, losses, p0, p1)
+        decision = sprt_check(wins, losses, p0, p1)
+        line["sprt_llr"] = round(llr, 4)
+        line["sprt_decision"] = decision
     print(f"PROGRESS {json.dumps(line, sort_keys=True)}", flush=True)
     if getattr(args, "json_out", None):
         progress_path = Path(str(args.json_out) + ".progress.jsonl")
@@ -879,6 +950,7 @@ def emit_progress(args: argparse.Namespace, result: GameResult, results: list[Ga
 async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResult]]:
     server_configuration = make_server_configuration(args)
     schedule = side_schedule(args.n_games, args.paired)
+    use_sprt = getattr(args, "sprt_h1", None) is not None
 
     results: list[GameResult] = []
     if args.log_dir:
@@ -890,6 +962,14 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
             )
             results.append(result)
             emit_progress(args, result, results)
+            if use_sprt:
+                decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
+                w = sum(1 for r in decisive if r.winner == "agent_a")
+                l = sum(1 for r in decisive if r.winner == "agent_b")
+                decision = sprt_check(w, l, args.sprt_h0, args.sprt_h1)
+                if decision != "continue":
+                    print(f"SPRT STOP: {decision} after {len(decisive)} decisive games (w={w} l={l})", flush=True)
+                    break
     else:
         with tempfile.TemporaryDirectory(prefix="phase0-eval-") as temp_dir_name:
             log_dir = Path(temp_dir_name)
@@ -899,6 +979,14 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
                 )
                 results.append(result)
                 emit_progress(args, result, results)
+                if use_sprt:
+                    decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
+                    w = sum(1 for r in decisive if r.winner == "agent_a")
+                    l = sum(1 for r in decisive if r.winner == "agent_b")
+                    decision = sprt_check(w, l, args.sprt_h0, args.sprt_h1)
+                    if decision != "continue":
+                        print(f"SPRT STOP: {decision} after {len(decisive)} decisive games (w={w} l={l})", flush=True)
+                        break
 
     completed_results = [result for result in results if not result.void]
     decisive_results = [
@@ -955,6 +1043,14 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
         voids_with_agent_b_challenger=sum(
             1 for result in results if result.void and result.challenger == "agent_b"
         ),
+        sprt_decision=sprt_check(agent_a_wins, agent_a_losses, args.sprt_h0, args.sprt_h1)
+            if getattr(args, "sprt_h1", None) else "n/a",
+        sprt_llr=round(sprt_llr(agent_a_wins, agent_a_losses, args.sprt_h0, args.sprt_h1), 4)
+            if getattr(args, "sprt_h1", None) else 0.0,
+        scorer_gate_passed=scorer_gate_check(agent_a_wins, agent_a_losses, void_games)[0]
+            if getattr(args, "scorer_gate", False) else False,
+        scorer_gate_message=scorer_gate_check(agent_a_wins, agent_a_losses, void_games)[1]
+            if getattr(args, "scorer_gate", False) else "n/a",
     )
     return summary, results
 
@@ -977,7 +1073,9 @@ async def run_ladder(args: argparse.Namespace) -> dict[str, object]:
         raise ValueError("--mode ladder requires --username")
     server_configuration = make_server_configuration(args)
     if is_foul_play(args.agent):
-        with tempfile.TemporaryDirectory(prefix="phase0-ladder-") as temp_dir_name:
+        if args.log_dir:
+            log_dir = Path(args.log_dir)
+            log_dir.mkdir(parents=True, exist_ok=True)
             proc, log_path, log_file = await start_foul_play(
                 args,
                 args.agent,
@@ -985,12 +1083,27 @@ async def run_ladder(args: argparse.Namespace) -> dict[str, object]:
                 args.username,
                 "search_ladder",
                 None,
-                Path(temp_dir_name),
+                log_dir,
             )
             output = await wait_for_foul_play(
                 proc, log_path, log_file, args.game_timeout_seconds * args.n_games
             )
             result = {"agent": args.agent, "username": args.username, "output_tail": output[-4000:]}
+        else:
+            with tempfile.TemporaryDirectory(prefix="phase0-ladder-") as temp_dir_name:
+                proc, log_path, log_file = await start_foul_play(
+                    args,
+                    args.agent,
+                    server_configuration,
+                    args.username,
+                    "search_ladder",
+                    None,
+                    Path(temp_dir_name),
+                )
+                output = await wait_for_foul_play(
+                    proc, log_path, log_file, args.game_timeout_seconds * args.n_games
+                )
+                result = {"agent": args.agent, "username": args.username, "output_tail": output[-4000:]}
     else:
         player = make_poke_env_player(
             args.agent, args.username, server_configuration, args.format
@@ -1125,6 +1238,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--json-out", default=None)
     parser.add_argument("--append-experiment-log", default=None)
     parser.add_argument("--phase", default="0")
+    parser.add_argument("--sprt-h0", type=float, default=None,
+                        help="SPRT null hypothesis winrate (e.g. 0.50). Activates sequential testing.")
+    parser.add_argument("--sprt-h1", type=float, default=None,
+                        help="SPRT alternative hypothesis winrate (e.g. 0.53). Activates sequential testing.")
+    parser.add_argument("--scorer-gate", action="store_true",
+                        help="Run §6.3 powered self-play scorer gate check on results.")
     parser.add_argument("--change-name", default="stock_foul_play_baseline")
     parser.add_argument("--decision", default=None)
     parser.add_argument(
