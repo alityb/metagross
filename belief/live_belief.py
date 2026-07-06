@@ -25,6 +25,61 @@ def norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
 
+# Gen 6+ type chart: attacking type -> {defending type: multiplier} (non-1x only)
+TYPE_CHART: dict[str, dict[str, float]] = {
+    "normal": {"rock": 0.5, "ghost": 0.0, "steel": 0.5},
+    "fire": {"fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 2.0, "bug": 2.0,
+             "rock": 0.5, "dragon": 0.5, "steel": 2.0},
+    "water": {"fire": 2.0, "water": 0.5, "grass": 0.5, "ground": 2.0,
+              "rock": 2.0, "dragon": 0.5},
+    "electric": {"water": 2.0, "electric": 0.5, "grass": 0.5, "ground": 0.0,
+                 "flying": 2.0, "dragon": 0.5},
+    "grass": {"fire": 0.5, "water": 2.0, "grass": 0.5, "poison": 0.5,
+              "ground": 2.0, "flying": 0.5, "bug": 0.5, "rock": 2.0,
+              "dragon": 0.5, "steel": 0.5},
+    "ice": {"fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 0.5, "ground": 2.0,
+            "flying": 2.0, "dragon": 2.0, "steel": 0.5},
+    "fighting": {"normal": 2.0, "ice": 2.0, "poison": 0.5, "flying": 0.5,
+                 "psychic": 0.5, "bug": 0.5, "rock": 2.0, "ghost": 0.0,
+                 "dark": 2.0, "steel": 2.0, "fairy": 0.5},
+    "poison": {"grass": 2.0, "poison": 0.5, "ground": 0.5, "rock": 0.5,
+               "ghost": 0.5, "steel": 0.0, "fairy": 2.0},
+    "ground": {"fire": 2.0, "electric": 2.0, "grass": 0.5, "poison": 2.0,
+               "flying": 0.0, "bug": 0.5, "rock": 2.0, "steel": 2.0},
+    "flying": {"electric": 0.5, "grass": 2.0, "fighting": 2.0, "bug": 2.0,
+               "rock": 0.5, "steel": 0.5},
+    "psychic": {"fighting": 2.0, "poison": 2.0, "psychic": 0.5, "dark": 0.0,
+                "steel": 0.5},
+    "bug": {"fire": 0.5, "grass": 2.0, "fighting": 0.5, "poison": 0.5,
+            "flying": 0.5, "psychic": 2.0, "ghost": 0.5, "dark": 2.0,
+            "steel": 0.5, "fairy": 0.5},
+    "rock": {"fire": 2.0, "ice": 2.0, "fighting": 0.5, "ground": 0.5,
+             "flying": 2.0, "bug": 2.0, "steel": 0.5},
+    "ghost": {"normal": 0.0, "psychic": 2.0, "ghost": 2.0, "dark": 0.5},
+    "dragon": {"dragon": 2.0, "steel": 0.5, "fairy": 0.0},
+    "dark": {"fighting": 0.5, "psychic": 2.0, "ghost": 2.0, "dark": 0.5,
+             "fairy": 0.5},
+    "steel": {"fire": 0.5, "water": 0.5, "electric": 0.5, "ice": 2.0,
+              "rock": 2.0, "steel": 0.5, "fairy": 2.0},
+    "fairy": {"fire": 0.5, "fighting": 2.0, "poison": 0.5, "dragon": 2.0,
+              "dark": 2.0, "steel": 0.5},
+}
+
+# Minimum base power for an unrevealed damaging move to count as a "threat"
+THREAT_MIN_BASE_POWER = 60
+
+
+def effectiveness(move_type: str, defender_types) -> float:
+    """Type effectiveness multiplier of move_type vs a (mono or dual) defender."""
+    chart = TYPE_CHART.get(move_type)
+    if chart is None:
+        return 1.0
+    mult = 1.0
+    for t in defender_types:
+        mult *= chart.get(t, 1.0)
+    return mult
+
+
 class OpponentBelief:
     """Tracks the belief over one opponent Pokémon's full set."""
 
@@ -36,10 +91,15 @@ class OpponentBelief:
         self.revealed_item: Optional[str] = None
         self.revealed_tera: Optional[str] = None
         self.terastallized: bool = False
+        # threat caches; invalidated whenever _consistent narrows
+        self._masks_cache: Optional[dict[frozenset, int]] = None
+        self._threat_cache: dict[tuple, float] = {}
         self._consistent: list[dict] = self._filter(pool_sets)
 
     def _filter(self, candidates: list[dict]) -> list[dict]:
         """Filter candidate sets by everything revealed so far."""
+        self._masks_cache = None
+        self._threat_cache = {}
         result = []
         for c in candidates:
             if self.revealed_ability and norm(c["ability"]) != norm(self.revealed_ability):
@@ -80,6 +140,53 @@ class OpponentBelief:
 
     def mark_terastallized(self):
         self.terastallized = True
+
+    def _unrevealed_type_masks(self, move_info: dict) -> dict[frozenset, int]:
+        """Count consistent sets grouped by the frozenset of attack types among
+        their UNREVEALED damaging moves (bp >= THREAT_MIN_BASE_POWER).
+
+        move_info: {normalized_move_id: (type, category, base_power)}
+        """
+        if self._masks_cache is None:
+            masks: dict[frozenset, int] = defaultdict(int)
+            for c in self._consistent:
+                types = set()
+                for m in c["moves_display"]:
+                    mn = norm(m)
+                    if mn in self.revealed_moves:
+                        continue
+                    info = move_info.get(mn)
+                    if not info:
+                        continue
+                    mtype, category, bp = info
+                    if category.lower() == "status" or (bp or 0) < THREAT_MIN_BASE_POWER:
+                        continue
+                    types.add(mtype)
+                masks[frozenset(types)] += 1
+            self._masks_cache = dict(masks)
+            self._threat_cache = {}
+        return self._masks_cache
+
+    def unrevealed_threat_prob(self, defender_types, move_info: dict) -> float:
+        """P(this mon's set contains an UNREVEALED damaging move that is
+        super-effective vs defender_types), exact under the pool prior."""
+        key = tuple(sorted(defender_types))
+        masks = self._unrevealed_type_masks(move_info)
+        cached = self._threat_cache.get(key)
+        if cached is not None:
+            return cached
+        total = sum(masks.values())
+        if total == 0:
+            return 0.0
+        hit = 0
+        for mask, count in masks.items():
+            for t in mask:
+                if effectiveness(t, key) >= 2.0:
+                    hit += count
+                    break
+        prob = hit / total
+        self._threat_cache[key] = prob
+        return prob
 
     def possible_remaining_moves(self) -> dict[str, float]:
         """Probability distribution over moves NOT yet revealed."""
