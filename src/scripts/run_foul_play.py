@@ -1562,7 +1562,20 @@ def patch_replay_capture() -> None:
 
                     # On game end (win/tie), save the replay
                     if msg_type in ("win", "tie") and len(parts) >= 3:
-                        log_text = "\n".join(_battle_logs.get(tag, []))
+                        # Build clean log without embedded-JSON protocol lines
+                        clean_lines = [
+                            line for line in _battle_logs.get(tag, [])
+                            if not line.startswith("|request|")
+                            and not line.startswith("|html|")
+                            and not line.startswith("|uhtml|")
+                            and not line.startswith("|raw|")
+                            and not line.startswith("|c|")
+                            and not line.startswith("|chatmsg|")
+                        ]
+                        log_text = "\n".join(clean_lines)
+                        # Escape any literal backslashes in the protocol log
+                        # (Showdown uses \n inside protocol lines, which breaks JSON)
+                        log_text = log_text.replace("\\", "\\\\")
                         players = _battle_players.get(tag, ["p1", "p2"])
 
                         # Extract winner
