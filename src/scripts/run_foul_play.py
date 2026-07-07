@@ -1562,7 +1562,8 @@ def patch_replay_capture() -> None:
 
                     # On game end (win/tie), save the replay
                     if msg_type in ("win", "tie") and len(parts) >= 3:
-                        # Build clean log without embedded-JSON protocol lines
+                        # Build clean log without embedded-JSON protocol lines.
+                        # Let json.dump handle all escaping — don't pre-escape.
                         clean_lines = [
                             line for line in _battle_logs.get(tag, [])
                             if not line.startswith("|request|")
@@ -1573,9 +1574,6 @@ def patch_replay_capture() -> None:
                             and not line.startswith("|chatmsg|")
                         ]
                         log_text = "\n".join(clean_lines)
-                        # Escape any literal backslashes in the protocol log
-                        # (Showdown uses \n inside protocol lines, which breaks JSON)
-                        log_text = log_text.replace("\\", "\\\\")
                         players = _battle_players.get(tag, ["p1", "p2"])
 
                         # Extract winner
@@ -1598,7 +1596,7 @@ def patch_replay_capture() -> None:
                             "_our_name": _our_name,
                         }
 
-                        out_file = replay_path / f"{tag}.json"
+                        out_file = replay_path / f"{tag}_{_our_name or 'agent'}.json"
                         with open(out_file, "w", encoding="utf-8") as f:
                             json.dump(replay_json, f, ensure_ascii=True)
 
