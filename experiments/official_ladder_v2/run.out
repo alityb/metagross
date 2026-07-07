@@ -1,0 +1,86 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/alityb/projects/metagross/src/eval/run.py", line 1328, in <module>
+    return
+  File "/Users/alityb/projects/metagross/src/eval/run.py", line 1324, in main
+    if args.json_out:
+^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/src/eval/run.py", line 1302, in async_main
+    parser.add_argument("--scorer-gate", action="store_true",
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/src/eval/run.py", line 1088, in run_ladder
+    return {"elo": rating.get("elo"), "gxe": rating.get("gxe")}
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/src/eval/run.py", line 455, in wait_for_foul_play
+    proc: asyncio.subprocess.Process,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FoulPlayError: Foul Play exited with code 1; log=experiments/official_ladder_v2/logs/zukostan234.log
+FO     Policy 3: swordsdance visited 48.14% avg_score=0.538 sample_chance_multiplier=0.062
+INFO     Policy 4: swordsdance visited 72.21% avg_score=0.463 sample_chance_multiplier=0.062
+INFO     Policy 5: swordsdance visited 66.84% avg_score=0.449 sample_chance_multiplier=0.062
+INFO     Policy 6: swordsdance visited 61.63% avg_score=0.511 sample_chance_multiplier=0.062
+INFO     Policy 7: swordsdance visited 76.88% avg_score=0.429 sample_chance_multiplier=0.062
+INFO     Policy 8: swordsdance visited 71.71% avg_score=0.478 sample_chance_multiplier=0.062
+INFO     Policy 9: powerwhip visited 54.92% avg_score=0.455 sample_chance_multiplier=0.062
+INFO     Policy 10: swordsdance visited 62.08% avg_score=0.445 sample_chance_multiplier=0.062
+INFO     Policy 11: swordsdance visited 51.14% avg_score=0.491 sample_chance_multiplier=0.062
+INFO     Policy 12: powerwhip visited 61.62% avg_score=0.44 sample_chance_multiplier=0.062
+INFO     Policy 13: swordsdance visited 52.39% avg_score=0.47 sample_chance_multiplier=0.062
+INFO     Policy 14: powerwhip visited 65.55% avg_score=0.506 sample_chance_multiplier=0.062
+INFO     Policy 15: swordsdance visited 69.78% avg_score=0.513 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	61.334%: swordsdance
+INFO     Choice: swordsdance
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/selector_events.py", line 974, in _read_ready__get_buffer
+    nbytes = self._sock.recv_into(buf)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: [Errno 60] Operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/src/scripts/run_foul_play.py", line 1453, in <module>
+    with open(output_path, "a", encoding="utf-8") as handle:
+^^^^^^
+  File "/Users/alityb/projects/metagross/src/scripts/run_foul_play.py", line 1449, in main
+    async def pokemon_battle_with_labels(ps_websocket_client, pokemon_battle_type, team_dict):
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/external/foul-play/run.py", line 97, in run_foul_play
+    winner = await pokemon_battle(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/external/foul-play/fp/run_battle.py", line 322, in pokemon_battle
+    msg = await ps_websocket_client.receive_message()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/src/scripts/run_foul_play.py", line 705, in receive_with_tee
+    wincon = _compute_wincon_matrix(state)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/src/scripts/run_foul_play.py", line 115, in receive_message_with_rating_log
+    message = await original_receive(self)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/external/foul-play/fp/websocket_client.py", line 49, in receive_message
+    message = await self.websocket.recv()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/.venv-fp-priors/lib/python3.11/site-packages/websockets/asyncio/connection.py", line 313, in recv
+    raise self.protocol.close_exc from self.recv_exc
+websockets.exceptions.ConnectionClosedError: no close frame received or sent
+

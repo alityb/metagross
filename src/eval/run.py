@@ -973,23 +973,51 @@ async def run_h2h(args: argparse.Namespace) -> tuple[EvalSummary, list[GameResul
     use_sprt = getattr(args, "sprt_h1", None) is not None
 
     results: list[GameResult] = []
+    max_concurrent = getattr(args, "concurrent_games", 1)
     if args.log_dir:
         log_dir = Path(args.log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
-        for index, (challenger, acceptor) in enumerate(schedule, start=1):
-            result = await run_scheduled_game(
-                args, server_configuration, index, challenger, acceptor, log_dir
-            )
-            results.append(result)
-            emit_progress(args, result, results)
-            if use_sprt:
-                decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
-                w = sum(1 for r in decisive if r.winner == "agent_a")
-                l = sum(1 for r in decisive if r.winner == "agent_b")
-                decision = sprt_check(w, l, args.sprt_h0, args.sprt_h1)
-                if decision != "continue":
-                    print(f"SPRT STOP: {decision} after {len(decisive)} decisive games (w={w} l={l})", flush=True)
-                    break
+        if max_concurrent <= 1:
+            for index, (challenger, acceptor) in enumerate(schedule, start=1):
+                result = await run_scheduled_game(
+                    args, server_configuration, index, challenger, acceptor, log_dir
+                )
+                results.append(result)
+                emit_progress(args, result, results)
+                if use_sprt:
+                    decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
+                    w = sum(1 for r in decisive if r.winner == "agent_a")
+                    l = sum(1 for r in decisive if r.winner == "agent_b")
+                    decision = sprt_check(w, l, args.sprt_h0, args.sprt_h1)
+                    if decision != "continue":
+                        print(f"SPRT STOP: {decision} after {len(decisive)} decisive games (w={w} l={l})", flush=True)
+                        break
+        else:
+            # Concurrent game batches
+            from collections import deque
+            queue = deque(enumerate(schedule, start=1))
+            pending = set()
+            async def _run_one(idx, chal, acc):
+                r = await run_scheduled_game(args, server_configuration, idx, chal, acc, log_dir)
+                return idx, r
+            while queue or pending:
+                while queue and len(pending) < max_concurrent:
+                    idx, (chal, acc) = queue.popleft()
+                    pending.add(asyncio.create_task(_run_one(idx, chal, acc)))
+                done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    idx, result = task.result()
+                    results.append(result)
+                    emit_progress(args, result, results)
+                    if use_sprt:
+                        decisive = [r for r in results if not r.void and r.winner in {"agent_a", "agent_b"}]
+                        w = sum(1 for r in decisive if r.winner == "agent_a")
+                        l = sum(1 for r in decisive if r.winner == "agent_b")
+                        decision = sprt_check(w, l, args.sprt_h0, args.sprt_h1)
+                        if decision != "continue":
+                            print(f"SPRT STOP: {decision} after {len(decisive)} decisive games (w={w} l={l})", flush=True)
+                            queue.clear()
+                            break
     else:
         with tempfile.TemporaryDirectory(prefix="phase0-eval-") as temp_dir_name:
             log_dir = Path(temp_dir_name)
@@ -1262,7 +1290,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=str(ROOT_DIR / "src" / "scripts" / "sample_conditional_randbats.cjs"),
         help="Node script used by foul_play_randbats_conditional.",
     )
-    parser.add_argument("--randbats-conditional-samples", type=int, default=24)
+    parser.add_argument("--concurrent-games", type=int, default=1,
+                        help="Number of games to run concurrently (for self-play data generation)")
     parser.add_argument("--randbats-conditional-max-teams", type=int, default=30000)
     parser.add_argument("--randbats-conditional-max-ms", type=int, default=250)
     parser.add_argument("--randbats-conditional-timeout-seconds", type=float, default=8.0)
