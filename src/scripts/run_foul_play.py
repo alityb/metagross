@@ -1494,6 +1494,116 @@ def patch_decision_logging() -> None:
     run_battle.pokemon_battle = pokemon_battle_with_labels
 
 
+def patch_replay_capture() -> None:
+    """METAGROSS_REPLAY_DIR=<path>: capture full Showdown protocol logs per game
+    and save as replay JSONs (compatible with the metamon replay parser).
+
+    Saves maximum information: protocol log, inputlog (if available), player names,
+    format, winner, and all raw websocket messages.
+    """
+    replay_dir = os.environ.get("METAGROSS_REPLAY_DIR")
+    if not replay_dir:
+        return
+
+    import sys as _sys
+    replay_path = Path(replay_dir).resolve()
+    replay_path.mkdir(parents=True, exist_ok=True)
+
+    from fp.websocket_client import PSWebsocketClient
+
+    # Store per-battle message logs: tag -> list of protocol lines
+    _battle_logs: dict[str, list[str]] = {}
+    _battle_players: dict[str, list[str]] = {}
+    _battle_inputlog: dict[str, list[str]] = {}
+    _our_name = None
+    try:
+        import config as _cfg
+        _our_name = _cfg.FoulPlayConfig.username
+    except Exception:
+        pass
+
+    original_receive = PSWebsocketClient.receive_message
+
+    async def receive_with_replay(self):
+        nonlocal _our_name
+        message = await original_receive(self)
+        try:
+            if message.startswith(">battle-"):
+                lines = message.split("\n")
+                tag = lines[0].lstrip(">").strip()
+                if tag not in _battle_logs:
+                    _battle_logs[tag] = []
+                    _battle_players[tag] = []
+                    _battle_inputlog[tag] = []
+
+                for line in lines[1:]:
+                    if not line.startswith("|"):
+                        continue
+                    parts = line.split("|")
+                    if len(parts) < 2:
+                        continue
+                    msg_type = parts[1]
+
+                    # Capture player names
+                    if msg_type == "player" and len(parts) >= 4:
+                        pname = parts[3]
+                        if pname and pname not in _battle_players[tag]:
+                            _battle_players[tag].append(pname)
+                        if _our_name is None:
+                            import config as _cfg
+                            _our_name = _cfg.FoulPlayConfig.username
+
+                    # Capture inputlog lines (>|p1 move ...| etc)
+                    if line.startswith(">p1 ") or line.startswith(">p2 ") or line.startswith(">start ") or line.startswith(">player "):
+                        _battle_inputlog[tag].append(line)
+
+                    # Capture all protocol lines
+                    _battle_logs[tag].append(line)
+
+                    # On game end (win/tie), save the replay
+                    if msg_type in ("win", "tie") and len(parts) >= 3:
+                        log_text = "\n".join(_battle_logs.get(tag, []))
+                        players = _battle_players.get(tag, ["p1", "p2"])
+
+                        # Extract winner
+                        winner = None
+                        if msg_type == "win":
+                            winner = parts[2].strip()
+
+                        replay_json = {
+                            "id": tag,
+                            "formatid": "gen9randombattle",
+                            "format": "[Gen 9] Random Battle",
+                            "players": players,
+                            "log": log_text,
+                            "uploadtime": int(__import__("time").time()),
+                            "views": 0,
+                            "rating": 0,
+                            "private": 0,
+                            "password": None,
+                            "_winner": winner,
+                            "_our_name": _our_name,
+                        }
+
+                        out_file = replay_path / f"{tag}.json"
+                        with open(out_file, "w", encoding="utf-8") as f:
+                            json.dump(replay_json, f, ensure_ascii=True)
+
+                        print(f"REPLAY_SAVED: {out_file.name} winner={winner}", file=_sys.stderr, flush=True)
+
+                        # Clean up
+                        _battle_logs.pop(tag, None)
+                        _battle_players.pop(tag, None)
+                        _battle_inputlog.pop(tag, None)
+        except Exception as e:
+            import sys as _sys2
+            print(f"REPLAY_CAPTURE_ERROR: {e}", file=_sys2.stderr, flush=True)
+        return message
+
+    PSWebsocketClient.receive_message = receive_with_replay
+    print(f"REPLAY_CAPTURE: saving to {replay_path}", file=sys.stderr, flush=True)
+
+
 def main() -> None:
     root_dir = Path(__file__).resolve().parents[2]
     foul_play_dir = Path(os.environ.get("FOUL_PLAY_DIR", root_dir / "external" / "foul-play"))
@@ -1523,6 +1633,7 @@ def main() -> None:
     patch_root_priors()
     patch_randbats_generator_belief()
     patch_decision_logging()
+    patch_replay_capture()
 
     from run import run_foul_play
 

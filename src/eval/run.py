@@ -40,6 +40,7 @@ AGENT_NAMES = (
     "foul_play_value_shield",
     "foul_play_belief_threat",
     "foul_play_wincon",
+    "foul_play_pp_stall",
     "foul_play_opp_priors",
     "foul_play_root_priors",
     "foul_play_root_priors_opp",
@@ -180,6 +181,7 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_value_shield",
         "foul_play_belief_threat",
         "foul_play_wincon",
+        "foul_play_pp_stall",
         "foul_play_opp_priors",
         "foul_play_root_priors",
         "foul_play_root_priors_opp",
@@ -399,6 +401,15 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
     else:
         env.pop("METAGROSS_BELIEF_EVAL", None)
         env.pop("METAGROSS_WINCON_EVAL", None)
+    if agent == "foul_play_pp_stall":
+        env["METAGROSS_PP_STALL"] = "1"
+    else:
+        env.pop("METAGROSS_PP_STALL", None)
+    # Pass through data-capture env vars (self-play / ExIt pipeline)
+    for passthrough in ("METAGROSS_REPLAY_DIR", "METAGROSS_DECISION_LOG", "METAGROSS_BELIEF_LOG"):
+        val = os.environ.get(passthrough)
+        if val:
+            env[passthrough] = val
     if is_value_shield_foul_play(agent):
         env["METAGROSS_FP_VALUE_SHIELD"] = "1"
         env["METAGROSS_FP_VALUE_SHIELD_MARGIN"] = str(args.value_shield_margin)
