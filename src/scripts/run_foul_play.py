@@ -395,7 +395,7 @@ def patch_tauros_action_kind_gate() -> None:
 _PRIOR_STATE = {"priors": None, "cpuct": 2.0}
 
 
-def _mcts_with_root_priors(state_str, search_time_ms, index):
+def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
     """Module-level (picklable/forkable) MCTS runner that applies the current
     turn's root priors. Replaces fp.search.main.get_result_from_mcts.
 
