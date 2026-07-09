@@ -13,3 +13,4 @@ __pycache__/
 .pytest_cache/
 .ladder_credentials
 /.venv/
+.ladder_exit_password
