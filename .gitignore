@@ -14,3 +14,10 @@ __pycache__/
 .ladder_credentials
 /.venv/
 .ladder_exit_password
+.ladder_exit_r1_credentials
+*.out
+experiments/exit_ladder_fresh/watchdog.out
+experiments/exit_ladder_fresh/run.out
+experiments/exit_ladder/prior_server.out
+experiments/exit_ladder/run.out
+experiments/pe_v2_equivalence/
