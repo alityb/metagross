@@ -25,7 +25,7 @@ import os
 import re
 import sys
 import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
@@ -431,6 +431,7 @@ def main() -> None:
     parser.add_argument("--username", required=True,
                         help="FP's showdown username (to identify our side)")
     parser.add_argument("--port", type=int, default=8977)
+    parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
 
     server = PriorServer(args)
@@ -480,8 +481,8 @@ def main() -> None:
             else:
                 self._json(404, {"error": "unknown"})
 
-    httpd = HTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"PRIOR_SERVER listening on 127.0.0.1:{args.port}", flush=True)
+    httpd = ThreadingHTTPServer((args.host, args.port), Handler)
+    print(f"PRIOR_SERVER listening on {args.host}:{args.port}", flush=True)
     httpd.serve_forever()
 
 
