@@ -1,0 +1,211 @@
+use crate::engine::items::Items;
+use crate::state::{Pokemon, PokemonStatus, Side, State};
+use std::env;
+use std::fs;
+use std::sync::OnceLock;
+
+const FEATURE_COUNT: usize = 16;
+
+#[derive(Debug)]
+struct LearnedValueModel {
+    bias: f32,
+    weights: Vec<f32>,
+}
+
+static MODEL: OnceLock<Option<LearnedValueModel>> = OnceLock::new();
+
+pub fn learned_eval_enabled() -> bool {
+    model().is_some()
+}
+
+pub fn learned_value(state: &State) -> Option<f32> {
+    let model = model()?;
+    let features = extract_features(state);
+    let mut logit = model.bias;
+    for (weight, feature) in model.weights.iter().zip(features.iter()) {
+        logit += weight * feature;
+    }
+    Some(sigmoid(logit).clamp(0.0, 1.0))
+}
+
+fn model() -> Option<&'static LearnedValueModel> {
+    MODEL.get_or_init(load_model).as_ref()
+}
+
+fn load_model() -> Option<LearnedValueModel> {
+    let path = match env::var("METAGROSS_VALUE_MODEL") {
+        Ok(path) if !path.trim().is_empty() => path,
+        _ => return None,
+    };
+    let contents = fs::read_to_string(&path)
+        .unwrap_or_else(|err| panic!("failed to read METAGROSS_VALUE_MODEL {}: {}", path, err));
+    parse_model(&contents).unwrap_or_else(|err| panic!("invalid METAGROSS_VALUE_MODEL {}: {}", path, err))
+}
+
+fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
+    let mut bias = None;
+    let mut weights = None;
+    for raw_line in contents.lines() {
+        let line = raw_line.split('#').next().unwrap_or("").trim();
+        if line.is_empty() || line == "metagross_value_net_v1" {
+            continue;
+        }
+        let mut parts = line.split_whitespace();
+        match parts.next() {
+            Some("bias") => {
+                let value = parts
+                    .next()
+                    .ok_or_else(|| "bias line missing value".to_string())?
+                    .parse::<f32>()
+                    .map_err(|err| format!("invalid bias: {}", err))?;
+                bias = Some(value);
+            }
+            Some("weights") => {
+                let parsed: Result<Vec<f32>, _> = parts.map(|p| p.parse::<f32>()).collect();
+                let parsed = parsed.map_err(|err| format!("invalid weight: {}", err))?;
+                if parsed.len() != FEATURE_COUNT {
+                    return Err(format!(
+                        "expected {} weights, found {}",
+                        FEATURE_COUNT,
+                        parsed.len()
+                    ));
+                }
+                weights = Some(parsed);
+            }
+            Some(other) => return Err(format!("unknown model line: {}", other)),
+            None => {}
+        }
+    }
+    Ok(Some(LearnedValueModel {
+        bias: bias.ok_or_else(|| "missing bias".to_string())?,
+        weights: weights.ok_or_else(|| "missing weights".to_string())?,
+    }))
+}
+
+fn sigmoid(x: f32) -> f32 {
+    1.0 / (1.0 + (-x).exp())
+}
+
+fn hp_fraction(pokemon: &Pokemon) -> f32 {
+    if pokemon.maxhp <= 0 || pokemon.hp <= 0 {
+        0.0
+    } else {
+        (pokemon.hp as f32 / pokemon.maxhp as f32).clamp(0.0, 1.0)
+    }
+}
+
+fn side_hp_fraction(side: &Side) -> f32 {
+    side.pokemon
+        .into_iter()
+        .map(hp_fraction)
+        .sum::<f32>()
+        / 6.0
+}
+
+fn side_alive_fraction(side: &Side) -> f32 {
+    side.pokemon
+        .into_iter()
+        .filter(|pokemon| pokemon.hp > 0)
+        .count() as f32
+        / 6.0
+}
+
+fn side_status_fraction(side: &Side) -> f32 {
+    side.pokemon
+        .into_iter()
+        .filter(|pokemon| pokemon.hp > 0 && pokemon.status != PokemonStatus::NONE)
+        .count() as f32
+        / 6.0
+}
+
+fn side_item_fraction(side: &Side) -> f32 {
+    side.pokemon
+        .into_iter()
+        .filter(|pokemon| pokemon.hp > 0 && pokemon.item != Items::NONE)
+        .count() as f32
+        / 6.0
+}
+
+fn side_used_tera(side: &Side) -> f32 {
+    if side.pokemon.into_iter().any(|pokemon| pokemon.terastallized) {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+fn active_stat_total(side: &Side) -> f32 {
+    let active = &side.pokemon[side.active_index];
+    (active.attack
+        + active.defense
+        + active.special_attack
+        + active.special_defense
+        + active.speed) as f32
+        / 1000.0
+}
+
+fn team_stat_total(side: &Side) -> f32 {
+    side.pokemon
+        .into_iter()
+        .filter(|pokemon| pokemon.hp > 0)
+        .map(|pokemon| {
+            (pokemon.attack
+                + pokemon.defense
+                + pokemon.special_attack
+                + pokemon.special_defense
+                + pokemon.speed) as f32
+        })
+        .sum::<f32>()
+        / 6000.0
+}
+
+fn screen_score(side: &Side) -> f32 {
+    let conditions = &side.side_conditions;
+    (conditions.reflect + conditions.light_screen + conditions.aurora_veil * 2) as f32 / 8.0
+}
+
+fn hazard_score(side: &Side) -> f32 {
+    let conditions = &side.side_conditions;
+    (conditions.stealth_rock
+        + conditions.spikes
+        + conditions.toxic_spikes
+        + conditions.sticky_web * 2) as f32
+        / 8.0
+}
+
+fn boost_features(side: &Side) -> [f32; 5] {
+    [
+        side.attack_boost as f32 / 6.0,
+        side.defense_boost as f32 / 6.0,
+        side.special_attack_boost as f32 / 6.0,
+        side.special_defense_boost as f32 / 6.0,
+        side.speed_boost as f32 / 6.0,
+    ]
+}
+
+fn extract_features(state: &State) -> [f32; FEATURE_COUNT] {
+    let side_one = &state.side_one;
+    let side_two = &state.side_two;
+    let side_one_boosts = boost_features(side_one);
+    let side_two_boosts = boost_features(side_two);
+    [
+        side_hp_fraction(side_one) - side_hp_fraction(side_two),
+        side_alive_fraction(side_one) - side_alive_fraction(side_two),
+        hp_fraction(&side_one.pokemon[side_one.active_index])
+            - hp_fraction(&side_two.pokemon[side_two.active_index]),
+        side_status_fraction(side_two) - side_status_fraction(side_one),
+        side_item_fraction(side_one) - side_item_fraction(side_two),
+        side_used_tera(side_two) - side_used_tera(side_one),
+        side_one_boosts[0] - side_two_boosts[0],
+        side_one_boosts[1] - side_two_boosts[1],
+        side_one_boosts[2] - side_two_boosts[2],
+        side_one_boosts[3] - side_two_boosts[3],
+        side_one_boosts[4] - side_two_boosts[4],
+        screen_score(side_one) - screen_score(side_two),
+        hazard_score(side_two) - hazard_score(side_one),
+        active_stat_total(side_one) - active_stat_total(side_two),
+        team_stat_total(side_one) - team_stat_total(side_two),
+        if side_one.substitute_health > 0 { 1.0 } else { 0.0 }
+            - if side_two.substitute_health > 0 { 1.0 } else { 0.0 },
+    ]
+}

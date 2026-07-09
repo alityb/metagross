@@ -1,0 +1,8 @@
+Metadata-Version: 2.3
+Name: poke-engine
+Version: 0.0.47
+Description-Content-Type: text/markdown; charset=UTF-8; variant=GFM
+
+Python bindings for the poke-engine library. Still a work in progress.
+
+For full documentation, see the [poke-engine documentation](https://poke-engine.readthedocs.io/en/latest/).

@@ -1,0 +1,455 @@
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/pyproject.toml engine/pe_v2/poke-engine-py/pyproject.toml
+--- external/source-dist/poke_engine-0.0.47/poke-engine-py/pyproject.toml	1969-12-31 16:00:00
++++ engine/pe_v2/poke-engine-py/pyproject.toml	2026-07-09 16:06:01
+@@ -0,0 +1,13 @@
++[build-system]
++requires = ["maturin>=1.0,<2.0"]
++build-backend = "maturin"
++
++[project]
++name = "poke_engine"
++version = "0.0.47"
++requires-python = ">=3.9"
++
++[tool.maturin]
++python-source = "python"
++module-name = "poke_engine.poke_engine"
++features = ["pyo3/extension-module"]
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/python/poke_engine/__init__.py engine/pe_v2/poke-engine-py/python/poke_engine/__init__.py
+--- external/source-dist/poke_engine-0.0.47/poke-engine-py/python/poke_engine/__init__.py	2026-06-13 13:32:23
++++ engine/pe_v2/poke-engine-py/python/poke_engine/__init__.py	2026-07-09 16:04:56
+@@ -146,7 +146,8 @@
+ 
+ 
+ def monte_carlo_tree_search(
+-    state: State, duration_ms: int = 1000, iterations: int = 0, threads: int = 1
++    state: State, duration_ms: int = 1000, iterations: int = 0, threads: int = 1,
++    s1_priors=None, s2_priors=None, c_puct: float = 2.0
+ ) -> MctsResult:
+     """
+     Perform monte-carlo-tree-search on the given state and for the given duration
+@@ -162,7 +163,10 @@
+     :return: the result of the search
+     :rtype: MctsResult
+     """
+-    return MctsResult._from_rust(mcts(state, duration_ms, iterations, threads))
++    return MctsResult._from_rust(
++        mcts(state, duration_ms, iterations, threads,
++             s1_priors=s1_priors, s2_priors=s2_priors, c_puct=c_puct)
++    )
+ 
+ 
+ def iterative_deepening_expectiminimax(
+@@ -179,3 +183,4 @@
+     :rtype: IterativeDeepeningResult
+     """
+     return IterativeDeepeningResult._from_rust(id(state, duration_ms))
++
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/src/lib.rs engine/pe_v2/poke-engine-py/src/lib.rs
+--- external/source-dist/poke_engine-0.0.47/poke-engine-py/src/lib.rs	2026-06-13 13:32:23
++++ engine/pe_v2/poke-engine-py/src/lib.rs	2026-07-09 16:20:18
+@@ -1,7 +1,7 @@
+ use pyo3::prelude::*;
+ use pyo3::types::PyType;
+ use pyo3::{pyfunction, pymethods, pymodule, wrap_pyfunction, Bound, PyResult};
+-use std::collections::HashSet;
++use std::collections::{HashMap, HashSet};
+ 
+ use poke_engine::choices::{Choices, MoveCategory, MOVES};
+ use poke_engine::engine::abilities::Abilities;
+@@ -44,6 +44,11 @@
+     pub trick_room: bool,
+     pub trick_room_turns_remaining: i8,
+     pub team_preview: bool,
++    pub s1_threat: f32,
++    pub s2_threat: f32,
++    pub scout_value: f32,
++    pub threat_matrix: Vec<f32>,
++    pub wincon_matrix: Vec<f32>,
+ }
+ 
+ impl From<State> for PyState {
+@@ -58,6 +63,11 @@
+             trick_room: other.trick_room.active,
+             trick_room_turns_remaining: other.trick_room.turns_remaining,
+             team_preview: other.team_preview,
++            s1_threat: other.s1_threat,
++            s2_threat: other.s2_threat,
++            scout_value: other.scout_value,
++            threat_matrix: other.threat_matrix.to_vec(),
++            wincon_matrix: other.wincon_matrix.to_vec(),
+         }
+     }
+ }
+@@ -82,6 +92,23 @@
+             team_preview: self.team_preview,
+             use_last_used_move: false,
+             use_damage_dealt: false,
++            s1_threat: self.s1_threat,
++            s2_threat: self.s2_threat,
++            scout_value: self.scout_value,
++            threat_matrix: {
++                let mut m = [0.0f32; 36];
++                for (i, v) in self.threat_matrix.iter().enumerate().take(36) {
++                    m[i] = *v;
++                }
++                m
++            },
++            wincon_matrix: {
++                let mut m = [0.0f32; 36];
++                for (i, v) in self.wincon_matrix.iter().enumerate().take(36) {
++                    m[i] = *v;
++                }
++                m
++            },
+         };
+         state.set_conditional_mechanics();
+         state
+@@ -101,6 +128,11 @@
+         trick_room=false,
+         trick_room_turns_remaining=0,
+         team_preview=false,
++        s1_threat=0.0,
++        s2_threat=0.0,
++        scout_value=0.0,
++        threat_matrix=vec![0.0; 36],
++        wincon_matrix=vec![0.0; 36],
+     ))]
+     fn new(
+         side_one: PySide,
+@@ -112,6 +144,11 @@
+         trick_room: bool,
+         trick_room_turns_remaining: i8,
+         team_preview: bool,
++        s1_threat: f32,
++        s2_threat: f32,
++        scout_value: f32,
++        threat_matrix: Vec<f32>,
++        wincon_matrix: Vec<f32>,
+     ) -> Self {
+         PyState {
+             side_one,
+@@ -123,6 +160,11 @@
+             trick_room,
+             trick_room_turns_remaining,
+             team_preview,
++            s1_threat,
++            s2_threat,
++            scout_value,
++            threat_matrix,
++            wincon_matrix,
+         }
+     }
+     fn apply_instructions(&self, instructions: PyStateInstructions) -> PyState {
+@@ -910,22 +952,55 @@
+     }
+ }
+ 
++fn match_priors_to_options(
++    priors: &Option<Vec<(String, f32)>>,
++    options: &[MoveChoice],
++    side: &Side,
++) -> Option<Vec<Option<f32>>> {
++    let pairs = priors.as_ref()?;
++    let map: HashMap<&str, f32> = pairs.iter().map(|(k, v)| (k.as_str(), *v)).collect();
++    // moves not present in the prior list get prior 0 (suppressed, PUCT node)
++    let matched: Vec<f32> = options
++        .iter()
++        .map(|mc| *map.get(movechoice_to_string(side, mc).as_str()).unwrap_or(&0.0))
++        .collect();
++    let total: f32 = matched.iter().sum();
++    if total <= 0.0 {
++        return None;
++    }
++    Some(
++        matched
++            .into_iter()
++            .map(|v| Some(v / total))
++            .collect(),
++    )
++}
++
+ #[pyfunction]
++#[pyo3(signature = (py_state, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0))]
+ fn mcts(
+     py_state: PyState,
+     duration_ms: u64,
+     iterations: u32,
+     threads: usize,
++    s1_priors: Option<Vec<(String, f32)>>,
++    s2_priors: Option<Vec<(String, f32)>>,
++    c_puct: f32,
+ ) -> PyResult<PyMctsResult> {
+     let mut state: State = py_state.into();
+     let duration = Duration::from_millis(duration_ms);
+     let (s1_options, s2_options) = state.root_get_all_options();
++    let s1_priors_vec = match_priors_to_options(&s1_priors, &s1_options, &state.side_one);
++    let s2_priors_vec = match_priors_to_options(&s2_priors, &s2_options, &state.side_two);
+     let mcts_result = if threads > 1 {
+         perform_mcts_shared_tree(
+             &mut state, s1_options, s2_options, duration, iterations, threads,
+         )
+     } else {
+-        perform_mcts(&mut state, s1_options, s2_options, duration, iterations)
++        perform_mcts(
++            &mut state, s1_options, s2_options, duration, iterations,
++            s1_priors_vec, s2_priors_vec, c_puct,
++        )
+     };
+ 
+     let py_mcts_result = PyMctsResult::from_mcts_result(mcts_result, &state);
+@@ -933,6 +1008,44 @@
+ }
+ 
+ #[pyfunction]
++fn set_belief(
++    py_state: &Bound<'_, PyState>,
++    s1_threat: f32,
++    s2_threat: f32,
++    scout_value: f32,
++) -> PyResult<()> {
++    let mut st = py_state.borrow_mut();
++    st.s1_threat = s1_threat;
++    st.s2_threat = s2_threat;
++    st.scout_value = scout_value;
++    Ok(())
++}
++
++#[pyfunction]
++fn set_threat_matrix(py_state: &Bound<'_, PyState>, flat_matrix: Vec<f32>) -> PyResult<()> {
++    if flat_matrix.len() != 36 {
++        return Err(pyo3::exceptions::PyValueError::new_err(
++            "flat_matrix must have exactly 36 elements (6x6 row-major)",
++        ));
++    }
++    let mut st = py_state.borrow_mut();
++    st.threat_matrix = flat_matrix;
++    Ok(())
++}
++
++#[pyfunction]
++fn set_wincon_matrix(py_state: &Bound<'_, PyState>, flat_matrix: Vec<f32>) -> PyResult<()> {
++    if flat_matrix.len() != 36 {
++        return Err(pyo3::exceptions::PyValueError::new_err(
++            "flat_matrix must have exactly 36 elements (6x6 row-major)",
++        ));
++    }
++    let mut st = py_state.borrow_mut();
++    st.wincon_matrix = flat_matrix;
++    Ok(())
++}
++
++#[pyfunction]
+ fn id(py_state: PyState, duration_ms: u64) -> PyResult<PyIterativeDeepeningResult> {
+     let mut state: State = py_state.into();
+     let duration = Duration::from_millis(duration_ms);
+@@ -1106,6 +1219,9 @@
+     m.add_function(wrap_pyfunction!(generate_instructions, m)?)?;
+     m.add_function(wrap_pyfunction!(id, m)?)?;
+     m.add_function(wrap_pyfunction!(mcts, m)?)?;
++    m.add_function(wrap_pyfunction!(set_belief, m)?)?;
++    m.add_function(wrap_pyfunction!(set_threat_matrix, m)?)?;
++    m.add_function(wrap_pyfunction!(set_wincon_matrix, m)?)?;
+     m.add_class::<PyState>()?;
+     m.add_class::<PySide>()?;
+     m.add_class::<PySideConditions>()?;
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/io.rs engine/pe_v2/src/io.rs
+--- external/source-dist/poke_engine-0.0.47/src/io.rs	2026-06-13 13:32:23
++++ engine/pe_v2/src/io.rs	2026-07-09 16:04:33
+@@ -315,6 +315,9 @@
+                         side_two_options.clone(),
+                         std::time::Duration::from_millis(mcts.time_to_search_ms),
+                         mcts.iterations,
++                        None,
++                        None,
++                        2.0,
+                     )
+                 };
+                 print_mcts_result(&state, result);
+@@ -581,6 +584,9 @@
+                         side_two_options.clone(),
+                         std::time::Duration::from_millis(max_time_ms),
+                         0,
++                        None,
++                        None,
++                        2.0,
+                     );
+                     let elapsed = start_time.elapsed();
+                     pprint_mcts_result(&io_data.state, result);
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/mcts.rs engine/pe_v2/src/mcts.rs
+--- external/source-dist/poke_engine-0.0.47/src/mcts.rs	2026-06-20 18:26:19
++++ engine/pe_v2/src/mcts.rs	2026-07-09 16:14:50
+@@ -49,6 +49,7 @@
+         let s1_options_vec: Vec<MoveNode> = s1_options
+             .iter()
+             .map(|x| MoveNode {
++                prior: None,
+                 move_choice: x.clone(),
+                 total_score: 0.0,
+                 visits: 0,
+@@ -57,6 +58,7 @@
+         let s2_options_vec: Vec<MoveNode> = s2_options
+             .iter()
+             .map(|x| MoveNode {
++                prior: None,
+                 move_choice: x.clone(),
+                 total_score: 0.0,
+                 visits: 0,
+@@ -67,6 +69,26 @@
+         self.s2_options = Some(s2_options_vec);
+     }
+ 
++    /// Attach c_puct-scaled root priors to this node's options (root only).
++    /// Options without a prior entry (None) keep plain UCB1 behavior.
++    fn assign_root_priors(
++        &mut self,
++        s1_priors: Option<Vec<Option<f32>>>,
++        s2_priors: Option<Vec<Option<f32>>>,
++        c_puct: f32,
++    ) {
++        if let (Some(priors), Some(options)) = (s1_priors, self.s1_options.as_mut()) {
++            for (node, p) in options.iter_mut().zip(priors.iter()) {
++                node.prior = p.map(|v| c_puct * v);
++            }
++        }
++        if let (Some(priors), Some(options)) = (s2_priors, self.s2_options.as_mut()) {
++            for (node, p) in options.iter_mut().zip(priors.iter()) {
++                node.prior = p.map(|v| c_puct * v);
++            }
++        }
++    }
++
+     pub fn maximize_ucb_for_side(&self, side_map: &[MoveNode]) -> usize {
+         let mut choice = 0;
+         let mut best_ucb1 = f32::MIN;
+@@ -198,6 +220,8 @@
+ 
+ #[derive(Debug)]
+ pub struct MoveNode {
++    // root prior (already scaled by c_puct); None = plain UCB1 node
++    pub prior: Option<f32>,
+     pub move_choice: MoveChoice,
+     pub total_score: f32,
+     pub visits: u32,
+@@ -205,9 +229,15 @@
+ 
+ impl MoveNode {
+     pub fn ucb1(&self, parent_visits: u32) -> f32 {
++        // every option gets one forced visit (stock behavior)
+         if self.visits == 0 {
+             return f32::INFINITY;
+         }
++        // PUCT when a (c_puct-scaled) root prior is attached; UCB1 otherwise
++        if let Some(cp_prior) = self.prior {
++            return (self.total_score / self.visits as f32)
++                + cp_prior * (parent_visits as f32).sqrt() / (1.0 + self.visits as f32);
++        }
+         let score = (self.total_score / self.visits as f32)
+             + (2.0 * (parent_visits as f32).ln() / self.visits as f32).sqrt();
+         score
+@@ -294,12 +324,16 @@
+     side_two_options: Vec<MoveChoice>,
+     max_time: Duration,
+     max_iterations: u32,
++    s1_priors: Option<Vec<Option<f32>>>,
++    s2_priors: Option<Vec<Option<f32>>>,
++    c_puct: f32,
+ ) -> MctsResult {
+     let mut root_node = Node::new();
+     unsafe {
+         root_node.populate(side_one_options, side_two_options);
+     }
+     root_node.root = true;
++    root_node.assign_root_priors(s1_priors, s2_priors, c_puct);
+     let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
+ 
+     let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
+diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/state.rs engine/pe_v2/src/state.rs
+--- external/source-dist/poke_engine-0.0.47/src/state.rs	2026-06-13 13:32:23
++++ engine/pe_v2/src/state.rs	2026-07-09 16:01:01
+@@ -1317,6 +1317,13 @@
+     pub team_preview: bool,
+     pub use_last_used_move: bool,
+     pub use_damage_dealt: bool,
++    // metagross belief/eval plumbing (serialized so values survive into
++    // forked/parallel search workers; not read by evaluate() in this build)
++    pub s1_threat: f32,
++    pub s2_threat: f32,
++    pub scout_value: f32,
++    pub threat_matrix: [f32; 36],
++    pub wincon_matrix: [f32; 36],
+ }
+ impl Default for State {
+     fn default() -> State {
+@@ -1338,6 +1345,11 @@
+             team_preview: false,
+             use_damage_dealt: false,
+             use_last_used_move: false,
++            s1_threat: 0.0,
++            s2_threat: 0.0,
++            scout_value: 0.0,
++            threat_matrix: [0.0; 36],
++            wincon_matrix: [0.0; 36],
+         };
+ 
+         // many tests rely on the speed of side 2's active pokemon being greater than side_one's
+@@ -2177,14 +2189,31 @@
+     }
+ 
+     pub fn serialize(&self) -> String {
++        let tm = self
++            .threat_matrix
++            .iter()
++            .map(|v| format!("{}", v))
++            .collect::<Vec<String>>()
++            .join(";");
++        let wc = self
++            .wincon_matrix
++            .iter()
++            .map(|v| format!("{}", v))
++            .collect::<Vec<String>>()
++            .join(";");
+         format!(
+-            "{}/{}/{}/{}/{}/{}",
++            "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}",
+             self.side_one.serialize(),
+             self.side_two.serialize(),
+             self.weather.serialize(),
+             self.terrain.serialize(),
+             self.trick_room.serialize(),
+-            self.team_preview
++            self.team_preview,
++            self.s1_threat,
++            self.s2_threat,
++            self.scout_value,
++            tm,
++            wc,
+         )
+     }
+ 
+@@ -2374,6 +2403,13 @@
+     /// ```
+     pub fn deserialize(serialized: &str) -> State {
+         let split: Vec<&str> = serialized.split("/").collect();
++        fn parse_matrix(s: &str) -> [f32; 36] {
++            let mut m = [0.0f32; 36];
++            for (i, part) in s.split(';').enumerate().take(36) {
++                m[i] = part.parse::<f32>().unwrap_or(0.0);
++            }
++            m
++        }
+         let mut state = State {
+             side_one: Side::deserialize(split[0]),
+             side_two: Side::deserialize(split[1]),
+@@ -2383,6 +2419,11 @@
+             team_preview: split[5].parse::<bool>().unwrap(),
+             use_damage_dealt: false,
+             use_last_used_move: false,
++            s1_threat: split.get(6).and_then(|s| s.parse().ok()).unwrap_or(0.0),
++            s2_threat: split.get(7).and_then(|s| s.parse().ok()).unwrap_or(0.0),
++            scout_value: split.get(8).and_then(|s| s.parse().ok()).unwrap_or(0.0),
++            threat_matrix: split.get(9).map(|s| parse_matrix(s)).unwrap_or([0.0; 36]),
++            wincon_matrix: split.get(10).map(|s| parse_matrix(s)).unwrap_or([0.0; 36]),
+         };
+         state.set_conditional_mechanics();
+         state
