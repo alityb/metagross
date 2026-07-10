@@ -1,0 +1,15 @@
+--- a/metamon/rl/custom_agent.py
++++ b/metamon/rl/custom_agent.py
+@@ def _compute_log_probs(self, actor_head, s_rep, a_buffer, obs=None):
+         if self.discrete:
++            # Replay batches use all-zero and all-one sentinels for padded or
++            # absent actions. OneHotCategorical validates before masks apply;
++            # use action 0 for every non-one-hot sentinel. Loss masks still
++            # exclude the corresponding timesteps.
++            valid = (a_buffer.sum(dim=-1, keepdim=True) == 1) & (
++                (a_buffer >= 0).all(dim=-1, keepdim=True)
++            )
++            fallback = torch.zeros_like(a_buffer)
++            fallback[..., 0] = 1.0
++            a_buffer = torch.where(valid, a_buffer, fallback)
+             logp = a_dist.log_prob(a_buffer).unsqueeze(-1)
