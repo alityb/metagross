@@ -832,7 +832,7 @@ def patch_root_priors() -> None:
                 # so the server has already seen this turn's data
                 full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
                 with _url.urlopen(
-                    f"{server_url}/priors?tag={full_tag}", timeout=10
+                    f"{server_url}/priors?tag={full_tag}", timeout=30
                 ) as resp:
                     data = json.loads(resp.read())
                 opp_only = os.environ.get("METAGROSS_OPP_PRIORS_ONLY") == "1"
