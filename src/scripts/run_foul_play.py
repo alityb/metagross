@@ -1427,16 +1427,18 @@ def patch_decision_logging() -> None:
                 battle_copy = deepcopy(battle)
                 battle_copy.user.update_from_request_json(battle_copy.request_json)
                 state = poke_engine_helpers.battle_to_poke_engine_state(battle_copy)
-                pending_rows.append(
-                    {
-                        "battle_tag": battle.battle_tag,
-                        "turn": battle.turn,
-                        "username": config.FoulPlayConfig.username,
-                        "fixed_side": "side_one",
-                        "features": extract_value_features(state),
-                        "state": state.to_string(),
-                    }
-                )
+                row = {
+                    "battle_tag": battle.battle_tag,
+                    "turn": battle.turn,
+                    "username": config.FoulPlayConfig.username,
+                    "fixed_side": "side_one",
+                    "state": state.to_string(),
+                }
+                try:
+                    row["features"] = extract_value_features(state)
+                except Exception as exc:  # optional legacy value features
+                    row["feature_error"] = f"{type(exc).__name__}: {exc}"
+                pending_rows.append(row)
             except Exception as exc:
                 pending_rows.append(
                     {
@@ -1453,17 +1455,16 @@ def patch_decision_logging() -> None:
             # are optional metadata; they must not gate policy-target writes.
             if pending_rows and len(pending_rows) > start_index:
                 row = pending_rows[-1]
-                if "features" in row:
-                    with _store_lock:
-                        captured = _policy_store.pop('__last__', None)
-                    if captured:
-                        row["mcts_visits"] = captured['visits']
-                        row["mcts_total"] = captured['total']
-                        row["selected_action"] = captured['selected_action']
-                    else:
-                        row["mcts_capture_missing"] = True
-                    row["record_type"] = "decision"
-                    write_record(row)
+                with _store_lock:
+                    captured = _policy_store.pop('__last__', None)
+                if captured:
+                    row["mcts_visits"] = captured['visits']
+                    row["mcts_total"] = captured['total']
+                    row["selected_action"] = captured['selected_action']
+                else:
+                    row["mcts_capture_missing"] = True
+                row["record_type"] = "decision"
+                write_record(row)
                 # This record is durable now; do not duplicate at battle end.
                 del pending_rows[start_index:]
             return result

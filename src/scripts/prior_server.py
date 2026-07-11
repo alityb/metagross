@@ -368,10 +368,20 @@ class BattleSession:
             view.team = self.battle.opponent_team
             view.opponent_active_pokemon = self.battle.active_pokemon
             view.opponent_team = self.battle.team
+            view.weather = self.battle.weather
+            view.fields = self.battle.fields
+            view.side_conditions = self.battle.opponent_side_conditions
+            view.opponent_side_conditions = self.battle.side_conditions
             view.force_switch = False
             view.reviving = False
+            view.won = False
+            view.lost = False
             view.can_tera = True
             view.battle_tag = self.battle._battle_tag
+            # Metamon only needs a species list for this field. The opponent's
+            # original preview is not available from the flipped view, so use
+            # the revealed team as a conservative proxy.
+            view.teampreview_opponent_team = list(self.battle.team.values())
         except Exception:
             return None
         return view
