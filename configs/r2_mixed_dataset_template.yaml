@@ -1,0 +1,10 @@
+# Required training mix for an ExIt promotion candidate.
+# Paths are materialized by the training launcher; do not train pure self-play.
+replay_weight: 0.0
+custom_replays:
+  - dir: /data/strict_selfplay
+    weight: 0.9
+  - dir: /data/human_anchor
+    weight: 0.1
+formats:
+  - gen9randombattle

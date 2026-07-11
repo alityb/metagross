@@ -5,13 +5,14 @@ set -euo pipefail
 # Runs on a game-worker instance (c6i). Connects to a prior server on another
 # instance.  Both sides are our agent (foul_play_root_priors_opp).
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PYTHON_BIN="${PYTHON_BIN:-$ROOT_DIR/.venv-foul-play/bin/python}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SRC_ROOT="$REPO_ROOT/src"
+PYTHON_BIN="${PYTHON_BIN:-$REPO_ROOT/.venv-foul-play/bin/python}"
 N_GAMES="${N_GAMES:-50000}"
 SEARCH_TIME_MS="${SEARCH_TIME_MS:-500}"
 SEARCH_PARALLELISM="${SEARCH_PARALLELISM:-8}"
 FORMAT="${FORMAT:-gen9randombattle}"
-OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/data/selfplay_round2}"
+OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/data/selfplay_round2}"
 SHOWDOWN_URI="${SHOWDOWN_URI:-ws://localhost:8000/showdown/websocket}"
 PRIOR_SERVER_URL="${PRIOR_SERVER_URL:-http://127.0.0.1:8977}"
 CONCURRENCY="${CONCURRENCY:-8}"
@@ -50,7 +51,7 @@ for i in $(seq 1 "$N_GAMES"); do
             METAGROSS_PRIOR_SERVER="$PRIOR_SERVER_URL" \
             METAGROSS_CPUCT="2.0" \
             METAGROSS_REQUIRE_PRIORS="1" \
-            "$PYTHON_BIN" "$ROOT_DIR/scripts/run_foul_play.py" \
+            "$PYTHON_BIN" "$SRC_ROOT/scripts/run_foul_play.py" \
             --websocket-uri "$SHOWDOWN_URI" \
             --ps-username "$ACCEPTOR_USER" \
             --bot-mode accept_challenge \
@@ -67,7 +68,7 @@ for i in $(seq 1 "$N_GAMES"); do
             METAGROSS_PRIOR_SERVER="$PRIOR_SERVER_URL" \
             METAGROSS_CPUCT="2.0" \
             METAGROSS_REQUIRE_PRIORS="1" \
-            "$PYTHON_BIN" "$ROOT_DIR/scripts/run_foul_play.py" \
+            "$PYTHON_BIN" "$SRC_ROOT/scripts/run_foul_play.py" \
             --websocket-uri "$SHOWDOWN_URI" \
             --ps-username "$CHALLENGER_USER" \
             --bot-mode challenge_user \

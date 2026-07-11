@@ -342,7 +342,12 @@ def model_for_slot(args: argparse.Namespace, slot: str) -> Optional[str]:
     return args.learned_value_model
 
 
-def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional[str] = None) -> dict[str, str]:
+def foul_play_env(
+    args: argparse.Namespace,
+    agent: str,
+    model_override: Optional[str] = None,
+    slot: Optional[str] = None,
+) -> dict[str, str]:
     env = os.environ.copy()
     model = model_override if model_override is not None else model_for_agent(args, agent)
     if is_learned_foul_play(agent):
@@ -373,11 +378,16 @@ def foul_play_env(args: argparse.Namespace, agent: str, model_override: Optional
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_MAX_MS", None)
         env.pop("METAGROSS_RANDBATS_CONDITIONAL_TIMEOUT_S", None)
         env.pop("METAGROSS_RANDBATS_FORMAT", None)
+    prior_url = args.prior_server_url
+    if slot == "agent_a" and getattr(args, "agent_a_prior_server_url", None):
+        prior_url = args.agent_a_prior_server_url
+    elif slot == "agent_b" and getattr(args, "agent_b_prior_server_url", None):
+        prior_url = args.agent_b_prior_server_url
     if agent in ("foul_play_root_priors", "foul_play_root_priors_opp"):
-        env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
+        env["METAGROSS_PRIOR_SERVER"] = prior_url
         env["METAGROSS_CPUCT"] = str(args.cpuct)
     elif is_opp_priors_foul_play(agent):
-        env["METAGROSS_PRIOR_SERVER"] = args.prior_server_url
+        env["METAGROSS_PRIOR_SERVER"] = prior_url
         env["METAGROSS_CPUCT"] = str(args.cpuct)
         env["METAGROSS_OPP_PRIORS_ONLY"] = "1"
     else:
@@ -446,7 +456,7 @@ async def start_foul_play(
         stdout=log_file,
         stderr=asyncio.subprocess.STDOUT,
         cwd=ROOT_DIR,
-        env=foul_play_env(args, agent, model_override),
+        env=foul_play_env(args, agent, model_override, slot=slot),
     )
     return proc, log_path, log_file
 
@@ -1279,6 +1289,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         help="Override Python binary for agent-b")
     parser.add_argument("--learned-value-model", default=None)
     parser.add_argument("--prior-server-url", default="http://127.0.0.1:8977")
+    parser.add_argument(
+        "--agent-a-prior-server-url",
+        default=None,
+        help="Per-side prior server URL for paired FP H2H tests.",
+    )
+    parser.add_argument(
+        "--agent-b-prior-server-url",
+        default=None,
+        help="Per-side prior server URL for paired FP H2H tests.",
+    )
     parser.add_argument("--cpuct", type=float, default=2.0)
     parser.add_argument(
         "--randbats-belief-pool",

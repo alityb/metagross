@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "format": "gen9randombattle",
+  "seed": 20260711,
+  "profiles": {
+    "accepted_r1": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://accepted-prior:8977",
+      "search_time_ms": 500,
+      "search_parallelism": 8,
+      "cpuct": 2.0,
+      "require_priors": true
+    },
+    "base_kakuna": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://base-prior:8977",
+      "search_time_ms": 500,
+      "search_parallelism": 8,
+      "cpuct": 2.0,
+      "require_priors": true
+    },
+    "stock_fp": {
+      "agent": "foul_play",
+      "search_time_ms": 500,
+      "search_parallelism": 8
+    }
+  },
+  "pfsp": {
+    "learner": "accepted_r1",
+    "pool": [
+      {"id": "accepted_r1", "base_weight": 0.35},
+      {"id": "base_kakuna", "base_weight": 0.25},
+      {"id": "older_accepted", "base_weight": 0.20},
+      {"id": "stock_fp", "base_weight": 0.20}
+    ],
+    "target_winrate": [0.4, 0.6],
+    "min_pool_weight": 0.05,
+    "probe_paired_games": 20
+  }
+}

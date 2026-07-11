@@ -1357,6 +1357,11 @@ def patch_decision_logging() -> None:
     _policy_store: dict = {}
     _store_lock = threading.Lock()
 
+    def write_record(row: dict) -> None:
+        """Append immediately: a disconnected game must not erase search data."""
+        with open(output_path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+
     def safe_select_move_from_mcts_results(mcts_results):
         final_policy = {}
         for mcts_result, sample_chance, _idx in mcts_results:
@@ -1389,22 +1394,29 @@ def patch_decision_logging() -> None:
         # Capture MCTS visit distributions. select_move_from_mcts_results runs in the
         # MAIN process after futures are collected, so no pickling required.
         # Each element: (MctsResult, sample_chance, index)
+        agg: dict[str, float] = {}
+        total = 0
         try:
-            agg: dict[str, float] = {}
-            total = 0
             for mcts_result, chance, _idx in mcts_results:
                 tv = mcts_result.total_visits
                 total += tv
                 for opt in mcts_result.side_one:
                     move = str(opt.move_choice)
-                    frac = opt.visits / tv if tv > 0 else 0.0
+                    # Match selection's uniform fallback for a zero-visit
+                    # search so logged targets are always distributions.
+                    frac = opt.visits / tv if tv > 0 else 1.0 / len(mcts_result.side_one)
                     agg[move] = agg.get(move, 0.0) + chance * frac
-            with _store_lock:
-                if agg:
-                    _policy_store['__last__'] = {'visits': agg, 'total': total}
         except Exception:
             pass
-        return safe_select_move_from_mcts_results(mcts_results)
+        selected = safe_select_move_from_mcts_results(mcts_results)
+        with _store_lock:
+            if agg:
+                _policy_store['__last__'] = {
+                    'visits': agg,
+                    'total': total,
+                    'selected_action': str(selected),
+                }
+        return selected
 
     search_main.select_move_from_mcts_results = select_and_capture
 
@@ -1437,7 +1449,8 @@ def patch_decision_logging() -> None:
                 )
         try:
             result = await original_async_pick_move(battle)
-            # Attach MCTS visit distribution if captured
+            # Attach and persist the MCTS policy immediately. Game-result rows
+            # are optional metadata; they must not gate policy-target writes.
             if pending_rows and len(pending_rows) > start_index:
                 row = pending_rows[-1]
                 if "features" in row:
@@ -1446,23 +1459,29 @@ def patch_decision_logging() -> None:
                     if captured:
                         row["mcts_visits"] = captured['visits']
                         row["mcts_total"] = captured['total']
+                        row["selected_action"] = captured['selected_action']
+                    else:
+                        row["mcts_capture_missing"] = True
+                    row["record_type"] = "decision"
+                    write_record(row)
+                # This record is durable now; do not duplicate at battle end.
+                del pending_rows[start_index:]
             return result
         except Exception:
             del pending_rows[start_index:]
             raise
 
     async def pokemon_battle_with_labels(ps_websocket_client, pokemon_battle_type, team_dict):
-        start_index = len(pending_rows)
         winner = await original_pokemon_battle(ps_websocket_client, pokemon_battle_type, team_dict)
         label = 1 if winner == config.FoulPlayConfig.username else 0
         with open(output_path, "a", encoding="utf-8") as handle:
-            for row in pending_rows[start_index:]:
-                if "features" in row:
-                    row = dict(row)
-                    row["winner"] = winner
-                    row["label"] = label
-                    handle.write(json.dumps(row, separators=(",", ":")) + "\n")
-        del pending_rows[start_index:]
+            handle.write(json.dumps({
+                "record_type": "battle_result",
+                "battle_tag": getattr(ps_websocket_client, "battle_tag", None),
+                "winner": winner,
+                "label": label,
+                "username": config.FoulPlayConfig.username,
+            }, separators=(",", ":")) + "\n")
         return winner
 
     # run.py imports pokemon_battle by value: `from fp.run_battle import pokemon_battle`
