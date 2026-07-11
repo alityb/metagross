@@ -392,7 +392,13 @@ def patch_tauros_action_kind_gate() -> None:
     run_battle.async_pick_move = async_pick_move_with_tauros_kind_gate
 
 
-_PRIOR_STATE = {"priors": None, "cpuct": 2.0}
+_PRIOR_STATE = {
+    "priors": None,
+    "opp_priors": None,
+    "cpuct": 2.0,
+    "root_prior_count": 0,
+    "opponent_prior_count": 0,
+}
 
 
 def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
@@ -825,6 +831,8 @@ def patch_root_priors() -> None:
     def find_best_move_with_priors(battle):
         _PRIOR_STATE["priors"] = None
         _PRIOR_STATE["opp_priors"] = None
+        _PRIOR_STATE["root_prior_count"] = 0
+        _PRIOR_STATE["opponent_prior_count"] = 0
         try:
             tag = getattr(battle, "battle_tag", None)
             if tag:
@@ -845,12 +853,14 @@ def patch_root_priors() -> None:
                     logger.info("opp-only mode: discarding %d s1 priors", len(data.get("priors") or {}))
                 if priors:
                     _PRIOR_STATE["priors"] = [(k, float(v)) for k, v in priors.items()]
+                    _PRIOR_STATE["root_prior_count"] = len(priors)
                     logger.info("root priors ({}): {}".format(
                         len(priors),
                         {k: round(v, 3) for k, v in sorted(priors.items(), key=lambda kv: -kv[1])[:4]},
                     ))
                 if opp_priors:
                     _PRIOR_STATE["opp_priors"] = [(k, float(v)) for k, v in opp_priors.items()]
+                    _PRIOR_STATE["opponent_prior_count"] = len(opp_priors)
                     logger.info("opp priors ({}): {}".format(
                         len(opp_priors),
                         {k: round(v, 3) for k, v in sorted(opp_priors.items(), key=lambda kv: -kv[1])[:4]},
@@ -1463,6 +1473,8 @@ def patch_decision_logging() -> None:
                     row["selected_action"] = captured['selected_action']
                 else:
                     row["mcts_capture_missing"] = True
+                row["root_prior_count"] = _PRIOR_STATE.get("root_prior_count", 0)
+                row["opponent_prior_count"] = _PRIOR_STATE.get("opponent_prior_count", 0)
                 row["record_type"] = "decision"
                 write_record(row)
                 # This record is durable now; do not duplicate at battle end.

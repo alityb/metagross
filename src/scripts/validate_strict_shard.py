@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument("--shard-dir", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--min-decisions", type=int, default=1)
+    parser.add_argument("--require-opponent-priors", action="store_true")
     args = parser.parse_args()
 
     shard = args.shard_dir
@@ -41,6 +42,8 @@ def main() -> None:
         shard / "challenger_decisions.jsonl",
     ]
     decisions = []
+    root_prior_decisions = 0
+    opponent_prior_decisions = 0
     result_tags: set[str] = set()
     errors: list[str] = []
     for path in decision_paths:
@@ -70,12 +73,22 @@ def main() -> None:
             if not row.get("selected_action"):
                 errors.append(f"{path.name}:{line_no}: missing selected_action")
                 continue
+            if int(row.get("root_prior_count", 0)) > 0:
+                root_prior_decisions += 1
+            if int(row.get("opponent_prior_count", 0)) > 0:
+                opponent_prior_decisions += 1
             decisions.append(row)
 
     if bad_usernames:
         errors.append(f"{len(bad_usernames)} replays use '_' usernames")
     if len(decisions) < args.min_decisions:
         errors.append(f"only {len(decisions)} valid decisions")
+    if root_prior_decisions != len(decisions):
+        errors.append(f"root priors missing on {len(decisions) - root_prior_decisions} decisions")
+    if args.require_opponent_priors and opponent_prior_decisions != len(decisions):
+        errors.append(
+            f"opponent priors missing on {len(decisions) - opponent_prior_decisions} decisions"
+        )
 
     if errors:
         for error in errors[:20]:
@@ -89,6 +102,8 @@ def main() -> None:
         "raw_replay_files": len(replays),
         "unique_replay_battles": len(replay_battles),
         "decision_records": len(decisions),
+        "root_prior_decisions": root_prior_decisions,
+        "opponent_prior_decisions": opponent_prior_decisions,
         "decision_battles": len(by_battle),
         "battle_result_records": len(result_tags),
         "minimum_decisions_per_battle": min(by_battle.values()),
