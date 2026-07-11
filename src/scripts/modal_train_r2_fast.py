@@ -55,7 +55,14 @@ IMAGE = (
     timeout=3600,
     volumes={"/data": VOLUME},
 )
-def train(parsed_tarball: bytes, variant_script: bytes, toggles: bytes, gins: bytes) -> list[str]:
+def train(
+    strict_tarball: bytes,
+    legacy_tarball: bytes,
+    human_tarball: bytes,
+    variant_script: bytes,
+    toggles: bytes,
+    gins: bytes,
+) -> list[str]:
     import glob
     import subprocess
     import sys
@@ -70,7 +77,11 @@ def train(parsed_tarball: bytes, variant_script: bytes, toggles: bytes, gins: by
     os.makedirs("/data/repo/src/train", exist_ok=True)
     os.makedirs("/data/repo/src/scripts", exist_ok=True)
 
-    with tarfile.open(fileobj=io.BytesIO(parsed_tarball), mode="r:gz") as archive:
+    with tarfile.open(fileobj=io.BytesIO(strict_tarball), mode="r:gz") as archive:
+        archive.extractall("/data")
+    with tarfile.open(fileobj=io.BytesIO(legacy_tarball), mode="r:gz") as archive:
+        archive.extractall("/data")
+    with tarfile.open(fileobj=io.BytesIO(human_tarball), mode="r:gz") as archive:
         archive.extractall("/data")
 
     with open("/data/repo/src/train/finetune_toggles.py", "wb") as f:
@@ -100,15 +111,21 @@ def train(parsed_tarball: bytes, variant_script: bytes, toggles: bytes, gins: by
                 import shutil
                 shutil.rmtree(os.path.join(root, directory), ignore_errors=True)
 
-    n = len(glob.glob("/data/selfplay_round2_parsed/gen9randombattle/*.lz4"))
-    print(f"Training on {n} trajectories", flush=True)
+    n_strict = len(glob.glob("/data/strict_round2_parsed/gen9randombattle/*.lz4"))
+    n_legacy = len(glob.glob("/data/legacy_r1_selfplay/gen9randombattle/*.lz4"))
+    n_human = len(glob.glob("/data/parsed_replays/gen9randombattle/*.lz4"))
+    print(f"Training on strict={n_strict} legacy={n_legacy} human={n_human}", flush=True)
 
     with open("/data/randbats_r2.yaml", "w") as f:
         f.write(
             "replay_weight: 0.0\n"
             "custom_replays:\n"
-            "  - dir: /data/selfplay_round2_parsed\n"
-            "    weight: 1.0\n"
+            "  - dir: /data/strict_round2_parsed\n"
+            "    weight: 0.45\n"
+            "  - dir: /data/legacy_r1_selfplay\n"
+            "    weight: 0.45\n"
+            "  - dir: /data/parsed_replays\n"
+            "    weight: 0.1\n"
             "formats:\n"
             "  - gen9randombattle\n"
         )
@@ -149,8 +166,12 @@ def train(parsed_tarball: bytes, variant_script: bytes, toggles: bytes, gins: by
 
 @APP.local_entrypoint()
 def main() -> None:
-    with open("/tmp/randbats_r2_train.tgz", "rb") as f:
-        parsed = f.read()
+    with open("/tmp/strict_r2_parsed.tgz", "rb") as f:
+        strict = f.read()
+    with open("/tmp/legacy_r1_selfplay.tgz", "rb") as f:
+        legacy = f.read()
+    with open("/tmp/randbats_human_parsed.tgz", "rb") as f:
+        human = f.read()
     with open(os.path.join(ROOT, "src", "scripts", "run_finetune_variant.py"), "rb") as f:
         variant_script = f.read()
     with open(os.path.join(ROOT, "src", "train", "finetune_toggles.py"), "rb") as f:
@@ -162,6 +183,11 @@ def main() -> None:
             path = os.path.join(ROOT, "src", "train", "gins", name)
             archive.add(path, arcname=f"gins/{name}")
 
-    print(f"Uploading {len(parsed) / 1e6:.1f}MB of trajectories", flush=True)
-    call = train.spawn(parsed, variant_script, toggles, gins_buf.getvalue())
+    print(
+        f"Uploading strict={len(strict)/1e6:.1f}MB + "
+        f"legacy={len(legacy)/1e6:.1f}MB + "
+        f"human={len(human)/1e6:.1f}MB",
+        flush=True,
+    )
+    call = train.spawn(strict, legacy, human, variant_script, toggles, gins_buf.getvalue())
     print(f"Detached training call: {call.object_id}", flush=True)
