@@ -31,6 +31,28 @@ Sources and exact caveats are collected in `docs/research_ideas.md` B1-B3.
 The reported useful Metamon round scale is 100k-500k full battles. We cannot
 call a smaller batch literature-scale; use it only as a gated pilot.
 
+### Primary References
+
+- Anthony, Tian, Barber, *Thinking Fast and Slow with Deep Learning and Tree
+  Search* (2017), https://arxiv.org/abs/1705.08439. Defines Expert Iteration:
+  an apprentice policy learns from a stronger search expert, then improves
+  later search. It does not promise monotonic generation gains.
+- Silver et al., *Mastering Chess and Shogi by Self-Play with a General
+  Reinforcement Learning Algorithm* (2017), https://arxiv.org/abs/1712.01815.
+  Search visit distributions, not merely selected actions, are the canonical
+  policy targets. This is why Metagross must preserve MCTS visit targets.
+- Vinyals et al., *Grandmaster Level in StarCraft II Using Multi-Agent
+  Reinforcement Learning* (2019), https://www.nature.com/articles/s41586-019-1724-z.
+  The league/PFSP result motivates a pool instead of latest-self-only data.
+- Metamon / PokéAgent Challenge: https://github.com/UT-Austin-RPL/metamon and
+  https://pokeagent.github.io/. These are the closest stack/metric precedent
+  for human-replay warm starts plus population/offline training.
+- piKL / Diplodocus, https://arxiv.org/abs/2210.05492. Human-policy anchoring
+  motivates retained human data and KL regularization; it is supporting
+  evidence, not a direct Pokémon proof.
+- MuZero Reanalyse, https://arxiv.org/abs/2104.06294. Preserving strict raw
+  trajectories allows later relabeling instead of discarding costly battles.
+
 ## Terms
 
 | Term | Meaning |
