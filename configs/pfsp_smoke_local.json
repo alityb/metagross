@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "format": "gen9randombattle",
+  "seed": 20260711,
+  "profiles": {
+    "candidate_r2": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://127.0.0.1:8981",
+      "python": ".venv-fp-priors/bin/python",
+      "require_priors": true
+    },
+    "accepted_r1": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://127.0.0.1:8982",
+      "python": ".venv-fp-priors/bin/python",
+      "require_priors": true
+    }
+  },
+  "pfsp": {
+    "learner": "candidate_r2",
+    "pool": [
+      {"id": "accepted_r1", "base_weight": 1.0}
+    ],
+    "target_winrate": [0.4, 0.6],
+    "min_pool_weight": 0.05,
+    "probe_paired_games": 2
+  }
+}

@@ -43,18 +43,23 @@ def main() -> None:
         replay_battles.add(battle_id)
 
     decision_paths = [
-        shard / "acceptor_decisions.jsonl",
-        shard / "challenger_decisions.jsonl",
+        path
+        for path in (
+            shard / "acceptor_decisions.jsonl",
+            shard / "challenger_decisions.jsonl",
+            shard / "agent_a_decisions.jsonl",
+            shard / "agent_b_decisions.jsonl",
+        )
+        if path.exists()
     ]
     decisions = []
     root_prior_decisions = 0
     opponent_prior_decisions = 0
     result_tags: set[str] = set()
     errors: list[str] = []
+    if not decision_paths:
+        errors.append("no decision JSONL files found")
     for path in decision_paths:
-        if not path.exists():
-            errors.append(f"missing {path.name}")
-            continue
         for line_no, line in enumerate(path.read_text().splitlines(), 1):
             try:
                 row = json.loads(line)
