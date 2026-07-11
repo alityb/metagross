@@ -1,0 +1,13 @@
+{
+  "dataset": "selfplay_round2_clean",
+  "purpose": "ExIt strong-search clean generation",
+  "source_agent": "foul_play_root_priors_opp",
+  "prior_checkpoint": "randbats_D_hlgauss@4 (base Kakuna)",
+  "search_time_ms": 500,
+  "search_parallelism": 8,
+  "cpuct": 2.0,
+  "strict_priors": true,
+  "policy_on_failure": "discard game",
+  "code_commit": "a1aa462b587b27cc1ab9e7dc14772a2eea050400",
+  "mixed_pre_strict_data": "archived and excluded from all future training"
+}
