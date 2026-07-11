@@ -144,38 +144,26 @@ class BattleSession:
             illegal[:] = False
         obs = dict(obs)
         obs["illegal_actions"] = illegal
-        self.obs_hist.append(obs)
-        # if action inference missed a turn, pad with a no-op guess (idx 0)
-        while len(self.action_hist) < len(self.obs_hist) - 1:
-            self.action_hist.append(0)
-        while len(self.reward_hist) < len(self.obs_hist) - 1:
-            self.reward_hist.append(0.0)
-
-        T = len(self.obs_hist)
+        # Stateless two-step inference is intentionally used here. The live
+        # protocol occasionally misses an action boundary, which makes a
+        # history sequence and its RL2 action/reward stream differ by one
+        # timestep. The policy's current-state prior is still useful, while
+        # this fixed shape avoids silently falling back to no-prior MCTS.
+        current_obs = obs
+        T = 2
         A = 13
         text = torch.tensor(
-            np.stack([o["text_tokens"] for o in self.obs_hist]), dtype=torch.int32
+            np.stack([np.zeros_like(current_obs["text_tokens"]), current_obs["text_tokens"]]),
+            dtype=torch.int32,
         ).unsqueeze(0)
         numbers = torch.tensor(
-            np.stack([o["numbers"] for o in self.obs_hist]), dtype=torch.float32
+            np.stack([np.zeros_like(current_obs["numbers"]), current_obs["numbers"]]),
+            dtype=torch.float32,
         ).unsqueeze(0)
         ill = torch.tensor(
-            np.stack([o["illegal_actions"] for o in self.obs_hist])
+            np.stack([np.ones(13, dtype=bool), current_obs["illegal_actions"]])
         ).unsqueeze(0)
-        acts = torch.zeros((T, A))
-        for i, a in enumerate(self.action_hist[: T - 1]):
-            acts[i, a] = 1.0
-        rews = torch.zeros((T, 1))
-        for i, r in enumerate(self.reward_hist[: T - 1]):
-            rews[i, 0] = r
-        # rl2s[t] = (reward[t-1], action[t-1]); blank at t=0
-        rl2s = torch.cat(
-            [
-                torch.cat([torch.zeros(1, 1), rews[: T - 1]], dim=0),
-                torch.cat([torch.zeros(1, A), acts[: T - 1]], dim=0),
-            ],
-            dim=-1,
-        ).unsqueeze(0)
+        rl2s = torch.zeros((1, T, A + 1))
         # AMAGO's transformer squeezes the final dimension internally. Keep
         # it explicit so a one-turn history stays [B, L] rather than [B].
         time_idxs = torch.arange(T).long().unsqueeze(0).unsqueeze(-1)
