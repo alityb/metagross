@@ -2,8 +2,10 @@
 # Paths are materialized by the training launcher; do not train pure self-play.
 replay_weight: 0.0
 custom_replays:
+  - dir: /data/legacy_r1_selfplay
+    weight: 0.45
   - dir: /data/strict_selfplay
-    weight: 0.9
+    weight: 0.45
   - dir: /data/human_anchor
     weight: 0.1
 formats:

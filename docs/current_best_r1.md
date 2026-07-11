@@ -81,7 +81,9 @@ does not prove a later round will improve.
 Treat this exact deployment as the baseline for every future candidate:
 
 1. Do not overwrite the r1 checkpoint.
-2. Do not mix archival r1/r2 smoke data into strict future rounds.
+2. Retain the validated r1 self-play pile as a versioned legacy replay buffer;
+   do not relabel it as strict strong-search data. Mixed/fallback r2 smoke data
+   remains archive-only.
 3. Compare candidates to r1 in paired H2H at identical 500ms/P8 budget before
    public ladder use.
 4. Report both GXE/RD and H2H confidence intervals; neither alone is enough.

@@ -103,7 +103,9 @@ No data is admitted into a training round unless every condition holds.
    validation count.
 
 Mixed/fallback data is archived for debugging only. It is never silently mixed
-into a promotion round.
+into a promotion round. A separately indexed, validated legacy self-play pile
+may remain in the replay buffer with explicit provenance and a lower fixed
+sampling weight; it must never be relabeled as current strict expert data.
 
 ## Round Protocol
 
