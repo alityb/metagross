@@ -39,8 +39,11 @@ wait_for_slot() {
 
 for i in $(seq 1 "$N_GAMES"); do
     wait_for_slot
-    ACCEPTOR_USER="r2A$(printf '%05d' $i)_$(openssl rand -hex 2)"
-    CHALLENGER_USER="r2C$(printf '%05d' $i)_$(openssl rand -hex 2)"
+    # Metamon parsed-replay filenames use `_` as a field separator. Keep
+    # generated usernames underscore-free so both POV trajectories survive
+    # indexing as distinct files.
+    ACCEPTOR_USER="r2A$(printf '%05d' $i)$(openssl rand -hex 2)"
+    CHALLENGER_USER="r2C$(printf '%05d' $i)$(openssl rand -hex 2)"
     (
         env METAGROSS_DECISION_LOG="$ACCEPTOR_LOG" \
             METAGROSS_REPLAY_DIR="$ABS_REPLAY_DIR" \
