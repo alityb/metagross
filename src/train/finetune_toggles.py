@@ -118,8 +118,14 @@ def install_kl_agent() -> None:
     custom_agent.KLAnchoredFinetuneAgent, and expose it on the module."""
     import gin
     import torch
+    from torch.distributions import Distribution
     import amago
     import metamon.rl.custom_agent as ca
+
+    # Metamon pads replay actions with sentinel rows. AMAGO masks them after
+    # computing actor log-probs, but OneHotCategorical validates first. Disable
+    # validation globally; every affected padded timestep is excluded by masks.
+    Distribution.set_default_validate_args(False)
 
     class KLAnchoredFinetuneAgent(ca.MetamonFinetuneAgent):
         def __init__(self, *args, kl_anchor_coeff: float = 0.02, **kwargs):

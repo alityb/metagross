@@ -14,6 +14,7 @@ import modal
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 APP = modal.App("metagross-exit-r2-train")
+app = APP  # Modal CLI discovers the conventional lowercase export.
 VOLUME = modal.Volume.from_name("metagross-exit-r2", create_if_missing=True)
 
 IMAGE = (
@@ -162,4 +163,5 @@ def main() -> None:
             archive.add(path, arcname=f"gins/{name}")
 
     print(f"Uploading {len(parsed) / 1e6:.1f}MB of trajectories", flush=True)
-    print(train.remote(parsed, variant_script, toggles, gins_buf.getvalue()))
+    call = train.spawn(parsed, variant_script, toggles, gins_buf.getvalue())
+    print(f"Detached training call: {call.object_id}", flush=True)

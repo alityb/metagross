@@ -176,7 +176,9 @@ class BattleSession:
             ],
             dim=-1,
         ).unsqueeze(0)
-        time_idxs = torch.arange(T).long().unsqueeze(0)
+        # AMAGO's transformer squeezes the final dimension internally. Keep
+        # it explicit so a one-turn history stays [B, L] rather than [B].
+        time_idxs = torch.arange(T).long().unsqueeze(0).unsqueeze(-1)
         obs_batch = {"text_tokens": text, "numbers": numbers, "illegal_actions": ill}
 
         agent = self.server.agent
