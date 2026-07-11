@@ -856,6 +856,11 @@ def patch_root_priors() -> None:
                         {k: round(v, 3) for k, v in sorted(opp_priors.items(), key=lambda kv: -kv[1])[:4]},
                     ))
         except Exception as exc:
+            # Generation can require policy-guided games. In that mode a
+            # failed fetch must discard the game rather than silently record
+            # a fallback-FP trajectory as expert data.
+            if os.environ.get("METAGROSS_REQUIRE_PRIORS") == "1":
+                raise RuntimeError(f"required prior fetch failed: {exc!r}") from exc
             logger.warning(f"prior fetch failed, searching without priors: {exc!r}")
         return original_find_best_move(battle)
 

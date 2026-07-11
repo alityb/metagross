@@ -46,6 +46,7 @@ for i in $(seq 1 "$N_GAMES"); do
             METAGROSS_REPLAY_DIR="$ABS_REPLAY_DIR" \
             METAGROSS_PRIOR_SERVER="$PRIOR_SERVER_URL" \
             METAGROSS_CPUCT="2.0" \
+            METAGROSS_REQUIRE_PRIORS="1" \
             "$PYTHON_BIN" "$ROOT_DIR/scripts/run_foul_play.py" \
             --websocket-uri "$SHOWDOWN_URI" \
             --ps-username "$ACCEPTOR_USER" \
@@ -62,6 +63,7 @@ for i in $(seq 1 "$N_GAMES"); do
             METAGROSS_REPLAY_DIR="$ABS_REPLAY_DIR" \
             METAGROSS_PRIOR_SERVER="$PRIOR_SERVER_URL" \
             METAGROSS_CPUCT="2.0" \
+            METAGROSS_REQUIRE_PRIORS="1" \
             "$PYTHON_BIN" "$ROOT_DIR/scripts/run_foul_play.py" \
             --websocket-uri "$SHOWDOWN_URI" \
             --ps-username "$CHALLENGER_USER" \
