@@ -394,6 +394,20 @@ def foul_play_env(
         env.pop("METAGROSS_PRIOR_SERVER", None)
         env.pop("METAGROSS_CPUCT", None)
         env.pop("METAGROSS_OPP_PRIORS_ONLY", None)
+
+    if slot in ("agent_a", "agent_b"):
+        prefix = slot.replace("agent_", "agent_")
+        decision_log = getattr(args, f"{prefix}_decision_log", None)
+        replay_dir = getattr(args, f"{prefix}_replay_dir", None)
+        require_priors = getattr(args, f"{prefix}_require_priors", False)
+        if decision_log:
+            env["METAGROSS_DECISION_LOG"] = str(Path(decision_log).resolve())
+        if replay_dir:
+            env["METAGROSS_REPLAY_DIR"] = str(Path(replay_dir).resolve())
+        if require_priors:
+            env["METAGROSS_REQUIRE_PRIORS"] = "1"
+        else:
+            env.pop("METAGROSS_REQUIRE_PRIORS", None)
     if is_tauros_kind_foul_play(agent):
         env["METAGROSS_TAUROS_KIND_MODEL"] = str(Path(args.tauros_kind_model).resolve())
         env["METAGROSS_TAUROS_KIND_THRESHOLD"] = str(args.tauros_kind_threshold)
@@ -1299,6 +1313,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="Per-side prior server URL for paired FP H2H tests.",
     )
+    for slot in ("agent-a", "agent-b"):
+        dest = slot.replace("-", "_")
+        parser.add_argument(f"--{slot}-decision-log", default=None)
+        parser.add_argument(f"--{slot}-replay-dir", default=None)
+        parser.add_argument(f"--{slot}-require-priors", action="store_true")
     parser.add_argument("--cpuct", type=float, default=2.0)
     parser.add_argument(
         "--randbats-belief-pool",
