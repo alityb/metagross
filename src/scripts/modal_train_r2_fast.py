@@ -112,7 +112,7 @@ def train(
                 shutil.rmtree(os.path.join(root, directory), ignore_errors=True)
 
     n_strict = len(glob.glob("/data/strict_round2_parsed/gen9randombattle/*.lz4"))
-    n_legacy = len(glob.glob("/data/legacy_r1_selfplay/gen9randombattle/*.lz4"))
+    n_legacy = len(glob.glob("/data/selfplay_parsed_indexed/gen9randombattle/*.lz4"))
     n_human = len(glob.glob("/data/parsed_replays/gen9randombattle/*.lz4"))
     print(f"Training on strict={n_strict} legacy={n_legacy} human={n_human}", flush=True)
 
@@ -122,7 +122,7 @@ def train(
             "custom_replays:\n"
             "  - dir: /data/strict_round2_parsed\n"
             "    weight: 0.45\n"
-            "  - dir: /data/legacy_r1_selfplay\n"
+            "  - dir: /data/selfplay_parsed_indexed\n"
             "    weight: 0.45\n"
             "  - dir: /data/parsed_replays\n"
             "    weight: 0.1\n"
