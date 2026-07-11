@@ -18,7 +18,12 @@ def main() -> None:
     parser.add_argument("--shard-dir", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--min-decisions", type=int, default=1)
-    parser.add_argument("--require-opponent-priors", action="store_true")
+    parser.add_argument(
+        "--min-opponent-prior-coverage",
+        type=float,
+        default=None,
+        help="Require C2 priors on at least this fraction of decision rows.",
+    )
     args = parser.parse_args()
 
     shard = args.shard_dir
@@ -85,9 +90,14 @@ def main() -> None:
         errors.append(f"only {len(decisions)} valid decisions")
     if root_prior_decisions != len(decisions):
         errors.append(f"root priors missing on {len(decisions) - root_prior_decisions} decisions")
-    if args.require_opponent_priors and opponent_prior_decisions != len(decisions):
+    opponent_coverage = opponent_prior_decisions / len(decisions) if decisions else 0.0
+    if (
+        args.min_opponent_prior_coverage is not None
+        and opponent_coverage < args.min_opponent_prior_coverage
+    ):
         errors.append(
-            f"opponent priors missing on {len(decisions) - opponent_prior_decisions} decisions"
+            f"opponent prior coverage {opponent_coverage:.3f} below "
+            f"{args.min_opponent_prior_coverage:.3f}"
         )
 
     if errors:
@@ -104,6 +114,7 @@ def main() -> None:
         "decision_records": len(decisions),
         "root_prior_decisions": root_prior_decisions,
         "opponent_prior_decisions": opponent_prior_decisions,
+        "opponent_prior_coverage": opponent_coverage,
         "decision_battles": len(by_battle),
         "battle_result_records": len(result_tags),
         "minimum_decisions_per_battle": min(by_battle.values()),

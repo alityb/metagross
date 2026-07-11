@@ -64,7 +64,6 @@ for i in $(seq 1 "$N_GAMES"); do
         ACC=$!
         sleep 5
         env METAGROSS_DECISION_LOG="$CHALLENGER_LOG" \
-            METAGROSS_REPLAY_DIR="$ABS_REPLAY_DIR" \
             METAGROSS_PRIOR_SERVER="$PRIOR_SERVER_URL" \
             METAGROSS_CPUCT="2.0" \
             METAGROSS_REQUIRE_PRIORS="1" \
