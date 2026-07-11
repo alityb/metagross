@@ -189,7 +189,11 @@ class BattleSession:
             dists = agent.actor(
                 emb,
                 straight_from_obs={
-                    k: obs_batch[k] for k in agent.pass_obs_keys_to_actor
+                    # The trajectory encoder emits one fewer transition than
+                    # raw observations. Match its sequence length for actor
+                    # side-channel tensors (especially numbers).
+                    k: obs_batch[k][:, : emb.shape[1]]
+                    for k in agent.pass_obs_keys_to_actor
                 },
             )
             probs = dists.probs[0, -1, -1, :].cpu().numpy()  # last step, inference gamma
@@ -247,24 +251,20 @@ class BattleSession:
         from metamon.interface import UniversalState, UniversalAction, consistent_move_order, consistent_pokemon_order
 
         try:
-            state = UniversalState.from_Battle(self.battle)
-            if not state.active_pokemon or not state.opponent_active_pokemon:
+            opp_battle = self._make_opp_battle()
+            if opp_battle is None:
                 return {}
-            # flip: opponent becomes "us", we become "them"
-            flipped = self._flip_state(state)
-            if not flipped.active_pokemon:
-                return {}
+            # Build a real opponent battle view instead of mutating obsolete
+            # UniversalState field names. This gives state_to_obs the expected
+            # player_active_pokemon / available_switches layout.
+            flipped = UniversalState.from_Battle(opp_battle)
             obs = self.server.obs_space.state_to_obs(flipped)
             # opponent's legal actions from the flipped battle
             illegal = np.ones(13, dtype=bool)
-            opp_battle = self._make_opp_battle()
-            if opp_battle is not None:
-                try:
-                    for a in UniversalAction.definitely_valid_actions(flipped, opp_battle):
-                        illegal[a] = False
-                except Exception:
-                    illegal[:] = False
-            else:
+            try:
+                for a in UniversalAction.definitely_valid_actions(flipped, opp_battle):
+                    illegal[a] = False
+            except Exception:
                 illegal[:] = False
             obs = dict(obs)
             obs["illegal_actions"] = illegal
@@ -284,7 +284,7 @@ class BattleSession:
             numbers = torch.tensor(nn, dtype=torch.float32).unsqueeze(0)
             ill_t = torch.tensor(ill_opp).unsqueeze(0)  # [1, 2, A]
             rl2s = torch.zeros((1, T, 14))
-            time_idxs = torch.arange(T).long().unsqueeze(0)
+            time_idxs = torch.arange(T).long().unsqueeze(0).unsqueeze(-1)
             obs_batch = {"text_tokens": text, "numbers": numbers, "illegal_actions": ill_t}
 
             agent = self.server.agent
@@ -296,7 +296,8 @@ class BattleSession:
                     dists = agent.actor(
                         emb,
                         straight_from_obs={
-                            k: obs_batch[k] for k in agent.pass_obs_keys_to_actor
+                            k: obs_batch[k][:, : emb.shape[1]]
+                            for k in agent.pass_obs_keys_to_actor
                         },
                     )
                     probs = dists.probs[0, -1, -1, :].cpu().numpy()
