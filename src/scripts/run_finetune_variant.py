@@ -48,6 +48,9 @@ def main() -> None:
     parser.add_argument("--steps-per-epoch", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=24)
     parser.add_argument("--dloader-workers", type=int, default=8)
+    parser.add_argument("--prev-run-dir", default=None)
+    parser.add_argument("--prev-run-name", default=None)
+    parser.add_argument("--prev-checkpoint", type=int, default=None)
     parser.add_argument("--probe", action="store_true",
                         help="Short throughput probe: 1 epoch x 200 steps")
     args = parser.parse_args()
@@ -94,6 +97,16 @@ def main() -> None:
         "--ckpt_interval", "1",
         "--dloader_workers", str(args.dloader_workers),
     ]
+    if args.prev_run_dir is not None:
+        if args.prev_run_name is None or args.prev_checkpoint is None:
+            parser.error("--prev-run-dir requires --prev-run-name and --prev-checkpoint")
+        argv.extend(
+            [
+                "--prev_run_dir", args.prev_run_dir,
+                "--prev_run_name", args.prev_run_name,
+                "--prev_checkpoint", str(args.prev_checkpoint),
+            ]
+        )
     print(f"VARIANT={args.variant} train_gin={train_gin} argv={argv}", flush=True)
 
     # metamon.rl.finetune's logic lives under `if __name__ == "__main__"`;
