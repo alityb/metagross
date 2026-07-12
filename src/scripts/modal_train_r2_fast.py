@@ -13,7 +13,7 @@ import modal
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-APP = modal.App("metagross-exit-r2-train-v3")
+APP = modal.App("metagross-exit-r2-train-v4")
 app = APP  # Modal CLI discovers the conventional lowercase export.
 VOLUME = modal.Volume.from_name("metagross-exit-r2", create_if_missing=True)
 
@@ -59,7 +59,6 @@ def train(
     strict_tarball: bytes,
     legacy_tarball: bytes,
     human_tarball: bytes,
-    accepted_r1_tarball: bytes,
     variant_script: bytes,
     toggles: bytes,
     gins: bytes,
@@ -84,7 +83,7 @@ def train(
         archive.extractall("/data")
     with tarfile.open(fileobj=io.BytesIO(human_tarball), mode="r:gz") as archive:
         archive.extractall("/data")
-    with tarfile.open(fileobj=io.BytesIO(accepted_r1_tarball), mode="r:gz") as archive:
+    with tarfile.open("/data/accepted_r1_policy.tgz", mode="r:gz") as archive:
         archive.extractall("/data")
 
     with open("/data/repo/src/train/finetune_toggles.py", "wb") as f:
@@ -181,8 +180,6 @@ def main() -> None:
         legacy = f.read()
     with open("/tmp/randbats_human_parsed.tgz", "rb") as f:
         human = f.read()
-    with open("/tmp/accepted_r1_policy.tgz", "rb") as f:
-        accepted_r1 = f.read()
     with open(os.path.join(ROOT, "src", "scripts", "run_finetune_variant.py"), "rb") as f:
         variant_script = f.read()
     with open(os.path.join(ROOT, "src", "train", "finetune_toggles.py"), "rb") as f:
@@ -200,7 +197,5 @@ def main() -> None:
         f"human={len(human)/1e6:.1f}MB",
         flush=True,
     )
-    call = train.spawn(
-        strict, legacy, human, accepted_r1, variant_script, toggles, gins_buf.getvalue()
-    )
+    call = train.spawn(strict, legacy, human, variant_script, toggles, gins_buf.getvalue())
     print(f"Detached training call: {call.object_id}", flush=True)
