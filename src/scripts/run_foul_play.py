@@ -5,6 +5,7 @@ import json
 import multiprocessing as mp
 import os
 import random
+import re
 import select
 import subprocess
 import sys
@@ -1364,8 +1365,61 @@ def patch_decision_logging() -> None:
     original_async_pick_move = run_battle.async_pick_move
     original_pokemon_battle = run_battle.pokemon_battle
     import threading
-    _policy_store: dict = {}
     _store_lock = threading.Lock()
+    _policy_by_battle: dict[str, dict] = {}
+    _decision_sequence: dict[str, int] = {}
+    _thread_policy = threading.local()
+
+    def canonical_action_context(battle) -> dict:
+        active = battle.user.active
+        normalize = lambda value: re.sub(r"[^a-z0-9]", "", value.lower())
+        moves = sorted((move.name for move in active.moves), key=normalize)
+        switches = sorted(
+            (pokemon.name for pokemon in battle.user.reserve if pokemon.is_alive()),
+            key=normalize,
+        )
+        if len(moves) > 4 or len(switches) > 5:
+            raise ValueError("action context exceeds Metamon's 13-action space")
+        return {
+            "moves": moves,
+            "switches": switches,
+            "can_tera": bool(active.can_terastallize),
+            "forced_switch": bool(battle.force_switch),
+        }
+
+    def canonical_action_index(action: str, context: dict) -> int:
+        raw = action.strip().lower()
+        normalize = lambda value: re.sub(r"[^a-z0-9]", "", value.lower())
+        if raw.startswith("switch "):
+            target = normalize(raw[7:])
+            matches = [index for index, name in enumerate(context["switches"]) if normalize(name) == target]
+            if len(matches) != 1:
+                raise ValueError(f"unknown or ambiguous switch {action!r}")
+            index = 4 + matches[0]
+        else:
+            tera = raw.endswith("-tera")
+            move = normalize(raw[:-5] if tera else raw)
+            matches = [index for index, name in enumerate(context["moves"]) if normalize(name) == move]
+            if len(matches) != 1 or (tera and not context["can_tera"]):
+                raise ValueError(f"unknown or illegal move {action!r}")
+            index = matches[0] + (9 if tera else 0)
+        legal = set(range(4, 4 + len(context["switches"])))
+        if not context["forced_switch"]:
+            legal.update(range(len(context["moves"])))
+            if context["can_tera"]:
+                legal.update(range(9, 9 + len(context["moves"])))
+        if index not in legal:
+            raise ValueError(f"illegal action {action!r}")
+        return index
+
+    def canonical_visit_target(visits: dict[str, float], context: dict) -> list[float]:
+        target = [0.0] * 13
+        for action, mass in visits.items():
+            target[canonical_action_index(action, context)] += float(mass)
+        total = sum(target)
+        if total <= 0:
+            raise ValueError("MCTS visits have no positive mass")
+        return [mass / total for mass in target]
 
     def write_record(row: dict) -> None:
         """Append immediately: a disconnected game must not erase search data."""
@@ -1419,13 +1473,12 @@ def patch_decision_logging() -> None:
         except Exception:
             pass
         selected = safe_select_move_from_mcts_results(mcts_results)
-        with _store_lock:
-            if agg:
-                _policy_store['__last__'] = {
-                    'visits': agg,
-                    'total': total,
-                    'selected_action': str(selected),
-                }
+        if agg:
+            _thread_policy.last = {
+                'visits': agg,
+                'total': total,
+                'selected_action': str(selected),
+            }
         return selected
 
     search_main.select_move_from_mcts_results = select_and_capture
@@ -1443,7 +1496,13 @@ def patch_decision_logging() -> None:
                     "username": config.FoulPlayConfig.username,
                     "fixed_side": "side_one",
                     "state": state.to_string(),
+                    "_mcts_action_context": canonical_action_context(battle_copy),
                 }
+                sequence = _decision_sequence.get(str(battle.battle_tag), 0)
+                _decision_sequence[str(battle.battle_tag)] = sequence + 1
+                row["mcts_schema_version"] = 2
+                row["mcts_decision_seq"] = sequence
+                row["learner_pov"] = config.FoulPlayConfig.username
                 try:
                     row["features"] = extract_value_features(state)
                 except Exception as exc:  # optional legacy value features
@@ -1466,13 +1525,24 @@ def patch_decision_logging() -> None:
             if pending_rows and len(pending_rows) > start_index:
                 row = pending_rows[-1]
                 with _store_lock:
-                    captured = _policy_store.pop('__last__', None)
+                    captured = _policy_by_battle.pop(str(battle.battle_tag), None)
                 if captured:
                     row["mcts_visits"] = captured['visits']
                     row["mcts_total"] = captured['total']
                     row["selected_action"] = captured['selected_action']
+                    try:
+                        context = row.pop("_mcts_action_context")
+                        row["canonical_selected_action_index"] = canonical_action_index(
+                            captured["selected_action"], context
+                        )
+                        row["mcts_visit_target_13"] = canonical_visit_target(
+                            captured["visits"], context
+                        )
+                    except (KeyError, TypeError, ValueError) as exc:
+                        row["mcts_capture_mapping_error"] = f"{type(exc).__name__}: {exc}"
                 else:
                     row["mcts_capture_missing"] = True
+                row.pop("_mcts_action_context", None)
                 row["root_prior_count"] = _PRIOR_STATE.get("root_prior_count", 0)
                 row["opponent_prior_count"] = _PRIOR_STATE.get("opponent_prior_count", 0)
                 row["record_type"] = "decision"
@@ -1508,9 +1578,15 @@ def patch_decision_logging() -> None:
 
     def find_best_move_capturing(battle):
         """Wrap find_best_move to capture MCTS visit distribution."""
+        _thread_policy.last = None
         result = original_find_best(battle)
-        # select_and_capture already ran inside find_best_move (via our search_main patch)
-        # and stored results in _policy_store. Nothing extra to do here.
+        captured = getattr(_thread_policy, "last", None)
+        if captured:
+            # The search selector may be called internally more than once. The
+            # return value is the only decision actually sent to Showdown.
+            captured["selected_action"] = str(result)
+            with _store_lock:
+                _policy_by_battle[str(battle.battle_tag)] = captured
         return result
 
     run_battle.find_best_move = find_best_move_capturing

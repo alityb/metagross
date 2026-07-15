@@ -1,0 +1,10 @@
+replay_weight: 0.0
+custom_replays:
+  - dir: /data/selfplay_parsed_indexed
+    weight: 0.70
+  - dir: /data/gate1_pfsp_learner_only
+    weight: 0.20
+  - dir: /data/parsed_replays
+    weight: 0.10
+formats:
+  - gen9randombattle

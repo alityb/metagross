@@ -51,12 +51,27 @@ def main() -> None:
     parser.add_argument("--prev-run-dir", default=None)
     parser.add_argument("--prev-run-name", default=None)
     parser.add_argument("--prev-checkpoint", type=int, default=None)
+    parser.add_argument("--run-name", default=None)
+    parser.add_argument(
+        "--mcts-policy-sidecar",
+        default=None,
+        help="Verified JSONL from build_mcts_policy_sidecar.py; enables MCTS policy distillation.",
+    )
+    parser.add_argument(
+        "--mcts-policy-coeff",
+        type=float,
+        default=0.0,
+        help="Auxiliary MCTS visit-policy cross-entropy coefficient (must be positive with --mcts-policy-sidecar).",
+    )
     parser.add_argument("--probe", action="store_true",
                         help="Short throughput probe: 1 epoch x 200 steps")
     args = parser.parse_args()
 
     spec = VARIANTS[args.variant]
     os.environ.setdefault("WANDB_MODE", "disabled")
+
+    from torch.distributions import Distribution
+    Distribution.set_default_validate_args(False)
 
     if spec["rating"]:
         from train.finetune_toggles import install_rating_conditioning
@@ -67,6 +82,14 @@ def main() -> None:
     if spec["binary"]:
         from train.finetune_toggles import install_binary_filter
         install_binary_filter()
+    if (args.mcts_policy_sidecar is None) != (args.mcts_policy_coeff == 0.0):
+        parser.error("--mcts-policy-sidecar and a positive --mcts-policy-coeff must be set together")
+    if args.mcts_policy_sidecar is not None:
+        if spec["kl"]:
+            parser.error("MCTS policy distillation cannot be combined with the KL-anchor variant")
+        from train.mcts_policy_distillation import install_mcts_policy_distillation
+
+        install_mcts_policy_distillation(args.mcts_policy_sidecar, args.mcts_policy_coeff)
 
     # gin files live in the repo (train/gins) and are copied next to metamon's
     # own configs so relative resolution works
@@ -80,7 +103,20 @@ def main() -> None:
     else:
         train_gin = "finetune.gin"
 
-    run_name = f"randbats_{args.variant}"
+    if args.mcts_policy_sidecar is not None:
+        import metamon.rl.train as mt
+
+        gin_dst_dir = Path(mt.__file__).parent / "configs" / "training"
+        source = gin_dst_dir / train_gin
+        distill_gin = "metagross_mcts_policy_distill.gin"
+        (gin_dst_dir / distill_gin).write_text(
+            source.read_text()
+            + "\nMetamonAMAGOExperiment.agent_type = @custom_agent.MCTSPolicyDistillationAgent\n"
+            + f"custom_agent.MCTSPolicyDistillationAgent.mcts_policy_coeff = {args.mcts_policy_coeff}\n"
+        )
+        train_gin = distill_gin
+
+    run_name = args.run_name or f"randbats_{args.variant}"
     epochs = 1 if args.probe else args.epochs
     steps = 200 if args.probe else args.steps_per_epoch
 

@@ -13,20 +13,16 @@ from collections import Counter
 from pathlib import Path
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--shard-dir", required=True, type=Path)
-    parser.add_argument("--manifest", required=True, type=Path)
-    parser.add_argument("--min-decisions", type=int, default=1)
-    parser.add_argument(
-        "--min-opponent-prior-coverage",
-        type=float,
-        default=None,
-        help="Require C2 priors on at least this fraction of decision rows.",
-    )
-    args = parser.parse_args()
+def validate_strict_shard(
+    shard: Path,
+    min_decisions: int = 1,
+    min_opponent_prior_coverage: float | None = None,
+) -> dict:
+    """Validate one strict shard and return its manifest or raise SystemExit.
 
-    shard = args.shard_dir
+    This is the callable counterpart to the CLI so aggregate finalizers apply
+    precisely the same fail-closed protocol as single-shard validation.
+    """
     replays = sorted((shard / "replays").glob("*.json"))
     if not replays:
         raise SystemExit("no replay JSONs found")
@@ -91,18 +87,15 @@ def main() -> None:
 
     if bad_usernames:
         errors.append(f"{len(bad_usernames)} replays use '_' usernames")
-    if len(decisions) < args.min_decisions:
+    if len(decisions) < min_decisions:
         errors.append(f"only {len(decisions)} valid decisions")
     if root_prior_decisions != len(decisions):
         errors.append(f"root priors missing on {len(decisions) - root_prior_decisions} decisions")
     opponent_coverage = opponent_prior_decisions / len(decisions) if decisions else 0.0
-    if (
-        args.min_opponent_prior_coverage is not None
-        and opponent_coverage < args.min_opponent_prior_coverage
-    ):
+    if min_opponent_prior_coverage is not None and opponent_coverage < min_opponent_prior_coverage:
         errors.append(
             f"opponent prior coverage {opponent_coverage:.3f} below "
-            f"{args.min_opponent_prior_coverage:.3f}"
+            f"{min_opponent_prior_coverage:.3f}"
         )
 
     if errors:
@@ -111,7 +104,7 @@ def main() -> None:
         raise SystemExit(f"strict shard rejected ({len(errors)} errors)")
 
     by_battle = Counter(str(row.get("battle_tag")) for row in decisions)
-    manifest = {
+    return {
         "schema_version": 1,
         "strict": True,
         "raw_replay_files": len(replays),
@@ -125,6 +118,26 @@ def main() -> None:
         "minimum_decisions_per_battle": min(by_battle.values()),
         "maximum_decisions_per_battle": max(by_battle.values()),
     }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--shard-dir", required=True, type=Path)
+    parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument("--min-decisions", type=int, default=1)
+    parser.add_argument(
+        "--min-opponent-prior-coverage",
+        type=float,
+        default=None,
+        help="Require C2 priors on at least this fraction of decision rows.",
+    )
+    args = parser.parse_args()
+
+    manifest = validate_strict_shard(
+        args.shard_dir,
+        args.min_decisions,
+        args.min_opponent_prior_coverage,
+    )
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))

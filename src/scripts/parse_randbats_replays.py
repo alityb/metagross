@@ -12,7 +12,6 @@ Run in .venv-metamon:
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import multiprocessing as mp
 import os
@@ -49,6 +48,75 @@ def _parse_one(path: str) -> tuple[str, str]:
         return (path, f"{type(e).__name__}: {str(e)[:100]}")
 
 
+def parse_replay_dir(
+    replay_dir: Path,
+    out_dir: Path,
+    pool_path: Path,
+    workers: int = 1,
+    seed: int = 0,
+) -> dict[str, int]:
+    """Parse one flat replay directory without replacing existing game outputs.
+
+    ``workers=1`` runs in-process, which lets post-collection finalization stay
+    process-free. Higher values retain the standalone parser's pool behavior.
+    """
+    if not pool_path.is_file():
+        raise ValueError(f"RandBats pool is required but missing: {pool_path}")
+    if not replay_dir.is_dir():
+        raise ValueError(f"replay directory is missing: {replay_dir}")
+    if workers <= 0:
+        raise ValueError("workers must be positive")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    outputs_by_gameid: dict[str, int] = {}
+    for path in out_dir.glob("*.json.lz4"):
+        gameid = path.name.split("_", 1)[0]
+        outputs_by_gameid[gameid] = outputs_by_gameid.get(gameid, 0) + 1
+    incomplete = {gameid: count for gameid, count in outputs_by_gameid.items() if count != 2}
+    if incomplete:
+        raise ValueError(f"incomplete or ambiguous parsed POVs: {incomplete}")
+
+    raw_by_gameid: dict[str, Path] = {}
+    for path in sorted(replay_dir.glob("*.json")):
+        try:
+            raw = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            raw = {}
+        gameid = str(raw.get("id") or path.stem)
+        if gameid in raw_by_gameid:
+            raise ValueError(f"duplicate replay identity {gameid}: {raw_by_gameid[gameid]}, {path}")
+        raw_by_gameid[gameid] = path
+    todo = [path for gameid, path in raw_by_gameid.items() if gameid not in outputs_by_gameid]
+    ok = 0
+    failed = 0
+    if workers == 1:
+        _init_worker(str(out_dir), str(pool_path), seed)
+        results = (_parse_one(str(path)) for path in todo)
+        for _, status in results:
+            if status == "ok":
+                ok += 1
+            else:
+                failed += 1
+    elif todo:
+        with mp.Pool(
+            workers,
+            initializer=_init_worker,
+            initargs=(str(out_dir), str(pool_path), seed),
+        ) as pool:
+            for _, status in pool.imap_unordered(_parse_one, map(str, todo)):
+                if status == "ok":
+                    ok += 1
+                else:
+                    failed += 1
+    return {
+        "already_parsed": len(outputs_by_gameid),
+        "replays_to_parse": len(todo),
+        "parsed_ok": ok,
+        "failed": failed,
+        "total_pov_trajectories": len(list(out_dir.glob("*.json.lz4"))),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--replay-dir", default=str(ROOT / "data" / "replays" / "gen9randombattle"))
@@ -58,42 +126,19 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    done_gameids = set()
-    for f in out_dir.glob("*.json.lz4"):
-        done_gameids.add(f.name.split("_")[0])
-
-    todo = []
-    for path in sorted(glob.glob(os.path.join(args.replay_dir, "*.json"))):
-        gameid = os.path.basename(path).replace(".json", "")
-        if gameid not in done_gameids:
-            todo.append(path)
-
-    print(f"{datetime.now(timezone.utc).isoformat()} replays={len(done_gameids)} done, {len(todo)} to parse", flush=True)
-    if not todo:
-        return
-
-    ok = 0
-    failed = 0
-    with mp.Pool(
-        args.workers, initializer=_init_worker,
-        initargs=(str(out_dir), args.pool_path, args.seed),
-    ) as pool:
-        for i, (path, status) in enumerate(pool.imap_unordered(_parse_one, todo), 1):
-            if status == "ok":
-                ok += 1
-            else:
-                failed += 1
-            if i % 250 == 0 or i == len(todo):
-                print(f"{datetime.now(timezone.utc).isoformat()} progress {i}/{len(todo)} ok={ok} failed={failed}", flush=True)
-
-    outputs = len(list(out_dir.glob("*.json.lz4")))
-    summary = {"parsed_ok": ok, "failed": failed, "total_pov_trajectories": outputs,
-               "ts": datetime.now(timezone.utc).isoformat()}
+    try:
+        summary = parse_replay_dir(
+            Path(args.replay_dir),
+            Path(args.out_dir),
+            Path(args.pool_path),
+            args.workers,
+            args.seed,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+    summary["ts"] = datetime.now(timezone.utc).isoformat()
     print(json.dumps(summary), flush=True)
-    (out_dir.parent / "parse_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    Path(args.out_dir).parent.joinpath("parse_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 
 
 if __name__ == "__main__":

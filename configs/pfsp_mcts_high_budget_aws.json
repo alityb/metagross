@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "format": "gen9randombattle",
+  "profiles": {
+    "accepted_r1": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://172.31.79.95:8979",
+      "python": "/opt/metagross/.venv-foul-play/bin/python",
+      "require_priors": true
+    },
+    "accepted_r1_peer": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://172.31.79.95:8981",
+      "python": "/opt/metagross/.venv-foul-play/bin/python",
+      "require_priors": true
+    }
+  },
+  "pfsp": {
+    "learner": "accepted_r1",
+    "pool": [
+      {"id": "accepted_r1_peer", "base_weight": 1.0}
+    ],
+    "target_winrate": [0.4, 0.6],
+    "min_pool_weight": 1.0
+  }
+}
