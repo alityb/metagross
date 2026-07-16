@@ -17,6 +17,7 @@ def validate_strict_shard(
     shard: Path,
     min_decisions: int = 1,
     min_opponent_prior_coverage: float | None = None,
+    require_prior_decision_idx: bool = False,
 ) -> dict:
     """Validate one strict shard and return its manifest or raise SystemExit.
 
@@ -79,6 +80,11 @@ def validate_strict_shard(
             if not row.get("selected_action"):
                 errors.append(f"{path.name}:{line_no}: missing selected_action")
                 continue
+            if require_prior_decision_idx and not isinstance(
+                row.get("prior_decision_idx"), int
+            ):
+                errors.append(f"{path.name}:{line_no}: missing prior_decision_idx")
+                continue
             if int(row.get("root_prior_count", 0)) > 0:
                 root_prior_decisions += 1
             if int(row.get("opponent_prior_count", 0)) > 0:
@@ -131,12 +137,18 @@ def main() -> None:
         default=None,
         help="Require C2 priors on at least this fraction of decision rows.",
     )
+    parser.add_argument(
+        "--require-prior-decision-idx",
+        action="store_true",
+        help="Schema-v3: reject decision rows lacking the prior-server join key.",
+    )
     args = parser.parse_args()
 
     manifest = validate_strict_shard(
         args.shard_dir,
         args.min_decisions,
         args.min_opponent_prior_coverage,
+        require_prior_decision_idx=args.require_prior_decision_idx,
     )
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.write_text(json.dumps(manifest, indent=2) + "\n")

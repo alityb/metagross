@@ -834,16 +834,28 @@ def patch_root_priors() -> None:
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["root_prior_count"] = 0
         _PRIOR_STATE["opponent_prior_count"] = 0
+        _PRIOR_STATE["prior_decision_idx"] = None
+        _PRIOR_STATE["prior_battle_turn"] = None
         try:
             tag = getattr(battle, "battle_tag", None)
             if tag:
                 # messages are sent synchronously in receive_with_tee now,
                 # so the server has already seen this turn's data
                 full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
+                # Schema-v3: send our actual PS username so the server's
+                # observation dump rows carry the decision-log join key.
+                from urllib.parse import quote as _quote
+                from config import FoulPlayConfig as _cfg
+                username_param = _quote(str(getattr(_cfg, "username", "") or ""))
                 with _url.urlopen(
-                    f"{server_url}/priors?tag={full_tag}", timeout=30
+                    f"{server_url}/priors?tag={full_tag}&username={username_param}",
+                    timeout=30,
                 ) as resp:
                     data = json.loads(resp.read())
+                # Schema-v3 join key: the server's per-battle decision counter
+                # for the observation that produced these priors.
+                _PRIOR_STATE["prior_decision_idx"] = data.get("decision_idx")
+                _PRIOR_STATE["prior_battle_turn"] = data.get("battle_turn")
                 opp_only = os.environ.get("METAGROSS_OPP_PRIORS_ONLY") == "1"
                 if opp_only:
                     priors = {}
@@ -1368,6 +1380,7 @@ def patch_decision_logging() -> None:
     _store_lock = threading.Lock()
     _policy_by_battle: dict[str, dict] = {}
     _decision_sequence: dict[str, int] = {}
+    _last_battle_tag: dict[str, object] = {"value": None}
     _thread_policy = threading.local()
 
     def canonical_action_context(battle) -> dict:
@@ -1485,6 +1498,9 @@ def patch_decision_logging() -> None:
 
     async def async_pick_move_with_logging(battle):
         start_index = len(pending_rows)
+        # Schema-v3: battle_result rows need the tag for the label join. Each
+        # FP subprocess plays a single game, so last-seen is unambiguous.
+        _last_battle_tag["value"] = getattr(battle, "battle_tag", None)
         if not battle.team_preview:
             try:
                 battle_copy = deepcopy(battle)
@@ -1545,6 +1561,15 @@ def patch_decision_logging() -> None:
                 row.pop("_mcts_action_context", None)
                 row["root_prior_count"] = _PRIOR_STATE.get("root_prior_count", 0)
                 row["opponent_prior_count"] = _PRIOR_STATE.get("opponent_prior_count", 0)
+                # Schema-v3: exact join key to the prior server's observation
+                # dump. When present, targets are built by joining
+                # (battle_tag, prior_decision_idx) against the dump — no
+                # replay parsing.
+                prior_decision_idx = _PRIOR_STATE.get("prior_decision_idx")
+                if prior_decision_idx is not None:
+                    row["prior_decision_idx"] = prior_decision_idx
+                    row["prior_battle_turn"] = _PRIOR_STATE.get("prior_battle_turn")
+                    row["mcts_schema_version"] = 3
                 row["record_type"] = "decision"
                 write_record(row)
                 # This record is durable now; do not duplicate at battle end.
@@ -1560,7 +1585,8 @@ def patch_decision_logging() -> None:
         with open(output_path, "a", encoding="utf-8") as handle:
             handle.write(json.dumps({
                 "record_type": "battle_result",
-                "battle_tag": getattr(ps_websocket_client, "battle_tag", None),
+                "battle_tag": getattr(ps_websocket_client, "battle_tag", None)
+                or _last_battle_tag.get("value"),
                 "winner": winner,
                 "label": label,
                 "username": config.FoulPlayConfig.username,
