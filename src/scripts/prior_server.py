@@ -155,15 +155,17 @@ class BattleSession:
         # legality mask
         illegal = np.ones(13, dtype=bool)
         mask_fallback = False
+        mask_fallback_error = None
         try:
             for a in UniversalAction.definitely_valid_actions(state, self.battle):
-                illegal[a] = False
-        except Exception:
+                illegal[a.action_idx] = False
+        except Exception as exc:
             # Fail-open for serving (a missing mask must not stall the game),
             # but flag it so schema-v3 consumers can count/reject these rows:
             # their legality validation is vacuous.
             illegal[:] = False
             mask_fallback = True
+            mask_fallback_error = f"{type(exc).__name__}: {exc}"
         obs = dict(obs)
         obs["illegal_actions"] = illegal
         # Stateless two-step inference is intentionally used here. The live
@@ -270,6 +272,7 @@ class BattleSession:
                 ).tolist(),
                 "illegal_actions": [bool(x) for x in illegal],
                 "mask_fallback": mask_fallback,
+                "mask_fallback_error": mask_fallback_error,
                 "name_table": name_table,
                 "probs": [float(p) for p in probs],
             }
@@ -318,7 +321,7 @@ class BattleSession:
             illegal = np.ones(13, dtype=bool)
             try:
                 for a in UniversalAction.definitely_valid_actions(flipped, opp_battle):
-                    illegal[a] = False
+                    illegal[a.action_idx] = False
             except Exception:
                 illegal[:] = False
             obs = dict(obs)
