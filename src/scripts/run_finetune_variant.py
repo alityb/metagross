@@ -63,6 +63,23 @@ def main() -> None:
         default=0.0,
         help="Auxiliary MCTS visit-policy cross-entropy coefficient (must be positive with --mcts-policy-sidecar).",
     )
+    parser.add_argument(
+        "--mcts-v3-dataset",
+        default=None,
+        help="Schema-v3 JSONL from build_mcts_v3_dataset.py; enables stateless MCTS distillation.",
+    )
+    parser.add_argument(
+        "--mcts-v3-coeff",
+        type=float,
+        default=0.0,
+        help="Schema-v3 distillation coefficient (must be positive with --mcts-v3-dataset).",
+    )
+    parser.add_argument(
+        "--mcts-v3-batch-size",
+        type=int,
+        default=64,
+        help="Records per schema-v3 distillation step.",
+    )
     parser.add_argument("--probe", action="store_true",
                         help="Short throughput probe: 1 epoch x 200 steps")
     args = parser.parse_args()
@@ -84,12 +101,24 @@ def main() -> None:
         install_binary_filter()
     if (args.mcts_policy_sidecar is None) != (args.mcts_policy_coeff == 0.0):
         parser.error("--mcts-policy-sidecar and a positive --mcts-policy-coeff must be set together")
+    if (args.mcts_v3_dataset is None) != (args.mcts_v3_coeff == 0.0):
+        parser.error("--mcts-v3-dataset and a positive --mcts-v3-coeff must be set together")
+    if args.mcts_policy_sidecar is not None and args.mcts_v3_dataset is not None:
+        parser.error("--mcts-policy-sidecar and --mcts-v3-dataset are mutually exclusive")
     if args.mcts_policy_sidecar is not None:
         if spec["kl"]:
             parser.error("MCTS policy distillation cannot be combined with the KL-anchor variant")
         from train.mcts_policy_distillation import install_mcts_policy_distillation
 
         install_mcts_policy_distillation(args.mcts_policy_sidecar, args.mcts_policy_coeff)
+    if args.mcts_v3_dataset is not None:
+        if spec["kl"]:
+            parser.error("MCTS v3 distillation cannot be combined with the KL-anchor variant")
+        from train.mcts_v3_distillation import install_mcts_v3_distillation
+
+        install_mcts_v3_distillation(
+            args.mcts_v3_dataset, args.mcts_v3_coeff, args.mcts_v3_batch_size
+        )
 
     # gin files live in the repo (train/gins) and are copied next to metamon's
     # own configs so relative resolution works
@@ -113,6 +142,19 @@ def main() -> None:
             source.read_text()
             + "\nMetamonAMAGOExperiment.agent_type = @custom_agent.MCTSPolicyDistillationAgent\n"
             + f"custom_agent.MCTSPolicyDistillationAgent.mcts_policy_coeff = {args.mcts_policy_coeff}\n"
+        )
+        train_gin = distill_gin
+
+    if args.mcts_v3_dataset is not None:
+        import metamon.rl.train as mt
+
+        gin_dst_dir = Path(mt.__file__).parent / "configs" / "training"
+        source = gin_dst_dir / train_gin
+        distill_gin = "metagross_mcts_v3_distill.gin"
+        (gin_dst_dir / distill_gin).write_text(
+            source.read_text()
+            + "\nMetamonAMAGOExperiment.agent_type = @custom_agent.MCTSV3DistillationAgent\n"
+            + f"custom_agent.MCTSV3DistillationAgent.mcts_policy_coeff = {args.mcts_v3_coeff}\n"
         )
         train_gin = distill_gin
 

@@ -59,11 +59,11 @@ IMAGE = (
 )
 
 
-def package_train_sources(root: Path = ROOT) -> bytes:
+def package_train_sources(root: Path = ROOT, sources: tuple[str, ...] = TRAIN_SOURCES) -> bytes:
     """Package exactly the repository modules required by the pilot runner."""
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode="w:gz") as archive:
-        for relative in TRAIN_SOURCES:
+        for relative in sources:
             source = root / relative
             if not source.is_file():
                 raise ValueError(f"required training source is missing: {source}")
