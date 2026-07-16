@@ -189,6 +189,18 @@ class TestBuildGroup(unittest.TestCase):
         rows = [make_decision(visits={"surf": 1.0}, selected="surf")]
         self.assert_rejected(rows, dumps, "unmappable_visit_string")
 
+    def test_forced_recharge_is_skipped_not_remapped(self):
+        dumps = dumps_by_key([make_dump()])
+        rows = [make_decision(visits={"recharge": 1.0}, selected="recharge")]
+        stats = Counter()
+        self.assertEqual(build_group(GROUP_KEY, rows, dumps, None, stats), [])
+        self.assertEqual(stats["skipped_forced_action_decisions"], 1)
+
+    def test_mixed_forced_and_unknown_visit_rejects(self):
+        dumps = dumps_by_key([make_dump()])
+        rows = [make_decision(visits={"recharge": 0.5, "surf": 0.5}, selected="recharge")]
+        self.assert_rejected(rows, dumps, "unmappable_visit_string")
+
     def test_bad_visit_mass_rejects(self):
         dumps = dumps_by_key([make_dump()])
         rows = [make_decision(visits={"voltswitch": 0.5})]

@@ -28,6 +28,7 @@ from pathlib import Path
 
 N_ACTIONS = 13
 MASS_TOLERANCE = 1e-4
+FORCED_ACTIONS = {"recharge", "struggle"}
 
 
 def norm(s: str) -> str:
@@ -213,6 +214,16 @@ def build_group(
         if not math.isfinite(mass) or abs(mass - 1.0) > MASS_TOLERANCE:
             raise GroupRejected("bad_visit_mass", f"decision_idx={decision_idx} mass={mass}")
 
+        positive_moves = {str(move) for move, weight in visits.items() if float(weight) > 0.0}
+        selected = row.get("selected_action")
+        # Recharge/Struggle are forced engine transitions, not policy choices:
+        # the prior name table deliberately has no mapping for them because
+        # poke-env executes them irrespective of the action index. Do not
+        # manufacture an arbitrary target; omit only this no-signal decision.
+        if positive_moves and positive_moves <= FORCED_ACTIONS and str(selected) in FORCED_ACTIONS:
+            match_stats["skipped_forced_action_decisions"] += 1
+            continue
+
         target = [0.0] * N_ACTIONS
         for move, weight in visits.items():
             weight = float(weight)
@@ -233,7 +244,6 @@ def build_group(
             raise GroupRejected("target_mass_mismatch", f"idx={decision_idx} total={total}")
         target = [t / total for t in target]
 
-        selected = row.get("selected_action")
         if not selected:
             raise GroupRejected("missing_selected_action", f"decision_idx={decision_idx}")
         selected_idx, how = map_move_string(str(selected), name_table)
