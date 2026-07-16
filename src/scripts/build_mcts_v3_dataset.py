@@ -59,7 +59,7 @@ def read_jsonl(path: Path):
             yield line_no, None
 
 
-def load_dumps(paths: list[Path]) -> tuple[dict, Counter]:
+def load_dumps(paths: list[Path], namespace: str | None = None) -> tuple[dict, Counter]:
     """Return {(tag, username, decision_idx): row} and stats. Duplicate keys
     are fatal for the affected group (recorded and both dropped)."""
     dumps: dict[tuple, dict] = {}
@@ -72,6 +72,9 @@ def load_dumps(paths: list[Path]) -> tuple[dict, Counter]:
                 continue
             if row.get("schema") != 3:
                 stats["dump_wrong_schema"] += 1
+                continue
+            if namespace is not None and row.get("namespace") != namespace:
+                stats["dump_other_namespace"] += 1
                 continue
             key = (
                 normalize_tag(row.get("tag")),
@@ -283,13 +286,18 @@ def main() -> None:
                         help="Prior-server dump JSONL (repeatable).")
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--report", required=True, type=Path)
+    parser.add_argument(
+        "--namespace",
+        default=None,
+        help="Require dump rows from this worker namespace; use when servers share a dump file.",
+    )
     parser.add_argument("--require-labels", action="store_true",
                         help="Reject groups without a battle_result label.")
     parser.add_argument("--min-admission-rate", type=float, default=None,
                         help="Exit nonzero if admitted-group rate falls below this.")
     args = parser.parse_args()
 
-    dumps, dump_stats = load_dumps(list(args.prior_dump))
+    dumps, dump_stats = load_dumps(list(args.prior_dump), args.namespace)
     groups, labels, decision_stats = load_decisions(list(args.decision_log))
 
     match_stats: Counter = Counter()

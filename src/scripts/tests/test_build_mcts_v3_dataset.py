@@ -239,6 +239,18 @@ class TestLoadDumps(unittest.TestCase):
             self.assertEqual(dumps, {})
             self.assertEqual(stats["dump_wrong_schema"], 1)
 
+    def test_namespace_filter_excludes_other_workers(self):
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "dump.jsonl"
+            rows = [
+                make_dump(namespace="w1"),
+                make_dump(namespace="w2"),
+            ]
+            path.write_text("\n".join(json.dumps(row) for row in rows) + "\n")
+            dumps, stats = load_dumps([path], namespace="w1")
+            self.assertEqual(len(dumps), 1)
+            self.assertEqual(stats["dump_other_namespace"], 1)
+
 
 class TestCli(unittest.TestCase):
     def run_cli(self, tmp, decision_rows, dump_rows, extra_args=()):

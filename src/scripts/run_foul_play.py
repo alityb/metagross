@@ -786,6 +786,10 @@ def patch_root_priors() -> None:
     import urllib.request as _url
 
     _PRIOR_STATE["cpuct"] = float(os.environ.get("METAGROSS_CPUCT", "2.0"))
+    # One server can safely serve many collection workers. Namespace only the
+    # server's live state key; capture rows retain the raw Showdown battle tag
+    # and join via their per-worker dump file.
+    prior_namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE", "")
 
     def _post_sync(path: str, payload: dict, timeout: float = 5.0):
         """Synchronous POST — called from async context via run_in_executor."""
@@ -810,8 +814,8 @@ def patch_root_priors() -> None:
                 import asyncio as _a
                 loop = _a.get_event_loop()
                 await loop.run_in_executor(
-                    None, _post_sync, "/lines",
-                    {"tag": tag, "lines": lines[1:]}
+                     None, _post_sync, "/lines",
+                    {"tag": tag, "namespace": prior_namespace, "lines": lines[1:]}
                 )
         except Exception:
             pass
@@ -847,8 +851,10 @@ def patch_root_priors() -> None:
                 from urllib.parse import quote as _quote
                 from config import FoulPlayConfig as _cfg
                 username_param = _quote(str(getattr(_cfg, "username", "") or ""))
+                namespace_param = _quote(prior_namespace)
                 with _url.urlopen(
-                    f"{server_url}/priors?tag={full_tag}&username={username_param}",
+                    f"{server_url}/priors?tag={full_tag}&username={username_param}"
+                    f"&namespace={namespace_param}",
                     timeout=30,
                 ) as resp:
                     data = json.loads(resp.read())
