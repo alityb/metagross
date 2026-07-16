@@ -9,10 +9,8 @@ protocol files.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
-import secrets
 import subprocess
 import sys
 from collections import Counter
@@ -74,9 +72,6 @@ def main() -> None:
         "parallelism": args.parallelism,
         "matchups": [],
     }
-    run_nonce = secrets.token_hex(8)
-    manifest["run_nonce"] = run_nonce
-
     def run_matchup(opponent_id: str, games: int, shard_index: int) -> dict:
         if opponent_id == learner_id:
             opponent = learner
@@ -100,11 +95,6 @@ def main() -> None:
         ]
         if args.keep_game_logs:
             cmd.extend(["--log-dir", str(out / "logs")])
-        username_prefix = hashlib.blake2s(
-            f"{run_nonce}\0{learner_id}\0{opponent_id}\0{shard_index}".encode(),
-            digest_size=4,
-        ).hexdigest()
-        cmd.extend(["--username-prefix", username_prefix])
         add_profile_args(cmd, "a", learner, out)
         add_profile_args(cmd, "b", opponent, out)
         environment = os.environ.copy()
@@ -123,7 +113,6 @@ def main() -> None:
             "requested_games": games,
             "paired_games": paired_games,
             "out": str(out),
-            "username_prefix": username_prefix,
             "prior_namespace": prior_namespace,
         }
         print("Running:", " ".join(cmd), flush=True)
