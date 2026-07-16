@@ -35,6 +35,10 @@ def norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
 
+def is_forced_action(move: str) -> bool:
+    return move.removesuffix("-tera") in FORCED_ACTIONS
+
+
 def normalize_tag(tag: str) -> str:
     tag = str(tag or "").strip()
     if tag.startswith("battle-"):
@@ -215,12 +219,13 @@ def build_group(
             raise GroupRejected("bad_visit_mass", f"decision_idx={decision_idx} mass={mass}")
 
         positive_moves = {str(move) for move, weight in visits.items() if float(weight) > 0.0}
+        nonforced_moves = {move for move in positive_moves if not is_forced_action(move)}
         selected = row.get("selected_action")
         # Recharge/Struggle are forced engine transitions, not policy choices:
         # the prior name table deliberately has no mapping for them because
         # poke-env executes them irrespective of the action index. Do not
         # manufacture an arbitrary target; omit only this no-signal decision.
-        if positive_moves and positive_moves <= FORCED_ACTIONS and str(selected) in FORCED_ACTIONS:
+        if positive_moves and not nonforced_moves and is_forced_action(str(selected)):
             match_stats["skipped_forced_action_decisions"] += 1
             continue
 
@@ -228,6 +233,9 @@ def build_group(
         for move, weight in visits.items():
             weight = float(weight)
             if weight <= 0.0:
+                continue
+            if is_forced_action(str(move)):
+                match_stats["ignored_forced_visit_mass"] += weight
                 continue
             idx, how = map_move_string(str(move), name_table)
             if idx is None:
@@ -240,8 +248,8 @@ def build_group(
             target[idx] += weight
 
         total = sum(target)
-        if abs(total - 1.0) > MASS_TOLERANCE:
-            raise GroupRejected("target_mass_mismatch", f"idx={decision_idx} total={total}")
+        if total <= 0.0:
+            raise GroupRejected("only_forced_visit_actions", f"idx={decision_idx}")
         target = [t / total for t in target]
 
         if not selected:
