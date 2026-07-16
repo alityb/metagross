@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -46,6 +47,11 @@ def main() -> None:
                         help="Concurrent matchup shards; each shard keeps games serial.")
     parser.add_argument("--shards-per-matchup", type=int, default=1,
                         help="Split each opponent matchup into isolated paired subshards.")
+    parser.add_argument(
+        "--keep-game-logs",
+        action="store_true",
+        help="Preserve per-game Foul Play logs. Disabled for large strict collection runs.",
+    )
     args = parser.parse_args()
     if args.workers <= 0:
         parser.error("--workers must be positive")
@@ -90,9 +96,10 @@ def main() -> None:
             "--foul-play-search-time-ms", str(args.search_ms),
             "--foul-play-search-parallelism", str(args.parallelism),
             "--foul-play-search-threads", "1",
-            "--log-dir", str(out / "logs"),
             "--json-out", str(out / "result.json"),
         ]
+        if args.keep_game_logs:
+            cmd.extend(["--log-dir", str(out / "logs")])
         username_prefix = hashlib.blake2s(
             f"{run_nonce}\0{learner_id}\0{opponent_id}\0{shard_index}".encode(),
             digest_size=4,
@@ -100,16 +107,32 @@ def main() -> None:
         cmd.extend(["--username-prefix", username_prefix])
         add_profile_args(cmd, "a", learner, out)
         add_profile_args(cmd, "b", opponent, out)
-        print("Running:", " ".join(cmd), flush=True)
-        subprocess.run(cmd, check=True)
-        return {
+        environment = os.environ.copy()
+        base_namespace = environment.get("METAGROSS_PRIOR_NAMESPACE")
+        prior_namespace = None
+        if base_namespace:
+            # eval.run launches one isolated local Showdown server per shard;
+            # its battle tags can overlap with concurrent shards. Keep the
+            # shared prior server's live-session key unique while its dump
+            # retains this namespace for fail-closed target filtering.
+            prior_namespace = f"{base_namespace}-{opponent_id}-{shard_index:02d}"
+            environment["METAGROSS_PRIOR_NAMESPACE"] = prior_namespace
+        result = {
             "opponent": opponent_id,
             "shard_index": shard_index,
             "requested_games": games,
             "paired_games": paired_games,
             "out": str(out),
             "username_prefix": username_prefix,
+            "prior_namespace": prior_namespace,
         }
+        print("Running:", " ".join(cmd), flush=True)
+        try:
+            subprocess.run(cmd, check=True, env=environment)
+        except Exception as exc:
+            # Keep collecting independent shards so failed work can be replaced.
+            return {**result, "error": str(exc)}
+        return result
 
     jobs = []
     for opponent_id, total_games in sorted(counts.items()):
@@ -132,6 +155,9 @@ def main() -> None:
     )
 
     (args.out_dir / "MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    failures = [row for row in completed if "error" in row]
+    if failures:
+        raise SystemExit(f"{len(failures)} PFSP shard(s) failed; see MANIFEST.json")
 
 
 if __name__ == "__main__":
