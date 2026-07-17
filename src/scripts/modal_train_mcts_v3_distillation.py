@@ -20,6 +20,7 @@ Ablation usage (1k/3k/6k update budgets):
 from __future__ import annotations
 
 import io
+import hashlib
 import json
 import math
 import os
@@ -48,10 +49,17 @@ def _learner_trajectory_paths(root: Path) -> set[str]:
     return paths
 
 
-def _package_dataset_root(root: Path) -> bytes:
+def _package_dataset_root(root: Path, max_trajectories: int | None = None) -> bytes:
     paths = sorted((root / FORMAT).rglob("*.json.lz4"))
     if not paths:
         raise ValueError(f"dataset root contains no {FORMAT} trajectories")
+    if max_trajectories is not None:
+        if max_trajectories < 1:
+            raise ValueError("human_anchor_max_trajectories must be positive")
+        paths = sorted(
+            paths,
+            key=lambda path: hashlib.sha256(path.relative_to(root).as_posix().encode()).hexdigest(),
+        )[:max_trajectories]
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode="w:gz") as archive:
         for path in paths:
@@ -348,6 +356,7 @@ def main(
     mcts_v3_batch_size: int = 64,
     batch_size: int = 24,
     run_name: str = "",
+    human_anchor_max_trajectories: int = 1000,
 ) -> None:
     """Package finalized local artifacts and invoke the Modal function."""
     learner_root = Path(learner_only_root)
@@ -365,7 +374,7 @@ def main(
 
     learner_tarball, trajectory_count = package_learner_trajectories(learner_root)
     print(f"Packaged learner trajectories: {trajectory_count}", flush=True)
-    human_anchor = _package_dataset_root(anchor_root)
+    human_anchor = _package_dataset_root(anchor_root, human_anchor_max_trajectories)
     r1_checkpoint = package_r1_checkpoint_archive(checkpoint_root)
     resolved_run_name = run_name or f"mcts_v3_distill_{steps_per_epoch}"
 
