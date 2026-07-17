@@ -23,28 +23,100 @@ import io
 import json
 import math
 import os
-import sys
 import tarfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import modal
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from scripts.modal_train_mcts_distillation import (  # noqa: E402
-    FORMAT,
-    NUM_ACTIONS,
-    R1_RUN_NAME,
-    IMAGE,
-    _extract_tarball,
-    _learner_trajectory_paths,
-    _package_dataset_root,
-    _strict_trajectory_lengths,
-    package_r1_checkpoint_archive,
-    package_train_sources,
+ROOT = Path(__file__).resolve().parents[2]
+FORMAT = "gen9randombattle"
+NUM_ACTIONS = 13
+R1_RUN_NAME = "randbats_exit_r1"
+IMAGE = (
+    modal.Image.debian_slim(python_version="3.11")
+    .apt_install("git", "build-essential", "curl")
+    .pip_install("torch", "numpy", "gymnasium<=0.29.1", "gin-config", "wandb", "einops", "tqdm", "lz4", "termcolor", "rich", "huggingface_hub", "datasets", "pandas", "scipy", "ratarmountcore", "poke-env @ git+https://github.com/UT-Austin-RPL/poke-env.git", "amago @ git+https://github.com/UT-Austin-RPL/amago@0974781a9096ff43df1b708312256f96fc2ab127")
+    .add_local_dir(ROOT / "external" / "metamon" / "metamon", "/usr/local/lib/python3.11/site-packages/metamon", copy=True, ignore=["__pycache__", "*.pyc"])
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+
+def _learner_trajectory_paths(root: Path) -> set[str]:
+    root = root.resolve()
+    paths = {path.relative_to(root).as_posix() for path in root.rglob("*.json.lz4") if path.is_file() and not path.is_symlink()}
+    if not paths:
+        raise ValueError("learner-only root contains no regular trajectories")
+    return paths
+
+
+def _package_dataset_root(root: Path) -> bytes:
+    paths = sorted((root / FORMAT).rglob("*.json.lz4"))
+    if not paths:
+        raise ValueError(f"dataset root contains no {FORMAT} trajectories")
+    payload = io.BytesIO()
+    with tarfile.open(fileobj=payload, mode="w:gz") as archive:
+        for path in paths:
+            if path.is_symlink() or not path.is_file():
+                raise ValueError(f"invalid dataset trajectory: {path}")
+            archive.add(path, arcname=path.relative_to(root).as_posix(), recursive=False)
+    return payload.getvalue()
+
+
+def package_train_sources(root: Path = ROOT, sources: tuple[str, ...] = ()) -> bytes:
+    payload = io.BytesIO()
+    with tarfile.open(fileobj=payload, mode="w:gz") as archive:
+        for relative in sources:
+            path = root / relative
+            if not path.is_file():
+                raise ValueError(f"missing training source: {path}")
+            archive.add(path, arcname=relative, recursive=False)
+    return payload.getvalue()
+
+
+def package_r1_checkpoint_archive(root: Path) -> bytes:
+    root = root.resolve()
+    run_dir = root / R1_RUN_NAME
+    checkpoint = run_dir / "ckpts" / "policy_weights" / "policy_epoch_5.pt"
+    if not checkpoint.is_file() or checkpoint.is_symlink():
+        raise ValueError("R1 epoch-5 checkpoint is missing")
+    payload = io.BytesIO()
+    with tarfile.open(fileobj=payload, mode="w:gz") as archive:
+        for path in sorted(run_dir.rglob("*")):
+            if path.is_symlink():
+                raise ValueError(f"R1 archive contains symlink: {path}")
+            if path.is_file():
+                archive.add(path, arcname=path.relative_to(root).as_posix(), recursive=False)
+    return payload.getvalue()
+
+
+def _safe_member(member: tarfile.TarInfo) -> None:
+    path = PurePosixPath(member.name)
+    if path.is_absolute() or not path.parts or any(part in ("", ".", "..") for part in path.parts) or not (member.isfile() or member.isdir()):
+        raise ValueError(f"unsafe tar member: {member.name!r}")
+
+
+def _extract_tarball(payload: bytes, destination: str) -> None:
+    with tarfile.open(fileobj=io.BytesIO(payload), mode="r:*") as archive:
+        for member in archive.getmembers():
+            _safe_member(member)
+            archive.extract(member, destination)
+
+
+def _strict_trajectory_lengths(payload: bytes) -> dict[str, int]:
+    import lz4.frame
+    lengths = {}
+    with tarfile.open(fileobj=io.BytesIO(payload), mode="r:*") as archive:
+        for member in archive.getmembers():
+            _safe_member(member)
+            path = PurePosixPath(member.name)
+            if member.isfile() and len(path.parts) >= 2 and path.parts[0] == FORMAT and path.name.endswith(".json.lz4"):
+                handle = archive.extractfile(member)
+                raw = json.loads(lz4.frame.decompress(handle.read()).decode("utf-8"))
+                if not isinstance(raw.get("actions"), list) or len(raw["actions"]) < 2:
+                    raise ValueError(f"invalid learner trajectory: {member.name}")
+                lengths[member.name] = len(raw["actions"]) - 1
+    if not lengths:
+        raise ValueError("learner archive contains no trajectories")
+    return lengths
 APP = modal.App("metagross-mcts-v3-distillation")
 app = APP  # Modal CLI discovers the conventional lowercase export.
 VOLUME = modal.Volume.from_name("metagross-mcts-v3-distillation", create_if_missing=True)
