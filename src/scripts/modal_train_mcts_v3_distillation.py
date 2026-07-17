@@ -199,8 +199,7 @@ def package_learner_trajectories(learner_only_root: Path) -> tuple[bytes, int]:
     return payload.getvalue(), len(source_paths)
 
 
-@APP.function(image=IMAGE, gpu="H100", timeout=4 * 3600, volumes={"/data": VOLUME})
-def train(
+def _train_impl(
     learner_tarball: bytes,
     v3_dataset_jsonl: bytes,
     human_anchor_tarball: bytes,
@@ -302,6 +301,42 @@ def train(
     return checkpoints
 
 
+@APP.function(image=IMAGE, gpu="H100", timeout=4 * 3600, volumes={"/data": VOLUME})
+def train(
+    learner_tarball: bytes,
+    v3_dataset_jsonl: bytes,
+    human_anchor_tarball: bytes,
+    r1_checkpoint_archive: bytes,
+    train_sources_tarball: bytes,
+    run_name: str,
+    steps_per_epoch: int,
+    mcts_v3_coeff: float,
+    mcts_v3_batch_size: int,
+    batch_size: int,
+) -> list[str]:
+    return _train_impl(
+        learner_tarball, v3_dataset_jsonl, human_anchor_tarball,
+        r1_checkpoint_archive, train_sources_tarball, run_name,
+        steps_per_epoch, mcts_v3_coeff, mcts_v3_batch_size, batch_size,
+    )
+
+
+@APP.function(image=IMAGE, gpu="H100", timeout=4 * 3600, volumes={"/data": VOLUME})
+def train_from_volume(
+    artifact_dir: str, run_name: str, steps_per_epoch: int,
+    mcts_v3_coeff: float, mcts_v3_batch_size: int, batch_size: int,
+) -> list[str]:
+    root = Path("/data") / artifact_dir.strip("/")
+    return _train_impl(
+        (root / "learner.tar.gz").read_bytes(),
+        (root / "targets.jsonl").read_bytes(),
+        (root / "human.tar.gz").read_bytes(),
+        (root / "r1.tar.gz").read_bytes(),
+        (root / "sources.tar.gz").read_bytes(),
+        run_name, steps_per_epoch, mcts_v3_coeff, mcts_v3_batch_size, batch_size,
+    )
+
+
 @APP.local_entrypoint()
 def main(
     learner_only_root: str,
@@ -334,16 +369,16 @@ def main(
     r1_checkpoint = package_r1_checkpoint_archive(checkpoint_root)
     resolved_run_name = run_name or f"mcts_v3_distill_{steps_per_epoch}"
 
-    result = train.remote(
-        learner_tarball,
-        dataset_jsonl,
-        human_anchor,
-        r1_checkpoint,
-        package_train_sources(sources=V3_TRAIN_SOURCES),
-        resolved_run_name,
-        steps_per_epoch,
-        mcts_v3_coeff,
-        mcts_v3_batch_size,
-        batch_size,
+    artifact_dir = f"mcts_v3_artifacts/{resolved_run_name}"
+    with VOLUME.batch_upload(force=True) as batch:
+        batch.put_file(io.BytesIO(learner_tarball), f"/{artifact_dir}/learner.tar.gz")
+        batch.put_file(io.BytesIO(dataset_jsonl), f"/{artifact_dir}/targets.jsonl")
+        batch.put_file(io.BytesIO(human_anchor), f"/{artifact_dir}/human.tar.gz")
+        batch.put_file(io.BytesIO(r1_checkpoint), f"/{artifact_dir}/r1.tar.gz")
+        batch.put_file(io.BytesIO(package_train_sources(sources=V3_TRAIN_SOURCES)), f"/{artifact_dir}/sources.tar.gz")
+    VOLUME.commit()
+    result = train_from_volume.remote(
+        artifact_dir, resolved_run_name, steps_per_epoch,
+        mcts_v3_coeff, mcts_v3_batch_size, batch_size,
     )
     print(f"Checkpoints: {result}", flush=True)
