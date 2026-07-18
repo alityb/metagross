@@ -165,9 +165,9 @@ def normalize_user_id(username: str) -> str:
     return re.sub(r"[^a-z0-9]", "", username.lower())
 
 
-def make_username(role: str, game_index: int) -> str:
+def make_username(role: str, game_index: int, username_prefix: str = "p0") -> str:
     suffix = secrets.token_hex(2)
-    return f"p0{role}{game_index:03d}{suffix}"[:18]
+    return f"{username_prefix}{role}{game_index:03d}{suffix}"[:18]
 
 
 def is_foul_play(agent: str) -> bool:
@@ -383,12 +383,19 @@ def foul_play_env(
         prior_url = args.agent_a_prior_server_url
     elif slot == "agent_b" and getattr(args, "agent_b_prior_server_url", None):
         prior_url = args.agent_b_prior_server_url
+    # Per-slot exploration constant: sharper (distilled) priors can need a
+    # different c_puct than the baseline they are gated against.
+    cpuct = args.cpuct
+    if slot == "agent_a" and getattr(args, "agent_a_cpuct", None) is not None:
+        cpuct = args.agent_a_cpuct
+    elif slot == "agent_b" and getattr(args, "agent_b_cpuct", None) is not None:
+        cpuct = args.agent_b_cpuct
     if agent in ("foul_play_root_priors", "foul_play_root_priors_opp"):
         env["METAGROSS_PRIOR_SERVER"] = prior_url
-        env["METAGROSS_CPUCT"] = str(args.cpuct)
+        env["METAGROSS_CPUCT"] = str(cpuct)
     elif is_opp_priors_foul_play(agent):
         env["METAGROSS_PRIOR_SERVER"] = prior_url
-        env["METAGROSS_CPUCT"] = str(args.cpuct)
+        env["METAGROSS_CPUCT"] = str(cpuct)
         env["METAGROSS_OPP_PRIORS_ONLY"] = "1"
     else:
         env.pop("METAGROSS_PRIOR_SERVER", None)
@@ -396,6 +403,13 @@ def foul_play_env(
         env.pop("METAGROSS_OPP_PRIORS_ONLY", None)
 
     if slot in ("agent_a", "agent_b"):
+        # Shard-local capture paths must win over any parent process environment.
+        for name in (
+            "METAGROSS_REPLAY_DIR",
+            "METAGROSS_DECISION_LOG",
+            "METAGROSS_BELIEF_LOG",
+        ):
+            env.pop(name, None)
         prefix = slot.replace("agent_", "agent_")
         decision_log = getattr(args, f"{prefix}_decision_log", None)
         replay_dir = getattr(args, f"{prefix}_replay_dir", None)
@@ -429,11 +443,6 @@ def foul_play_env(
         env["METAGROSS_PP_STALL"] = "1"
     else:
         env.pop("METAGROSS_PP_STALL", None)
-    # Pass through data-capture env vars (self-play / ExIt pipeline)
-    for passthrough in ("METAGROSS_REPLAY_DIR", "METAGROSS_DECISION_LOG", "METAGROSS_BELIEF_LOG"):
-        val = os.environ.get(passthrough)
-        if val:
-            env[passthrough] = val
     if is_value_shield_foul_play(agent):
         env["METAGROSS_FP_VALUE_SHIELD"] = "1"
         env["METAGROSS_FP_VALUE_SHIELD_MARGIN"] = str(args.value_shield_margin)
@@ -581,8 +590,8 @@ async def play_poke_env_vs_poke_env(
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
-    challenger_username = make_username("c", game_index)
-    acceptor_username = make_username("a", game_index)
+    challenger_username = make_username("c", game_index, args.username_prefix)
+    acceptor_username = make_username("a", game_index, args.username_prefix)
     challenger = make_poke_env_player(
         challenger_agent, challenger_username, server_configuration, args.format
     )
@@ -635,8 +644,8 @@ async def play_foul_play_accepts_poke_env_challenge(
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
-    fp_username = make_username("f", game_index)
-    challenger_username = make_username("c", game_index)
+    fp_username = make_username("f", game_index, args.username_prefix)
+    challenger_username = make_username("c", game_index, args.username_prefix)
     proc, log_path, log_file = await start_foul_play(
         args,
         acceptor_agent,
@@ -646,6 +655,7 @@ async def play_foul_play_accepts_poke_env_challenge(
         None,
         log_dir,
         model_override=model_for_slot(args, acceptor_slot),
+        slot=acceptor_slot,
     )
     await asyncio.sleep(args.foul_play_startup_delay_seconds)
     await ensure_foul_play_still_running(proc, log_path, log_file)
@@ -709,8 +719,8 @@ async def play_foul_play_challenges_poke_env(
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
-    fp_username = make_username("f", game_index)
-    acceptor_username = make_username("a", game_index)
+    fp_username = make_username("f", game_index, args.username_prefix)
+    acceptor_username = make_username("a", game_index, args.username_prefix)
     acceptor = make_poke_env_player(
         acceptor_agent, acceptor_username, server_configuration, args.format
     )
@@ -726,6 +736,7 @@ async def play_foul_play_challenges_poke_env(
         acceptor_username,
         log_dir,
         model_override=model_for_slot(args, challenger_slot),
+        slot=challenger_slot,
     )
     proc_task = None
     try:
@@ -784,8 +795,8 @@ async def play_foul_play_vs_foul_play(
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
-    challenger_username = make_username("x", game_index)
-    acceptor_username = make_username("y", game_index)
+    challenger_username = make_username("x", game_index, args.username_prefix)
+    acceptor_username = make_username("y", game_index, args.username_prefix)
     acceptor_proc, acceptor_log_path, acceptor_log_file = await start_foul_play(
         args,
         acceptor_agent,
@@ -1319,6 +1330,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         parser.add_argument(f"--{slot}-replay-dir", default=None)
         parser.add_argument(f"--{slot}-require-priors", action="store_true")
     parser.add_argument("--cpuct", type=float, default=2.0)
+    parser.add_argument("--agent-a-cpuct", type=float, default=None,
+                        help="Per-slot c_puct override for agent A (falls back to --cpuct).")
+    parser.add_argument("--agent-b-cpuct", type=float, default=None,
+                        help="Per-slot c_puct override for agent B (falls back to --cpuct).")
     parser.add_argument(
         "--randbats-belief-pool",
         default=None,
@@ -1331,6 +1346,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--concurrent-games", type=int, default=1,
                         help="Number of games to run concurrently (for self-play data generation)")
+    parser.add_argument("--username-prefix", default="p0")
     parser.add_argument("--randbats-conditional-max-teams", type=int, default=30000)
     parser.add_argument("--randbats-conditional-max-ms", type=int, default=250)
     parser.add_argument("--randbats-conditional-timeout-seconds", type=float, default=8.0)
@@ -1382,6 +1398,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         raise SystemExit(0)
     if args.n_games <= 0:
         raise ValueError("--n-games must be positive")
+    if not re.fullmatch(r"[a-z0-9]{1,8}", args.username_prefix):
+        raise ValueError("--username-prefix must contain 1-8 lowercase alphanumeric characters")
     return args
 
 
