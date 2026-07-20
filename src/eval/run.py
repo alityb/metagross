@@ -33,6 +33,7 @@ AGENT_NAMES = (
     "max_damage",
     "foul_play",
     "foul_play_learned",
+    "foul_play_learned_root_priors_opp",
     "foul_play_randbats_pool",
     "foul_play_randbats_conditional",
     "foul_play_tauros_kind",
@@ -174,6 +175,7 @@ def is_foul_play(agent: str) -> bool:
     return agent in {
         "foul_play",
         "foul_play_learned",
+        "foul_play_learned_root_priors_opp",
         "foul_play_randbats_pool",
         "foul_play_randbats_conditional",
         "foul_play_tauros_kind",
@@ -189,7 +191,7 @@ def is_foul_play(agent: str) -> bool:
 
 
 def is_learned_foul_play(agent: str) -> bool:
-    return agent == "foul_play_learned"
+    return agent in {"foul_play_learned", "foul_play_learned_root_priors_opp"}
 
 
 def is_randbats_pool_foul_play(agent: str) -> bool:
@@ -325,7 +327,7 @@ def foul_play_command(
 
 def model_for_agent(args: argparse.Namespace, agent: str) -> Optional[str]:
     """Return the model path for the given agent, respecting per-slot overrides."""
-    if agent == "foul_play_learned":
+    if is_learned_foul_play(agent):
         # Per-slot overrides take priority over the shared --learned-value-model
         # They're stored as args.agent_a_model / args.agent_b_model and resolved
         # by the caller from the slot name.
@@ -352,7 +354,7 @@ def foul_play_env(
     model = model_override if model_override is not None else model_for_agent(args, agent)
     if is_learned_foul_play(agent):
         if not model:
-            raise ValueError("foul_play_learned requires --learned-value-model or a per-slot model override")
+            raise ValueError("learned Foul Play requires --learned-value-model or a per-slot model override")
         env["METAGROSS_VALUE_MODEL"] = str(Path(model).resolve())
     else:
         env.pop("METAGROSS_VALUE_MODEL", None)
@@ -390,9 +392,11 @@ def foul_play_env(
         cpuct = args.agent_a_cpuct
     elif slot == "agent_b" and getattr(args, "agent_b_cpuct", None) is not None:
         cpuct = args.agent_b_cpuct
-    if agent in ("foul_play_root_priors", "foul_play_root_priors_opp"):
+    if agent in ("foul_play_root_priors", "foul_play_root_priors_opp", "foul_play_learned_root_priors_opp"):
         env["METAGROSS_PRIOR_SERVER"] = prior_url
         env["METAGROSS_CPUCT"] = str(cpuct)
+        if agent == "foul_play_learned_root_priors_opp":
+            env["METAGROSS_OPP_PRIORS_ONLY"] = "1"
     elif is_opp_priors_foul_play(agent):
         env["METAGROSS_PRIOR_SERVER"] = prior_url
         env["METAGROSS_CPUCT"] = str(cpuct)
