@@ -1,0 +1,37 @@
+diff --git a/metamon/config.py b/metamon/config.py
+index e04fd3df..7e1a6f77 100644
+--- a/metamon/config.py
++++ b/metamon/config.py
+@@ -29,4 +29,8 @@ SUPPORTED_BATTLE_FORMATS = [
+ FORMAT_ALIASES = {
+     "gen1oulongtimer": "gen1ou",
+     "gen9oulongtimer": "gen9ou",
++    # metagross local patch: randbats plays with the gen9ou format token so the
++    # pretrained vocab stays in-distribution (parsing, training, and play all
++    # see the same token).
++    "gen9randombattle": "gen9ou",
+ }
+diff --git a/metamon/rl/configs/models/superkazam.gin b/metamon/rl/configs/models/superkazam.gin
+index 67f7f299..66aadfc4 100644
+--- a/metamon/rl/configs/models/superkazam.gin
++++ b/metamon/rl/configs/models/superkazam.gin
+@@ -52,5 +52,4 @@ traj_encoders.TformerTrajEncoder.sigma_reparam = True
+ traj_encoders.TformerTrajEncoder.norm = "layer"
+ traj_encoders.TformerTrajEncoder.head_scaling = True
+ traj_encoders.TformerTrajEncoder.activation = "leaky_relu"
+-traj_encoders.TformerTrajEncoder.attention_type = @transformer.FlashAttention
+-transformer.FlashAttention.window_size = (96, 0)
++traj_encoders.TformerTrajEncoder.attention_type = @transformer.VanillaAttention
+diff --git a/metamon/rl/pretrained.py b/metamon/rl/pretrained.py
+index 6c32d982..dab0fbe0 100644
+--- a/metamon/rl/pretrained.py
++++ b/metamon/rl/pretrained.py
+@@ -346,4 +346,8 @@ class LocalFinetunedModel(LocalPretrainedModel):
+             reward_function=reward_function,
+             battle_backend=battle_backend,
+             dataset_config=dataset_config,
++            # metagross local patch: base models like Kakuna carry required gin
++            # overrides (e.g. MetamonPerceiverTstepEncoder.tokenizer); without
++            # forwarding them, LocalFinetunedModel fails to initialize.
++            gin_overrides=base_model.gin_overrides,
+         )

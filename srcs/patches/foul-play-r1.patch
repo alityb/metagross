@@ -1,0 +1,37 @@
+diff --git a/fp/search/main.py b/fp/search/main.py
+index 2f2659d..9c225a1 100644
+--- a/fp/search/main.py
++++ b/fp/search/main.py
+@@ -24,18 +24,29 @@ def select_move_from_mcts_results(mcts_results: list[(MctsResult, float, int)])
+             "Policy {}: {} visited {}% avg_score={} sample_chance_multiplier={}".format(
+                 index,
+                 this_policy.move_choice,
+-                round(100 * this_policy.visits / mcts_result.total_visits, 2),
+-                round(this_policy.total_score / this_policy.visits, 3),
++                round(100 * this_policy.visits / mcts_result.total_visits, 2)
++                if mcts_result.total_visits > 0 else 0.0,
++                round(this_policy.total_score / this_policy.visits, 3)
++                if this_policy.visits > 0 else 0.0,
+                 round(sample_chance, 3),
+             )
+         )
++        total_visits = mcts_result.total_visits
+         for s1_option in mcts_result.side_one:
+             final_policy[s1_option.move_choice] = final_policy.get(
+                 s1_option.move_choice, 0
+-            ) + (sample_chance * (s1_option.visits / mcts_result.total_visits))
++            ) + sample_chance * (
++                s1_option.visits / total_visits
++                if total_visits > 0
++                else 1.0 / len(mcts_result.side_one)
++            )
+ 
+     final_policy = sorted(final_policy.items(), key=lambda x: x[1], reverse=True)
+ 
++    if final_policy and sum(weight for _action, weight in final_policy) <= 0:
++        uniform = 1.0 / len(final_policy)
++        final_policy = [(action, uniform) for action, _weight in final_policy]
++
+     # Consider all moves that are close to the best move
+     highest_percentage = final_policy[0][1]
+     final_policy = [i for i in final_policy if i[1] >= highest_percentage * 0.75]

@@ -1,6 +1,6 @@
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/pyproject.toml engine/pe_v2/poke-engine-py/pyproject.toml
---- external/source-dist/poke_engine-0.0.47/poke-engine-py/pyproject.toml	1969-12-31 16:00:00
-+++ engine/pe_v2/poke-engine-py/pyproject.toml	2026-07-09 16:06:01
+diff --git a/srcs/vendor/poke-engine/poke-engine-py/pyproject.toml b/srcs/vendor/poke-engine/poke-engine-py/pyproject.toml
+--- /dev/null
++++ b/srcs/vendor/poke-engine/poke-engine-py/pyproject.toml
 @@ -0,0 +1,13 @@
 +[build-system]
 +requires = ["maturin>=1.0,<2.0"]
@@ -15,9 +15,9 @@ diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/s
 +python-source = "python"
 +module-name = "poke_engine.poke_engine"
 +features = ["pyo3/extension-module"]
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/python/poke_engine/__init__.py engine/pe_v2/poke-engine-py/python/poke_engine/__init__.py
---- external/source-dist/poke_engine-0.0.47/poke-engine-py/python/poke_engine/__init__.py	2026-06-13 13:32:23
-+++ engine/pe_v2/poke-engine-py/python/poke_engine/__init__.py	2026-07-09 16:04:56
+diff --git a/srcs/vendor/poke-engine/poke-engine-py/python/poke_engine/__init__.py b/srcs/vendor/poke-engine/poke-engine-py/python/poke_engine/__init__.py
+--- a/srcs/vendor/poke-engine/poke-engine-py/python/poke_engine/__init__.py
++++ b/srcs/vendor/poke-engine/poke-engine-py/python/poke_engine/__init__.py
 @@ -146,7 +146,8 @@
  
  
@@ -45,9 +45,9 @@ diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/s
      """
      return IterativeDeepeningResult._from_rust(id(state, duration_ms))
 +
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/poke-engine-py/src/lib.rs engine/pe_v2/poke-engine-py/src/lib.rs
---- external/source-dist/poke_engine-0.0.47/poke-engine-py/src/lib.rs	2026-06-13 13:32:23
-+++ engine/pe_v2/poke-engine-py/src/lib.rs	2026-07-09 16:20:18
+diff --git a/srcs/vendor/poke-engine/poke-engine-py/src/lib.rs b/srcs/vendor/poke-engine/poke-engine-py/src/lib.rs
+--- a/srcs/vendor/poke-engine/poke-engine-py/src/lib.rs
++++ b/srcs/vendor/poke-engine/poke-engine-py/src/lib.rs
 @@ -1,7 +1,7 @@
  use pyo3::prelude::*;
  use pyo3::types::PyType;
@@ -253,9 +253,9 @@ diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/s
      m.add_class::<PyState>()?;
      m.add_class::<PySide>()?;
      m.add_class::<PySideConditions>()?;
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/io.rs engine/pe_v2/src/io.rs
---- external/source-dist/poke_engine-0.0.47/src/io.rs	2026-06-13 13:32:23
-+++ engine/pe_v2/src/io.rs	2026-07-09 16:04:33
+diff --git a/srcs/vendor/poke-engine/src/io.rs b/srcs/vendor/poke-engine/src/io.rs
+--- a/srcs/vendor/poke-engine/src/io.rs
++++ b/srcs/vendor/poke-engine/src/io.rs
 @@ -315,6 +315,9 @@
                          side_two_options.clone(),
                          std::time::Duration::from_millis(mcts.time_to_search_ms),
@@ -276,9 +276,9 @@ diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/s
                      );
                      let elapsed = start_time.elapsed();
                      pprint_mcts_result(&io_data.state, result);
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/mcts.rs engine/pe_v2/src/mcts.rs
---- external/source-dist/poke_engine-0.0.47/src/mcts.rs	2026-06-20 18:26:19
-+++ engine/pe_v2/src/mcts.rs	2026-07-09 16:14:50
+diff --git a/srcs/vendor/poke-engine/src/mcts.rs b/srcs/vendor/poke-engine/src/mcts.rs
+--- a/srcs/vendor/poke-engine/src/mcts.rs
++++ b/srcs/vendor/poke-engine/src/mcts.rs
 @@ -49,6 +49,7 @@
          let s1_options_vec: Vec<MoveNode> = s1_options
              .iter()
@@ -364,9 +364,9 @@ diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/s
      let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
  
      let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
-diff -ruN --exclude=target --exclude=Cargo.lock --exclude=__pycache__ external/source-dist/poke_engine-0.0.47/src/state.rs engine/pe_v2/src/state.rs
---- external/source-dist/poke_engine-0.0.47/src/state.rs	2026-06-13 13:32:23
-+++ engine/pe_v2/src/state.rs	2026-07-09 16:01:01
+diff --git a/srcs/vendor/poke-engine/src/state.rs b/srcs/vendor/poke-engine/src/state.rs
+--- a/srcs/vendor/poke-engine/src/state.rs
++++ b/srcs/vendor/poke-engine/src/state.rs
 @@ -1317,6 +1317,13 @@
      pub team_preview: bool,
      pub use_last_used_move: bool,

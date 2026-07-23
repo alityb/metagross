@@ -56,6 +56,9 @@ fn main() {
                 side_two_options,
                 std::time::Duration::from_millis(0),
                 args.iterations,
+                None,
+                None,
+                2.0,
             );
         }
         println!("{}", i);
