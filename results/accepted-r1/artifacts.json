@@ -1,0 +1,24 @@
+{
+  "checkpoint": {
+    "path": "srcs/models/randbats_exit_r1/ckpts/policy_weights/policy_epoch_5.pt",
+    "sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+    "tracked": false
+  },
+  "foul_play": {
+    "commit": "e1e2ca650598621e85c3b6ab751c66e625489934",
+    "patch": "srcs/patches/foul-play-r1.patch"
+  },
+  "metamon": {
+    "commit": "0a00a759c9a4382a2877088d828302ec294a05a5",
+    "patch": "srcs/patches/metamon-r1.patch"
+  },
+  "poke_engine": {
+    "patch": "srcs/patches/poke-engine-0.0.47-priors-v2.patch",
+    "source": "srcs/vendor/poke-engine",
+    "version": "0.0.47"
+  },
+  "poke_engine_linux_wheel": {
+    "path": "srcs/vendor/poke-engine/linux_wheels/poke_engine-0.0.47-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "sha256": "3c13f27a6a1638d2d087a20acc830048a0b5885d84422555c1a458d13e8d4f70"
+  }
+}

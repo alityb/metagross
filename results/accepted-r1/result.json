@@ -1,0 +1,29 @@
+{
+  "account": "metaexitr1",
+  "agent": "foul_play_root_priors_opp",
+  "evidence": {
+    "classification": "historical_public_ladder_observation",
+    "formal_paired_gate_predated": true,
+    "immutable_final_api_snapshot_retained": false,
+    "raw_logs": "experimental/runs/exit_ladder_fresh"
+  },
+  "format": "gen9randombattle",
+  "policy": {
+    "checkpoint": 5,
+    "name": "randbats_exit_r1",
+    "parameters": 142832563
+  },
+  "rating": {
+    "gxe_peak_observed": 93.6,
+    "gxe_settled_high": 92.7,
+    "gxe_settled_low": 92.4,
+    "rating_deviation": 25
+  },
+  "search": {
+    "c_puct": 2.0,
+    "parallelism": 8,
+    "search_time_ms": 500,
+    "threads": 1
+  },
+  "status": "accepted"
+}
