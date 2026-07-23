@@ -1,23 +1,36 @@
-/.venv-*/
-/external/
-/data/randbats_pools/
-/data/traces/
-/data/processed/
-/data/replays/
-/data/parsed_replays/
-/data/parsed_replays_heldout/
-/src/nets/checkpoints/randbats_full/
-*.log
-*.pid
+/.venv*/
+/.claude/
+/.opencode/
+/.ruff_cache/
+/.pytest_cache/
+/.ladder_credentials
+/.ladder_exit_password
+/.ladder_exit_r1_credentials
+/.ladder_r2_credentials
+
 __pycache__/
-.pytest_cache/
-.ladder_credentials
-/.venv/
-.ladder_exit_password
-.ladder_exit_r1_credentials
+target/
+*.log
 *.out
-experiments/exit_ladder_fresh/watchdog.out
-experiments/exit_ladder_fresh/run.out
-experiments/exit_ladder/prior_server.out
-experiments/exit_ladder/run.out
-experiments/pe_v2_equivalence/
+*.pid
+
+# Local production artifacts. Their required hashes are in
+# results/accepted-r1/artifacts.json.
+/srcs/models/
+/srcs/runtime/*
+!/srcs/runtime/.gitkeep
+/srcs/vendor/foul-play/
+/srcs/vendor/metamon/
+
+# Historical local dependencies and generated research payloads. Files already
+# tracked in the archive remain tracked; these rules prevent new run artifacts
+# from being added accidentally.
+/experimental/external/
+/experimental/data/**
+/experimental/runs/**
+!/experimental/runs/README.md
+!/experimental/runs/iteration_log.md
+/experimental/src/external/
+/experimental/src/nets/checkpoints/**
+/experimental/engine/**/linux_wheels/
+/experimental/engine/**/docs/make.bat

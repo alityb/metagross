@@ -1,0 +1,2 @@
+{"replay_id":"early","time":1,"active_candidates":[{"candidate_id":"set-a","prior_weight":3},{"candidate_id":"set-b","prior_weight":1}],"legal_actions":["move surf","switch pikachu"],"observed_action":"move surf","action_likelihoods":{"set-a":0.2,"set-b":0.8},"label":"set-b"}
+{"replay_id":"late","time":2,"active_candidates":[{"candidate_id":"set-a","prior_weight":1},{"candidate_id":"set-b","prior_weight":3}],"legal_actions":["move surf","switch pikachu"],"observed_action":"move surf","action_likelihoods":{"set-a":0.9,"set-b":0.1},"label":"set-a"}

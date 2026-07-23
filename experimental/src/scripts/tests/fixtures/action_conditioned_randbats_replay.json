@@ -1,0 +1,6 @@
+{
+  "id": "synthetic-action-conditioned-1",
+  "formatid": "gen9randombattle",
+  "uploadtime": 100,
+  "log": "|gen|9\n|tier|[Gen 9] Random Battle\n|player|p1|Alice|\n|player|p2|Bob|\n|teamsize|p1|6\n|teamsize|p2|6\n|switch|p1a: Pikachu|Pikachu, L80|100/100\n|switch|p2a: Charizard|Charizard, L80|100/100\n|turn|1\n|move|p2a: Charizard|Flamethrower|p1a: Pikachu\n|-damage|p1a: Pikachu|50/100\n|turn|2\n|move|p2a: Charizard|Air Slash|p1a: Pikachu\n|-damage|p1a: Pikachu|0 fnt\n|faint|p1a: Pikachu\n|win|Bob"
+}

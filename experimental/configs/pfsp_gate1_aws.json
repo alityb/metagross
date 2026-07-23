@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "format": "gen9randombattle",
+  "seed": 20260712,
+  "profiles": {
+    "accepted_r1": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://172.31.79.95:8979",
+      "python": "/opt/metagross/.venv-foul-play/bin/python",
+      "require_priors": true
+    },
+    "accepted_r1_cpu": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://172.31.79.95:8981",
+      "python": "/opt/metagross/.venv-foul-play/bin/python",
+      "require_priors": true
+    },
+    "base_kakuna": {
+      "agent": "foul_play_root_priors_opp",
+      "prior_server_url": "http://172.31.79.95:8980",
+      "python": "/opt/metagross/.venv-foul-play/bin/python",
+      "require_priors": true
+    },
+    "stock_fp": {
+      "agent": "foul_play",
+      "python": "/opt/metagross/.venv-foul-play/bin/python"
+    }
+  },
+  "pfsp": {
+    "learner": "accepted_r1",
+    "pool": [
+      {"id": "accepted_r1_cpu", "base_weight": 0.4375},
+      {"id": "base_kakuna", "base_weight": 0.3125},
+      {"id": "stock_fp", "base_weight": 0.25}
+    ],
+    "target_winrate": [0.4, 0.6],
+    "min_pool_weight": 0.05,
+    "probe_paired_games": 20
+  }
+}
