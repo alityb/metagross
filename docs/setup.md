@@ -47,6 +47,11 @@ CARGO_TARGET_DIR=/tmp/metagross-poke-engine \
   --config-settings='build-args=--no-default-features --features poke-engine/gen9,poke-engine/terastallization'
 ```
 
+The production launcher fails closed unless `poke_engine` reports a non-editable
+local install sourced from `srcs/vendor/poke-engine` with the expected root-prior
+MCTS signature. It records the native extension SHA-256 in every ladder manifest
+and rejects experimental engine variants.
+
 Create the Metamon environment:
 
 ```bash
