@@ -15,6 +15,8 @@ This module intentionally contains only the accepted r1 inference path.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -35,6 +37,26 @@ def norm(s: str) -> str:
 def session_key(namespace: str, tag: str) -> str:
     """Namespace the live session without changing the dumped replay tag."""
     return f"{namespace}\0{tag}" if namespace else tag
+
+
+def verify_local_checkpoint(
+    local_run_dir: str, local_run_name: str, checkpoint: int, expected_sha256: str
+) -> tuple[Path, str]:
+    path = (
+        Path(local_run_dir)
+        / local_run_name
+        / "ckpts"
+        / "policy_weights"
+        / f"policy_epoch_{checkpoint}.pt"
+    ).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"policy checkpoint not found: {path}")
+    actual = hashlib.sha256(path.read_bytes()).hexdigest()
+    if not hmac.compare_digest(actual, expected_sha256):
+        raise RuntimeError(
+            f"checkpoint SHA-256 mismatch: expected {expected_sha256}, got {actual}"
+        )
+    return path, actual
 
 
 class BattleSession:
@@ -512,6 +534,7 @@ def main() -> None:
     parser.add_argument("--local-run-name", default=None)
     parser.add_argument("--local-base-model", default="Kakuna")
     parser.add_argument("--checkpoint", type=int, default=None)
+    parser.add_argument("--checkpoint-sha256", default=None)
     parser.add_argument("--username", required=True,
                         help="FP's showdown username (to identify our side)")
     parser.add_argument("--port", type=int, default=8977)
@@ -523,6 +546,22 @@ def main() -> None:
         "per served /priors decision. Env fallback: METAGROSS_PRIOR_DUMP.",
     )
     args = parser.parse_args()
+
+    if args.checkpoint_sha256:
+        if not args.local_run_dir or not args.local_run_name or args.checkpoint is None:
+            parser.error(
+                "--checkpoint-sha256 requires --local-run-dir, --local-run-name, and --checkpoint"
+            )
+        checkpoint_path, checkpoint_sha256 = verify_local_checkpoint(
+            args.local_run_dir,
+            args.local_run_name,
+            args.checkpoint,
+            args.checkpoint_sha256,
+        )
+        print(
+            f"PRIOR_CHECKPOINT path={checkpoint_path} sha256={checkpoint_sha256}",
+            flush=True,
+        )
 
     server = PriorServer(args)
 

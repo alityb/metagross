@@ -146,7 +146,13 @@ class MctsResult:
 
 
 def monte_carlo_tree_search(
-    state: State, duration_ms: int = 1000, iterations: int = 0, threads: int = 1
+    state: State,
+    duration_ms: int = 1000,
+    iterations: int = 0,
+    threads: int = 1,
+    s1_priors=None,
+    s2_priors=None,
+    c_puct: float = 2.0,
 ) -> MctsResult:
     """
     Perform monte-carlo-tree-search on the given state and for the given duration
@@ -162,7 +168,17 @@ def monte_carlo_tree_search(
     :return: the result of the search
     :rtype: MctsResult
     """
-    return MctsResult._from_rust(mcts(state, duration_ms, iterations, threads))
+    return MctsResult._from_rust(
+        mcts(
+            state,
+            duration_ms,
+            iterations,
+            threads,
+            s1_priors=s1_priors,
+            s2_priors=s2_priors,
+            c_puct=c_puct,
+        )
+    )
 
 
 def iterative_deepening_expectiminimax(

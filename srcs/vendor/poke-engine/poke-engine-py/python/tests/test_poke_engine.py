@@ -81,6 +81,20 @@ def test_monte_carlo_search():
     monte_carlo_tree_search(state, 10)
 
 
+def test_monte_carlo_search_uses_root_priors():
+    result = monte_carlo_tree_search(
+        state,
+        duration_ms=0,
+        iterations=128,
+        s1_priors=[("leer", 1.0)],
+        c_puct=100.0,
+    )
+    visits = {entry.move_choice: entry.visits for entry in result.side_one}
+    assert visits["leer"] > max(
+        visits[move] for move in visits if move != "leer"
+    )
+
+
 def test_iterative_deepening_search():
     iterative_deepening_expectiminimax(state, 10)
 
