@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="r1 live on the Pokémon Showdown ladder" />
+    <title>r1 live</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <nav>
+        <a href="/">r1 live</a>
+        <a id="showdown-link" href="https://play.pokemonshowdown.com/" target="_blank" rel="noreferrer">watch on showdown ↗</a>
+      </nav>
+
+      <header>
+        <div>
+          <h1 id="username">jeanfan4</h1>
+          <span class="presence"><i id="live-dot"></i><b id="presence-label">connecting</b></span>
+        </div>
+        <dl>
+          <div><dt>record</dt><dd id="record">--</dd></div>
+          <div><dt>elo</dt><dd id="elo">--</dd></div>
+          <div><dt>gxe</dt><dd id="gxe">--</dd></div>
+        </dl>
+      </header>
+
+      <section class="battle" id="battle">
+        <div class="battle-topline">
+          <span id="opponent-name">searching...</span>
+          <span>turn <b id="turn">--</b></span>
+        </div>
+
+        <div class="stage">
+          <div class="mon opponent">
+            <div class="sprite"><span>?</span><img id="opponent-sprite" alt="" /></div>
+            <div class="plate">
+              <strong id="opponent-species">waiting</strong>
+              <div class="hp"><i id="opponent-hp-bar"></i></div>
+              <small><span id="opponent-hp">--%</span><b id="opponent-status"></b></small>
+            </div>
+          </div>
+
+          <div class="mon ours">
+            <div class="sprite"><span>?</span><img id="our-sprite" alt="" /></div>
+            <div class="plate">
+              <strong id="our-species">waiting</strong>
+              <div class="hp"><i id="our-hp-bar"></i></div>
+              <small><span id="our-hp">--%</span><b id="our-status"></b></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="battle-bottom">
+          <div class="teams"><span id="our-team"></span><span id="opponent-team"></span></div>
+          <ol id="events"></ol>
+        </div>
+      </section>
+
+      <section class="recent">
+        <span>recent</span>
+        <div id="recent-results"></div>
+        <small id="updated">--</small>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

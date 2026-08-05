@@ -1,0 +1,9 @@
+public/status.json
+dist/
+.vercel/
+node_modules/
+.vercel
+.env*
+.agents/
+.claude/
+skills-lock.json

@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "sequence": 0,
+  "updatedAt": "2026-08-04T00:00:00Z",
+  "run": {
+    "username": "jeanfan4",
+    "profile": "r1",
+    "format": "gen9randombattle",
+    "status": "running",
+    "requestedGames": 600,
+    "search": { "timeMs": 500, "parallelism": 16, "threads": 1, "cPuct": 2.0 }
+  },
+  "rating": { "elo": 1518, "gxe": 78.3, "rd": 61.8, "wins": 24, "losses": 2 },
+  "health": { "overall": "healthy", "prior": true, "telemetryFresh": true },
+  "battle": {
+    "id": "battle-gen9randombattle-demo",
+    "opponent": "Poupousky",
+    "turn": 14,
+    "state": "active",
+    "us": {
+      "active": { "species": "Wugtrio", "hpPercent": 100, "status": null, "fainted": false },
+      "revealed": [
+        { "species": "Wugtrio", "hpPercent": 100, "status": null, "fainted": false },
+        { "species": "Decidueye-Hisui", "hpPercent": 72, "status": null, "fainted": false }
+      ]
+    },
+    "opponentSide": {
+      "active": { "species": "Ogerpon-Cornerstone", "hpPercent": 100, "status": null, "fainted": false },
+      "revealed": [
+        { "species": "Ogerpon-Cornerstone", "hpPercent": 100, "status": null, "fainted": false },
+        { "species": "Rotom-Wash", "hpPercent": 44, "status": "brn", "fainted": false }
+      ]
+    },
+    "lastAction": "Wugtrio used Liquidation",
+    "search": { "worlds": 64, "totalVisits": 4907000, "averageVisits": 76672 },
+    "events": [
+      { "kind": "turn", "label": "Turn 14", "side": null },
+      { "kind": "move", "label": "Ogerpon-Cornerstone used Ivy Cudgel", "side": "opponent" },
+      { "kind": "move", "label": "Wugtrio used Liquidation", "side": "us" }
+    ]
+  },
+  "recentBattles": [
+    { "id": "demo-3", "opponent": "Shockinly Bad", "result": "loss", "turn": 31, "reason": "normal" },
+    { "id": "demo-2", "opponent": "Jcg401", "result": "win", "turn": 24, "reason": "normal" },
+    { "id": "demo-1", "opponent": "odysses s grant", "result": "win", "turn": 18, "reason": "normal" }
+  ]
+}

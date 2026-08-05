@@ -1,0 +1,13 @@
+{
+  "name": "metagross-ladder-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "python3 -m http.server 4173 -d public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

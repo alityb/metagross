@@ -28,6 +28,8 @@ SEARCH_TIME_MS = 500
 DEFAULT_SEARCH_PARALLELISM = 8
 DEFAULT_SEARCH_THREADS = 1
 CPU_C_PUCT = 2.0
+DEFAULT_REMOTE_MCTS_APP = "metagross-mcts-r1-p16"
+DEFAULT_REMOTE_MCTS_FUNCTION = "search_batch"
 
 
 @dataclass(frozen=True)
@@ -195,6 +197,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--search-parallelism", type=int, default=DEFAULT_SEARCH_PARALLELISM
     )
     parser.add_argument("--search-threads", type=int, default=DEFAULT_SEARCH_THREADS)
+    parser.add_argument("--remote-mcts", action="store_true")
+    parser.add_argument("--remote-mcts-app", default=DEFAULT_REMOTE_MCTS_APP)
+    parser.add_argument("--remote-mcts-function", default=DEFAULT_REMOTE_MCTS_FUNCTION)
+    parser.add_argument("--remote-engine-sha256")
     parser.add_argument("--stall-timeout-seconds", type=int, default=1200)
     parser.add_argument(
         "--max-runtime-seconds",
@@ -227,6 +233,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         args.max_runtime_seconds = max(3600, args.games * 900)
     elif args.max_runtime_seconds <= 0:
         parser.error("--max-runtime-seconds must be positive")
+    if args.remote_mcts and not args.remote_engine_sha256:
+        parser.error("--remote-mcts requires --remote-engine-sha256")
     if not showdown_user_id(args.username):
         parser.error("--username must contain a letter or number")
     return args
@@ -336,6 +344,7 @@ def main(argv: list[str] | None = None) -> int:
             "parallelism": args.search_parallelism,
             "threads": args.search_threads,
             "c_puct": CPU_C_PUCT,
+            "execution": "modal" if args.remote_mcts else "local",
         },
         "limits": {
             "stall_timeout_seconds": args.stall_timeout_seconds,
@@ -365,6 +374,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     prior_env = common_env.copy()
     prior_env.pop("METAGROSS_SHOWDOWN_PASSWORD", None)
+    prior_env.pop("MODAL_TOKEN_ID", None)
+    prior_env.pop("MODAL_TOKEN_SECRET", None)
     prior_command = [
         str(args.metamon_python),
         "-u",
@@ -453,6 +464,22 @@ def main(argv: list[str] | None = None) -> int:
                     "METAGROSS_SEARCH_DUMP": str(search_dump_path),
                 }
             )
+            if args.remote_mcts:
+                client_env.update(
+                    {
+                        "METAGROSS_REQUIRE_REMOTE_MCTS": "1",
+                        "METAGROSS_REMOTE_MCTS_APP": args.remote_mcts_app,
+                        "METAGROSS_REMOTE_MCTS_FUNCTION": args.remote_mcts_function,
+                        "METAGROSS_REMOTE_ENGINE_SHA256": args.remote_engine_sha256,
+                    }
+                )
+                manifest["search"]["modal"] = {
+                    "app": args.remote_mcts_app,
+                    "function": args.remote_mcts_function,
+                    "engine_sha256": args.remote_engine_sha256,
+                    "schema": 1,
+                }
+                write_json(manifest_path, manifest)
             client = subprocess.Popen(
                 client_command,
                 cwd=ROOT,

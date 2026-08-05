@@ -9,10 +9,12 @@ import importlib
 import importlib.metadata
 import inspect
 import json
+import math
 import multiprocessing as mp
 import os
 import sys
 import time
+import uuid
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -22,7 +24,11 @@ _PRIOR_STATE = {
     "opp_priors": None,
     "cpuct": 2.0,
     "context": None,
+    "remote_search": None,
 }
+_REMOTE_FUNCTIONS: dict[int, object] = {}
+REMOTE_MCTS_SCHEMA = 1
+REMOTE_ENGINE_CONTRACT = "poke-engine-0.0.47-priors-v2"
 
 
 def _append_jsonl(environment_variable: str, row: dict) -> None:
@@ -51,6 +57,160 @@ def _mcts_result_payload(result) -> dict:
         "side_two": side_payload(result.side_two),
         "total_visits": int(result.total_visits),
     }
+
+
+def _mcts_result_from_payload(payload: object, engine_module=None):
+    if not isinstance(payload, dict):
+        raise RuntimeError("remote MCTS result must be an object")
+    if engine_module is None:
+        import poke_engine as engine_module
+
+    def side(value: object, label: str):
+        if not isinstance(value, list) or (label == "side_one" and not value):
+            raise RuntimeError(f"remote MCTS {label} is invalid")
+        options = []
+        for row in value:
+            if not isinstance(row, dict):
+                raise RuntimeError(f"remote MCTS {label} entry is invalid")
+            move = row.get("move_choice")
+            score = row.get("total_score")
+            visits = row.get("visits")
+            if not isinstance(move, str) or not move:
+                raise RuntimeError(f"remote MCTS {label} move is invalid")
+            if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
+                raise RuntimeError(f"remote MCTS {label} score is invalid")
+            if isinstance(visits, bool) or not isinstance(visits, int) or visits < 0:
+                raise RuntimeError(f"remote MCTS {label} visits are invalid")
+            options.append(
+                engine_module.MctsSideResult(
+                    move_choice=move,
+                    total_score=float(score),
+                    visits=visits,
+                )
+            )
+        return options
+
+    total_visits = payload.get("total_visits")
+    if isinstance(total_visits, bool) or not isinstance(total_visits, int) or total_visits < 0:
+        raise RuntimeError("remote MCTS total visits are invalid")
+    return engine_module.MctsResult(
+        side_one=side(payload.get("side_one"), "side_one"),
+        side_two=side(payload.get("side_two"), "side_two"),
+        total_visits=total_visits,
+    )
+
+
+def _remote_mcts_function():
+    pid = os.getpid()
+    if pid not in _REMOTE_FUNCTIONS:
+        import modal
+
+        app_name = os.environ["METAGROSS_REMOTE_MCTS_APP"]
+        function_name = os.environ["METAGROSS_REMOTE_MCTS_FUNCTION"]
+        _REMOTE_FUNCTIONS.clear()
+        _REMOTE_FUNCTIONS[pid] = modal.Function.from_name(app_name, function_name)
+    return _REMOTE_FUNCTIONS[pid]
+
+
+def _validate_remote_response(response: object, request_id: str, index: int) -> dict:
+    if not isinstance(response, dict) or response.get("schema") != REMOTE_MCTS_SCHEMA:
+        raise RuntimeError("remote MCTS returned an invalid schema")
+    if response.get("request_id") != request_id or response.get("index") != index:
+        raise RuntimeError("remote MCTS response correlation mismatch")
+    engine = response.get("engine")
+    expected_sha = os.environ.get("METAGROSS_REMOTE_ENGINE_SHA256")
+    if not isinstance(engine, dict) or engine.get("contract") != REMOTE_ENGINE_CONTRACT:
+        raise RuntimeError("remote MCTS engine contract mismatch")
+    if not expected_sha or engine.get("native_sha256") != expected_sha:
+        raise RuntimeError("remote MCTS engine SHA-256 mismatch")
+    if response.get("ok") is not True:
+        error = response.get("error") or {}
+        raise RuntimeError(f"remote MCTS failed: {error.get('kind', 'unknown error')}")
+    return response
+
+
+def _remote_mcts_batch(state_strings: list[str], search_time_ms: int, threads: int):
+    requests = []
+    for index, state_string in enumerate(state_strings):
+        requests.append(
+            {
+                "schema": REMOTE_MCTS_SCHEMA,
+                "request_id": uuid.uuid4().hex,
+                "index": index,
+                "state": state_string,
+                "duration_ms": int(search_time_ms),
+                "threads": int(threads),
+                "s1_priors": [list(row) for row in (_PRIOR_STATE["priors"] or [])]
+                or None,
+                "s2_priors": [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])]
+                or None,
+                "c_puct": float(_PRIOR_STATE["cpuct"]),
+            }
+        )
+    started = time.monotonic()
+    responses = _remote_mcts_function().remote(requests)
+    rpc_ms = round((time.monotonic() - started) * 1000, 3)
+    if not isinstance(responses, list) or len(responses) != len(requests):
+        raise RuntimeError("remote MCTS returned the wrong batch size")
+    import poke_engine
+
+    results = []
+    timings = []
+    for request, response in zip(requests, responses, strict=True):
+        validated = _validate_remote_response(
+            response, request["request_id"], request["index"]
+        )
+        results.append(_mcts_result_from_payload(validated.get("result"), poke_engine))
+        timings.append(validated.get("timing"))
+    _PRIOR_STATE["remote_search"] = {
+        "rpc_ms": rpc_ms,
+        "worlds": len(requests),
+        "engine": responses[0].get("engine"),
+        "timings": timings,
+    }
+    return results
+
+
+def _remote_find_best_move(battle, search_main):
+    battle = search_main.deepcopy(battle)
+    if battle.team_preview:
+        battle.user.active = battle.user.reserve.pop(0)
+        battle.opponent.active = battle.opponent.reserve.pop(0)
+
+    if battle.battle_type == search_main.BattleType.RANDOM_BATTLE:
+        num_battles, search_time_ms = search_main.search_time_num_battles_randombattles(
+            battle
+        )
+        battles = search_main.prepare_random_battles(battle, num_battles)
+    elif battle.battle_type == search_main.BattleType.BATTLE_FACTORY:
+        num_battles, search_time_ms = search_main.search_time_num_battles_standard_battle(
+            battle
+        )
+        battles = search_main.prepare_random_battles(battle, num_battles)
+    elif battle.battle_type == search_main.BattleType.STANDARD_BATTLE:
+        num_battles, search_time_ms = search_main.search_time_num_battles_standard_battle(
+            battle
+        )
+        battles = search_main.prepare_battles(battle, num_battles)
+    else:
+        raise ValueError("Unsupported battle type")
+
+    search_main.logger.info("Searching for a move using remote MCTS...")
+    search_main.logger.info(
+        "Sampling %s battles at %sms each", num_battles, search_time_ms
+    )
+    states = [
+        search_main.battle_to_poke_engine_state(sampled).to_string()
+        for sampled, _chance in battles
+    ]
+    from config import FoulPlayConfig
+
+    results = _remote_mcts_batch(states, search_time_ms, FoulPlayConfig.search_threads)
+    weighted = [
+        (result, chance, index)
+        for index, (result, (_sampled, chance)) in enumerate(zip(results, battles, strict=True))
+    ]
+    return search_main.select_move_from_mcts_results(weighted)
 
 
 def validate_poke_engine_provenance(provenance: dict, expected_source: Path) -> None:
@@ -116,12 +276,56 @@ def patch_foul_play_protocol() -> None:
 
     original_connect = websockets.connect
 
-    def connect_without_ping(address, *args, **kwargs):
-        # Search can block the event loop longer than the websocket ping timeout.
-        kwargs.setdefault("ping_interval", None)
+    def connect_with_safe_ping(address, *args, **kwargs):
+        if os.environ.get("METAGROSS_WEBSOCKET_KEEPALIVE") == "1":
+            # Keep proxy tunnels active, but never let a delayed pong terminate
+            # a battle while CPU-bound search is blocking the event loop.
+            kwargs.setdefault("ping_interval", 20)
+            kwargs.setdefault("ping_timeout", None)
+        else:
+            kwargs.setdefault("ping_interval", None)
         return original_connect(address, *args, **kwargs)
 
-    websocket_client.websockets.connect = connect_without_ping
+    websocket_client.websockets.connect = connect_with_safe_ping
+
+    async def login_without_idle_delay(self):
+        """Authenticate without the upstream three-second proxy-idle window."""
+        websocket_client.logger.info("Logging in...")
+        client_id, challstr = await self.get_id_and_challstr()
+        guest_login = self.password is None
+        if guest_login:
+            response = websocket_client.requests.post(
+                self.login_uri,
+                data={
+                    "act": "getassertion",
+                    "userid": self.username,
+                    "challstr": "|".join([client_id, challstr]),
+                },
+            )
+        else:
+            response = websocket_client.requests.post(
+                self.login_uri,
+                data={
+                    "name": self.username,
+                    "pass": self.password,
+                    "challstr": "|".join([client_id, challstr]),
+                },
+            )
+        if response.status_code != 200:
+            raise websocket_client.LoginError("Could not get assertion")
+        if guest_login:
+            assertion = response.text
+            user_id = self.username
+        else:
+            response_json = websocket_client.json.loads(response.text[1:])
+            if "actionsuccess" not in response_json:
+                raise websocket_client.LoginError(f"Could not log-in: {response_json}")
+            assertion = response_json.get("assertion")
+            user_id = response_json["curuser"]["userid"]
+        await self.send_message("", [f"/trn {self.username},0,{assertion}"])
+        return user_id
+
+    websocket_client.PSWebsocketClient.login = login_without_idle_delay
 
     original_receive = websocket_client.PSWebsocketClient.receive_message
 
@@ -169,6 +373,23 @@ def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
     """Run the patched engine with player and opponent root priors."""
     import poke_engine
     from config import FoulPlayConfig
+
+    if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
+        request_id = uuid.uuid4().hex
+        request = {
+            "schema": REMOTE_MCTS_SCHEMA,
+            "request_id": request_id,
+            "index": int(index),
+            "state": state_str,
+            "duration_ms": int(search_time_ms),
+            "threads": int(FoulPlayConfig.search_threads),
+            "s1_priors": [list(row) for row in (_PRIOR_STATE["priors"] or [])] or None,
+            "s2_priors": [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])] or None,
+            "c_puct": float(_PRIOR_STATE["cpuct"]),
+        }
+        response = _remote_mcts_function().remote(request)
+        validated = _validate_remote_response(response, request_id, int(index))
+        return _mcts_result_from_payload(validated.get("result"), poke_engine)
 
     state = poke_engine.State.from_string(state_str)
     kwargs = {}
@@ -248,6 +469,7 @@ def patch_root_priors() -> None:
                 "choice": choice,
                 "player_priors": _PRIOR_STATE["priors"],
                 "opponent_priors": _PRIOR_STATE["opp_priors"],
+                "remote_search": _PRIOR_STATE["remote_search"],
                 "samples": [
                     {
                         "sample_chance": float(sample_chance),
@@ -266,6 +488,7 @@ def patch_root_priors() -> None:
         _PRIOR_STATE["priors"] = None
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["context"] = None
+        _PRIOR_STATE["remote_search"] = None
         try:
             tag = getattr(battle, "battle_tag", None)
             if not tag:
@@ -304,6 +527,8 @@ def patch_root_priors() -> None:
             if os.environ.get("METAGROSS_REQUIRE_PRIORS", "1") == "1":
                 raise RuntimeError(f"required prior fetch failed: {exc!r}") from exc
             logger.warning("prior fetch failed; using unguided search: %r", exc)
+        if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
+            return _remote_find_best_move(battle, search_main)
         return original_find_best_move(battle)
 
     search_main.find_best_move = find_best_move_with_priors

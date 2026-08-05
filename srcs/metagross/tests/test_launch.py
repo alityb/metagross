@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace
 from pathlib import Path
+from unittest import mock
 
 from srcs.metagross import launch
 from srcs.metagross import prior_server
@@ -31,6 +32,22 @@ class LaunchTest(unittest.TestCase):
         self.assertEqual(args.search_parallelism, 5)
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             launch.parse_args(["--username", "bot", "--search-parallelism", "0"])
+
+    def test_remote_mcts_requires_pinned_engine_hash(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            launch.parse_args(["--username", "bot", "--remote-mcts"])
+        args = launch.parse_args(
+            [
+                "--username",
+                "bot",
+                "--remote-mcts",
+                "--remote-engine-sha256",
+                "a" * 64,
+            ]
+        )
+        self.assertTrue(args.remote_mcts)
+        self.assertEqual(args.remote_mcts_app, launch.DEFAULT_REMOTE_MCTS_APP)
+        self.assertEqual(args.remote_mcts_function, launch.DEFAULT_REMOTE_MCTS_FUNCTION)
 
     def test_g4_requires_explicit_three_game_canary(self):
         for extra in ([], ["--games", "3"], ["--confirm-g4-canary"]):
@@ -175,6 +192,52 @@ class LaunchTest(unittest.TestCase):
             payload["side_one"],
             [{"move_choice": "tackle", "total_score": 3.5, "visits": 7}],
         )
+
+    def test_mcts_result_payload_round_trip(self):
+        engine = SimpleNamespace(MctsSideResult=SimpleNamespace, MctsResult=SimpleNamespace)
+        payload = {
+            "side_one": [{"move_choice": "tackle", "total_score": 3.5, "visits": 7}],
+            "side_two": [{"move_choice": "protect", "total_score": -1.0, "visits": 2}],
+            "total_visits": 9,
+        }
+        result = run_foul_play._mcts_result_from_payload(payload, engine)
+        self.assertEqual(run_foul_play._mcts_result_payload(result), payload)
+
+    def test_mcts_result_rejects_invalid_numeric_values(self):
+        engine = SimpleNamespace(MctsSideResult=SimpleNamespace, MctsResult=SimpleNamespace)
+        base = {
+            "side_one": [{"move_choice": "tackle", "total_score": 1.0, "visits": 1}],
+            "side_two": [],
+            "total_visits": 1,
+        }
+        for field, value in (("visits", -1), ("visits", True), ("total_score", float("nan"))):
+            payload = {**base, "side_one": [{**base["side_one"][0], field: value}]}
+            with self.subTest(field=field, value=value), self.assertRaises(RuntimeError):
+                run_foul_play._mcts_result_from_payload(payload, engine)
+
+    def test_remote_response_requires_correlation_and_engine_identity(self):
+        response = {
+            "schema": 1,
+            "request_id": "request",
+            "index": 3,
+            "ok": True,
+            "engine": {
+                "contract": run_foul_play.REMOTE_ENGINE_CONTRACT,
+                "native_sha256": "a" * 64,
+            },
+            "result": {},
+        }
+        with mock.patch.dict(
+            "os.environ", {"METAGROSS_REMOTE_ENGINE_SHA256": "a" * 64}, clear=False
+        ):
+            self.assertIs(
+                run_foul_play._validate_remote_response(response, "request", 3), response
+            )
+            with self.assertRaisesRegex(RuntimeError, "correlation"):
+                run_foul_play._validate_remote_response(response, "other", 3)
+            response["engine"]["native_sha256"] = "b" * 64
+            with self.assertRaisesRegex(RuntimeError, "SHA-256"):
+                run_foul_play._validate_remote_response(response, "request", 3)
 
 
 if __name__ == "__main__":
