@@ -7,6 +7,7 @@ use crate::state::State;
 use rand::distr::weighted::WeightedIndex;
 use rand::prelude::*;
 use rand::rng;
+use rand::rngs::StdRng;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -102,10 +103,11 @@ impl Node {
         choice
     }
 
-    pub unsafe fn selection(
+    pub unsafe fn selection<R: Rng + ?Sized>(
         &mut self,
         state: &mut State,
         children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+        rng: &mut R,
     ) -> (*mut Node, usize, usize) {
         if self.s1_options.is_none() {
             let (s1_options, s2_options) = state.get_all_options();
@@ -118,32 +120,36 @@ impl Node {
         match children.get_mut(&key) {
             Some(child_vector) => {
                 let child_vec_ptr = child_vector as *mut Box<[Node]>;
-                let chosen_child = self.sample_node(child_vec_ptr);
+                let chosen_child = self.sample_node(child_vec_ptr, rng);
                 state.apply_instructions(&(*chosen_child).instructions.instruction_list);
-                (*chosen_child).selection(state, children)
+                (*chosen_child).selection(state, children, rng)
             }
             None => (self as *mut Node, s1_mc_index, s2_mc_index),
         }
     }
 
-    unsafe fn sample_node(&self, move_vector: *mut Box<[Node]>) -> *mut Node {
-        let mut rng = rng();
+    unsafe fn sample_node<R: Rng + ?Sized>(
+        &self,
+        move_vector: *mut Box<[Node]>,
+        rng: &mut R,
+    ) -> *mut Node {
         let weights: Vec<f64> = (*move_vector)
             .iter()
             .map(|x| x.instructions.percentage as f64)
             .collect();
         let dist = WeightedIndex::new(weights).unwrap();
-        let chosen_node = &mut (&mut *move_vector)[dist.sample(&mut rng)];
+        let chosen_node = &mut (&mut *move_vector)[dist.sample(rng)];
         let chosen_node_ptr = chosen_node as *mut Node;
         chosen_node_ptr
     }
 
-    pub unsafe fn expand(
+    pub unsafe fn expand<R: Rng + ?Sized>(
         &mut self,
         state: &mut State,
         s1_move_index: usize,
         s2_move_index: usize,
         children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+        rng: &mut R,
     ) -> *mut Node {
         let s1_move = &self.s1_options.as_ref().unwrap()[s1_move_index].move_choice;
         let s2_move = &self.s2_options.as_ref().unwrap()[s2_move_index].move_choice;
@@ -172,7 +178,7 @@ impl Node {
         // makes it a type that cannot be resized, which ensures the node
         // addresses are stable for the children map keys
         let mut boxed = this_pair_vec.into_boxed_slice();
-        let new_node_ptr = self.sample_node(&mut boxed);
+        let new_node_ptr = self.sample_node(&mut boxed, rng);
         state.apply_instructions(&(*new_node_ptr).instructions.instruction_list);
 
         let key = (self as *mut Node as usize, s1_move_index, s2_move_index);
@@ -271,14 +277,15 @@ pub struct MctsResult {
     pub iteration_count: u32,
 }
 
-fn mcts_iteration(
+fn mcts_iteration<R: Rng + ?Sized>(
     root_node: &mut Node,
     state: &mut State,
     root_eval: &f32,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+    rng: &mut R,
 ) {
-    let (mut new_node, s1_move, s2_move) = unsafe { root_node.selection(state, children) };
-    new_node = unsafe { (*new_node).expand(state, s1_move, s2_move, children) };
+    let (mut new_node, s1_move, s2_move) = unsafe { root_node.selection(state, children, rng) };
+    new_node = unsafe { (*new_node).expand(state, s1_move, s2_move, children, rng) };
     let rollout_result = unsafe { (*new_node).rollout(state, root_eval) };
     unsafe { (*new_node).backpropagate(rollout_result, state) }
 }
@@ -288,33 +295,29 @@ enum SearchLimit {
     Iterations(u32),
 }
 
-fn run_mcts_loop(
+fn run_mcts_loop<R: Rng + ?Sized>(
     root_node: &mut Node,
     state: &mut State,
     root_eval: &f32,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
     limit: SearchLimit,
+    rng: &mut R,
 ) {
     let start_time = std::time::Instant::now();
-    loop {
-        for _ in 0..1000 {
-            mcts_iteration(root_node, state, root_eval, children);
-        }
-        if root_node.times_visited >= 10_000_000 {
-            break;
-        }
-        match limit {
-            SearchLimit::Time(max_time) => {
-                if start_time.elapsed() >= max_time {
-                    break;
-                }
-            }
-            SearchLimit::Iterations(n) => {
-                if root_node.times_visited >= n {
-                    break;
-                }
+    match limit {
+        SearchLimit::Iterations(iterations) => {
+            while root_node.times_visited < iterations {
+                mcts_iteration(root_node, state, root_eval, children, rng);
             }
         }
+        SearchLimit::Time(max_time) => loop {
+            for _ in 0..1000 {
+                mcts_iteration(root_node, state, root_eval, children, rng);
+            }
+            if root_node.times_visited >= 10_000_000 || start_time.elapsed() >= max_time {
+                break;
+            }
+        },
     }
 }
 
@@ -328,6 +331,57 @@ pub fn perform_mcts(
     s2_priors: Option<Vec<Option<f32>>>,
     c_puct: f32,
 ) -> MctsResult {
+    let mut rng = rng();
+    perform_mcts_with_rng(
+        state,
+        side_one_options,
+        side_two_options,
+        max_time,
+        max_iterations,
+        s1_priors,
+        s2_priors,
+        c_puct,
+        &mut rng,
+    )
+}
+
+/// Run deterministic single-threaded MCTS without root priors.
+///
+/// This is intentionally separate from [`perform_mcts`] so the existing live
+/// API continues to use the thread-local RNG.
+pub fn perform_mcts_seeded(
+    state: &mut State,
+    side_one_options: Vec<MoveChoice>,
+    side_two_options: Vec<MoveChoice>,
+    iterations: u32,
+    seed: u64,
+) -> MctsResult {
+    let mut rng = StdRng::seed_from_u64(seed);
+    perform_mcts_with_rng(
+        state,
+        side_one_options,
+        side_two_options,
+        Duration::ZERO,
+        iterations,
+        None,
+        None,
+        2.0,
+        &mut rng,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn perform_mcts_with_rng<R: Rng + ?Sized>(
+    state: &mut State,
+    side_one_options: Vec<MoveChoice>,
+    side_two_options: Vec<MoveChoice>,
+    max_time: Duration,
+    max_iterations: u32,
+    s1_priors: Option<Vec<Option<f32>>>,
+    s2_priors: Option<Vec<Option<f32>>>,
+    c_puct: f32,
+    rng: &mut R,
+) -> MctsResult {
     let mut root_node = Node::new();
     unsafe {
         root_node.populate(side_one_options, side_two_options);
@@ -336,7 +390,11 @@ pub fn perform_mcts(
     root_node.assign_root_priors(s1_priors, s2_priors, c_puct);
     let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
 
-    let root_eval = if learned_eval_enabled() { 0.0 } else { evaluate(state) };
+    let root_eval = if learned_eval_enabled() {
+        0.0
+    } else {
+        evaluate(state)
+    };
     let search_limit = if max_iterations > 0 {
         SearchLimit::Iterations(max_iterations)
     } else {
@@ -348,6 +406,7 @@ pub fn perform_mcts(
         &root_eval,
         &mut children,
         search_limit,
+        rng,
     );
 
     let result = MctsResult {
@@ -377,4 +436,70 @@ pub fn perform_mcts(
     };
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::choices::Choices;
+    use crate::state::PokemonMoveIndex;
+
+    fn test_state() -> State {
+        let mut state = State::default();
+        state
+            .side_one
+            .get_active()
+            .replace_move(PokemonMoveIndex::M0, Choices::TACKLE);
+        state
+            .side_two
+            .get_active()
+            .replace_move(PokemonMoveIndex::M0, Choices::TACKLE);
+        state
+    }
+
+    fn seeded_result(state: &mut State, iterations: u32, seed: u64) -> MctsResult {
+        let (side_one, side_two) = state.get_all_options();
+        perform_mcts_seeded(state, side_one, side_two, iterations, seed)
+    }
+
+    fn result_signature(result: &MctsResult) -> Vec<(u32, u32)> {
+        result
+            .s1
+            .iter()
+            .chain(result.s2.iter())
+            .map(|entry| (entry.total_score.to_bits(), entry.visits))
+            .collect()
+    }
+
+    #[test]
+    fn seeded_mcts_executes_exact_iteration_count() {
+        for iterations in [1, 37, 999, 1001] {
+            let mut state = test_state();
+            assert_eq!(
+                seeded_result(&mut state, iterations, 7).iteration_count,
+                iterations
+            );
+        }
+    }
+
+    #[test]
+    fn seeded_mcts_is_deterministic_and_seed_sensitive() {
+        let mut first_state = test_state();
+        let mut second_state = test_state();
+        let mut third_state = test_state();
+        let first = seeded_result(&mut first_state, 53, 1234);
+        let second = seeded_result(&mut second_state, 53, 1234);
+        let third = seeded_result(&mut third_state, 53, 5678);
+
+        assert_eq!(result_signature(&first), result_signature(&second));
+        assert_ne!(result_signature(&first), result_signature(&third));
+    }
+
+    #[test]
+    fn seeded_mcts_leaves_input_state_unchanged() {
+        let mut state = test_state();
+        let before = state.serialize();
+        seeded_result(&mut state, 17, 42);
+        assert_eq!(state.serialize(), before);
+    }
 }

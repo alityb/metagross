@@ -21,7 +21,6 @@ import json
 import logging
 import os
 import re
-import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -37,6 +36,56 @@ def norm(s: str) -> str:
 def session_key(namespace: str, tag: str) -> str:
     """Namespace the live session without changing the dumped replay tag."""
     return f"{namespace}\0{tag}" if namespace else tag
+
+
+def recover_empty_legality_mask(illegal, fallback_actions=()):
+    """Recover only request-plausible actions from an empty strict mask."""
+    if illegal.all():
+        recovered = {
+            int(getattr(action, "action_idx", action)) for action in fallback_actions
+        }
+        recovered = {index for index in recovered if 0 <= index < len(illegal)}
+        if not recovered:
+            raise RuntimeError("no definitely or potentially valid actions")
+        for index in recovered:
+            illegal[index] = False
+        return True, "no definitely valid actions"
+    return False, None
+
+
+def correlated_request_rqid(
+    pending_request: bool, last_request: object, expected_rqid: int | None
+) -> int:
+    """Validate that one prior response belongs to the latest actionable request."""
+    if not pending_request:
+        raise RuntimeError("no unconsumed battle request")
+    if not isinstance(last_request, dict):
+        raise RuntimeError("battle request metadata is unavailable")
+    rqid = last_request.get("rqid")
+    if isinstance(rqid, bool) or not isinstance(rqid, int) or rqid < 0:
+        raise RuntimeError("battle request has an invalid rqid")
+    if expected_rqid is not None and rqid != expected_rqid:
+        raise RuntimeError(
+            f"battle request rqid mismatch: expected {expected_rqid}, found {rqid}"
+        )
+    return rqid
+
+
+def opponent_action_support_complete(battle) -> bool:
+    """Return whether public state covers the opponent's full root action support."""
+    try:
+        active = battle.opponent_active_pokemon
+        team = list(battle.opponent_team.values())
+        moves = list(active.moves.values())
+    except (AttributeError, TypeError):
+        return False
+    if active is None or len(moves) < 4 or len(team) < 6:
+        return False
+    active_members = [pokemon for pokemon in team if pokemon.active]
+    return (
+        len(active_members) == 1
+        and active_members[0].unique_id == active.unique_id
+    )
 
 
 def verify_local_checkpoint(
@@ -152,12 +201,19 @@ class BattleSession:
         if idx is not None and len(self.action_hist) < len(self.obs_hist):
             self.action_hist.append(idx)
 
-    def compute_priors(self, requester_username: str | None = None) -> dict:
+    def compute_priors(
+        self,
+        requester_username: str | None = None,
+        expected_rqid: int | None = None,
+    ) -> dict:
         import numpy as np
         import torch
 
         from metamon.interface import UniversalState, UniversalAction, consistent_move_order, consistent_pokemon_order
 
+        rqid = correlated_request_rqid(
+            self.pending_request, self.battle.last_request, expected_rqid
+        )
         state = UniversalState.from_Battle(self.battle)
         # reward for rl2s bookkeeping
         if self.last_state is not None:
@@ -183,6 +239,10 @@ class BattleSession:
             illegal[:] = False
             mask_fallback = True
             mask_fallback_error = f"{type(exc).__name__}: {exc}"
+        if not mask_fallback:
+            mask_fallback, mask_fallback_error = recover_empty_legality_mask(
+                illegal, UniversalAction.maybe_valid_actions(state)
+            )
         obs = dict(obs)
         obs["illegal_actions"] = illegal
         # Stateless two-step inference is intentionally used here. The live
@@ -298,15 +358,18 @@ class BattleSession:
                 with open(self.server.dump_path, "a", encoding="utf-8") as handle:
                     handle.write(line)
                     handle.flush()
+        opponent_priors = self.compute_opponent_priors()
         self.decision_idx += 1
+        self.pending_request = False
 
         return {
             "priors": priors,
-            "opp_priors": self.compute_opponent_priors(),
+            "opp_priors": opponent_priors,
             "probs": [float(p) for p in probs],
             "turn": T,
             "decision_idx": decision_idx,
             "battle_turn": battle_turn,
+            "rqid": rqid,
         }
 
     def compute_opponent_priors(self) -> dict:
@@ -326,6 +389,8 @@ class BattleSession:
         from metamon.interface import UniversalState, UniversalAction, consistent_move_order, consistent_pokemon_order
 
         try:
+            if not opponent_action_support_complete(self.battle):
+                return {}
             opp_battle = self._make_opp_battle()
             if opp_battle is None:
                 return {}
@@ -340,7 +405,10 @@ class BattleSession:
                 for a in UniversalAction.definitely_valid_actions(flipped, opp_battle):
                     illegal[a.action_idx] = False
             except Exception:
-                illegal[:] = False
+                return {}
+            recover_empty_legality_mask(
+                illegal, UniversalAction.maybe_valid_actions(flipped)
+            )
             obs = dict(obs)
             obs["illegal_actions"] = illegal
 
@@ -393,7 +461,7 @@ class BattleSession:
             # map to opponent's engine move strings
             opp_name_table: dict[str, int] = {}
             try:
-                opp_active = self.battle.opponent_active_pokemon
+                opp_active = opp_battle.active_pokemon
                 opp_moves = consistent_move_order(
                     list(opp_active.moves.values())
                 ) if opp_active else []
@@ -401,7 +469,7 @@ class BattleSession:
                 opp_moves = []
             try:
                 opp_bench = consistent_pokemon_order(
-                    [p for p in self.battle.opponent_team.values() if not p.fainted and not p.active]
+                    [p for p in opp_battle.team.values() if not p.fainted and not p.active]
                 )
             except Exception:
                 opp_bench = []
@@ -413,7 +481,8 @@ class BattleSession:
 
             opp_priors = {}
             for name, idx in opp_name_table.items():
-                opp_priors[name] = float(probs[idx])
+                if not illegal[idx]:
+                    opp_priors[name] = float(probs[idx])
             return opp_priors
         except Exception as e:
             import traceback
@@ -468,6 +537,12 @@ class BattleSession:
             view.won = False
             view.lost = False
             view.can_tera = True
+            view.available_moves = list(view.active_pokemon.moves.values())
+            view.available_switches = [
+                pokemon
+                for pokemon in view.team.values()
+                if not pokemon.fainted and not pokemon.active
+            ]
             view.battle_tag = self.battle._battle_tag
             # Metamon only needs a species list for this field. The opponent's
             # original preview is not available from the flipped view, so use
@@ -607,13 +682,21 @@ def main() -> None:
                 tag = query.get("tag", [""])[0]
                 namespace = query.get("namespace", [""])[0]
                 requester_username = query.get("username", [""])[0] or None
+                rqid_text = query.get("rqid", [""])[0]
                 if not isinstance(tag, str) or not isinstance(namespace, str):
                     self._json(400, {"error": "tag and namespace must be strings"})
                     return
                 try:
+                    expected_rqid = int(rqid_text)
+                    if expected_rqid < 0 or str(expected_rqid) != rqid_text:
+                        raise ValueError
+                except ValueError:
+                    self._json(400, {"error": "rqid must be a non-negative integer"})
+                    return
+                try:
                     sess = server.session(session_key(namespace, tag), tag, namespace)
                     with sess.lock:
-                        result = sess.compute_priors(requester_username)
+                        result = sess.compute_priors(requester_username, expected_rqid)
                     self._json(200, result)
                 except Exception as e:  # noqa: BLE001
                     import traceback

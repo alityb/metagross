@@ -21,6 +21,7 @@ pub mod io;
 pub mod learned_value;
 pub mod mcts;
 pub mod mcts_threaded;
+pub mod paired_root;
 pub mod pokemon;
 pub mod search;
 pub mod state;

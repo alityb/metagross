@@ -21,6 +21,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import MappingProxyType
 
+from srcs.metagross.mcts_contract import (
+    ENGINE_CONTRACT,
+    ENGINE_SOURCE_SHA256,
+    REQUEST_SCHEMA,
+    validate_loopback_search_url,
+)
+from srcs.metagross import world_provenance
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FORMAT = "gen9randombattle"
@@ -198,8 +206,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--search-threads", type=int, default=DEFAULT_SEARCH_THREADS)
     parser.add_argument("--remote-mcts", action="store_true")
+    parser.add_argument(
+        "--remote-mcts-transport", choices=("modal", "http"), default="modal"
+    )
     parser.add_argument("--remote-mcts-app", default=DEFAULT_REMOTE_MCTS_APP)
     parser.add_argument("--remote-mcts-function", default=DEFAULT_REMOTE_MCTS_FUNCTION)
+    parser.add_argument("--remote-mcts-url")
+    parser.add_argument("--remote-mcts-instance-type")
     parser.add_argument("--remote-engine-sha256")
     parser.add_argument("--stall-timeout-seconds", type=int, default=1200)
     parser.add_argument(
@@ -235,6 +248,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--max-runtime-seconds must be positive")
     if args.remote_mcts and not args.remote_engine_sha256:
         parser.error("--remote-mcts requires --remote-engine-sha256")
+    if args.remote_engine_sha256 and not re.fullmatch(r"[0-9a-fA-F]{64}", args.remote_engine_sha256):
+        parser.error("--remote-engine-sha256 must contain 64 hexadecimal characters")
+    if args.remote_mcts_transport == "http" and not args.remote_mcts:
+        parser.error("--remote-mcts-transport=http requires --remote-mcts")
+    if args.remote_mcts and args.remote_mcts_transport == "http":
+        if not args.remote_mcts_url:
+            parser.error("HTTP remote MCTS requires --remote-mcts-url")
+        if not args.remote_mcts_instance_type:
+            parser.error("HTTP remote MCTS requires --remote-mcts-instance-type")
+        try:
+            validate_loopback_search_url(args.remote_mcts_url)
+        except ValueError as exc:
+            parser.error(str(exc))
+        if len(os.environ.get("METAGROSS_REMOTE_MCTS_TOKEN", "")) < 32:
+            parser.error("HTTP remote MCTS requires a 32-character METAGROSS_REMOTE_MCTS_TOKEN")
     if not showdown_user_id(args.username):
         parser.error("--username must contain a letter or number")
     return args
@@ -285,10 +313,71 @@ def inspect_foul_play_engine(python: Path) -> dict:
     return json.loads(result.stdout)
 
 
+def preflight_remote_mcts(args: argparse.Namespace) -> dict[str, object] | None:
+    if not args.remote_mcts:
+        return None
+    command = [
+        str(args.foul_play_python),
+        "-m",
+        "srcs.metagross.remote_mcts_preflight",
+        "--transport",
+        args.remote_mcts_transport,
+        "--native-sha256",
+        args.remote_engine_sha256,
+    ]
+    if args.remote_mcts_transport == "modal":
+        command.extend(
+            [
+                "--app",
+                args.remote_mcts_app,
+                "--function",
+                args.remote_mcts_function,
+            ]
+        )
+    else:
+        command.extend(
+            [
+                "--url",
+                args.remote_mcts_url,
+                "--instance-type",
+                args.remote_mcts_instance_type,
+            ]
+        )
+    result = subprocess.run(
+        command,
+        cwd=ROOT,
+        env=os.environ.copy(),
+        text=True,
+        capture_output=True,
+        timeout=240,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(f"remote MCTS preflight failed: {detail}")
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("remote MCTS preflight returned invalid JSON") from exc
+    if payload.get("ok") is not True:
+        raise RuntimeError("remote MCTS preflight did not pass")
+    return payload
+
+
+def build_world_manifest(run_seed: str) -> dict[str, object]:
+    foul_play_root = ROOT / "srcs" / "vendor" / "foul-play"
+    metamon_root = ROOT / "srcs" / "vendor" / "metamon"
+    metagross_root = ROOT / "srcs" / "metagross"
+    dataset = foul_play_root / "data" / "pkmn_sets_cache" / f"{FORMAT}.json"
+    return world_provenance.manifest_provenance(
+        run_seed, foul_play_root, dataset, metamon_root, metagross_root
+    )
+
+
 def production_environment(source: dict[str, str]) -> dict[str, str]:
     environment = source.copy()
     environment.pop("METAGROSS_VALUE_MODEL", None)
     environment.pop("METAGROSS_LEARNED_VALUE_WEIGHT", None)
+    environment.pop("METAGROSS_REMOTE_MCTS_TOKEN", None)
     return environment
 
 
@@ -321,6 +410,8 @@ def main(argv: list[str] | None = None) -> int:
     if not os.environ.get("METAGROSS_SHOWDOWN_PASSWORD"):
         raise RuntimeError("set METAGROSS_SHOWDOWN_PASSWORD before launching")
     engine_provenance = inspect_foul_play_engine(args.foul_play_python)
+    remote_preflight = preflight_remote_mcts(args)
+    run_seed = world_provenance.generate_run_seed()
 
     run_dir = make_run_dir(args.output_root, args.profile, args.username)
     prior_log_path = run_dir / "prior.log"
@@ -328,6 +419,7 @@ def main(argv: list[str] | None = None) -> int:
     decision_dump_path = run_dir / "decisions.jsonl"
     protocol_dump_path = run_dir / "protocol.jsonl"
     search_dump_path = run_dir / "search.jsonl"
+    holdout_ledger_path = run_dir / "holdout-v5.jsonl"
     manifest_path = run_dir / "manifest.json"
     manifest = {
         "schema": 1,
@@ -338,13 +430,18 @@ def main(argv: list[str] | None = None) -> int:
         "policy": asdict(profile),
         "checkpoint": {"path": str(checkpoint_path), "sha256_verified": checkpoint_sha},
         "poke_engine": engine_provenance,
+        "remote_preflight": remote_preflight,
         "ladder": {"username": args.username, "format": FORMAT, "games": args.games},
         "search": {
             "search_time_ms": SEARCH_TIME_MS,
             "parallelism": args.search_parallelism,
             "threads": args.search_threads,
             "c_puct": CPU_C_PUCT,
-            "execution": "modal" if args.remote_mcts else "local",
+            "execution": args.remote_mcts_transport if args.remote_mcts else "local",
+        },
+        "safeguards": {
+            "max_consecutive_capped_swords_dance": 1,
+            "replacement_ranking": "sample-weighted-mean-mcts-score",
         },
         "limits": {
             "stall_timeout_seconds": args.stall_timeout_seconds,
@@ -357,7 +454,9 @@ def main(argv: list[str] | None = None) -> int:
             "decisions": str(decision_dump_path),
             "protocol": str(protocol_dump_path),
             "search": str(search_dump_path),
+            "holdout_ledger": str(holdout_ledger_path),
         },
+        **build_world_manifest(run_seed),
     }
     write_json(manifest_path, manifest)
 
@@ -376,6 +475,7 @@ def main(argv: list[str] | None = None) -> int:
     prior_env.pop("METAGROSS_SHOWDOWN_PASSWORD", None)
     prior_env.pop("MODAL_TOKEN_ID", None)
     prior_env.pop("MODAL_TOKEN_SECRET", None)
+    prior_env.pop("METAGROSS_REMOTE_MCTS_TOKEN", None)
     prior_command = [
         str(args.metamon_python),
         "-u",
@@ -398,7 +498,8 @@ def main(argv: list[str] | None = None) -> int:
     client_command = [
         str(args.foul_play_python),
         "-u",
-        str(ROOT / "srcs" / "metagross" / "run_foul_play.py"),
+        "-m",
+        "srcs.metagross.run_foul_play",
         "--websocket-uri",
         args.websocket_uri,
         "--ps-username",
@@ -457,28 +558,57 @@ def main(argv: list[str] | None = None) -> int:
             client_env.update(
                 {
                     "FOUL_PLAY_DIR": str(ROOT / "srcs" / "vendor" / "foul-play"),
+                    "METAGROSS_RUN_SEED": run_seed,
+                    "METAGROSS_RNG_SCHEME": world_provenance.RNG_SCHEME,
                     "METAGROSS_PRIOR_SERVER": prior_url,
                     "METAGROSS_CPUCT": "2.0",
                     "METAGROSS_REQUIRE_PRIORS": "1",
                     "METAGROSS_PROTOCOL_DUMP": str(protocol_dump_path),
                     "METAGROSS_SEARCH_DUMP": str(search_dump_path),
+                    "METAGROSS_HOLDOUT_LEDGER": str(holdout_ledger_path),
                 }
             )
             if args.remote_mcts:
                 client_env.update(
                     {
                         "METAGROSS_REQUIRE_REMOTE_MCTS": "1",
-                        "METAGROSS_REMOTE_MCTS_APP": args.remote_mcts_app,
-                        "METAGROSS_REMOTE_MCTS_FUNCTION": args.remote_mcts_function,
+                        "METAGROSS_REMOTE_MCTS_TRANSPORT": args.remote_mcts_transport,
                         "METAGROSS_REMOTE_ENGINE_SHA256": args.remote_engine_sha256,
                     }
                 )
-                manifest["search"]["modal"] = {
-                    "app": args.remote_mcts_app,
-                    "function": args.remote_mcts_function,
-                    "engine_sha256": args.remote_engine_sha256,
-                    "schema": 1,
-                }
+                if args.remote_mcts_transport == "modal":
+                    client_env.update(
+                        {
+                            "METAGROSS_REMOTE_MCTS_APP": args.remote_mcts_app,
+                            "METAGROSS_REMOTE_MCTS_FUNCTION": args.remote_mcts_function,
+                        }
+                    )
+                    manifest["search"]["modal"] = {
+                        "app": args.remote_mcts_app,
+                        "function": args.remote_mcts_function,
+                        "engine_sha256": args.remote_engine_sha256,
+                        "contract": ENGINE_CONTRACT,
+                        "source_sha256": ENGINE_SOURCE_SHA256,
+                        "schema": REQUEST_SCHEMA,
+                    }
+                else:
+                    client_env.update(
+                        {
+                            "METAGROSS_REMOTE_MCTS_URL": args.remote_mcts_url,
+                            "METAGROSS_REMOTE_MCTS_INSTANCE_TYPE": args.remote_mcts_instance_type,
+                            "METAGROSS_REMOTE_MCTS_TOKEN": os.environ[
+                                "METAGROSS_REMOTE_MCTS_TOKEN"
+                            ],
+                        }
+                    )
+                    manifest["search"]["http"] = {
+                        "url": args.remote_mcts_url,
+                        "instance_type": args.remote_mcts_instance_type,
+                        "engine_sha256": args.remote_engine_sha256,
+                        "contract": ENGINE_CONTRACT,
+                        "source_sha256": ENGINE_SOURCE_SHA256,
+                        "schema": REQUEST_SCHEMA,
+                    }
                 write_json(manifest_path, manifest)
             client = subprocess.Popen(
                 client_command,

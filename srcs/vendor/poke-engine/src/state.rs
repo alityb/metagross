@@ -1315,6 +1315,9 @@ pub struct State {
     pub terrain: StateTerrain,
     pub trick_room: StateTrickRoom,
     pub team_preview: bool,
+    // Request-authoritative permissions used only when generating root choices.
+    pub s1_can_tera: bool,
+    pub s2_can_tera: bool,
     pub use_last_used_move: bool,
     pub use_damage_dealt: bool,
     // metagross belief/eval plumbing (serialized so values survive into
@@ -1343,6 +1346,8 @@ impl Default for State {
                 turns_remaining: 0,
             },
             team_preview: false,
+            s1_can_tera: true,
+            s2_can_tera: true,
             use_damage_dealt: false,
             use_last_used_move: false,
             s1_threat: 0.0,
@@ -2202,7 +2207,7 @@ impl State {
             .collect::<Vec<String>>()
             .join(";");
         format!(
-            "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}",
+            "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}",
             self.side_one.serialize(),
             self.side_two.serialize(),
             self.weather.serialize(),
@@ -2214,6 +2219,8 @@ impl State {
             self.scout_value,
             tm,
             wc,
+            self.s1_can_tera,
+            self.s2_can_tera,
         )
     }
 
@@ -2417,6 +2424,8 @@ impl State {
             terrain: StateTerrain::deserialize(split[3]),
             trick_room: StateTrickRoom::deserialize(split[4]),
             team_preview: split[5].parse::<bool>().unwrap(),
+            s1_can_tera: split.get(11).and_then(|s| s.parse().ok()).unwrap_or(true),
+            s2_can_tera: split.get(12).and_then(|s| s.parse().ok()).unwrap_or(true),
             use_damage_dealt: false,
             use_last_used_move: false,
             s1_threat: split.get(6).and_then(|s| s.parse().ok()).unwrap_or(0.0),

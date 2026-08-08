@@ -12,12 +12,42 @@ import json
 import math
 import multiprocessing as mp
 import os
+import random
+import statistics
 import sys
 import time
-import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+from srcs.metagross.decision_harness import (
+    CallableBelief,
+    CallableController,
+    CallablePolicy,
+    CallableSearch,
+    CallableVerifier,
+    DecisionHarness,
+    PolicySnapshot,
+)
+from srcs.metagross.holdout_metrics import compute_holdout_metrics
+from srcs.metagross.mcts_contract import (
+    ENGINE_CONTRACT,
+    ENGINE_SOURCE_SHA256,
+    MODAL_CONTAINER_BATCH_SIZE,
+    MODAL_MAX_CONTAINERS,
+    REQUEST_SCHEMA,
+    validate_holdout_result_payload,
+    validate_result_payload,
+    validate_loopback_search_url,
+)
+from srcs.metagross.world_provenance import (
+    RNG_SCHEME,
+    append_ledger_row,
+    derive_seed,
+    deterministic_request_id,
+    seeded_global_random,
+    state_sha256,
+)
 
 _PRIOR_STATE = {
     "priors": None,
@@ -25,10 +55,143 @@ _PRIOR_STATE = {
     "cpuct": 2.0,
     "context": None,
     "remote_search": None,
+    "battle": None,
 }
 _REMOTE_FUNCTIONS: dict[int, object] = {}
-REMOTE_MCTS_SCHEMA = 1
-REMOTE_ENGINE_CONTRACT = "poke-engine-0.0.47-priors-v2"
+_MODAL_EXECUTOR: ThreadPoolExecutor | None = None
+_MODAL_EXECUTOR_PID: int | None = None
+_CAPPED_SETUP_STREAKS: dict[tuple[str, str, str], int] = {}
+_CHOICE_HISTORY: dict[str, list[tuple[object, str]]] = {}
+_HOLDOUT_DECISION_SEQUENCE = 0
+REMOTE_MCTS_SCHEMA = REQUEST_SCHEMA
+REMOTE_ENGINE_CONTRACT = ENGINE_CONTRACT
+MAX_REMOTE_RESPONSE_BYTES = 16_000_000
+MAX_CONSECUTIVE_CAPPED_SWORDS_DANCE = 1
+MIN_PAIRED_POSTERIOR_COVERAGE = 1.0
+MIN_PAIRED_ADVANTAGE = 0.10
+PAIRED_CONFIDENCE_Z = 1.96
+ENABLE_ADAPTIVE_SEARCH_OVERRIDES = False
+MAX_TRACKED_BATTLES = 128
+HOLDOUT_ROLLOUTS = 64
+HOLDOUT_CONTINUATION_ITERATIONS = 64
+HOLDOUT_CONTINUATION_STEPS = 1
+HOLDOUT_CONTINUATION_HORIZONS = (1, 2)
+HOLDOUT_CANDIDATE_COUNT = 3
+HOLDOUT_MIN_EFFECTIVE_WORLDS = 12.0
+HOLDOUT_MIN_PAIRS = 512
+HOLDOUT_MIN_MEAN_ADVANTAGE = 0.08
+HOLDOUT_MIN_LOWER_BOUND = 0.02
+HOLDOUT_MIN_POSITIVE_WORLD_WEIGHT = 0.75
+HOLDOUT_MAX_CATASTROPHIC_RATE = 0.005
+HOLDOUT_MIN_SIGN_MARGIN = 0.10
+HOLDOUT_ALPHA_BUDGET = 0.001
+HOLDOUT_CVAR_TAIL_MASS = 0.10
+HOLDOUT_MAX_CATASTROPHE_RATE_GAP = 0.005
+HOLDOUT_MAX_CATASTROPHE_SEVERITY_GAP = 0.05
+HOLDOUT_MIN_EVALUATOR_DELTA_DIFFERENCE = -0.02
+HOLDOUT_ALPHA_CHECKS_PER_LOOK = 4
+HOLDOUT_OPPONENT_UNIFORM_MIX = 0.25
+
+_PURE_BOOST_MOVES = {
+    "acidarmor": ("defense",),
+    "agility": ("speed",),
+    "amnesia": ("special-defense",),
+    "barrier": ("defense",),
+    "bellydrum": ("attack",),
+    "bulkup": ("attack", "defense"),
+    "calmmind": ("special-attack", "special-defense"),
+    "coil": ("attack", "defense", "accuracy"),
+    "cosmicpower": ("defense", "special-defense"),
+    "cottonguard": ("defense",),
+    "defendorder": ("defense", "special-defense"),
+    "doubleteam": ("evasion",),
+    "dragondance": ("attack", "speed"),
+    "growth": ("attack", "special-attack"),
+    "honeclaws": ("attack", "accuracy"),
+    "howl": ("attack",),
+    "irondefense": ("defense",),
+    "meditate": ("attack",),
+    "nastyplot": ("special-attack",),
+    "quiverdance": ("special-attack", "special-defense", "speed"),
+    "rockpolish": ("speed",),
+    "sharpen": ("attack",),
+    "shiftgear": ("attack", "speed"),
+    "swordsdance": ("attack",),
+    "tailglow": ("special-attack",),
+    "victorydance": ("attack", "defense", "speed"),
+    "workup": ("attack", "special-attack"),
+}
+_KNOWN_REFLECTABLE_MOVES = {
+    "spikes",
+    "stealthrock",
+    "stickyweb",
+    "toxic",
+    "toxicspikes",
+}
+_ABILITY_TYPE_IMMUNITIES = {
+    "dryskin": "water",
+    "eartheater": "ground",
+    "flashfire": "fire",
+    "levitate": "ground",
+    "lightningrod": "electric",
+    "motordrive": "electric",
+    "sapsipper": "grass",
+    "stormdrain": "water",
+    "voltabsorb": "electric",
+    "waterabsorb": "water",
+    "wellbakedbody": "fire",
+}
+_ABILITY_FLAG_IMMUNITIES = {
+    "bulletproof": "bullet",
+    "soundproof": "sound",
+    "windrider": "wind",
+}
+_MOLD_BREAKER_ABILITIES = {"moldbreaker", "teravolt", "turboblaze"}
+_CURRENT_TARGETS = {
+    "adjacentfoe",
+    "all",
+    "alladjacent",
+    "alladjacentfoes",
+    "any",
+    "normal",
+    "randomnormal",
+}
+_PROTECT_MOVES = {
+    "banefulbunker",
+    "burningbulwark",
+    "detect",
+    "kingsshield",
+    "obstruct",
+    "protect",
+    "silktrap",
+    "spikyshield",
+}
+_RECOVERY_MOVES = {
+    "healorder",
+    "lifedew",
+    "milkdrink",
+    "moonlight",
+    "morningsun",
+    "recover",
+    "rest",
+    "roost",
+    "shoreup",
+    "slackoff",
+    "softboiled",
+    "strengthsap",
+    "synthesis",
+}
+_PIVOT_MOVES = {
+    "batonpass",
+    "chillyreception",
+    "flipturn",
+    "partingshot",
+    "shedtail",
+    "teleport",
+    "uturn",
+    "voltswitch",
+}
+_NON_DAMAGE_TERMINAL_PIVOTS = {"batonpass", "shedtail", "teleport"}
 
 
 def _append_jsonl(environment_variable: str, row: dict) -> None:
@@ -39,6 +202,82 @@ def _append_jsonl(environment_variable: str, row: dict) -> None:
     with open(path, "a", encoding="utf-8") as handle:
         handle.write(payload)
         handle.flush()
+
+
+def _decision_coordinates(*, required: bool = False) -> tuple[str, int] | None:
+    context = _PRIOR_STATE.get("context") or {}
+    tag = context.get("tag")
+    decision_index = context.get("decision_idx")
+    valid = (
+        isinstance(tag, str)
+        and bool(tag)
+        and isinstance(decision_index, int)
+        and not isinstance(decision_index, bool)
+        and decision_index >= 0
+    )
+    if not valid:
+        if required:
+            raise RuntimeError("deterministic remote execution requires decision context")
+        return None
+    return tag, decision_index
+
+
+def _run_seed(*, required: bool = False) -> str | None:
+    run_seed = os.environ.get("METAGROSS_RUN_SEED")
+    rng_scheme = os.environ.get("METAGROSS_RNG_SCHEME")
+    if run_seed and rng_scheme == RNG_SCHEME:
+        return run_seed
+    if required:
+        raise RuntimeError("deterministic remote execution requires the frozen run seed")
+    return None
+
+
+def _derived_seed(channel: str, cohort: str | int, *, required: bool = False) -> int | None:
+    coordinates = _decision_coordinates(required=required)
+    run_seed = _run_seed(required=required)
+    if coordinates is None or run_seed is None:
+        return None
+    tag, decision_index = coordinates
+    return derive_seed(run_seed, channel, tag, decision_index, cohort)
+
+
+def _deterministic_request_id(channel: str, cohort: str | int) -> str:
+    coordinates = _decision_coordinates(required=True)
+    run_seed = _run_seed(required=True)
+    assert coordinates is not None and run_seed is not None
+    tag, decision_index = coordinates
+    return deterministic_request_id(
+        run_seed, tag, decision_index, cohort, channel=channel
+    )
+
+
+def holdout_alpha(sequence_index: int, candidate_rank: int, horizon_index: int) -> float:
+    """Allocate the preregistered family-wise budget to one certification look."""
+    if (
+        isinstance(sequence_index, bool)
+        or not isinstance(sequence_index, int)
+        or sequence_index < 0
+        or isinstance(candidate_rank, bool)
+        or not isinstance(candidate_rank, int)
+        or not 1 <= candidate_rank <= HOLDOUT_CANDIDATE_COUNT
+        or isinstance(horizon_index, bool)
+        or not isinstance(horizon_index, int)
+        or not 0 <= horizon_index < len(HOLDOUT_CONTINUATION_HORIZONS)
+    ):
+        raise ValueError("invalid holdout alpha coordinates")
+    decision_number = sequence_index + 1
+    decision_budget = (
+        HOLDOUT_ALPHA_BUDGET
+        * 6.0
+        / (math.pi * math.pi)
+        / (decision_number * decision_number)
+    )
+    family_size = (
+        HOLDOUT_CANDIDATE_COUNT
+        * len(HOLDOUT_CONTINUATION_HORIZONS)
+        * HOLDOUT_ALPHA_CHECKS_PER_LOOK
+    )
+    return decision_budget / family_size
 
 
 def _mcts_result_payload(result) -> dict:
@@ -59,9 +298,1673 @@ def _mcts_result_payload(result) -> dict:
     }
 
 
+def _best_mcts_alternative_by_score(mcts_results, blocked_choice: str) -> str | None:
+    blocked = blocked_choice.removesuffix("-tera")
+    scores: dict[str, float] = {}
+    weights: dict[str, float] = {}
+    for result, sample_chance, _index in mcts_results:
+        weight = float(sample_chance)
+        if not math.isfinite(weight) or weight <= 0:
+            continue
+        for option in result.side_one:
+            if (
+                option.move_choice.removesuffix("-tera") == blocked
+                or option.visits <= 0
+            ):
+                continue
+            mean_score = float(option.total_score) / option.visits
+            if not math.isfinite(mean_score):
+                continue
+            scores[option.move_choice] = (
+                scores.get(option.move_choice, 0.0) + weight * mean_score
+            )
+            weights[option.move_choice] = weights.get(option.move_choice, 0.0) + weight
+    if not scores:
+        return None
+    return max(scores, key=lambda move: (scores[move] / weights[move], move))
+
+
+def guard_repeated_capped_swords_dance(
+    battle, choice: str, mcts_results, streaks=None
+) -> tuple[str, dict[str, object] | None]:
+    """Permit one Sucker Punch dodge at +6, then prevent a repeated no-op."""
+    if streaks is None:
+        streaks = _CAPPED_SETUP_STREAKS
+    tag = str(getattr(battle, "battle_tag", ""))
+    active = getattr(getattr(battle, "user", None), "active", None)
+    active_name = str(getattr(active, "name", ""))
+    key = (tag, active_name, "swordsdance")
+    try:
+        attack_boost = float(
+            _mapping_value(getattr(active, "boosts", {}) or {}, "attack", 0)
+        )
+    except (TypeError, ValueError):
+        attack_boost = 0
+    is_capped = choice.removesuffix("-tera") == "swordsdance" and attack_boost >= 6
+    if not is_capped:
+        for existing in [candidate for candidate in streaks if candidate[0] == tag]:
+            streaks.pop(existing, None)
+        return choice, None
+
+    streaks[key] = streaks.get(key, 0) + 1
+    if streaks[key] <= MAX_CONSECUTIVE_CAPPED_SWORDS_DANCE:
+        return choice, None
+
+    alternative = _best_mcts_alternative_by_score(mcts_results, choice)
+    if alternative is None:
+        return choice, None
+    streak = streaks.pop(key)
+    return alternative, {
+        "reason": "repeated_capped_swords_dance",
+        "original_choice": choice,
+        "replacement_choice": alternative,
+        "capped_streak": streak,
+    }
+
+
+def _mcts_actions_and_visit_mass(mcts_results) -> tuple[list[str], dict[str, float]]:
+    actions: set[str] = set()
+    visit_mass: dict[str, float] = {}
+    for row in mcts_results:
+        try:
+            result, sample_chance, _index = row
+            weight = float(sample_chance)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(weight) or weight <= 0:
+            continue
+        options = list(getattr(result, "side_one", ()) or ())
+        valid_options = []
+        for option in options:
+            action = getattr(option, "move_choice", None)
+            if not isinstance(action, str) or not action:
+                continue
+            actions.add(action)
+            try:
+                visits = int(getattr(option, "visits", 0))
+            except (TypeError, ValueError):
+                visits = 0
+            valid_options.append((action, max(0, visits)))
+        if not valid_options:
+            continue
+        try:
+            total_visits = int(getattr(result, "total_visits", 0))
+        except (TypeError, ValueError):
+            total_visits = 0
+        if total_visits <= 0:
+            total_visits = sum(visits for _action, visits in valid_options)
+        for action, visits in valid_options:
+            share = (
+                visits / total_visits if total_visits > 0 else 1.0 / len(valid_options)
+            )
+            visit_mass[action] = visit_mass.get(action, 0.0) + weight * share
+    ordered = sorted(actions, key=lambda action: (-visit_mass.get(action, 0.0), action))
+    return ordered, visit_mass
+
+
+def _authorized_action_name(action: str, allowed: set[str]) -> str | None:
+    if action in allowed:
+        return action
+    if not action.startswith("switch "):
+        return None
+    requested = "".join(character for character in action[7:] if character.isalnum())
+    candidates = []
+    for candidate in allowed:
+        if not candidate.startswith("switch "):
+            continue
+        authorized = "".join(
+            character for character in candidate[7:] if character.isalnum()
+        )
+        if (
+            requested
+            and authorized
+            and (requested.startswith(authorized) or authorized.startswith(requested))
+        ):
+            candidates.append(candidate)
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def derive_policy_baseline(
+    mcts_results, priors=None, request_actions: set[str] | None = None
+) -> tuple[str, list[str], dict[str, float]]:
+    """Choose the highest request-valid player-prior action."""
+    ordered, visit_mass = _mcts_actions_and_visit_mass(mcts_results)
+    if not ordered:
+        return "no move", [], visit_mass
+    prior_by_action: dict[str, float] = {}
+    for row in priors or ():
+        try:
+            action, probability = row
+            probability = float(probability)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(action, str) and math.isfinite(probability):
+            prior_by_action[action] = probability
+    allowed = None if request_actions is None else set(request_actions)
+    if allowed == set():
+        return "no move", ordered, visit_mass
+    authorized_priors: dict[str, float] = {}
+    for action, probability in prior_by_action.items():
+        authorized = (
+            action if allowed is None else _authorized_action_name(action, allowed)
+        )
+        if authorized is not None:
+            authorized_priors[authorized] = max(
+                authorized_priors.get(authorized, 0.0), probability
+            )
+    prior_actions = list(authorized_priors)
+    if not prior_actions:
+        authorized_search = [
+            action for action in ordered if allowed is None or action in allowed
+        ]
+        return (
+            (authorized_search[0] if authorized_search else "no move"),
+            ordered,
+            visit_mass,
+        )
+    baseline = min(
+        prior_actions,
+        key=lambda action: (-authorized_priors[action], action),
+    )
+    return baseline, ordered, visit_mass
+
+
+def request_player_actions(battle) -> set[str] | None:
+    """Build the action names authorized by Foul Play's current request clone."""
+    user = getattr(battle, "user", None)
+    active = getattr(user, "active", None)
+    actions: set[str] = set()
+    if active is None:
+        return None
+    if not hasattr(active, "moves"):
+        return None
+    force_switch = bool(getattr(battle, "force_switch", False))
+    if not force_switch:
+        can_tera = bool(getattr(active, "can_terastallize", False))
+        for move in getattr(active, "moves", ()) or ():
+            if bool(getattr(move, "disabled", False)):
+                continue
+            name = str(getattr(move, "name", getattr(move, "id", "")) or "")
+            if not name:
+                continue
+            actions.add(name)
+            if can_tera:
+                actions.add(f"{name}-tera")
+    if not bool(getattr(user, "trapped", False)):
+        for pokemon in getattr(user, "reserve", ()) or ():
+            try:
+                alive = float(getattr(pokemon, "hp", 0)) > 0
+            except (TypeError, ValueError):
+                alive = False
+            if alive:
+                actions.add(f"switch {getattr(pokemon, 'name', '')}")
+    return actions
+
+
+def _request_allows(action: str, request_actions: set[str] | None) -> bool:
+    return request_actions is None or action in request_actions
+
+
+def paired_candidate_evidence(
+    mcts_results,
+    candidate: str,
+    baseline: str,
+    minimum_coverage: float = MIN_PAIRED_POSTERIOR_COVERAGE,
+) -> dict[str, object]:
+    """Measure paired candidate advantage without renormalizing covered worlds."""
+    worlds = []
+    total_weight = 0.0
+    for row in mcts_results:
+        try:
+            result, sample_chance, index = row
+            weight = float(sample_chance)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(weight) or weight <= 0:
+            continue
+        total_weight += weight
+        by_action = {
+            getattr(option, "move_choice", None): option
+            for option in (getattr(result, "side_one", ()) or ())
+        }
+        candidate_option = by_action.get(candidate)
+        baseline_option = by_action.get(baseline)
+        if candidate_option is None or baseline_option is None:
+            continue
+        try:
+            candidate_visits = int(getattr(candidate_option, "visits", 0))
+            baseline_visits = int(getattr(baseline_option, "visits", 0))
+            candidate_mean = float(candidate_option.total_score) / candidate_visits
+            baseline_mean = float(baseline_option.total_score) / baseline_visits
+        except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+            continue
+        if (
+            candidate_visits <= 0
+            or baseline_visits <= 0
+            or not math.isfinite(candidate_mean)
+            or not math.isfinite(baseline_mean)
+        ):
+            continue
+        try:
+            world_index = int(index)
+        except (TypeError, ValueError):
+            world_index = repr(index)
+        delta = candidate_mean - baseline_mean
+        standard_error_bound = math.sqrt(1.0 / candidate_visits + 1.0 / baseline_visits)
+        worlds.append(
+            {
+                "index": world_index,
+                "weight": weight,
+                "delta": delta,
+                "lower_bound": delta - PAIRED_CONFIDENCE_Z * standard_error_bound,
+                "candidate_visits": candidate_visits,
+                "baseline_visits": baseline_visits,
+            }
+        )
+    paired_weight = sum(float(world["weight"]) for world in worlds)
+    coverage = paired_weight / total_weight if total_weight > 0 else 0.0
+    posterior_delta = (
+        sum(float(world["weight"]) * float(world["delta"]) for world in worlds)
+        / total_weight
+        if total_weight > 0
+        else 0.0
+    )
+    lower_bound = (
+        sum(float(world["weight"]) * float(world["lower_bound"]) for world in worlds)
+        / total_weight
+        if total_weight > 0
+        else 0.0
+    )
+    complete = total_weight > 0 and coverage >= minimum_coverage
+    heuristic_qualified = complete and lower_bound >= MIN_PAIRED_ADVANTAGE
+    return {
+        "candidate": candidate,
+        "baseline": baseline,
+        "coverage": coverage,
+        "minimum_coverage": minimum_coverage,
+        "paired_posterior_weight": paired_weight,
+        "total_posterior_weight": total_weight,
+        "paired_worlds": len(worlds),
+        "posterior_delta": posterior_delta,
+        "paired_lower_confidence_bound": lower_bound,
+        "complete": complete,
+        "minimum_advantage": MIN_PAIRED_ADVANTAGE,
+        "evidence_kind": "adaptive_mcts_heuristic",
+        "heuristic_qualified": heuristic_qualified,
+        "qualified": ENABLE_ADAPTIVE_SEARCH_OVERRIDES and heuristic_qualified,
+        "worlds": worlds,
+    }
+
+
+_LEGACY_HOLDOUT_FIELDS = {
+    "pairs",
+    "baseline_sum",
+    "candidate_sum",
+    "delta_sum",
+    "delta_squared_sum",
+    "catastrophic_count",
+    "candidate_better_count",
+    "baseline_better_count",
+    "equal_count",
+    "baseline_terminal_count",
+    "candidate_terminal_count",
+    "continuation_iterations_executed",
+}
+
+
+def _validate_legacy_holdout_result_payload(raw: object) -> dict[str, object]:
+    """Validate only the aggregate fields available in immutable v4 captures."""
+    if not isinstance(raw, dict) or set(raw) != _LEGACY_HOLDOUT_FIELDS:
+        raise ValueError("legacy holdout result has invalid fields")
+    pairs = raw["pairs"]
+    if isinstance(pairs, bool) or not isinstance(pairs, int) or pairs <= 0:
+        raise ValueError("legacy holdout result has invalid pairs")
+    numeric = {}
+    for name in ("baseline_sum", "candidate_sum", "delta_sum", "delta_squared_sum"):
+        value = raw[name]
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+        ):
+            raise ValueError(f"legacy holdout result has invalid {name}")
+        numeric[name] = float(value)
+    for name in _LEGACY_HOLDOUT_FIELDS - set(numeric):
+        value = raw[name]
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"legacy holdout result has invalid {name}")
+    tolerance = 1e-8 * max(1, pairs)
+    if (
+        abs(numeric["candidate_sum"] - numeric["baseline_sum"] - numeric["delta_sum"])
+        > tolerance
+        or numeric["delta_squared_sum"] + tolerance
+        < numeric["delta_sum"] ** 2 / pairs
+        or raw["candidate_better_count"]
+        + raw["baseline_better_count"]
+        + raw["equal_count"]
+        != pairs
+    ):
+        raise ValueError("legacy holdout result is inconsistent")
+    return {**raw, **numeric}
+
+
+def independent_holdout_certificate(
+    results,
+    world_weights,
+    candidate: str,
+    baseline: str,
+    decision_index: int = 0,
+) -> dict[str, object]:
+    """Apply a one-candidate, fresh-world admission rule to paired aggregates."""
+    if len(results) != len(world_weights) or not results:
+        raise ValueError("holdout results must exactly cover their fresh worlds")
+    worlds = []
+    total_weight = 0.0
+    for index, (raw, raw_weight) in enumerate(zip(results, world_weights, strict=True)):
+        if isinstance(raw, dict) and set(raw) == _LEGACY_HOLDOUT_FIELDS:
+            payload = _validate_legacy_holdout_result_payload(raw)
+        else:
+            payload = validate_holdout_result_payload(raw)
+        weight = float(raw_weight)
+        if not math.isfinite(weight) or weight <= 0:
+            raise ValueError("holdout world weights must be positive and finite")
+        pairs = payload["pairs"]
+        delta_mean = payload["delta_sum"] / pairs
+        delta_second_moment = payload["delta_squared_sum"] / pairs
+        within_variance = max(0.0, delta_second_moment - delta_mean * delta_mean)
+        worlds.append(
+            {
+                "index": index,
+                "weight": weight,
+                "pairs": pairs,
+                "delta_mean": delta_mean,
+                "within_variance": within_variance,
+                "catastrophic_count": payload["catastrophic_count"],
+                "candidate_better_count": payload["candidate_better_count"],
+                "baseline_better_count": payload["baseline_better_count"],
+                "equal_count": payload["equal_count"],
+                "continuation_iterations_executed": payload[
+                    "continuation_iterations_executed"
+                ],
+            }
+        )
+        total_weight += weight
+
+    normalized = [world["weight"] / total_weight for world in worlds]
+    sum_squared_weights = math.fsum(weight * weight for weight in normalized)
+    effective_worlds = 1.0 / sum_squared_weights
+    mean = math.fsum(
+        weight * world["delta_mean"]
+        for weight, world in zip(normalized, worlds, strict=True)
+    )
+    weighted_variance = math.fsum(
+        weight * (world["delta_mean"] - mean) ** 2
+        for weight, world in zip(normalized, worlds, strict=True)
+    )
+    correction = max(1e-12, 1.0 - sum_squared_weights)
+    between_variance = weighted_variance / correction
+    within_mean_variance = math.fsum(
+        weight * weight * world["within_variance"] / world["pairs"]
+        for weight, world in zip(normalized, worlds, strict=True)
+    )
+    standard_error = math.sqrt(
+        max(0.0, between_variance * sum_squared_weights + within_mean_variance)
+    )
+    try:
+        decision_number = max(1, int(decision_index) + 1)
+    except (TypeError, ValueError):
+        decision_number = 1
+    alpha = (
+        HOLDOUT_ALPHA_BUDGET
+        * 6.0
+        / (math.pi * math.pi)
+        / (decision_number * decision_number)
+    )
+    z_value = statistics.NormalDist().inv_cdf(1.0 - alpha)
+    lower_bound = mean - z_value * standard_error
+    total_pairs = sum(world["pairs"] for world in worlds)
+    catastrophic_rate = (
+        sum(world["catastrophic_count"] for world in worlds) / total_pairs
+    )
+    candidate_better_rate = (
+        sum(world["candidate_better_count"] for world in worlds) / total_pairs
+    )
+    baseline_better_rate = (
+        sum(world["baseline_better_count"] for world in worlds) / total_pairs
+    )
+    positive_world_weight = math.fsum(
+        weight
+        for weight, world in zip(normalized, worlds, strict=True)
+        if world["delta_mean"] > 0
+    )
+    positive_worlds = sum(world["delta_mean"] > 0 for world in worlds)
+    sign_p_value = math.fsum(
+        math.comb(len(worlds), successes)
+        for successes in range(positive_worlds, len(worlds) + 1)
+    ) / (2 ** len(worlds))
+    checks = {
+        "effective_worlds": effective_worlds >= HOLDOUT_MIN_EFFECTIVE_WORLDS,
+        "pairs": total_pairs >= HOLDOUT_MIN_PAIRS,
+        "mean_advantage": mean >= HOLDOUT_MIN_MEAN_ADVANTAGE,
+        "lower_bound": lower_bound >= HOLDOUT_MIN_LOWER_BOUND,
+        "positive_world_weight": (
+            positive_world_weight >= HOLDOUT_MIN_POSITIVE_WORLD_WEIGHT
+        ),
+        "world_sign_test": sign_p_value <= alpha,
+        "catastrophic_rate": catastrophic_rate <= HOLDOUT_MAX_CATASTROPHIC_RATE,
+        "sign_margin": (
+            candidate_better_rate - baseline_better_rate >= HOLDOUT_MIN_SIGN_MARGIN
+        ),
+    }
+    return {
+        "candidate": candidate,
+        "baseline": baseline,
+        "evidence_kind": "independent_seeded_paired_holdout",
+        "fresh_worlds": len(worlds),
+        "effective_worlds": effective_worlds,
+        "pairs": total_pairs,
+        "posterior_delta": mean,
+        "standard_error": standard_error,
+        "alpha": alpha,
+        "z_value": z_value,
+        "paired_lower_confidence_bound": lower_bound,
+        "positive_world_weight": positive_world_weight,
+        "positive_worlds": positive_worlds,
+        "sign_p_value": sign_p_value,
+        "catastrophic_rate": catastrophic_rate,
+        "candidate_better_rate": candidate_better_rate,
+        "baseline_better_rate": baseline_better_rate,
+        "coverage": 1.0,
+        "complete": True,
+        "qualified": all(checks.values()),
+        "checks": checks,
+        "worlds": worlds,
+    }
+
+
+def robust_holdout_certificate(
+    results,
+    world_weights,
+    state_hashes,
+    cluster_hashes,
+    candidate: str,
+    baseline: str,
+    alpha_sequence_index: int,
+    candidate_rank: int,
+    horizon_index: int,
+) -> dict[str, object]:
+    """Apply the preregistered symmetric, cluster-aware v5 admission rule."""
+    if not isinstance(candidate, str) or not candidate:
+        raise ValueError("holdout candidate must be a nonempty action")
+    if not isinstance(baseline, str) or not baseline or candidate == baseline:
+        raise ValueError("holdout baseline must be a different nonempty action")
+    validated_results = [validate_holdout_result_payload(row) for row in results]
+    alpha = holdout_alpha(alpha_sequence_index, candidate_rank, horizon_index)
+    metrics = compute_holdout_metrics(
+        validated_results,
+        world_weights,
+        state_hashes,
+        cluster_hashes,
+        alpha=alpha,
+        cvar_tail_mass=HOLDOUT_CVAR_TAIL_MASS,
+    )
+    z_value = statistics.NormalDist().inv_cdf(1.0 - alpha)
+    lower_bound = float(metrics["weighted_mean_delta"]) - z_value * float(
+        metrics["standard_error"]
+    )
+    active_clusters = [
+        cluster
+        for cluster in metrics["cluster_aggregates"]
+        if float(cluster["normalized_weight"]) > 0.0
+    ]
+    positive_clusters = sum(
+        float(cluster["delta_mean"]) > 0.0 for cluster in active_clusters
+    )
+    sign_p_value = math.fsum(
+        math.comb(len(active_clusters), successes)
+        for successes in range(positive_clusters, len(active_clusters) + 1)
+    ) / (2 ** len(active_clusters))
+    candidate_catastrophe_rate = float(metrics["candidate_catastrophe_rate"])
+    baseline_catastrophe_rate = float(metrics["baseline_catastrophe_rate"])
+    candidate_severity = float(metrics["candidate_catastrophe_severity_mean"])
+    baseline_severity = float(metrics["baseline_catastrophe_severity_mean"])
+    evaluator_difference = metrics[
+        "weighted_nonterminal_evaluation_delta_mean_difference"
+    ]
+    checks = {
+        "effective_clusters": (
+            float(metrics["effective_clusters"]) >= HOLDOUT_MIN_EFFECTIVE_WORLDS
+        ),
+        "pairs": int(metrics["total_pairs"]) >= HOLDOUT_MIN_PAIRS,
+        "mean_advantage": (
+            float(metrics["weighted_mean_delta"]) >= HOLDOUT_MIN_MEAN_ADVANTAGE
+        ),
+        "lower_bound": lower_bound >= HOLDOUT_MIN_LOWER_BOUND,
+        "positive_cluster_mass": (
+            float(metrics["positive_cluster_mass"])
+            >= HOLDOUT_MIN_POSITIVE_WORLD_WEIGHT
+        ),
+        "cluster_sign_test": sign_p_value <= alpha,
+        "candidate_catastrophe_rate": (
+            candidate_catastrophe_rate <= HOLDOUT_MAX_CATASTROPHIC_RATE
+        ),
+        "symmetric_catastrophe_rate_gap": (
+            candidate_catastrophe_rate
+            <= baseline_catastrophe_rate + HOLDOUT_MAX_CATASTROPHE_RATE_GAP
+        ),
+        "symmetric_catastrophe_severity": (
+            candidate_severity
+            <= baseline_severity + HOLDOUT_MAX_CATASTROPHE_SEVERITY_GAP
+        ),
+        "sign_margin": (
+            float(metrics["candidate_better_rate"])
+            - float(metrics["baseline_better_rate"])
+            >= HOLDOUT_MIN_SIGN_MARGIN
+        ),
+        "lower_tail_cvar": (
+            float(metrics["candidate_lower_tail_cvar"]) >= 0.0
+        ),
+        "median_of_means": (
+            float(metrics["candidate_median_of_means"])
+            >= HOLDOUT_MIN_LOWER_BOUND
+        ),
+        "evaluator_calibration": (
+            evaluator_difference is None
+            or float(evaluator_difference) >= HOLDOUT_MIN_EVALUATOR_DELTA_DIFFERENCE
+        ),
+    }
+    return {
+        "schema_version": 2,
+        "candidate": candidate,
+        "candidate_rank": candidate_rank,
+        "baseline": baseline,
+        "alpha_sequence_index": alpha_sequence_index,
+        "horizon_index": horizon_index,
+        "continuation_steps": HOLDOUT_CONTINUATION_HORIZONS[horizon_index],
+        "evidence_kind": "independent_deterministic_robust_paired_holdout_v5",
+        "fresh_worlds": int(metrics["world_count"]),
+        "effective_worlds": float(metrics["effective_clusters"]),
+        "pairs": int(metrics["total_pairs"]),
+        "posterior_delta": float(metrics["weighted_mean_delta"]),
+        "standard_error": float(metrics["standard_error"]),
+        "alpha": alpha,
+        "z_value": z_value,
+        "paired_lower_confidence_bound": lower_bound,
+        "positive_world_weight": float(metrics["positive_cluster_mass"]),
+        "positive_worlds": positive_clusters,
+        "sign_p_value": sign_p_value,
+        "catastrophic_rate": candidate_catastrophe_rate,
+        "baseline_catastrophic_rate": baseline_catastrophe_rate,
+        "candidate_better_rate": float(metrics["candidate_better_rate"]),
+        "baseline_better_rate": float(metrics["baseline_better_rate"]),
+        "coverage": 1.0,
+        "complete": True,
+        "qualified": all(checks.values()),
+        "checks": checks,
+        "metrics": metrics,
+        "world_weights": [float(weight) for weight in world_weights],
+        "state_hashes": list(state_hashes),
+        "cluster_hashes": list(cluster_hashes),
+        "raw_results": validated_results,
+    }
+
+
+def combined_robust_holdout_certificate(
+    certificates: dict[int, dict],
+) -> dict[str, object]:
+    """Combine an adaptive prefix of the frozen horizon schedule."""
+    if not certificates:
+        raise ValueError("at least one robust holdout look is required")
+    executed = list(certificates)
+    planned = list(HOLDOUT_CONTINUATION_HORIZONS)
+    if executed != planned[: len(executed)]:
+        raise ValueError("robust holdout looks are not a planned horizon prefix")
+    candidate = None
+    baseline = None
+    for horizon, certificate in certificates.items():
+        if not isinstance(certificate, dict) or certificate.get("complete") is not True:
+            raise ValueError(f"robust holdout horizon {horizon} is incomplete")
+        if candidate is None:
+            candidate = certificate.get("candidate")
+            baseline = certificate.get("baseline")
+        if (
+            certificate.get("candidate") != candidate
+            or certificate.get("baseline") != baseline
+            or certificate.get("continuation_steps") != horizon
+        ):
+            raise ValueError("robust holdout looks evaluate different frozen inputs")
+    passed = all(row.get("qualified") is True for row in certificates.values())
+    qualified = passed and executed == planned
+    if not passed:
+        stop_reason = f"rejected_at_horizon_{executed[-1]}"
+    elif qualified:
+        stop_reason = "all_horizons_qualified"
+    else:
+        raise ValueError("passing robust holdout prefix cannot stop early")
+    return {
+        "schema_version": 2,
+        "candidate": candidate,
+        "candidate_rank": certificates[executed[0]].get("candidate_rank"),
+        "baseline": baseline,
+        "evidence_kind": "adaptive_multi_horizon_robust_paired_holdout_v5",
+        "planned_horizons": planned,
+        "executed_horizons": executed,
+        "horizons": executed,
+        "stop_reason": stop_reason,
+        "complete": True,
+        "coverage": min(float(row["coverage"]) for row in certificates.values()),
+        "pairs": sum(int(row["pairs"]) for row in certificates.values()),
+        "posterior_delta": min(
+            float(row["posterior_delta"]) for row in certificates.values()
+        ),
+        "paired_lower_confidence_bound": min(
+            float(row["paired_lower_confidence_bound"])
+            for row in certificates.values()
+        ),
+        "catastrophic_rate": max(
+            float(row["catastrophic_rate"]) for row in certificates.values()
+        ),
+        "qualified": qualified,
+        "certificates": {str(key): value for key, value in certificates.items()},
+    }
+
+
+def recompute_robust_holdout_certificate(certificate: dict) -> dict[str, object]:
+    """Recompute one captured v5 look from its raw aggregate evidence."""
+    if not isinstance(certificate, dict) or certificate.get("schema_version") != 2:
+        raise ValueError("captured robust holdout certificate has an invalid schema")
+    return robust_holdout_certificate(
+        certificate["raw_results"],
+        certificate["world_weights"],
+        certificate["state_hashes"],
+        certificate["cluster_hashes"],
+        certificate["candidate"],
+        certificate["baseline"],
+        certificate["alpha_sequence_index"],
+        certificate["candidate_rank"],
+        certificate["horizon_index"],
+    )
+
+
+def combined_holdout_certificate(certificates: dict[int, dict]) -> dict[str, object]:
+    """Require the frozen candidate to pass every configured continuation horizon."""
+    if set(certificates) != set(HOLDOUT_CONTINUATION_HORIZONS):
+        raise ValueError("holdout certificates do not cover every required horizon")
+    candidate = None
+    baseline = None
+    for horizon, certificate in certificates.items():
+        if not isinstance(certificate, dict) or not certificate.get("complete"):
+            raise ValueError(f"holdout horizon {horizon} is incomplete")
+        if candidate is None:
+            candidate = certificate.get("candidate")
+            baseline = certificate.get("baseline")
+        if (
+            certificate.get("candidate") != candidate
+            or certificate.get("baseline") != baseline
+        ):
+            raise ValueError("holdout horizons evaluate different frozen actions")
+    qualified = all(
+        certificate.get("qualified") is True for certificate in certificates.values()
+    )
+    return {
+        "candidate": candidate,
+        "baseline": baseline,
+        "evidence_kind": "independent_seeded_paired_multi_horizon_holdout",
+        "horizons": list(HOLDOUT_CONTINUATION_HORIZONS),
+        "complete": True,
+        "coverage": min(float(row["coverage"]) for row in certificates.values()),
+        "pairs": sum(int(row["pairs"]) for row in certificates.values()),
+        "posterior_delta": min(
+            float(row["posterior_delta"]) for row in certificates.values()
+        ),
+        "paired_lower_confidence_bound": min(
+            float(row["paired_lower_confidence_bound"]) for row in certificates.values()
+        ),
+        "catastrophic_rate": max(
+            float(row["catastrophic_rate"]) for row in certificates.values()
+        ),
+        "qualified": qualified,
+        "certificates": {str(key): value for key, value in certificates.items()},
+    }
+
+
+def _mapping_value(mapping, key, default=0):
+    try:
+        return mapping.get(key, default)
+    except AttributeError:
+        try:
+            return mapping[key]
+        except (KeyError, TypeError):
+            return default
+
+
+def _normalize_identifier(value) -> str:
+    return "".join(
+        character for character in str(value or "").lower() if character.isalnum()
+    )
+
+
+def sanitize_opponent_priors(battle, priors: object) -> list[tuple[str, float]] | None:
+    """Keep only finite priors that match the current public opponent state."""
+    if not priors:
+        return None
+    if not isinstance(priors, dict):
+        raise RuntimeError("opponent priors must be an object")
+    opponent = getattr(battle, "opponent", None)
+    active = getattr(opponent, "active", None)
+    if active is None:
+        return None
+    move_names = {
+        _normalize_identifier(getattr(move, "name", move))
+        for move in (getattr(active, "moves", ()) or ())
+    }
+    switch_names = {
+        _normalize_identifier(getattr(pokemon, "name", ""))
+        for pokemon in (getattr(opponent, "reserve", ()) or ())
+        if float(getattr(pokemon, "hp", 0) or 0) > 0
+    }
+    tera_available = not bool(getattr(active, "terastallized", False)) and not bool(
+        getattr(opponent, "tera_used", False)
+    )
+    expected_actions = set(move_names)
+    expected_actions.update(f"switch {name}" for name in switch_names)
+    if tera_available:
+        expected_actions.update(f"{name}-tera" for name in move_names)
+    retained: dict[str, float] = {}
+    for raw_name, raw_probability in priors.items():
+        if (
+            isinstance(raw_probability, bool)
+            or not isinstance(raw_probability, (int, float))
+            or not math.isfinite(raw_probability)
+            or raw_probability < 0
+        ):
+            raise RuntimeError("opponent priors contain an invalid probability")
+        name = str(raw_name).strip().lower()
+        if name.startswith("switch "):
+            target = _normalize_identifier(name.removeprefix("switch "))
+            if not target or target not in switch_names:
+                continue
+            canonical = f"switch {target}"
+        else:
+            tera = name.endswith("-tera")
+            move = _normalize_identifier(name.removesuffix("-tera"))
+            if not move or move not in move_names or (tera and not tera_available):
+                continue
+            canonical = move + ("-tera" if tera else "")
+        retained[canonical] = retained.get(canonical, 0.0) + float(raw_probability)
+    if not expected_actions.issubset(retained):
+        return None
+    total = sum(retained.values())
+    if total <= 0:
+        return None
+    return [(name, probability / total) for name, probability in retained.items()]
+
+
+def _showdown_move_data(move: str):
+    try:
+        from data import all_move_json
+    except ImportError:
+        return None
+    return all_move_json.get(move)
+
+
+def _type_effectiveness_modifier(move_type: str, target_types: list[str]):
+    try:
+        from fp.helpers import type_effectiveness_modifier
+    except ImportError:
+        return None
+    try:
+        return type_effectiveness_modifier(move_type, target_types)
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _pending_wish(battle) -> bool:
+    wish = getattr(getattr(battle, "user", None), "wish", None)
+    try:
+        return float(wish[0]) > 0
+    except (IndexError, TypeError, ValueError):
+        return False
+
+
+def _encore_failure_reason(battle) -> str | None:
+    opponent = getattr(battle, "opponent", None)
+    target = getattr(opponent, "active", None)
+    if target is None:
+        return None
+
+    volatiles = {
+        _normalize_identifier(value)
+        for value in (getattr(target, "volatile_statuses", ()) or ())
+    }
+    if "dynamax" in volatiles:
+        return "encore_target_incompatible"
+    if "encore" in volatiles:
+        return "encore_target_already_encored"
+
+    last_used = getattr(opponent, "last_used_move", None)
+    last_move = _normalize_identifier(getattr(last_used, "move", ""))
+    last_pokemon = _normalize_identifier(getattr(last_used, "pokemon_name", ""))
+    target_name = _normalize_identifier(getattr(target, "name", ""))
+    if str(getattr(last_used, "move", "") or "").lower().startswith("switch "):
+        return "encore_target_just_switched"
+    if not last_move or (last_pokemon and target_name and last_pokemon != target_name):
+        return "encore_no_eligible_last_move"
+
+    target_moves = getattr(target, "moves", None)
+    if target_moves is None:
+        return None
+    matching_move = next(
+        (
+            candidate
+            for candidate in target_moves
+            if _normalize_identifier(
+                getattr(candidate, "name", getattr(candidate, "id", candidate))
+            )
+            == last_move
+        ),
+        None,
+    )
+    if matching_move is None:
+        return "encore_no_eligible_last_move"
+    try:
+        if float(getattr(matching_move, "current_pp")) <= 0:
+            return "encore_last_move_no_pp"
+    except (AttributeError, TypeError, ValueError):
+        pass
+
+    last_move_data = _showdown_move_data(last_move)
+    if last_move_data is None:
+        return None
+    if bool((last_move_data.get("flags") or {}).get("failencore")):
+        return "encore_last_move_incompatible"
+    if bool(last_move_data.get("isZ") or last_move_data.get("isMax")):
+        return "encore_last_move_incompatible"
+    return None
+
+
+def _known_noop_reason(battle, choice: str) -> str | None:
+    move = choice.removesuffix("-tera").lower()
+    if move.startswith("switch "):
+        return None
+    active = getattr(getattr(battle, "user", None), "active", None)
+    if active is None:
+        return None
+    if choice.endswith("-tera") and not bool(getattr(active, "terastallized", False)):
+        return None
+    if move == "wish" and _pending_wish(battle):
+        return "wish_already_pending"
+    if move == "encore":
+        encore_reason = _encore_failure_reason(battle)
+        if encore_reason:
+            return encore_reason
+    try:
+        hp_value = float(getattr(active, "hp", None))
+        max_hp_value = float(getattr(active, "max_hp", None))
+    except (TypeError, ValueError):
+        hp_value = max_hp_value = float("nan")
+
+    if (
+        move == "substitute"
+        and math.isfinite(hp_value)
+        and math.isfinite(max_hp_value)
+        and max_hp_value > 0
+        and hp_value <= max_hp_value / 4
+    ):
+        return "substitute_insufficient_hp"
+
+    status = str(getattr(active, "status", "") or "").lower()
+    if move == "rest" and status in {"slp", "sleep"}:
+        item = str(getattr(active, "item", "") or "").lower()
+        ability = str(getattr(active, "ability", "") or "").lower()
+        volatiles = {
+            str(value).lower()
+            for value in (getattr(active, "volatile_statuses", ()) or ())
+        }
+        opponent = getattr(getattr(battle, "opponent", None), "active", None)
+        opponent_ability = str(getattr(opponent, "ability", "") or "").lower()
+        field = str(getattr(battle, "field", "") or "").lower()
+        usable_chesto = item == "chestoberry" and not (
+            ability == "klutz"
+            or "embargo" in volatiles
+            or field == "magicroom"
+            or opponent_ability == "unnerve"
+        )
+        if not usable_chesto and item not in {"unknownitem", "unknown"}:
+            return "rest_already_asleep_without_usable_chesto"
+
+    boosted_stats = _PURE_BOOST_MOVES.get(move)
+    boosts = getattr(active, "boosts", {}) or {}
+    try:
+        capped = boosted_stats and all(
+            float(_mapping_value(boosts, stat, 0)) >= 6 for stat in boosted_stats
+        )
+    except (TypeError, ValueError):
+        capped = False
+    if capped:
+        return "capped_boost"
+    return None
+
+
+def _opponent_has_known_conditional_priority(battle) -> bool:
+    """Status no-ops can be intentional into Sucker Punch-like moves."""
+    opponent = getattr(getattr(battle, "opponent", None), "active", None)
+    for move in getattr(opponent, "moves", ()) or ():
+        name = str(getattr(move, "name", getattr(move, "id", move)) or "")
+        normalized = "".join(
+            character for character in name.lower() if character.isalnum()
+        )
+        if normalized in {"suckerpunch", "thunderclap"}:
+            return True
+    return False
+
+
+def _effective_defensive_types(pokemon) -> list[str]:
+    tera_type = _normalize_identifier(getattr(pokemon, "tera_type", ""))
+    if bool(getattr(pokemon, "terastallized", False)) and tera_type not in {
+        "",
+        "nothing",
+        "typeless",
+    }:
+        return [tera_type]
+    return [
+        normalized
+        for normalized in (
+            _normalize_identifier(value)
+            for value in (getattr(pokemon, "types", ()) or ())
+        )
+        if normalized and normalized not in {"nothing", "typeless"}
+    ]
+
+
+def _move_ignores_ability(active, move_data) -> bool:
+    ability = _normalize_identifier(getattr(active, "ability", ""))
+    if ability in _MOLD_BREAKER_ABILITIES:
+        return True
+    if move_data is None:
+        return False
+    if bool(move_data.get("ignoreAbility")):
+        return True
+    return (
+        ability == "myceliummight"
+        and str(move_data.get("category", "")).lower() == "status"
+    )
+
+
+def _ability_immunity_reason(battle, move: str, move_data, opponent) -> str | None:
+    ability = _normalize_identifier(getattr(opponent, "ability", ""))
+    if not ability:
+        return None
+    active = getattr(getattr(battle, "user", None), "active", None)
+    if active is None or _move_ignores_ability(active, move_data):
+        return None
+
+    target = _normalize_identifier(move_data.get("target", "normal"))
+    if target not in _CURRENT_TARGETS:
+        return None
+    move_type = _normalize_identifier(move_data.get("type", ""))
+    flags = move_data.get("flags") or {}
+    immune_type = _ABILITY_TYPE_IMMUNITIES.get(ability)
+    if immune_type == move_type:
+        if ability == "levitate" and move == "thousandarrows":
+            return None
+        return f"revealed_{ability}_immunity"
+    immune_flag = _ABILITY_FLAG_IMMUNITIES.get(ability)
+    if immune_flag and bool(flags.get(immune_flag)):
+        return f"revealed_{ability}_immunity"
+    if (
+        ability == "goodasgold"
+        and str(move_data.get("category", "")).lower() == "status"
+    ):
+        return "revealed_goodasgold_immunity"
+    if ability == "overcoat" and bool(flags.get("powder")):
+        return "revealed_overcoat_immunity"
+    if ability == "wonderguard" and move != "struggle":
+        modifier = _type_effectiveness_modifier(
+            move_type, _effective_defensive_types(opponent)
+        )
+        if (
+            str(move_data.get("category", "")).lower() != "status"
+            and modifier is not None
+            and modifier <= 1
+        ):
+            return "revealed_wonderguard_immunity"
+    return None
+
+
+def _type_immunity_applies(battle, move: str, move_data, opponent) -> bool:
+    if str(move_data.get("category", "")).lower() == "status":
+        return False
+    ignored = move_data.get("ignoreImmunity")
+    move_type = _normalize_identifier(move_data.get("type", ""))
+    if ignored is True or bool(_mapping_value(ignored, move_type, False)):
+        return False
+    if _normalize_identifier(getattr(opponent, "item", "")) == "ringtarget":
+        return False
+    target_types = _effective_defensive_types(opponent)
+    if move_type == "ground" and "flying" in target_types:
+        grounded = (
+            bool(getattr(battle, "gravity", False))
+            or _normalize_identifier(getattr(opponent, "item", "")) == "ironball"
+            or bool(
+                {"ingrain", "smackdown"}
+                & {
+                    _normalize_identifier(value)
+                    for value in (getattr(opponent, "volatile_statuses", ()) or ())
+                }
+            )
+            or move == "thousandarrows"
+        )
+        if grounded:
+            target_types = [value for value in target_types if value != "flying"]
+            if not target_types:
+                return False
+    modifier = _type_effectiveness_modifier(move_type, target_types)
+    return bool(target_types) and modifier == 0
+
+
+def _prediction_sensitive_reason(battle, choice: str) -> str | None:
+    move = choice.removesuffix("-tera").lower()
+    if move.startswith("switch "):
+        return None
+    opponent = getattr(getattr(battle, "opponent", None), "active", None)
+    if opponent is None:
+        return None
+    move_data = _showdown_move_data(move)
+    reflectable = bool((move_data or {}).get("flags", {}).get("reflectable"))
+    if move_data is None:
+        reflectable = move in _KNOWN_REFLECTABLE_MOVES
+
+    ability = _normalize_identifier(getattr(opponent, "ability", ""))
+    if ability == "magicbounce" and reflectable:
+        active = getattr(getattr(battle, "user", None), "active", None)
+        if active is None or not _move_ignores_ability(active, move_data):
+            return "revealed_magic_bounce"
+    if move_data:
+        ability_reason = _ability_immunity_reason(battle, move, move_data, opponent)
+        if ability_reason:
+            return ability_reason
+        if _type_immunity_applies(battle, move, move_data, opponent):
+            return "known_type_immunity"
+    return None
+
+
+def _freeze_public_mapping(value) -> tuple:
+    try:
+        items = value.items()
+    except AttributeError:
+        return ()
+    return tuple(sorted((str(key), repr(item)) for key, item in items))
+
+
+def _pokemon_public_state(pokemon) -> tuple | None:
+    if pokemon is None:
+        return None
+    return (
+        str(getattr(pokemon, "name", "")),
+        repr(getattr(pokemon, "hp", None)),
+        repr(getattr(pokemon, "max_hp", None)),
+        str(getattr(pokemon, "status", "") or ""),
+        str(getattr(pokemon, "item", "") or ""),
+        str(getattr(pokemon, "ability", "") or ""),
+        bool(getattr(pokemon, "terastallized", False)),
+        str(getattr(pokemon, "tera_type", "") or ""),
+        repr(getattr(pokemon, "rest_turns", None)),
+        repr(getattr(pokemon, "sleep_turns", None)),
+        _freeze_public_mapping(getattr(pokemon, "boosts", {})),
+        tuple(
+            sorted(
+                str(value)
+                for value in (getattr(pokemon, "volatile_statuses", ()) or ())
+            )
+        ),
+    )
+
+
+def public_battle_state(battle) -> tuple:
+    """Return progress-bearing public state, intentionally excluding turn and PP."""
+    sides = []
+    for side_name in ("user", "opponent"):
+        side = getattr(battle, side_name, None)
+        sides.append(
+            (
+                _pokemon_public_state(getattr(side, "active", None)),
+                tuple(
+                    _pokemon_public_state(pokemon)
+                    for pokemon in (getattr(side, "reserve", ()) or ())
+                ),
+                _freeze_public_mapping(getattr(side, "side_conditions", {})),
+                repr(getattr(side, "wish", None)),
+            )
+        )
+    return (
+        *sides,
+        str(getattr(battle, "weather", "") or ""),
+        repr(getattr(battle, "weather_turns_remaining", None)),
+        str(getattr(battle, "field", "") or ""),
+        repr(getattr(battle, "field_turns_remaining", None)),
+        bool(getattr(battle, "trick_room", False)),
+        repr(getattr(battle, "trick_room_turns_remaining", None)),
+        bool(getattr(battle, "gravity", False)),
+        bool(getattr(battle, "force_switch", False)),
+    )
+
+
+def _repeated_no_progress_period(history, state, choice: str) -> int | None:
+    proposed = (state, choice)
+    for period in (1, 2, 3):
+        if len(history) < 2 * period:
+            continue
+        first = history[-2 * period : -period]
+        second = history[-period:]
+        if first == second and proposed == first[0]:
+            return period
+    return None
+
+
+def _state_active(state: tuple, side: int) -> tuple | None:
+    try:
+        active = state[side][0]
+    except (IndexError, TypeError):
+        return None
+    return active if isinstance(active, tuple) else None
+
+
+def _state_hp_fraction(state: tuple, side: int) -> float | None:
+    active = _state_active(state, side)
+    if active is None:
+        return None
+    try:
+        hp = float(active[1])
+        maximum = float(active[2])
+    except (IndexError, TypeError, ValueError):
+        return None
+    if not math.isfinite(hp) or not math.isfinite(maximum) or maximum <= 0:
+        return None
+    return hp / maximum
+
+
+def _same_active(state: tuple, other: tuple, side: int) -> bool:
+    active = _state_active(state, side)
+    other_active = _state_active(other, side)
+    return bool(active and other_active and active[0] == other_active[0])
+
+
+def _opponent_made_no_hp_progress(first: tuple, current: tuple) -> bool:
+    if not _same_active(first, current, 1):
+        return False
+    first_hp = _state_hp_fraction(first, 1)
+    current_hp = _state_hp_fraction(current, 1)
+    return (
+        first_hp is not None
+        and current_hp is not None
+        and current_hp >= first_hp - 0.02
+    )
+
+
+def _state_boosts(state: tuple, side: int) -> dict[str, float]:
+    active = _state_active(state, side)
+    if active is None:
+        return {}
+    try:
+        frozen_boosts = active[10]
+    except IndexError:
+        return {}
+    boosts = {}
+    for key, value in frozen_boosts:
+        try:
+            boosts[key] = float(value)
+        except (TypeError, ValueError):
+            continue
+    return boosts
+
+
+def _state_live_count(state: tuple, side: int) -> int:
+    try:
+        active = state[side][0]
+        reserve = state[side][1]
+    except (IndexError, TypeError):
+        return 0
+    count = 0
+    for pokemon in (active, *(reserve or ())):
+        if not isinstance(pokemon, tuple):
+            continue
+        try:
+            count += float(pokemon[1]) > 0
+        except (IndexError, TypeError, ValueError):
+            continue
+    return count
+
+
+def _opponent_offense_increased(first: tuple, current: tuple) -> bool:
+    previous = _state_boosts(first, 1)
+    present = _state_boosts(current, 1)
+    return any(
+        present.get(stat, 0) > previous.get(stat, 0)
+        for stat in ("attack", "special-attack", "speed", "atk", "spa", "spe")
+    )
+
+
+def _losing_stall(history, state: tuple) -> bool:
+    same_matchup = []
+    for previous_state, _previous_choice in reversed(history):
+        if not _same_active(previous_state, state, 0) or not _same_active(
+            previous_state, state, 1
+        ):
+            break
+        same_matchup.append(previous_state)
+    if len(same_matchup) < 4 or _state_live_count(state, 0) <= 1:
+        return False
+    first = same_matchup[-1]
+    first_user_hp = _state_hp_fraction(first, 0)
+    current_user_hp = _state_hp_fraction(state, 0)
+    return (
+        first_user_hp is not None
+        and current_user_hp is not None
+        and current_user_hp <= first_user_hp - 0.10
+        and _opponent_made_no_hp_progress(first, state)
+        and _opponent_offense_increased(first, state)
+    )
+
+
+def _meaningful_progress_since(first: tuple, current: tuple) -> bool:
+    if not _same_active(first, current, 0) or not _same_active(first, current, 1):
+        return True
+    if not _opponent_made_no_hp_progress(first, current):
+        return True
+
+    first_user_boosts = _state_boosts(first, 0)
+    current_user_boosts = _state_boosts(current, 0)
+    if any(
+        current_user_boosts.get(stat, 0) > value
+        for stat, value in first_user_boosts.items()
+    ):
+        return True
+
+    first_opponent_boosts = _state_boosts(first, 1)
+    current_opponent_boosts = _state_boosts(current, 1)
+    if any(
+        current_opponent_boosts.get(stat, 0) < value
+        for stat, value in first_opponent_boosts.items()
+    ):
+        return True
+
+    first_opponent = _state_active(first, 1)
+    current_opponent = _state_active(current, 1)
+    # Status, item, ability, tera, or volatile changes can make an otherwise
+    # repeated action productive. HP and turn counters are handled separately.
+    progress_fields = (3, 4, 5, 6, 7, 11)
+    return any(
+        first_opponent[index] != current_opponent[index] for index in progress_fields
+    )
+
+
+def _semantic_no_progress_reason(history, state: tuple, choice: str) -> str | None:
+    base_choice = choice.removesuffix("-tera")
+    if not choice.startswith("switch ") and _losing_stall(history, state):
+        return "losing_stall"
+    if base_choice in _PIVOT_MOVES:
+        for previous_state, previous_choice in reversed(history):
+            if previous_choice.removesuffix("-tera") != base_choice:
+                continue
+            if not _same_active(previous_state, state, 0) or not _same_active(
+                previous_state, state, 1
+            ):
+                continue
+            if (
+                _state_live_count(state, 0) < _state_live_count(previous_state, 0)
+                and _opponent_offense_increased(previous_state, state)
+            ):
+                return "repeated_sacrificial_pivot"
+            break
+    if history and base_choice in _PROTECT_MOVES:
+        previous_state, previous_choice = history[-1]
+        if (
+            previous_choice.removesuffix("-tera") == base_choice
+            and _same_active(previous_state, state, 0)
+            and _same_active(previous_state, state, 1)
+            and not _meaningful_progress_since(previous_state, state)
+        ):
+            return "consecutive_protect"
+
+    repeated_history = 5 if base_choice in _RECOVERY_MOVES else 2
+    if len(history) >= repeated_history:
+        recent = history[-repeated_history:]
+        if all(
+            previous_choice.removesuffix("-tera") == base_choice
+            and _same_active(previous_state, state, 0)
+            and _same_active(previous_state, state, 1)
+            for previous_state, previous_choice in recent
+        ) and not _meaningful_progress_since(recent[0][0], state):
+            return "repeated_action"
+
+    if choice.startswith("switch ") and len(history) >= 3:
+        recent = history[-3:]
+        if all(
+            previous_choice.startswith("switch ") for _state, previous_choice in recent
+        ):
+            first_state = recent[0][0]
+            if all(
+                _same_active(previous_state, state, 1) for previous_state, _ in recent
+            ):
+                if _opponent_made_no_hp_progress(first_state, state):
+                    return "switch_carousel"
+    return None
+
+
+def _terminal_action_reason(battle, choice: str) -> str | None:
+    move = choice.removesuffix("-tera")
+    if move not in _PIVOT_MOVES:
+        return None
+    reserves = getattr(getattr(battle, "user", None), "reserve", ()) or ()
+    for pokemon in reserves:
+        try:
+            if float(getattr(pokemon, "hp", 0)) > 0:
+                return None
+        except (TypeError, ValueError):
+            continue
+    move_data = _showdown_move_data(move)
+    if move in _NON_DAMAGE_TERMINAL_PIVOTS or str(
+        (move_data or {}).get("category", "")
+    ).lower() in {"physical", "special"}:
+        return "pivot_without_reserve"
+    return None
+
+
+def _credible_terminal_replacement(blocked_choice: str, replacement: str) -> bool:
+    blocked = blocked_choice.removesuffix("-tera")
+    if blocked in _NON_DAMAGE_TERMINAL_PIVOTS:
+        return True
+    blocked_data = _showdown_move_data(blocked) or {}
+    replacement_data = _showdown_move_data(replacement.removesuffix("-tera")) or {}
+    if str(replacement_data.get("category", "")).lower() not in {
+        "physical",
+        "special",
+    }:
+        return False
+    try:
+        blocked_power = float(blocked_data.get("basePower", 0))
+        replacement_power = float(replacement_data.get("basePower", 0))
+    except (TypeError, ValueError):
+        return False
+    return blocked_power > 0 and replacement_power >= blocked_power * 0.75
+
+
+def freeze_holdout_candidate_panel(
+    battle, provisional: dict[str, object]
+) -> list[dict[str, object]]:
+    """Freeze the eligible search-ranked candidates before certification starts."""
+    baseline = provisional.get("baseline")
+    request_actions = set(provisional.get("request_actions") or ())
+    visit_mass = provisional.get("visit_mass") or {}
+    panel = []
+    for action in provisional.get("search_actions") or ():
+        if (
+            action == baseline
+            or action not in request_actions
+            or _known_noop_reason(battle, action) is not None
+            or _prediction_sensitive_reason(battle, action) is not None
+        ):
+            continue
+        panel.append(
+            {
+                "rank": len(panel) + 1,
+                "action": action,
+                "visit_mass": float(visit_mass.get(action, 0.0)),
+            }
+        )
+        if len(panel) == HOLDOUT_CANDIDATE_COUNT:
+            break
+    return panel
+
+
+def select_final_choice(
+    battle,
+    mcts_results,
+    priors=None,
+    histories=None,
+    independent_evidence=None,
+    record_history: bool = True,
+) -> tuple[str, dict[str, object]]:
+    """Deterministically apply policy, paired evidence, no-op, and cycle gates."""
+    request_actions = request_player_actions(battle)
+    baseline, ordered, visit_mass = derive_policy_baseline(
+        mcts_results, priors, request_actions
+    )
+    raw_choice = ordered[0] if ordered else baseline
+    baseline_missing_from_search = baseline not in ordered
+    evidence_by_action = {
+        action: paired_candidate_evidence(mcts_results, action, baseline)
+        for action in ordered
+        if action != baseline
+    }
+    for action, holdout in (independent_evidence or {}).items():
+        if action in evidence_by_action and isinstance(holdout, dict):
+            evidence_by_action[action] = {
+                **holdout,
+                "adaptive_heuristic": evidence_by_action[action],
+            }
+    baseline_evidence = {
+        "candidate": baseline,
+        "baseline": baseline,
+        "coverage": 1.0,
+        "complete": True,
+        "qualified": True,
+        "paired_lower_confidence_bound": 0.0,
+        "posterior_delta": 0.0,
+        "minimum_advantage": MIN_PAIRED_ADVANTAGE,
+        "evidence_kind": "policy_baseline",
+        "heuristic_qualified": True,
+    }
+
+    if baseline_missing_from_search:
+        choice = baseline
+        reason = "policy_baseline_missing_from_search"
+        evidence = baseline_evidence
+    elif raw_choice == baseline:
+        choice = baseline
+        reason = "policy_baseline"
+        evidence = baseline_evidence
+    else:
+        qualified_candidates = [
+            action
+            for action in ordered
+            if action != baseline
+            and evidence_by_action.get(action, {}).get("qualified") is True
+        ]
+        if qualified_candidates:
+            choice = qualified_candidates[0]
+            evidence = evidence_by_action[choice]
+            reason = "independent_holdout_qualified_search_override"
+        else:
+            choice = baseline
+            evidence = evidence_by_action[raw_choice]
+            reason = "incomplete_or_nonpositive_evidence"
+
+    def qualified(action: str) -> bool:
+        return action == baseline or bool(
+            evidence_by_action.get(action, {}).get("qualified")
+        )
+
+    if histories is None:
+        histories = _CHOICE_HISTORY
+    tag = str(getattr(battle, "battle_tag", "") or id(battle))
+    if record_history:
+        if tag not in histories and len(histories) >= MAX_TRACKED_BATTLES:
+            histories.pop(next(iter(histories)))
+        history = histories.setdefault(tag, [])
+    else:
+        history = histories.get(tag, [])
+    state = public_battle_state(battle)
+    blocked_safeguard = None
+
+    noop_reason = _known_noop_reason(battle, choice)
+    if noop_reason:
+        repeated_noop = any(
+            previous_choice == choice for _state, previous_choice in history[-3:]
+        )
+        tactical_dodge = (
+            _opponent_has_known_conditional_priority(battle) and not repeated_noop
+        )
+        if not tactical_dodge:
+            safe = [
+                action
+                for action in ordered
+                if _request_allows(action, request_actions)
+                and _known_noop_reason(battle, action) is None
+            ]
+            qualified_safe = [action for action in safe if qualified(action)]
+            replacement = (qualified_safe or safe or [choice])[0]
+            if replacement != choice:
+                choice = replacement
+                reason = f"guaranteed_noop_{noop_reason}"
+                evidence = evidence_by_action.get(choice, baseline_evidence)
+
+    prediction_reason = _prediction_sensitive_reason(battle, choice)
+    if prediction_reason:
+        repeated_prediction = any(
+            previous_choice == choice for _state, previous_choice in history[-3:]
+        )
+        safe = [
+            action
+            for action in ordered
+            if action != choice
+            and _request_allows(action, request_actions)
+            and _known_noop_reason(battle, action) is None
+            and _prediction_sensitive_reason(battle, action) is None
+        ]
+        prior_by_action = {
+            action: float(probability)
+            for action, probability in (priors or ())
+            if isinstance(action, str)
+            and isinstance(probability, (int, float))
+            and not isinstance(probability, bool)
+            and math.isfinite(probability)
+        }
+        safe.sort(key=lambda action: (-prior_by_action.get(action, 0.0), action))
+        comparison = None
+        if safe:
+            comparison = paired_candidate_evidence(mcts_results, choice, safe[0])
+        if repeated_prediction or not comparison or not comparison["qualified"]:
+            qualified_safe = [action for action in safe if qualified(action)]
+            replacement = (qualified_safe or [choice])[0]
+            if replacement != choice:
+                choice = replacement
+                reason = (
+                    f"repeated_{prediction_reason}"
+                    if repeated_prediction
+                    else f"unqualified_{prediction_reason}"
+                )
+                evidence = evidence_by_action.get(choice, comparison or baseline_evidence)
+            elif safe:
+                blocked_safeguard = {
+                    "reason": prediction_reason,
+                    "cause": "no_qualified_replacement",
+                    "candidates": safe,
+                }
+    period = _repeated_no_progress_period(history, state, choice)
+    if period is not None:
+        safe = [
+            action
+            for action in ordered
+            if action != choice
+            and _request_allows(action, request_actions)
+            and _known_noop_reason(battle, action) is None
+            and _repeated_no_progress_period(history, state, action) is None
+        ]
+        qualified_safe = [action for action in safe if qualified(action)]
+        replacement = (qualified_safe or [choice])[0]
+        if replacement == choice and safe and blocked_safeguard is None:
+            blocked_safeguard = {
+                "reason": f"repeated_no_progress_period_{period}",
+                "cause": "no_qualified_replacement",
+                "candidates": safe,
+            }
+        if replacement != choice:
+            choice = replacement
+            reason = f"repeated_no_progress_period_{period}"
+            evidence = evidence_by_action.get(choice, baseline_evidence)
+    terminal_reason = _terminal_action_reason(battle, choice)
+    semantic_reason = _semantic_no_progress_reason(history, state, choice)
+    if terminal_reason or semantic_reason:
+        blocked_base = choice.removesuffix("-tera")
+        safe = [
+            action
+            for action in ordered
+            if action.removesuffix("-tera") != blocked_base
+            and _request_allows(action, request_actions)
+            and _known_noop_reason(battle, action) is None
+            and _prediction_sensitive_reason(battle, action) is None
+            and not (
+                semantic_reason == "switch_carousel" and action.startswith("switch ")
+            )
+            and not (
+                semantic_reason == "repeated_sacrificial_pivot"
+                and action.removesuffix("-tera") in _PIVOT_MOVES
+            )
+            and not (terminal_reason and _terminal_action_reason(battle, action))
+            and not (
+                terminal_reason and not _credible_terminal_replacement(choice, action)
+            )
+        ]
+        qualified_safe = [action for action in safe if qualified(action)]
+        if terminal_reason:
+            replacement = (qualified_safe or safe or [choice])[0]
+        elif semantic_reason == "losing_stall":
+            switches = [action for action in safe if action.startswith("switch ")]
+            qualified_switches = [action for action in switches if qualified(action)]
+            replacement = (qualified_switches or qualified_safe or [choice])[0]
+        else:
+            replacement = (qualified_safe or [choice])[0]
+        if (
+            semantic_reason
+            and replacement == choice
+            and safe
+            and blocked_safeguard is None
+        ):
+            blocked_safeguard = {
+                "reason": semantic_reason,
+                "cause": "no_qualified_replacement",
+                "candidates": safe,
+            }
+        if replacement != choice:
+            choice = replacement
+            reason = (
+                f"terminal_{terminal_reason}"
+                if terminal_reason
+                else f"semantic_no_progress_{semantic_reason}"
+            )
+            evidence = evidence_by_action.get(choice, baseline_evidence)
+    if record_history:
+        history.append((state, choice))
+        del history[:-12]
+
+    telemetry = {
+        "baseline": baseline,
+        "raw_choice": raw_choice,
+        "final_choice": choice,
+        "reason": reason,
+        "coverage": evidence.get("coverage", 0.0),
+        "evidence": evidence,
+        "overridden": choice != raw_choice,
+        "search_override_admitted": (
+            reason == "independent_holdout_qualified_search_override"
+            and choice != baseline
+        ),
+        "blocked_safeguard": blocked_safeguard,
+        "visit_mass": visit_mass,
+        "request_actions": sorted(request_actions or ()),
+        "search_actions": ordered,
+        "missing_request_actions": sorted((request_actions or set()) - set(ordered)),
+    }
+    return choice, telemetry
+
+
 def _mcts_result_from_payload(payload: object, engine_module=None):
-    if not isinstance(payload, dict):
-        raise RuntimeError("remote MCTS result must be an object")
+    try:
+        payload = validate_result_payload(payload)
+    except ValueError as exc:
+        raise RuntimeError(f"remote MCTS result is invalid: {exc}") from exc
     if engine_module is None:
         import poke_engine as engine_module
 
@@ -77,7 +1980,11 @@ def _mcts_result_from_payload(payload: object, engine_module=None):
             visits = row.get("visits")
             if not isinstance(move, str) or not move:
                 raise RuntimeError(f"remote MCTS {label} move is invalid")
-            if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
+            if (
+                isinstance(score, bool)
+                or not isinstance(score, (int, float))
+                or not math.isfinite(score)
+            ):
                 raise RuntimeError(f"remote MCTS {label} score is invalid")
             if isinstance(visits, bool) or not isinstance(visits, int) or visits < 0:
                 raise RuntimeError(f"remote MCTS {label} visits are invalid")
@@ -91,7 +1998,11 @@ def _mcts_result_from_payload(payload: object, engine_module=None):
         return options
 
     total_visits = payload.get("total_visits")
-    if isinstance(total_visits, bool) or not isinstance(total_visits, int) or total_visits < 0:
+    if (
+        isinstance(total_visits, bool)
+        or not isinstance(total_visits, int)
+        or total_visits < 0
+    ):
         raise RuntimeError("remote MCTS total visits are invalid")
     return engine_module.MctsResult(
         side_one=side(payload.get("side_one"), "side_one"),
@@ -112,6 +2023,78 @@ def _remote_mcts_function():
     return _REMOTE_FUNCTIONS[pid]
 
 
+def _http_mcts_call(payload: object) -> object:
+    import urllib.request
+
+    url = validate_loopback_search_url(os.environ.get("METAGROSS_REMOTE_MCTS_URL", ""))
+    token = os.environ.get("METAGROSS_REMOTE_MCTS_TOKEN")
+    if not token:
+        raise RuntimeError("METAGROSS_REMOTE_MCTS_TOKEN is required")
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload, separators=(",", ":")).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            body = response.read(MAX_REMOTE_RESPONSE_BYTES + 1)
+    except Exception as exc:
+        raise RuntimeError(
+            f"remote HTTP MCTS request failed: {type(exc).__name__}"
+        ) from exc
+    if len(body) > MAX_REMOTE_RESPONSE_BYTES:
+        raise RuntimeError("remote HTTP MCTS response is too large")
+    try:
+        return json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("remote HTTP MCTS returned invalid JSON") from exc
+
+
+MODAL_BATCH_SIZE = MODAL_CONTAINER_BATCH_SIZE
+MODAL_MAX_CONCURRENT_BATCHES = MODAL_MAX_CONTAINERS
+
+
+def _modal_executor() -> ThreadPoolExecutor:
+    global _MODAL_EXECUTOR, _MODAL_EXECUTOR_PID
+    pid = os.getpid()
+    if _MODAL_EXECUTOR is None or _MODAL_EXECUTOR_PID != pid:
+        _MODAL_EXECUTOR = ThreadPoolExecutor(
+            max_workers=MODAL_MAX_CONCURRENT_BATCHES,
+            thread_name_prefix="modal-mcts",
+        )
+        _MODAL_EXECUTOR_PID = pid
+    return _MODAL_EXECUTOR
+
+
+def _modal_mcts_call(payload: object) -> object:
+    function = _remote_mcts_function()
+    if not isinstance(payload, list) or len(payload) <= MODAL_BATCH_SIZE:
+        return function.remote(payload)
+    batches = [
+        payload[start : start + MODAL_BATCH_SIZE]
+        for start in range(0, len(payload), MODAL_BATCH_SIZE)
+    ]
+    if len(batches) > MODAL_MAX_CONCURRENT_BATCHES:
+        raise RuntimeError("remote Modal MCTS request exceeds shard concurrency")
+    responses = list(_modal_executor().map(function.remote, batches))
+    if any(not isinstance(response, list) for response in responses):
+        raise RuntimeError("remote Modal MCTS shard returned an invalid response")
+    return [row for response in responses for row in response]
+
+
+def _remote_mcts_call(payload: object) -> object:
+    transport = os.environ.get("METAGROSS_REMOTE_MCTS_TRANSPORT", "modal")
+    if transport == "modal":
+        return _modal_mcts_call(payload)
+    if transport == "http":
+        return _http_mcts_call(payload)
+    raise RuntimeError("unsupported remote MCTS transport")
+
+
 def _validate_remote_response(response: object, request_id: str, index: int) -> dict:
     if not isinstance(response, dict) or response.get("schema") != REMOTE_MCTS_SCHEMA:
         raise RuntimeError("remote MCTS returned an invalid schema")
@@ -121,8 +2104,50 @@ def _validate_remote_response(response: object, request_id: str, index: int) -> 
     expected_sha = os.environ.get("METAGROSS_REMOTE_ENGINE_SHA256")
     if not isinstance(engine, dict) or engine.get("contract") != REMOTE_ENGINE_CONTRACT:
         raise RuntimeError("remote MCTS engine contract mismatch")
+    if engine.get("source_sha256") != ENGINE_SOURCE_SHA256:
+        raise RuntimeError("remote MCTS engine source SHA-256 mismatch")
     if not expected_sha or engine.get("native_sha256") != expected_sha:
         raise RuntimeError("remote MCTS engine SHA-256 mismatch")
+    if os.environ.get("METAGROSS_REMOTE_MCTS_TRANSPORT", "modal") == "http":
+        resources = engine.get("resources")
+        expected_instance_type = os.environ.get("METAGROSS_REMOTE_MCTS_INSTANCE_TYPE")
+        if (
+            not isinstance(resources, dict)
+            or resources.get("provider") != "aws_ec2"
+            or not expected_instance_type
+            or resources.get("instance_type") != expected_instance_type
+            or resources.get("logical_cpus") != 32
+            or not isinstance(resources.get("memory_mib"), int)
+            or resources.get("memory_mib") < 60_000
+        ):
+            raise RuntimeError("remote HTTP MCTS resource identity mismatch")
+        timing = response.get("timing")
+        required_timings = {
+            "queue_ms",
+            "validation_ms",
+            "search_ms",
+            "worker_ms",
+            "batch_ms",
+        }
+        if not isinstance(timing, dict) or required_timings - set(timing):
+            raise RuntimeError("remote HTTP MCTS timing telemetry is incomplete")
+        if any(
+            isinstance(timing[name], bool)
+            or not isinstance(timing[name], (int, float))
+            or not math.isfinite(timing[name])
+            or timing[name] < 0
+            for name in required_timings
+        ):
+            raise RuntimeError("remote HTTP MCTS timing telemetry is invalid")
+        batch_size = timing.get("batch_size")
+        if (
+            isinstance(batch_size, bool)
+            or not isinstance(batch_size, int)
+            or not 1 <= batch_size <= 64
+        ):
+            raise RuntimeError("remote HTTP MCTS batch telemetry is invalid")
+        if resources.get("worker_processes") != 16:
+            raise RuntimeError("remote HTTP MCTS worker identity mismatch")
     if response.get("ok") is not True:
         error = response.get("error") or {}
         raise RuntimeError(f"remote MCTS failed: {error.get('kind', 'unknown error')}")
@@ -135,7 +2160,10 @@ def _remote_mcts_batch(state_strings: list[str], search_time_ms: int, threads: i
         requests.append(
             {
                 "schema": REMOTE_MCTS_SCHEMA,
-                "request_id": uuid.uuid4().hex,
+                "operation": "search",
+                "request_id": _deterministic_request_id(
+                    "selection-search-request", index
+                ),
                 "index": index,
                 "state": state_string,
                 "duration_ms": int(search_time_ms),
@@ -148,7 +2176,7 @@ def _remote_mcts_batch(state_strings: list[str], search_time_ms: int, threads: i
             }
         )
     started = time.monotonic()
-    responses = _remote_mcts_function().remote(requests)
+    responses = _remote_mcts_call(requests)
     rpc_ms = round((time.monotonic() - started) * 1000, 3)
     if not isinstance(responses, list) or len(responses) != len(requests):
         raise RuntimeError("remote MCTS returned the wrong batch size")
@@ -166,34 +2194,145 @@ def _remote_mcts_batch(state_strings: list[str], search_time_ms: int, threads: i
         "rpc_ms": rpc_ms,
         "worlds": len(requests),
         "engine": responses[0].get("engine"),
+        "state_hashes": [state_sha256(state) for state in state_strings],
+        "request_ids": [request["request_id"] for request in requests],
         "timings": timings,
     }
     return results
 
 
-def _remote_find_best_move(battle, search_main):
-    battle = search_main.deepcopy(battle)
-    if battle.team_preview:
-        battle.user.active = battle.user.reserve.pop(0)
-        battle.opponent.active = battle.opponent.reserve.pop(0)
+def _remote_holdout_batch(
+    state_strings: list[str],
+    baseline: str,
+    candidate: str,
+    continuation_steps: int,
+    seeds: list[int],
+    candidate_rank: int,
+    *,
+    request_channel: str = "certification-request",
+    telemetry_key: str = "holdout",
+) -> list[dict[str, object]]:
+    if len(seeds) != len(state_strings):
+        raise ValueError("holdout seeds must exactly cover their worlds")
+    requests = [
+        {
+            "schema": REMOTE_MCTS_SCHEMA,
+            "operation": "paired_holdout",
+            "request_id": _deterministic_request_id(
+                request_channel,
+                f"{candidate_rank}:{continuation_steps}:{index}",
+            ),
+            "index": index,
+            "state": state_string,
+            "baseline_action": baseline,
+            "candidate_action": candidate,
+            "rollouts": HOLDOUT_ROLLOUTS,
+            "continuation_iterations": HOLDOUT_CONTINUATION_ITERATIONS,
+            "continuation_steps": continuation_steps,
+            "seed": seeds[index],
+            "opponent_priors": [
+                list(row) for row in (_PRIOR_STATE["opp_priors"] or [])
+            ]
+            or None,
+        }
+        for index, state_string in enumerate(state_strings)
+    ]
+    started = time.monotonic()
+    responses = _remote_mcts_call(requests)
+    rpc_ms = round((time.monotonic() - started) * 1000, 3)
+    if not isinstance(responses, list) or len(responses) != len(requests):
+        raise RuntimeError("remote holdout returned the wrong batch size")
+    results = []
+    timings = []
+    for request, response in zip(requests, responses, strict=True):
+        validated = _validate_remote_response(
+            response, request["request_id"], request["index"]
+        )
+        try:
+            results.append(
+                validate_holdout_result_payload(
+                    validated.get("result"),
+                    expected_pairs=request["rollouts"],
+                    maximum_executed=(
+                        2
+                        * request["rollouts"]
+                        * request["continuation_iterations"]
+                        * request["continuation_steps"]
+                    ),
+                )
+            )
+        except ValueError as exc:
+            raise RuntimeError(f"remote holdout result is invalid: {exc}") from exc
+        timings.append(validated.get("timing"))
+    remote = _PRIOR_STATE.get("remote_search") or {}
+    holdout_timings = remote.setdefault(telemetry_key, [])
+    holdout_timings.append(
+        {
+            "continuation_steps": continuation_steps,
+            "rpc_ms": rpc_ms,
+            "worlds": len(requests),
+            "candidate": candidate,
+            "candidate_rank": candidate_rank,
+            "seeds": seeds,
+            "state_hashes": [state_sha256(state) for state in state_strings],
+            "request_ids": [request["request_id"] for request in requests],
+            "opponent_priors": requests[0]["opponent_priors"] if requests else None,
+            "timings": timings,
+        }
+    )
+    _PRIOR_STATE["remote_search"] = remote
+    return results
 
-    if battle.battle_type == search_main.BattleType.RANDOM_BATTLE:
-        num_battles, search_time_ms = search_main.search_time_num_battles_randombattles(
-            battle
-        )
-        battles = search_main.prepare_random_battles(battle, num_battles)
-    elif battle.battle_type == search_main.BattleType.BATTLE_FACTORY:
-        num_battles, search_time_ms = search_main.search_time_num_battles_standard_battle(
-            battle
-        )
-        battles = search_main.prepare_random_battles(battle, num_battles)
-    elif battle.battle_type == search_main.BattleType.STANDARD_BATTLE:
-        num_battles, search_time_ms = search_main.search_time_num_battles_standard_battle(
-            battle
-        )
-        battles = search_main.prepare_battles(battle, num_battles)
+
+def _prepare_search_battles(battle, search_main, sampling_channel: str | None = None):
+    sampled_battle = search_main.deepcopy(battle)
+    if sampled_battle.team_preview:
+        sampled_battle.user.active = sampled_battle.user.reserve.pop(0)
+        sampled_battle.opponent.active = sampled_battle.opponent.reserve.pop(0)
+    def sample(rng=None):
+        if sampled_battle.battle_type == search_main.BattleType.RANDOM_BATTLE:
+            count, duration = search_main.search_time_num_battles_randombattles(
+                sampled_battle
+            )
+            worlds = search_main.prepare_random_battles(
+                sampled_battle, count, rng=rng
+            )
+        elif sampled_battle.battle_type == search_main.BattleType.BATTLE_FACTORY:
+            count, duration = search_main.search_time_num_battles_standard_battle(
+                sampled_battle
+            )
+            worlds = search_main.prepare_random_battles(
+                sampled_battle, count, rng=rng
+            )
+        elif sampled_battle.battle_type == search_main.BattleType.STANDARD_BATTLE:
+            count, duration = search_main.search_time_num_battles_standard_battle(
+                sampled_battle
+            )
+            worlds = search_main.prepare_battles(sampled_battle, count)
+        else:
+            raise ValueError("Unsupported battle type")
+        return worlds, count, duration
+
+    if sampling_channel is None:
+        battles, num_battles, search_time_ms = sample()
     else:
-        raise ValueError("Unsupported battle type")
+        sampling_seed = _derived_seed(sampling_channel, 0, required=True)
+        assert sampling_seed is not None
+        if sampled_battle.battle_type in {
+            search_main.BattleType.RANDOM_BATTLE,
+            search_main.BattleType.BATTLE_FACTORY,
+        }:
+            battles, num_battles, search_time_ms = sample(random.Random(sampling_seed))
+        else:
+            with seeded_global_random(sampling_seed):
+                battles, num_battles, search_time_ms = sample()
+    return battles, num_battles, search_time_ms
+
+
+def _remote_find_best_move(battle, search_main, harness: DecisionHarness):
+    battles, num_battles, search_time_ms = harness.belief.expand(
+        battle, search_main, "selection-worlds"
+    )
 
     search_main.logger.info("Searching for a move using remote MCTS...")
     search_main.logger.info(
@@ -205,10 +2344,17 @@ def _remote_find_best_move(battle, search_main):
     ]
     from config import FoulPlayConfig
 
-    results = _remote_mcts_batch(states, search_time_ms, FoulPlayConfig.search_threads)
+    results = harness.search.evaluate(
+        states, search_time_ms, FoulPlayConfig.search_threads
+    )
+    _PRIOR_STATE["remote_search"]["sampling_seed"] = _derived_seed(
+        "selection-worlds", 0, required=True
+    )
     weighted = [
         (result, chance, index)
-        for index, (result, (_sampled, chance)) in enumerate(zip(results, battles, strict=True))
+        for index, (result, (_sampled, chance)) in enumerate(
+            zip(results, battles, strict=True)
+        )
     ]
     return search_main.select_move_from_mcts_results(weighted)
 
@@ -226,7 +2372,9 @@ def validate_poke_engine_provenance(provenance: dict, expected_source: Path) -> 
     required = {"state", "duration_ms", "threads", "s1_priors", "s2_priors", "c_puct"}
     missing = required - set(parameters)
     if missing:
-        raise RuntimeError(f"production poke-engine missing MCTS parameters: {sorted(missing)}")
+        raise RuntimeError(
+            f"production poke-engine missing MCTS parameters: {sorted(missing)}"
+        )
     if "seed" in parameters:
         raise RuntimeError("experimental poke-engine MCTS signature detected")
 
@@ -375,19 +2523,27 @@ def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
     from config import FoulPlayConfig
 
     if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
-        request_id = uuid.uuid4().hex
+        request_id = _deterministic_request_id("search-request", int(index))
         request = {
             "schema": REMOTE_MCTS_SCHEMA,
+            "operation": "search",
             "request_id": request_id,
             "index": int(index),
             "state": state_str,
             "duration_ms": int(search_time_ms),
             "threads": int(FoulPlayConfig.search_threads),
             "s1_priors": [list(row) for row in (_PRIOR_STATE["priors"] or [])] or None,
-            "s2_priors": [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])] or None,
+            "s2_priors": [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])]
+            or None,
             "c_puct": float(_PRIOR_STATE["cpuct"]),
         }
-        response = _remote_mcts_function().remote(request)
+        if os.environ.get("METAGROSS_REMOTE_MCTS_TRANSPORT", "modal") == "http":
+            responses = _remote_mcts_call([request])
+            if not isinstance(responses, list) or len(responses) != 1:
+                raise RuntimeError("remote MCTS returned the wrong batch size")
+            response = responses[0]
+        else:
+            response = _remote_mcts_call(request)
         validated = _validate_remote_response(response, request_id, int(index))
         return _mcts_result_from_payload(validated.get("result"), poke_engine)
 
@@ -406,31 +2562,93 @@ def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
     )
 
 
-def patch_root_priors() -> None:
+def build_decision_harness() -> DecisionHarness:
+    """Compose the production adapters without changing their algorithms."""
+    import urllib.request
+    from urllib.parse import quote
+
+    server_url = os.environ.get("METAGROSS_PRIOR_SERVER")
+    if not server_url:
+        raise RuntimeError("METAGROSS_PRIOR_SERVER is required")
+    namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE", "")
+
+    def observe(tag: str, lines: list[str]) -> None:
+        request = urllib.request.Request(
+            f"{server_url}/lines",
+            data=json.dumps(
+                {"tag": tag, "namespace": namespace, "lines": lines}
+            ).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=5.0):
+            pass
+
+    def propose(battle) -> PolicySnapshot:
+        tag = getattr(battle, "battle_tag", None)
+        if not tag:
+            raise RuntimeError("battle has no tag")
+        full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
+        from config import FoulPlayConfig
+
+        username = quote(str(getattr(FoulPlayConfig, "username", "") or ""))
+        rqid = getattr(battle, "rqid", None)
+        if isinstance(rqid, bool) or not isinstance(rqid, int) or rqid < 0:
+            raise RuntimeError("battle has no valid rqid")
+        with urllib.request.urlopen(
+            f"{server_url}/priors?tag={full_tag}"
+            f"&username={username}&namespace={quote(namespace)}&rqid={rqid}",
+            timeout=30,
+        ) as response:
+            payload = json.loads(response.read())
+        priors = payload.get("priors") or {}
+        if not priors:
+            raise RuntimeError("policy server returned no player priors")
+        if payload.get("rqid") != rqid:
+            raise RuntimeError("policy server returned stale request priors")
+        opponent_priors = sanitize_opponent_priors(
+            battle, payload.get("opp_priors") or {}
+        )
+        return PolicySnapshot(
+            priors=tuple(
+                (name, float(probability)) for name, probability in priors.items()
+            ),
+            opponent_priors=(
+                tuple(opponent_priors) if opponent_priors is not None else None
+            ),
+            context={
+                "tag": full_tag,
+                "decision_idx": payload.get("decision_idx"),
+                "battle_turn": payload.get("battle_turn"),
+            },
+        )
+
+    return DecisionHarness(
+        policy=CallablePolicy(observe, propose),
+        belief=CallableBelief(_prepare_search_battles),
+        search=CallableSearch(_remote_mcts_batch, _remote_holdout_batch),
+        controller=CallableController(select_final_choice),
+        verifier=CallableVerifier(
+            robust_holdout_certificate, combined_robust_holdout_certificate
+        ),
+    )
+
+
+def patch_root_priors(harness: DecisionHarness | None = None) -> None:
     """Connect Foul Play's search roots to the local r1 policy server."""
     server_url = os.environ.get("METAGROSS_PRIOR_SERVER")
     if not server_url:
         raise RuntimeError("METAGROSS_PRIOR_SERVER is required")
+    if harness is None:
+        harness = build_decision_harness()
 
     import logging
-    import urllib.request
-    from urllib.parse import quote
 
     import fp.run_battle as run_battle
     import fp.search.main as search_main
     from fp.websocket_client import PSWebsocketClient
 
     logger = logging.getLogger("fp.root_priors")
-    namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE", "")
     _PRIOR_STATE["cpuct"] = float(os.environ.get("METAGROSS_CPUCT", "2.0"))
-
-    def post(path: str, payload: dict, timeout: float = 5.0):
-        request = urllib.request.Request(
-            f"{server_url}{path}",
-            data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        return urllib.request.urlopen(request, timeout=timeout)
 
     original_receive = PSWebsocketClient.receive_message
 
@@ -443,30 +2661,187 @@ def patch_root_priors() -> None:
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(
                     None,
-                    post,
-                    "/lines",
-                    {"tag": tag, "namespace": namespace, "lines": lines[1:]},
+                    harness.policy.observe,
+                    tag,
+                    lines[1:],
                 )
             except Exception as exc:
                 if os.environ.get("METAGROSS_REQUIRE_PRIORS") == "1":
-                    raise RuntimeError(f"required protocol tee failed: {exc!r}") from exc
+                    raise RuntimeError(
+                        f"required protocol tee failed: {exc!r}"
+                    ) from exc
                 logger.warning("prior protocol tee failed: %r", exc)
         return message
 
     PSWebsocketClient.receive_message = receive_with_tee
     search_main.get_result_from_mcts = _mcts_with_root_priors
     original_find_best_move = search_main.find_best_move
-    original_select_move = search_main.select_move_from_mcts_results
 
     def select_move_with_dump(mcts_results):
-        choice = original_select_move(mcts_results)
+        global _HOLDOUT_DECISION_SEQUENCE
+        alpha_sequence_index = _HOLDOUT_DECISION_SEQUENCE
+        _HOLDOUT_DECISION_SEQUENCE += 1
+        _provisional, provisional = harness.controller.select(
+            _PRIOR_STATE["battle"],
+            mcts_results,
+            _PRIOR_STATE["priors"],
+            record_history=False,
+        )
+        baseline = provisional["baseline"]
+        candidate_panel = freeze_holdout_candidate_panel(
+            _PRIOR_STATE["battle"], provisional
+        )
+        holdout_by_action = {}
+        holdout_panel = None
+        if candidate_panel and os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
+            try:
+                fresh_battles, _count, _duration = harness.belief.expand(
+                    _PRIOR_STATE["battle"], search_main, "certification-worlds"
+                )
+                fresh_states = [
+                    search_main.battle_to_poke_engine_state(sampled).to_string()
+                    for sampled, _chance in fresh_battles
+                ]
+                fresh_weights = [
+                    float(chance) for _sampled, chance in fresh_battles
+                ]
+                state_hashes = [state_sha256(state) for state in fresh_states]
+                cluster_hashes = list(state_hashes)
+                holdout_seeds = [
+                    _derived_seed("holdout-tape", index, required=True)
+                    for index in range(len(fresh_states))
+                ]
+                if any(seed is None for seed in holdout_seeds):
+                    raise RuntimeError("holdout tape derivation failed")
+                for panel_row in candidate_panel:
+                    candidate = str(panel_row["action"])
+                    candidate_rank = int(panel_row["rank"])
+                    certificates = {}
+                    for horizon_index, continuation_steps in enumerate(
+                        HOLDOUT_CONTINUATION_HORIZONS
+                    ):
+                        holdout_results = harness.search.holdout(
+                            fresh_states,
+                            baseline,
+                            candidate,
+                            continuation_steps,
+                            holdout_seeds,
+                            candidate_rank,
+                        )
+                        certificate = harness.verifier.certify(
+                            holdout_results,
+                            fresh_weights,
+                            state_hashes,
+                            cluster_hashes,
+                            candidate,
+                            baseline,
+                            alpha_sequence_index,
+                            candidate_rank,
+                            horizon_index,
+                        )
+                        certificates[continuation_steps] = certificate
+                        if certificate["qualified"] is not True:
+                            break
+                    holdout_by_action[candidate] = (
+                        harness.verifier.combine(certificates)
+                    )
+                holdout_panel = {
+                    "schema_version": 1,
+                    "evidence_kind": "frozen_top_k_adaptive_holdout_panel_v5",
+                    "baseline": baseline,
+                    "alpha_sequence_index": alpha_sequence_index,
+                    "candidate_panel": candidate_panel,
+                    "selection_cohort": {
+                        "sampling_seed": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "sampling_seed"
+                        ),
+                        "state_hashes": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "state_hashes"
+                        ),
+                        "request_ids": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "request_ids"
+                        ),
+                    },
+                    "certification_cohort": {
+                        "sampling_seed": _derived_seed(
+                            "certification-worlds", 0, required=True
+                        ),
+                        "state_hashes": state_hashes,
+                        "cluster_hashes": cluster_hashes,
+                        "weights": fresh_weights,
+                        "tape_seeds": holdout_seeds,
+                    },
+                    "opponent_priors": _PRIOR_STATE["opp_priors"],
+                    "opponent_uniform_mix": HOLDOUT_OPPONENT_UNIFORM_MIX,
+                    "certificates_by_action": holdout_by_action,
+                    "complete": True,
+                    "qualified_actions": [
+                        row["action"]
+                        for row in candidate_panel
+                        if holdout_by_action[row["action"]]["qualified"] is True
+                    ],
+                }
+            except Exception as exc:
+                logger.error("required independent holdout failed: %s", type(exc).__name__)
+                raise RuntimeError("required independent holdout failed") from exc
+        choice, choice_override = harness.controller.select(
+            _PRIOR_STATE["battle"],
+            mcts_results,
+            _PRIOR_STATE["priors"],
+            independent_evidence=holdout_by_action or None,
+        )
+        selected_holdout = holdout_by_action.get(choice)
+        if selected_holdout is None and candidate_panel:
+            selected_holdout = holdout_by_action.get(candidate_panel[0]["action"])
+        choice_override["holdout"] = selected_holdout
+        choice_override["holdout_panel"] = holdout_panel
+        choice_override["candidate_panel"] = candidate_panel
+        if choice_override["overridden"]:
+            logger.warning(
+                "final-choice override (%s): %s -> %s",
+                choice_override["reason"],
+                choice_override["raw_choice"],
+                choice,
+            )
+        ledger_path = os.environ.get("METAGROSS_HOLDOUT_LEDGER")
+        if ledger_path:
+            append_ledger_row(
+                Path(ledger_path),
+                {
+                    "schema_version": 1,
+                    "sequence_index": alpha_sequence_index,
+                    "context": _PRIOR_STATE["context"],
+                    "baseline": baseline,
+                    "candidate_panel": candidate_panel,
+                    "selection_cohort": {
+                        "sampling_seed": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "sampling_seed"
+                        ),
+                        "state_hashes": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "state_hashes"
+                        ),
+                        "request_ids": (_PRIOR_STATE["remote_search"] or {}).get(
+                            "request_ids"
+                        ),
+                        "weights": [
+                            float(sample_chance)
+                            for _result, sample_chance, _index in mcts_results
+                        ],
+                    },
+                    "certification": holdout_panel,
+                    "final_choice": choice,
+                    "final_reason": choice_override["reason"],
+                },
+            )
         _append_jsonl(
             "METAGROSS_SEARCH_DUMP",
             {
-                "schema": 1,
+                "schema": 2,
                 "time_ns": time.time_ns(),
                 "context": _PRIOR_STATE["context"],
                 "choice": choice,
+                "original_choice": choice_override["raw_choice"],
+                "choice_override": choice_override,
                 "player_priors": _PRIOR_STATE["priors"],
                 "opponent_priors": _PRIOR_STATE["opp_priors"],
                 "remote_search": _PRIOR_STATE["remote_search"],
@@ -489,46 +2864,26 @@ def patch_root_priors() -> None:
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["context"] = None
         _PRIOR_STATE["remote_search"] = None
+        _PRIOR_STATE["battle"] = battle
         try:
-            tag = getattr(battle, "battle_tag", None)
-            if not tag:
-                raise RuntimeError("battle has no tag")
-            full_tag = tag if tag.startswith("battle-") else f"battle-{tag}"
-            from config import FoulPlayConfig
-
-            username = quote(str(getattr(FoulPlayConfig, "username", "") or ""))
-            with urllib.request.urlopen(
-                f"{server_url}/priors?tag={full_tag}"
-                f"&username={username}&namespace={quote(namespace)}",
-                timeout=30,
-            ) as response:
-                payload = json.loads(response.read())
-
-            priors = payload.get("priors") or {}
-            opponent_priors = payload.get("opp_priors") or {}
-            if not priors:
-                raise RuntimeError("policy server returned no player priors")
-            _PRIOR_STATE["priors"] = [
-                (name, float(probability)) for name, probability in priors.items()
-            ]
-            _PRIOR_STATE["opp_priors"] = [
-                (name, float(probability))
-                for name, probability in opponent_priors.items()
-            ] or None
-            _PRIOR_STATE["context"] = {
-                "tag": full_tag,
-                "decision_idx": payload.get("decision_idx"),
-                "battle_turn": payload.get("battle_turn"),
-            }
+            snapshot = harness.policy.propose(battle)
+            _PRIOR_STATE["priors"] = list(snapshot.priors)
+            _PRIOR_STATE["opp_priors"] = (
+                list(snapshot.opponent_priors)
+                if snapshot.opponent_priors is not None
+                else None
+            )
+            _PRIOR_STATE["context"] = dict(snapshot.context)
             logger.info(
-                f"loaded {len(priors)} player and {len(opponent_priors)} opponent priors"
+                f"loaded {len(snapshot.priors)} player and "
+                f"{len(_PRIOR_STATE['opp_priors'] or ())} effective opponent priors"
             )
         except Exception as exc:
             if os.environ.get("METAGROSS_REQUIRE_PRIORS", "1") == "1":
                 raise RuntimeError(f"required prior fetch failed: {exc!r}") from exc
             logger.warning("prior fetch failed; using unguided search: %r", exc)
         if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
-            return _remote_find_best_move(battle, search_main)
+            return _remote_find_best_move(battle, search_main, harness)
         return original_find_best_move(battle)
 
     search_main.find_best_move = find_best_move_with_priors
@@ -541,10 +2896,14 @@ def patch_root_priors() -> None:
 def main() -> None:
     root = Path(__file__).resolve().parents[2]
     provenance = inspect_poke_engine()
-    print(f"POKE_ENGINE_PROVENANCE {json.dumps(provenance, sort_keys=True)}", flush=True)
-    foul_play_dir = Path(
-        os.environ.get("FOUL_PLAY_DIR", root / "srcs" / "vendor" / "foul-play")
-    ).expanduser().resolve()
+    print(
+        f"POKE_ENGINE_PROVENANCE {json.dumps(provenance, sort_keys=True)}", flush=True
+    )
+    foul_play_dir = (
+        Path(os.environ.get("FOUL_PLAY_DIR", root / "srcs" / "vendor" / "foul-play"))
+        .expanduser()
+        .resolve()
+    )
     if sys.platform == "darwin":
         try:
             mp.set_start_method("fork")
@@ -554,7 +2913,7 @@ def main() -> None:
     os.chdir(foul_play_dir)
     sys.path.insert(0, str(foul_play_dir))
     patch_foul_play_protocol()
-    patch_root_priors()
+    patch_root_priors(build_decision_harness())
 
     from run import run_foul_play
     from config import FoulPlayConfig

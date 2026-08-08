@@ -874,6 +874,13 @@ impl State {
 
         let (mut s1_options, mut s2_options) = self.get_all_options();
 
+        if !self.s1_can_tera {
+            s1_options.retain(|choice| !matches!(choice, MoveChoice::MoveTera(_)));
+        }
+        if !self.s2_can_tera {
+            s2_options.retain(|choice| !matches!(choice, MoveChoice::MoveTera(_)));
+        }
+
         if self.side_one.force_trapped {
             s1_options.retain(|x| match x {
                 MoveChoice::Move(_) | MoveChoice::MoveTera(_) | MoveChoice::MoveMega(_) => true,
@@ -896,7 +903,7 @@ impl State {
                 &self.side_one.last_used_move,
                 encored,
                 taunted,
-                self.side_one.can_use_tera(),
+                self.s1_can_tera && self.side_one.can_use_tera(),
             );
         }
 
@@ -922,7 +929,7 @@ impl State {
                 &self.side_two.last_used_move,
                 encored,
                 taunted,
-                self.side_two.can_use_tera(),
+                self.s2_can_tera && self.side_two.can_use_tera(),
             );
         }
 

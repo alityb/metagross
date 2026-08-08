@@ -13,6 +13,10 @@ use poke_engine::engine::state::{MoveChoice, PokemonVolatileStatus, Terrain, Wea
 use poke_engine::instruction::{Instruction, StateInstructions};
 use poke_engine::mcts::{perform_mcts, MctsResult, MctsSideResult};
 use poke_engine::mcts_threaded::perform_mcts_shared_tree;
+use poke_engine::paired_root::{
+    paired_root_policy_evaluation_with_opponent_priors as evaluate_paired_root,
+    PairedRootPolicyEvaluation,
+};
 use poke_engine::pokemon::PokemonName;
 use poke_engine::search::iterative_deepen_expectiminimax;
 use poke_engine::state::{
@@ -44,6 +48,8 @@ pub struct PyState {
     pub trick_room: bool,
     pub trick_room_turns_remaining: i8,
     pub team_preview: bool,
+    pub s1_can_tera: bool,
+    pub s2_can_tera: bool,
     pub s1_threat: f32,
     pub s2_threat: f32,
     pub scout_value: f32,
@@ -63,6 +69,8 @@ impl From<State> for PyState {
             trick_room: other.trick_room.active,
             trick_room_turns_remaining: other.trick_room.turns_remaining,
             team_preview: other.team_preview,
+            s1_can_tera: other.s1_can_tera,
+            s2_can_tera: other.s2_can_tera,
             s1_threat: other.s1_threat,
             s2_threat: other.s2_threat,
             scout_value: other.scout_value,
@@ -90,6 +98,8 @@ impl Into<State> for PyState {
                 turns_remaining: self.trick_room_turns_remaining,
             },
             team_preview: self.team_preview,
+            s1_can_tera: self.s1_can_tera,
+            s2_can_tera: self.s2_can_tera,
             use_last_used_move: false,
             use_damage_dealt: false,
             s1_threat: self.s1_threat,
@@ -133,6 +143,8 @@ impl PyState {
         scout_value=0.0,
         threat_matrix=vec![0.0; 36],
         wincon_matrix=vec![0.0; 36],
+        s1_can_tera=true,
+        s2_can_tera=true,
     ))]
     fn new(
         side_one: PySide,
@@ -149,6 +161,8 @@ impl PyState {
         scout_value: f32,
         threat_matrix: Vec<f32>,
         wincon_matrix: Vec<f32>,
+        s1_can_tera: bool,
+        s2_can_tera: bool,
     ) -> Self {
         PyState {
             side_one,
@@ -160,6 +174,8 @@ impl PyState {
             trick_room,
             trick_room_turns_remaining,
             team_preview,
+            s1_can_tera,
+            s2_can_tera,
             s1_threat,
             s2_threat,
             scout_value,
@@ -923,6 +939,60 @@ impl PyMctsResult {
 
 #[derive(Clone)]
 #[pyclass(get_all)]
+struct PyPairedRootPolicyEvaluation {
+    pairs: u32,
+    baseline_sum: f64,
+    candidate_sum: f64,
+    delta_sum: f64,
+    delta_squared_sum: f64,
+    catastrophic_count: u32,
+    candidate_catastrophic_count: u32,
+    baseline_catastrophic_count: u32,
+    candidate_catastrophic_severity_sum: f64,
+    baseline_catastrophic_severity_sum: f64,
+    candidate_better_count: u32,
+    baseline_better_count: u32,
+    equal_count: u32,
+    baseline_terminal_count: u32,
+    candidate_terminal_count: u32,
+    baseline_nonterminal_evaluation_delta_sum: f64,
+    candidate_nonterminal_evaluation_delta_sum: f64,
+    baseline_nonterminal_count: u32,
+    candidate_nonterminal_count: u32,
+    continuation_iterations_executed: u64,
+}
+
+impl From<PairedRootPolicyEvaluation> for PyPairedRootPolicyEvaluation {
+    fn from(result: PairedRootPolicyEvaluation) -> Self {
+        Self {
+            pairs: result.pairs,
+            baseline_sum: result.baseline_sum,
+            candidate_sum: result.candidate_sum,
+            delta_sum: result.delta_sum,
+            delta_squared_sum: result.delta_squared_sum,
+            catastrophic_count: result.catastrophic_count,
+            candidate_catastrophic_count: result.candidate_catastrophic_count,
+            baseline_catastrophic_count: result.baseline_catastrophic_count,
+            candidate_catastrophic_severity_sum: result.candidate_catastrophic_severity_sum,
+            baseline_catastrophic_severity_sum: result.baseline_catastrophic_severity_sum,
+            candidate_better_count: result.candidate_better_count,
+            baseline_better_count: result.baseline_better_count,
+            equal_count: result.equal_count,
+            baseline_terminal_count: result.baseline_terminal_count,
+            candidate_terminal_count: result.candidate_terminal_count,
+            baseline_nonterminal_evaluation_delta_sum: result
+                .baseline_nonterminal_evaluation_delta_sum,
+            candidate_nonterminal_evaluation_delta_sum: result
+                .candidate_nonterminal_evaluation_delta_sum,
+            baseline_nonterminal_count: result.baseline_nonterminal_count,
+            candidate_nonterminal_count: result.candidate_nonterminal_count,
+            continuation_iterations_executed: result.continuation_iterations_executed,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
 struct PyIterativeDeepeningResult {
     s1: Vec<String>,
     s2: Vec<String>,
@@ -956,24 +1026,47 @@ fn match_priors_to_options(
     priors: &Option<Vec<(String, f32)>>,
     options: &[MoveChoice],
     side: &Side,
-) -> Option<Vec<Option<f32>>> {
-    let pairs = priors.as_ref()?;
-    let map: HashMap<&str, f32> = pairs.iter().map(|(k, v)| (k.as_str(), *v)).collect();
-    // moves not present in the prior list get prior 0 (suppressed, PUCT node)
-    let matched: Vec<f32> = options
-        .iter()
-        .map(|mc| *map.get(movechoice_to_string(side, mc).as_str()).unwrap_or(&0.0))
-        .collect();
-    let total: f32 = matched.iter().sum();
-    if total <= 0.0 {
-        return None;
+) -> PyResult<Option<Vec<Option<f32>>>> {
+    let Some(pairs) = priors.as_ref() else {
+        return Ok(None);
+    };
+    let mut map = HashMap::with_capacity(pairs.len());
+    let mut supplied_total = 0.0_f32;
+    for (action, probability) in pairs {
+        if action.is_empty()
+            || !probability.is_finite()
+            || *probability < 0.0
+            || *probability > 1.0
+            || map.insert(action.as_str(), *probability).is_some()
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "priors contain an invalid or duplicate entry",
+            ));
+        }
+        supplied_total += probability;
     }
-    Some(
-        matched
-            .into_iter()
-            .map(|v| Some(v / total))
-            .collect(),
-    )
+    if !supplied_total.is_finite() || supplied_total <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "priors must contain positive finite probability mass",
+        ));
+    }
+
+    let mut matched: Vec<Option<f32>> = options
+        .iter()
+        .map(|mc| {
+            map.get(movechoice_to_string(side, mc).as_str())
+                .copied()
+                .filter(|probability| *probability > 0.0)
+        })
+        .collect();
+    let matched_total: f32 = matched.iter().flatten().sum();
+    if matched_total <= 0.0 {
+        return Ok(None);
+    }
+    for probability in matched.iter_mut().flatten() {
+        *probability /= matched_total;
+    }
+    Ok(Some(matched))
 }
 
 #[pyfunction]
@@ -987,24 +1080,62 @@ fn mcts(
     s2_priors: Option<Vec<(String, f32)>>,
     c_puct: f32,
 ) -> PyResult<PyMctsResult> {
+    if threads > 1 && (s1_priors.is_some() || s2_priors.is_some()) {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "root priors require single-threaded MCTS",
+        ));
+    }
     let mut state: State = py_state.into();
     let duration = Duration::from_millis(duration_ms);
     let (s1_options, s2_options) = state.root_get_all_options();
-    let s1_priors_vec = match_priors_to_options(&s1_priors, &s1_options, &state.side_one);
-    let s2_priors_vec = match_priors_to_options(&s2_priors, &s2_options, &state.side_two);
+    let s1_priors_vec = match_priors_to_options(&s1_priors, &s1_options, &state.side_one)?;
+    let s2_priors_vec = match_priors_to_options(&s2_priors, &s2_options, &state.side_two)?;
     let mcts_result = if threads > 1 {
         perform_mcts_shared_tree(
             &mut state, s1_options, s2_options, duration, iterations, threads,
         )
     } else {
         perform_mcts(
-            &mut state, s1_options, s2_options, duration, iterations,
-            s1_priors_vec, s2_priors_vec, c_puct,
+            &mut state,
+            s1_options,
+            s2_options,
+            duration,
+            iterations,
+            s1_priors_vec,
+            s2_priors_vec,
+            c_puct,
         )
     };
 
     let py_mcts_result = PyMctsResult::from_mcts_result(mcts_result, &state);
     Ok(py_mcts_result)
+}
+
+#[pyfunction]
+#[pyo3(signature = (py_state, baseline_action, candidate_action, rollouts, continuation_iterations, continuation_steps, seed, opponent_priors=None))]
+fn paired_root_policy_evaluation(
+    py_state: PyState,
+    baseline_action: String,
+    candidate_action: String,
+    rollouts: u32,
+    continuation_iterations: u32,
+    continuation_steps: u32,
+    seed: u64,
+    opponent_priors: Option<Vec<(String, f32)>>,
+) -> PyResult<PyPairedRootPolicyEvaluation> {
+    let state: State = py_state.into();
+    evaluate_paired_root(
+        &state,
+        &baseline_action,
+        &candidate_action,
+        rollouts,
+        continuation_iterations,
+        continuation_steps,
+        seed,
+        opponent_priors.as_deref(),
+    )
+    .map(Into::into)
+    .map_err(|error| pyo3::exceptions::PyValueError::new_err(error.to_string()))
 }
 
 #[pyfunction]
@@ -1219,6 +1350,7 @@ fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_instructions, m)?)?;
     m.add_function(wrap_pyfunction!(id, m)?)?;
     m.add_function(wrap_pyfunction!(mcts, m)?)?;
+    m.add_function(wrap_pyfunction!(paired_root_policy_evaluation, m)?)?;
     m.add_function(wrap_pyfunction!(set_belief, m)?)?;
     m.add_function(wrap_pyfunction!(set_threat_matrix, m)?)?;
     m.add_function(wrap_pyfunction!(set_wincon_matrix, m)?)?;
@@ -1230,5 +1362,6 @@ fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMove>()?;
     m.add_class::<PyStateInstructions>()?;
     m.add_class::<PyInstruction>()?;
+    m.add_class::<PyPairedRootPolicyEvaluation>()?;
     Ok(())
 }

@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from .poke_engine import *
 
+_rust_paired_root_policy_evaluation = paired_root_policy_evaluation
+
 
 class Weather(StrEnum):
     NONE = "none"
@@ -145,9 +147,113 @@ class MctsResult:
         )
 
 
+@dataclass(frozen=True)
+class PairedRootPolicyEvaluation:
+    pairs: int
+    baseline_sum: float
+    candidate_sum: float
+    delta_sum: float
+    delta_squared_sum: float
+    catastrophic_count: int
+    candidate_better_count: int
+    baseline_better_count: int
+    equal_count: int
+    baseline_terminal_count: int
+    candidate_terminal_count: int
+    continuation_iterations_executed: int
+    candidate_catastrophic_count: int = 0
+    baseline_catastrophic_count: int = 0
+    candidate_catastrophic_severity_sum: float = 0.0
+    baseline_catastrophic_severity_sum: float = 0.0
+    baseline_nonterminal_evaluation_delta_sum: float = 0.0
+    candidate_nonterminal_evaluation_delta_sum: float = 0.0
+    baseline_nonterminal_count: int = 0
+    candidate_nonterminal_count: int = 0
+
+    @classmethod
+    def _from_rust(cls, result):
+        return cls(
+            pairs=result.pairs,
+            baseline_sum=result.baseline_sum,
+            candidate_sum=result.candidate_sum,
+            delta_sum=result.delta_sum,
+            delta_squared_sum=result.delta_squared_sum,
+            catastrophic_count=result.catastrophic_count,
+            candidate_better_count=result.candidate_better_count,
+            baseline_better_count=result.baseline_better_count,
+            equal_count=result.equal_count,
+            baseline_terminal_count=result.baseline_terminal_count,
+            candidate_terminal_count=result.candidate_terminal_count,
+            continuation_iterations_executed=result.continuation_iterations_executed,
+            candidate_catastrophic_count=result.candidate_catastrophic_count,
+            baseline_catastrophic_count=result.baseline_catastrophic_count,
+            candidate_catastrophic_severity_sum=result.candidate_catastrophic_severity_sum,
+            baseline_catastrophic_severity_sum=result.baseline_catastrophic_severity_sum,
+            baseline_nonterminal_evaluation_delta_sum=(
+                result.baseline_nonterminal_evaluation_delta_sum
+            ),
+            candidate_nonterminal_evaluation_delta_sum=(
+                result.candidate_nonterminal_evaluation_delta_sum
+            ),
+            baseline_nonterminal_count=result.baseline_nonterminal_count,
+            candidate_nonterminal_count=result.candidate_nonterminal_count,
+        )
+
+
+def paired_root_policy_evaluation(
+    state: State,
+    baseline_action: str,
+    candidate_action: str,
+    rollouts: int,
+    continuation_iterations: int,
+    continuation_steps: int,
+    seed: int,
+    opponent_priors=None,
+) -> PairedRootPolicyEvaluation:
+    if not isinstance(baseline_action, str) or not baseline_action:
+        raise TypeError("baseline_action must be a nonempty string")
+    if not isinstance(candidate_action, str) or not candidate_action:
+        raise TypeError("candidate_action must be a nonempty string")
+    for name, value in (
+        ("rollouts", rollouts),
+        ("continuation_iterations", continuation_iterations),
+        ("continuation_steps", continuation_steps),
+        ("seed", seed),
+    ):
+        if type(value) is not int:
+            raise TypeError(f"{name} must be an integer")
+    if not 1 <= rollouts <= 100_000:
+        raise ValueError("rollouts must be between 1 and 100000")
+    if not 1 <= continuation_iterations <= 10_000_000:
+        raise ValueError("continuation_iterations must be between 1 and 10000000")
+    if not 1 <= continuation_steps <= 100:
+        raise ValueError("continuation_steps must be between 1 and 100")
+    if 2 * rollouts * continuation_iterations * continuation_steps > 100_000_000:
+        raise ValueError("total requested continuation iterations exceed 100000000")
+    if not 0 <= seed <= (1 << 64) - 1:
+        raise ValueError("seed must fit in an unsigned 64-bit integer")
+    return PairedRootPolicyEvaluation._from_rust(
+        _rust_paired_root_policy_evaluation(
+            state,
+            baseline_action,
+            candidate_action,
+            rollouts,
+            continuation_iterations,
+            continuation_steps,
+            seed,
+            opponent_priors,
+        )
+    )
+
+
 def monte_carlo_tree_search(
-    state: State, duration_ms: int = 1000, iterations: int = 0, threads: int = 1,
-    s1_priors=None, s2_priors=None, c_puct: float = 2.0
+    state: State,
+    duration_ms: int = 1000,
+    iterations: int = 0,
+    threads: int = 1,
+    s1_priors=None,
+    s2_priors=None,
+    c_puct: float = 2.0,
 ) -> MctsResult:
     """
     Perform monte-carlo-tree-search on the given state and for the given duration
@@ -164,8 +270,15 @@ def monte_carlo_tree_search(
     :rtype: MctsResult
     """
     return MctsResult._from_rust(
-        mcts(state, duration_ms, iterations, threads,
-             s1_priors=s1_priors, s2_priors=s2_priors, c_puct=c_puct)
+        mcts(
+            state,
+            duration_ms,
+            iterations,
+            threads,
+            s1_priors=s1_priors,
+            s2_priors=s2_priors,
+            c_puct=c_puct,
+        )
     )
 
 
@@ -183,4 +296,3 @@ def iterative_deepening_expectiminimax(
     :rtype: IterativeDeepeningResult
     """
     return IterativeDeepeningResult._from_rust(id(state, duration_ms))
-

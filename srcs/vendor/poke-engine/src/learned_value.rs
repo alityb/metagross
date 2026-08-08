@@ -39,7 +39,8 @@ fn load_model() -> Option<LearnedValueModel> {
     };
     let contents = fs::read_to_string(&path)
         .unwrap_or_else(|err| panic!("failed to read METAGROSS_VALUE_MODEL {}: {}", path, err));
-    parse_model(&contents).unwrap_or_else(|err| panic!("invalid METAGROSS_VALUE_MODEL {}: {}", path, err))
+    parse_model(&contents)
+        .unwrap_or_else(|err| panic!("invalid METAGROSS_VALUE_MODEL {}: {}", path, err))
 }
 
 fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
@@ -95,11 +96,7 @@ fn hp_fraction(pokemon: &Pokemon) -> f32 {
 }
 
 fn side_hp_fraction(side: &Side) -> f32 {
-    side.pokemon
-        .into_iter()
-        .map(hp_fraction)
-        .sum::<f32>()
-        / 6.0
+    side.pokemon.into_iter().map(hp_fraction).sum::<f32>() / 6.0
 }
 
 fn side_alive_fraction(side: &Side) -> f32 {
@@ -127,7 +124,11 @@ fn side_item_fraction(side: &Side) -> f32 {
 }
 
 fn side_used_tera(side: &Side) -> f32 {
-    if side.pokemon.into_iter().any(|pokemon| pokemon.terastallized) {
+    if side
+        .pokemon
+        .into_iter()
+        .any(|pokemon| pokemon.terastallized)
+    {
         1.0
     } else {
         0.0
@@ -136,11 +137,8 @@ fn side_used_tera(side: &Side) -> f32 {
 
 fn active_stat_total(side: &Side) -> f32 {
     let active = &side.pokemon[side.active_index];
-    (active.attack
-        + active.defense
-        + active.special_attack
-        + active.special_defense
-        + active.speed) as f32
+    (active.attack + active.defense + active.special_attack + active.special_defense + active.speed)
+        as f32
         / 1000.0
 }
 
@@ -205,7 +203,14 @@ fn extract_features(state: &State) -> [f32; FEATURE_COUNT] {
         hazard_score(side_two) - hazard_score(side_one),
         active_stat_total(side_one) - active_stat_total(side_two),
         team_stat_total(side_one) - team_stat_total(side_two),
-        if side_one.substitute_health > 0 { 1.0 } else { 0.0 }
-            - if side_two.substitute_health > 0 { 1.0 } else { 0.0 },
+        if side_one.substitute_health > 0 {
+            1.0
+        } else {
+            0.0
+        } - if side_two.substitute_health > 0 {
+            1.0
+        } else {
+            0.0
+        },
     ]
 }

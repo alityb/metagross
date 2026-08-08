@@ -396,6 +396,13 @@ class State:
     trick_room: bool
     trick_room_turns_remaining: int
     team_preview: bool
+    s1_threat: float
+    s2_threat: float
+    scout_value: float
+    threat_matrix: List[float]
+    wincon_matrix: List[float]
+    s1_can_tera: bool
+    s2_can_tera: bool
 
     def __init__(
         self,
@@ -408,6 +415,13 @@ class State:
         trick_room: bool = False,
         trick_room_turns_remaining: int = 0,
         team_preview: bool = False,
+        s1_threat: float = 0.0,
+        s2_threat: float = 0.0,
+        scout_value: float = 0.0,
+        threat_matrix: List[float] = None,
+        wincon_matrix: List[float] = None,
+        s1_can_tera: bool = True,
+        s2_can_tera: bool = True,
     ) -> None: ...
     def apply_instructions(self, instructions: StateInstructions) -> State: ...
     def reverse_instructions(self, instructions: StateInstructions) -> State: ...
@@ -428,6 +442,39 @@ class MctsResult:
     side_one: List[MctsSideResult]
     side_two: List[MctsSideResult]
     iteration_count: int
+
+class PairedRootPolicyEvaluation:
+    pairs: int
+    baseline_sum: float
+    candidate_sum: float
+    delta_sum: float
+    delta_squared_sum: float
+    catastrophic_count: int
+    candidate_better_count: int
+    baseline_better_count: int
+    equal_count: int
+    baseline_terminal_count: int
+    candidate_terminal_count: int
+    continuation_iterations_executed: int
+    candidate_catastrophic_count: int
+    baseline_catastrophic_count: int
+    candidate_catastrophic_severity_sum: float
+    baseline_catastrophic_severity_sum: float
+    baseline_nonterminal_evaluation_delta_sum: float
+    candidate_nonterminal_evaluation_delta_sum: float
+    baseline_nonterminal_count: int
+    candidate_nonterminal_count: int
+
+def paired_root_policy_evaluation(
+    state: State,
+    baseline_action: str,
+    candidate_action: str,
+    rollouts: int,
+    continuation_iterations: int,
+    continuation_steps: int,
+    seed: int,
+    opponent_priors: Optional[List[Tuple[str, float]]] = None,
+) -> PairedRootPolicyEvaluation: ...
 
 def mcts(
     py_state: State, duration_ms: int, iterations: int, threads: int
