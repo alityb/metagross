@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import contextlib
 import io
 import inspect
 import json
 import os
+import stat
+import struct
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -16,9 +19,20 @@ from srcs.metagross import decision_harness
 from srcs.metagross import launch
 from srcs.metagross import prior_server
 from srcs.metagross import run_foul_play
+from srcs.metagross.mcts_contract import _fnv1a64_digest
 
 
 class LaunchTest(unittest.TestCase):
+    def test_search_capture_is_written_private(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "search.jsonl"
+            with mock.patch.dict(
+                os.environ, {"METAGROSS_SEARCH_DUMP": str(path)}, clear=True
+            ):
+                run_foul_play._append_jsonl("METAGROSS_SEARCH_DUMP", {"value": 1})
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+            self.assertEqual(json.loads(path.read_text()), {"value": 1})
+
     @staticmethod
     def holdout_result(delta=0.2, pairs=64, catastrophic_count=0):
         baseline_sum = 0.4 * pairs
@@ -93,6 +107,116 @@ class LaunchTest(unittest.TestCase):
             ),
         )
 
+    @staticmethod
+    def shared_root_result(particles=1, input_weights=None):
+        policy = [
+            {
+                "action": "earthquake",
+                "probability": 0.7,
+                "counterfactual_value": 0.625,
+            },
+            {
+                "action": "recover",
+                "probability": 0.3,
+                "counterfactual_value": 0.5,
+            },
+        ]
+        input_weights = input_weights or [1.0 / particles] * particles
+        payoffs = [row["counterfactual_value"] for row in policy]
+        expected_value = sum(
+            row["probability"] * row["counterfactual_value"] for row in policy
+        )
+        best_response = max(payoffs)
+        none_digest = _fnv1a64_digest([b"none"])
+        continuations = []
+        for payoff in payoffs:
+            total_score = payoff * 8
+            continuations.append(
+                [
+                    {
+                        "seed": 11,
+                        "requested_iterations": 8,
+                        "executed_iterations": 8,
+                        "visits": 8,
+                        "total_score": total_score,
+                        "total_score_bits": struct.unpack(
+                            "<I", struct.pack("<f", total_score)
+                        )[0],
+                        "payoff": payoff,
+                        "payoff_bits": struct.unpack("<Q", struct.pack("<d", payoff))[0],
+                    }
+                ]
+            )
+        result = {
+            "policy": policy,
+            "opponent_policies": [
+                [{"action": "protect", "probability": 1.0}]
+            ],
+            "diagnostics": {
+                "solver_contract": "weighted-shared-rm-plus-v1",
+                "iterations": 100,
+                "continuation_iterations": 8,
+                "seed": 7,
+                "prior_strength": 1.0,
+                "expected_value": expected_value,
+                "player_best_response_value": best_response,
+                "opponent_best_response_value": expected_value,
+                "player_best_response_gain": best_response - expected_value,
+                "opponent_best_response_gain": 0.0,
+                "nash_conv": best_response - expected_value,
+                "exploitability": (best_response - expected_value) / 2,
+                "player_regret_bound": 0.0,
+                "opponent_regret_bound": 0.0,
+                "total_regret_bound": 0.0,
+                "payoff_cells": len(policy),
+                "total_forced_continuation_iterations": 8 * len(policy),
+                "input_particle_count": particles,
+                "positive_particle_count": particles,
+                "canonical_particle_count": 1,
+                "normalized_weight_sum": 1.0,
+                "action_support_digest": _fnv1a64_digest(
+                    [row["action"].encode() for row in sorted(policy, key=lambda row: row["action"])]
+                ),
+                "particle_digest": _fnv1a64_digest(
+                    [b"state", struct.pack("<d", 1.0)]
+                ),
+                "payoff_digest": _fnv1a64_digest(
+                    [struct.pack("<d", payoff) for payoff in payoffs]
+                ),
+                "player_prior_digest": none_digest,
+                "opponent_prior_digest": none_digest,
+            },
+            "replay_capture": {
+                "schema_version": 1,
+                "solver_contract": "weighted-shared-rm-plus-v1",
+                "configuration": {
+                    "iterations": 100,
+                    "continuation_iterations": 8,
+                    "seed": 7,
+                    "prior_strength": 1.0,
+                },
+                "own_action_support": sorted(row["action"] for row in policy),
+                "normalized_player_prior": None,
+                "canonical_particles": [
+                    {
+                        "canonical_index": 0,
+                        "state": "state",
+                        "normalized_weight": 1.0,
+                        "source_particles": [
+                            {"input_index": index, "input_weight": weight}
+                            for index, weight in enumerate(input_weights)
+                        ],
+                        "opponent_action_support": ["protect"],
+                        "normalized_opponent_prior": None,
+                        "payoff_matrix": [[payoff] for payoff in payoffs],
+                        "continuations": continuations,
+                        "opponent_policy": [1.0],
+                    }
+                ],
+            },
+        }
+        return result
+
     def test_decision_harness_controller_preserves_golden_choice(self):
         battle = self.choice_battle(hp=100)
         results = [
@@ -133,7 +257,15 @@ class LaunchTest(unittest.TestCase):
         self.assertIs(harness.search.evaluate_fn, run_foul_play._remote_mcts_batch)
         self.assertIs(harness.search.holdout_fn, run_foul_play._remote_holdout_batch)
         self.assertIs(
-            harness.controller.select_fn, run_foul_play.select_final_choice
+            harness.search.solve_shared_root_fn,
+            run_foul_play._remote_shared_root_batch,
+        )
+        self.assertIs(
+            harness.controller.select_fn, run_foul_play.select_search_first_choice
+        )
+        self.assertIs(
+            harness.controller.select_shared_fn,
+            run_foul_play.select_shared_root_choice,
         )
         self.assertIs(
             harness.verifier.certify_fn, run_foul_play.robust_holdout_certificate
@@ -142,6 +274,649 @@ class LaunchTest(unittest.TestCase):
             harness.verifier.combine_fn,
             run_foul_play.combined_robust_holdout_certificate,
         )
+
+    def test_certified_controller_remains_explicit_rollback_comparator(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "METAGROSS_PRIOR_SERVER": "http://127.0.0.1:8977",
+                "METAGROSS_CONTROLLER_MODE": "certified",
+            },
+        ):
+            harness = run_foul_play.build_decision_harness()
+
+        self.assertIs(harness.controller.select_fn, run_foul_play.select_final_choice)
+
+    def test_unknown_controller_mode_fails_closed(self):
+        with self.assertRaisesRegex(RuntimeError, "unsupported METAGROSS_CONTROLLER_MODE"):
+            run_foul_play.controller_select_fn("unknown")
+
+    def test_shared_root_mode_is_explicitly_gated_and_has_rollback(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(run_foul_play.root_search_mode(), "independent_mcts")
+        with (
+            mock.patch.dict(
+                os.environ,
+                {"METAGROSS_ROOT_SEARCH_MODE": "shared_rm_plus"},
+                clear=True,
+            ),
+            self.assertRaisesRegex(RuntimeError, "ALLOW_EXPERIMENTAL"),
+        ):
+            run_foul_play.root_search_mode()
+        with mock.patch.dict(
+            os.environ,
+            {
+                "METAGROSS_ROOT_SEARCH_MODE": "shared_rm_plus",
+                "METAGROSS_ALLOW_EXPERIMENTAL_SHARED_ROOT": "1",
+                "METAGROSS_CONTROLLER_MODE": "search_first",
+            },
+            clear=True,
+        ):
+            self.assertEqual(run_foul_play.root_search_mode(), "shared_rm_plus")
+
+    def test_independent_ensemble_mode_is_explicitly_gated(self):
+        with (
+            mock.patch.dict(
+                os.environ,
+                {"METAGROSS_ROOT_SEARCH_MODE": "independent_ensemble"},
+                clear=True,
+            ),
+            self.assertRaisesRegex(RuntimeError, "ALLOW_EXPERIMENTAL_ENSEMBLE"),
+        ):
+            run_foul_play.root_search_mode()
+        with mock.patch.dict(
+            os.environ,
+            {
+                "METAGROSS_ROOT_SEARCH_MODE": "independent_ensemble",
+                "METAGROSS_ALLOW_EXPERIMENTAL_ENSEMBLE": "1",
+                "METAGROSS_REQUIRE_REMOTE_MCTS": "1",
+                "METAGROSS_ALLOW_INSECURE_LOOPBACK": "1",
+                "METAGROSS_CONTROLLER_MODE": "search_first",
+            },
+            clear=True,
+        ):
+            self.assertEqual(run_foul_play.root_search_mode(), "independent_ensemble")
+
+    def test_independent_ensemble_rejects_public_showdown_websocket(self):
+        environment = {
+            "METAGROSS_ROOT_SEARCH_MODE": "independent_ensemble",
+            "METAGROSS_ALLOW_EXPERIMENTAL_ENSEMBLE": "1",
+            "METAGROSS_REQUIRE_REMOTE_MCTS": "1",
+            "METAGROSS_ALLOW_INSECURE_LOOPBACK": "1",
+            "METAGROSS_CONTROLLER_MODE": "search_first",
+        }
+        with mock.patch.dict(os.environ, environment, clear=True):
+            run_foul_play.require_local_ensemble_websocket(
+                "ws://localhost:8000/showdown/websocket"
+            )
+            with self.assertRaisesRegex(RuntimeError, "loopback Showdown"):
+                run_foul_play.require_local_ensemble_websocket(
+                    "wss://sim3.psim.us/showdown/websocket"
+                )
+
+    def test_ensemble_results_split_each_world_weight_across_repeats(self):
+        results = [object() for _index in range(6)]
+        battles = [(object(), 0.75), (object(), 0.25)]
+        weighted = run_foul_play._ensemble_weighted_results(results, battles, 3)
+        self.assertEqual([row[0] for row in weighted], results)
+        self.assertEqual([row[1] for row in weighted], [0.25, 1 / 12] * 3)
+        self.assertEqual([row[2] for row in weighted], list(range(6)))
+        with self.assertRaisesRegex(ValueError, "world weight"):
+            run_foul_play._ensemble_weighted_results(
+                results, [(object(), float("nan")), (object(), 0.25)], 3
+            )
+
+    def test_adaptive_ensemble_repeats_respect_wire_capacity(self):
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(8), 3)
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(16), 3)
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(21), 3)
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(22), 2)
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(32), 2)
+        self.assertEqual(run_foul_play._adaptive_ensemble_repeat_count(64), 1)
+        with self.assertRaisesRegex(RuntimeError, "world count"):
+            run_foul_play._adaptive_ensemble_repeat_count(65)
+
+    def test_shared_root_selector_samples_mixture_reproducibly(self):
+        battle = self.choice_battle()
+        result = self.shared_root_result()
+        priors = [("recover", 0.9), ("earthquake", 0.1)]
+
+        first = run_foul_play.select_shared_root_choice(
+            battle, result, priors, seed=1, histories={}, record_history=False
+        )
+        second = run_foul_play.select_shared_root_choice(
+            battle, result, priors, seed=1, histories={}, record_history=False
+        )
+        alternate = run_foul_play.select_shared_root_choice(
+            battle, result, priors, seed=0, histories={}, record_history=False
+        )
+
+        self.assertEqual(first, second)
+        self.assertEqual(first[0], "earthquake")
+        self.assertEqual(alternate[0], "recover")
+        self.assertEqual(first[1]["search_mass_kind"], "shared_policy_probability")
+        self.assertEqual(first[1]["mixed_strategy_seed"], 1)
+        self.assertEqual(first[1]["sampled_action"], "earthquake")
+        self.assertEqual(first[1]["solver_diagnostics"], result["diagnostics"])
+
+    def test_shared_root_selector_rejects_positive_illegal_mass(self):
+        battle = self.choice_battle(
+            moves=[SimpleNamespace(name="recover", disabled=False)],
+            can_terastallize=False,
+        )
+        with self.assertRaisesRegex(RuntimeError, "request-illegal"):
+            run_foul_play.select_shared_root_choice(
+                battle,
+                self.shared_root_result(),
+                [("recover", 1.0)],
+                seed=1,
+                histories={},
+                record_history=False,
+            )
+
+    def test_insecure_login_is_limited_to_actual_loopback_websockets(self):
+        self.assertTrue(run_foul_play.is_loopback_websocket_uri("ws://localhost:8000/ws"))
+        self.assertTrue(run_foul_play.is_loopback_websocket_uri("wss://127.0.0.1/ws"))
+        self.assertTrue(run_foul_play.is_loopback_websocket_uri("ws://[::1]:8000/ws"))
+        self.assertFalse(run_foul_play.is_loopback_websocket_uri("https://localhost/ws"))
+        self.assertFalse(
+            run_foul_play.is_loopback_websocket_uri("ws://localhost@example.com/ws")
+        )
+
+    def test_liveness_timeouts_are_positive_and_configurable(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                run_foul_play.positive_environment_seconds("MISSING", 12.0), 12.0
+            )
+        for value in ("0", "-1", "nan", "invalid"):
+            with self.subTest(value=value), mock.patch.dict(
+                os.environ, {"TIMEOUT": value}, clear=True
+            ), self.assertRaisesRegex(RuntimeError, "positive number"):
+                run_foul_play.positive_environment_seconds("TIMEOUT", 12.0)
+
+    def test_websocket_liveness_contract_enables_pings_and_receive_deadline(self):
+        environment = {
+            "METAGROSS_WEBSOCKET_KEEPALIVE": "1",
+            "METAGROSS_WEBSOCKET_PING_INTERVAL_SECONDS": "20",
+            "METAGROSS_WEBSOCKET_PING_TIMEOUT_SECONDS": "60",
+            "METAGROSS_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS": "0.01",
+        }
+
+        async def never_returns():
+            await asyncio.Event().wait()
+
+        with mock.patch.dict(os.environ, environment, clear=True):
+            self.assertEqual(
+                run_foul_play.websocket_connect_kwargs({}),
+                {"ping_interval": 20.0, "ping_timeout": 60.0, "close_timeout": 10},
+            )
+            with self.assertRaisesRegex(
+                TimeoutError, "no Showdown websocket message within 0.01s"
+            ):
+                asyncio.run(run_foul_play.receive_websocket_message(never_returns))
+
+    def test_reconnect_replay_returns_only_unseen_public_delta_and_request(self):
+        room = "battle-gen9randombattle-1"
+        messages = [
+            "\n".join(
+                [
+                    f">{room}",
+                    "|init|battle",
+                    "|title|ReconnectSmoke vs. Opponent",
+                    "|gametype|singles",
+                    "|player|p1|ReconnectSmoke|1|",
+                    "|player|p2|Opponent|1|",
+                    "|start",
+                    "|turn|3",
+                    "|player|p1|ReconnectSmoke|1|",
+                ]
+            ),
+            f'>{room}\n|request|{{"wait":true,"rqid":4}}',
+            f">{room}\n|move|p2a: Target|U-turn|p1a: Bot\n|turn|4",
+            f'>{room}\n|request|{{"active":[{{"moves":[]}}],"rqid":5}}',
+        ]
+
+        previously_seen = ["|gametype|singles", "|start", "|turn|3"]
+        chunks, replayed = run_foul_play.reconnect_delta_chunks(
+            messages, room, previously_seen
+        )
+
+        self.assertEqual(
+            chunks,
+            [
+                f">{room}\n|move|p2a: Target|U-turn|p1a: Bot\n|turn|4",
+                f'>{room}\n|request|{{"active":[{{"moves":[]}}],"rqid":5}}',
+            ],
+        )
+        self.assertEqual(
+            replayed,
+            previously_seen + ["|move|p2a: Target|U-turn|p1a: Bot", "|turn|4"],
+        )
+        self.assertFalse(run_foul_play.actionable_showdown_request(messages[1]))
+        self.assertTrue(run_foul_play.actionable_showdown_request(messages[-1]))
+
+    def test_reconnect_replay_requires_current_request_and_history_prefix(self):
+        room = "battle-test"
+        with self.assertRaisesRegex(RuntimeError, "no current request"):
+            run_foul_play.reconnect_delta_chunks(
+                [f">{room}\n|init|battle"], room, []
+            )
+        with self.assertRaisesRegex(RuntimeError, "does not extend"):
+            run_foul_play.reconnect_delta_chunks(
+                [
+                    f">{room}\n|init|battle\n|turn|2",
+                    f">{room}\n|request|{{\"forceSwitch\":[true]}}",
+                ],
+                room,
+                ["|turn|1"],
+            )
+
+    def test_reconnect_replay_preserves_wait_request_and_sent_choice(self):
+        room = "battle-test"
+        message = (
+            f">{room}\n|request|{{\"active\":[{{\"moves\":[]}}],\"rqid\":8}}"
+            "\n|sentchoice|move scald"
+        )
+        chunks, replayed = run_foul_play.reconnect_delta_chunks(
+            [f">{room}\n|turn|4", message], room, ["|turn|4"]
+        )
+
+        self.assertEqual(chunks, [message.split("\n|sentchoice|")[0]])
+        self.assertEqual(replayed, ["|turn|4"])
+        self.assertEqual(run_foul_play.showdown_request_payload(message)["rqid"], 8)
+        self.assertEqual(
+            run_foul_play.showdown_sent_choice(message), "move scald"
+        )
+        self.assertEqual(
+            run_foul_play.outbound_choice_identity(["/choose move scald", "8"]),
+            ("move scald", 8),
+        )
+        self.assertEqual(
+            run_foul_play.outbound_choice_identity(["/switch 3", "10"]),
+            ("switch 3", 10),
+        )
+
+    def test_send_recovery_decision_table(self):
+        request = {"active": [{"moves": []}], "rqid": 8}
+        self.assertEqual(
+            run_foul_play.send_recovery_action(request, None, "move scald", 8),
+            "resend",
+        )
+        self.assertEqual(
+            run_foul_play.send_recovery_action(
+                request, "move scald", "move scald", 8
+            ),
+            "confirmed",
+        )
+        self.assertEqual(
+            run_foul_play.send_recovery_action(
+                {"active": [{"moves": []}], "rqid": 10},
+                None,
+                "move scald",
+                8,
+            ),
+            "advanced",
+        )
+        self.assertEqual(
+            run_foul_play.send_recovery_action(
+                None, None, "move scald", 8, terminal=True
+            ),
+            "terminal",
+        )
+        with self.assertRaisesRegex(RuntimeError, "no request object"):
+            run_foul_play.send_recovery_action(
+                None, None, "move scald", 8
+            )
+        self.assertEqual(
+            run_foul_play.send_recovery_action(
+                {"wait": True, "rqid": 8}, None, "move scald", 8
+            ),
+            "wait",
+        )
+        with self.assertRaisesRegex(RuntimeError, "different pending choice"):
+            run_foul_play.send_recovery_action(
+                request, "move recover", "move scald", 8
+            )
+        with self.assertRaisesRegex(RuntimeError, "already has a pending choice"):
+            run_foul_play.send_recovery_action(
+                {"active": [{"moves": []}], "rqid": 10},
+                "move recover",
+                "move scald",
+                8,
+            )
+        with self.assertRaisesRegex(RuntimeError, "older rqid"):
+            run_foul_play.send_recovery_action(
+                {"active": [{"moves": []}], "rqid": 6},
+                None,
+                "move scald",
+                8,
+            )
+        with self.assertRaisesRegex(RuntimeError, "invalid rqid"):
+            run_foul_play.send_recovery_action(
+                {"active": [{"moves": []}], "rqid": True},
+                None,
+                "move scald",
+                8,
+            )
+        with self.assertRaisesRegex(RuntimeError, "unexpectedly has a pending choice"):
+            run_foul_play.send_recovery_action(
+                {"wait": True, "rqid": 8},
+                "move recover",
+                "move scald",
+                8,
+            )
+        with self.assertRaisesRegex(RuntimeError, "older rqid"):
+            run_foul_play.send_recovery_action(
+                {"wait": True, "rqid": 6}, None, "move scald", 8
+            )
+        with self.assertRaisesRegex(RuntimeError, "not an object"):
+            run_foul_play.showdown_request_payload(
+                ">battle-test\n|request|[]"
+            )
+        self.assertIsNone(
+            run_foul_play.showdown_choice_error([">battle-test\n|turn|4"])
+        )
+        self.assertEqual(
+            run_foul_play.showdown_choice_error(
+                [">battle-test\n|error|[Invalid choice] Too late"]
+            ),
+            "|error|[Invalid choice] Too late",
+        )
+
+    def test_reconnect_replay_accepts_terminal_delta_without_request(self):
+        room = "battle-test"
+        chunks, replayed = run_foul_play.reconnect_delta_chunks(
+            [
+                f">{room}\n|init|battle\n|turn|4\n"
+                '|request|{"active":[{"moves":[]}],"rqid":8}\n|win|Bot',
+            ],
+            room,
+            ["|turn|4"],
+        )
+
+        self.assertEqual(chunks, [f">{room}\n|win|Bot"])
+        self.assertEqual(replayed, ["|turn|4", "|win|Bot"])
+        self.assertTrue(run_foul_play.terminal_showdown_message(chunks[0]))
+
+    def test_battle_request_identity_is_stable_and_payload_bound(self):
+        battle = SimpleNamespace(
+            battle_tag="battle-test",
+            rqid=7,
+            request_json={"rqid": 7, "active": [{"moves": []}]},
+        )
+        key, fingerprint = run_foul_play.battle_request_identity(battle)
+        reordered = SimpleNamespace(
+            battle_tag="battle-test",
+            rqid=7,
+            request_json={"active": [{"moves": []}], "rqid": 7},
+        )
+
+        self.assertEqual(key, ("battle-test", 7))
+        self.assertEqual(
+            run_foul_play.battle_request_identity(reordered), (key, fingerprint)
+        )
+        battle.request_json["wait"] = True
+        self.assertNotEqual(
+            run_foul_play.battle_request_identity(battle)[1], fingerprint
+        )
+
+    def test_search_first_selector_table(self):
+        cases = []
+
+        agreement = self.choice_battle(hp=50)
+        cases.append(
+            (
+                "agreement",
+                agreement,
+                [(self.mcts_result([("recover", 90.0, 100)]), 1.0, 0)],
+                [("recover", 1.0)],
+                None,
+                "recover",
+                "search_first_policy_agreement",
+                "search_selection",
+            )
+        )
+
+        disagreement = self.choice_battle(hp=50)
+        cases.append(
+            (
+                "rejected_certificate_is_shadow_only",
+                disagreement,
+                [
+                    (
+                        self.mcts_result(
+                            [("earthquake", 180.0, 200), ("recover", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("recover", 0.9), ("earthquake", 0.1)],
+                {"earthquake": {"qualified": False, "coverage": 1.0}},
+                "earthquake",
+                "search_first_search_selection",
+                "search_selection",
+            )
+        )
+
+        illegal = self.choice_battle(hp=50)
+        illegal.user.active.moves = [SimpleNamespace(name="recover", disabled=False)]
+        cases.append(
+            (
+                "illegal_search_top",
+                illegal,
+                [
+                    (
+                        self.mcts_result(
+                            [("earthquake", 180.0, 200), ("recover", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("recover", 1.0)],
+                None,
+                "recover",
+                "search_first_policy_agreement",
+                "search_selection",
+            )
+        )
+
+        forced = self.choice_battle(hp=50)
+        forced.force_switch = True
+        forced.user.active.moves = [SimpleNamespace(name="earthquake", disabled=False)]
+        forced.user.reserve = [SimpleNamespace(name="blissey", hp=100)]
+        cases.append(
+            (
+                "forced_switch",
+                forced,
+                [
+                    (
+                        self.mcts_result(
+                            [("earthquake", 180.0, 200), ("switch blissey", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("earthquake", 0.9), ("switch blissey", 0.1)],
+                None,
+                "switch blissey",
+                "search_first_policy_agreement",
+                "search_selection",
+            )
+        )
+
+        noop = self.choice_battle(hp=25)
+        noop.user.active.moves = [
+            SimpleNamespace(name="substitute", disabled=False),
+            SimpleNamespace(name="tackle", disabled=False),
+        ]
+        cases.append(
+            (
+                "guaranteed_noop",
+                noop,
+                [
+                    (
+                        self.mcts_result(
+                            [("substitute", 180.0, 200), ("tackle", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("substitute", 1.0)],
+                None,
+                "tackle",
+                "guaranteed_noop_substitute_insufficient_hp",
+                "deterministic_correction",
+            )
+        )
+
+        missing = self.choice_battle(hp=50)
+        missing.user.active.moves = [SimpleNamespace(name="recover", disabled=False)]
+        cases.append(
+            (
+                "missing_search_result",
+                missing,
+                [],
+                [("recover", 1.0)],
+                None,
+                "recover",
+                "search_infrastructure_policy_fallback",
+                "infrastructure_fallback",
+            )
+        )
+
+        malformed = self.choice_battle(hp=50)
+        malformed.user.active.moves = [SimpleNamespace(name="recover", disabled=False)]
+        cases.append(
+            (
+                "malformed_search_result",
+                malformed,
+                [object()],
+                [("recover", 1.0)],
+                None,
+                "recover",
+                "search_infrastructure_policy_fallback",
+                "infrastructure_fallback",
+            )
+        )
+
+        tera = self.choice_battle(hp=50, can_terastallize=True)
+        tera.user.active.moves = [SimpleNamespace(name="tackle", disabled=False)]
+        cases.append(
+            (
+                "tera_mapping",
+                tera,
+                [
+                    (
+                        self.mcts_result(
+                            [("tackle-tera", 180.0, 200), ("tackle", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("tackle", 1.0)],
+                None,
+                "tackle-tera",
+                "search_first_search_selection",
+                "search_selection",
+            )
+        )
+
+        for name, battle, results, priors, evidence, expected, reason, kind in cases:
+            with self.subTest(name=name):
+                choice, telemetry = run_foul_play.select_search_first_choice(
+                    battle,
+                    results,
+                    priors,
+                    histories={},
+                    independent_evidence=evidence,
+                    record_history=False,
+                )
+                self.assertEqual(choice, expected)
+                self.assertEqual(telemetry["reason"], reason)
+                self.assertEqual(telemetry["selection_class"], kind)
+                self.assertEqual(telemetry["controller_mode"], "search_first")
+                self.assertFalse(telemetry["verifier_shadow"]["selection_eligible"])
+                request_actions = telemetry["request_actions"]
+                if request_actions:
+                    self.assertIn(choice, request_actions)
+
+    def test_search_first_terminal_correction(self):
+        battle = self.choice_battle(hp=100)
+        battle.user.active.moves = [
+            SimpleNamespace(name="uturn", disabled=False),
+            SimpleNamespace(name="woodhammer", disabled=False),
+        ]
+        results = [
+            (
+                self.mcts_result(
+                    [("uturn", 180.0, 200), ("woodhammer", 20.0, 100)]
+                ),
+                1.0,
+                0,
+            )
+        ]
+        move_data = {
+            "uturn": {"basePower": 70, "category": "Physical"},
+            "woodhammer": {"basePower": 120, "category": "Physical"},
+        }
+
+        with mock.patch.object(
+            run_foul_play, "_showdown_move_data", side_effect=move_data.get
+        ):
+            choice, telemetry = run_foul_play.select_search_first_choice(
+                battle,
+                results,
+                [("uturn", 1.0)],
+                histories={},
+                record_history=False,
+            )
+
+        self.assertEqual(choice, "woodhammer")
+        self.assertEqual(telemetry["reason"], "terminal_pivot_without_reserve")
+        self.assertEqual(telemetry["selection_class"], "deterministic_correction")
+
+    def test_search_first_revealed_prediction_risk_is_shadow_only(self):
+        battle = self.choice_battle(hp=50)
+        battle.opponent.active.ability = "waterabsorb"
+        battle.user.active.moves = [
+            SimpleNamespace(name="surf", disabled=False),
+            SimpleNamespace(name="tackle", disabled=False),
+        ]
+        move_data = {
+            "category": "special",
+            "flags": {"protect": 1},
+            "target": "normal",
+            "type": "water",
+        }
+
+        with mock.patch.object(
+            run_foul_play, "_showdown_move_data", return_value=move_data
+        ):
+            choice, telemetry = run_foul_play.select_search_first_choice(
+                battle,
+                [
+                    (
+                        self.mcts_result(
+                            [("surf", 180.0, 200), ("tackle", 20.0, 100)]
+                        ),
+                        1.0,
+                        0,
+                    )
+                ],
+                [("tackle", 1.0)],
+                histories={},
+                independent_evidence={"surf": {"qualified": False}},
+                record_history=False,
+            )
+
+        self.assertEqual(choice, "surf")
+        self.assertEqual(telemetry["shadow_risks"][0]["reason"], "revealed_waterabsorb_immunity")
+        self.assertFalse(telemetry["shadow_risks"][0]["selection_eligible"])
 
     def test_incomplete_favorable_world_evidence_falls_back_to_policy_baseline(self):
         results = [
@@ -772,6 +1547,33 @@ class LaunchTest(unittest.TestCase):
         ):
             self.assertIsNone(
                 run_foul_play._prediction_sensitive_reason(battle, "toxic")
+            )
+
+    def test_scrappy_bypasses_ghost_type_immunity(self):
+        battle = self.choice_battle(hp=50, ability="scrappy")
+        battle.opponent.active.types = ["ghost", "fire"]
+        move_data = {
+            "category": "physical",
+            "flags": {"protect": 1},
+            "target": "normal",
+            "type": "fighting",
+        }
+
+        with (
+            mock.patch.object(
+                run_foul_play, "_showdown_move_data", return_value=move_data
+            ),
+            mock.patch.object(
+                run_foul_play, "_type_effectiveness_modifier", return_value=0
+            ),
+        ):
+            self.assertIsNone(
+                run_foul_play._prediction_sensitive_reason(battle, "triplearrows")
+            )
+            battle.user.active.ability = "overgrow"
+            self.assertEqual(
+                run_foul_play._prediction_sensitive_reason(battle, "triplearrows"),
+                "known_type_immunity",
             )
 
     def test_current_target_immunity_uses_switch_as_prediction_safe_fallback(self):
@@ -1630,6 +2432,18 @@ class LaunchTest(unittest.TestCase):
         )
 
         self.assertTrue(prior_server.opponent_action_support_complete(battle))
+        del active.unique_id
+        self.assertTrue(prior_server.opponent_action_support_complete(battle))
+        active.unique_id = "active"
+        distinct_active = SimpleNamespace(
+            name="carbink",
+            moves={f"move-{index}": object() for index in range(4)},
+        )
+        team["active"] = SimpleNamespace(name="carbink", active=True)
+        battle.opponent_active_pokemon = distinct_active
+        self.assertTrue(prior_server.opponent_action_support_complete(battle))
+        team["active"] = active
+        battle.opponent_active_pokemon = active
         active.moves.pop("move-3")
         self.assertFalse(prior_server.opponent_action_support_complete(battle))
         active.moves["move-3"] = object()
@@ -1689,14 +2503,80 @@ class LaunchTest(unittest.TestCase):
             )
         )
 
+    def test_opponent_prior_sanitizer_does_not_restore_tera_after_switch(self):
+        battle = SimpleNamespace(
+            opponent=SimpleNamespace(
+                active=SimpleNamespace(
+                    name="carbink",
+                    moves=[SimpleNamespace(name="bodypress")],
+                    terastallized=False,
+                ),
+                reserve=[
+                    SimpleNamespace(name="clefable", hp=1, terastallized=True)
+                ],
+            )
+        )
+        sanitized = dict(
+            run_foul_play.sanitize_opponent_priors(
+                battle,
+                {"bodypress": 0.7, "bodypress-tera": 0.2, "switch clefable": 0.1},
+            )
+            or []
+        )
+        self.assertEqual(set(sanitized), {"bodypress", "switch clefable"})
+        self.assertAlmostEqual(sanitized["bodypress"], 0.875)
+        self.assertAlmostEqual(sanitized["switch clefable"], 0.125)
+
+    def test_showdown_login_status_requires_exact_named_confirmation(self):
+        self.assertEqual(
+            run_foul_play.showdown_login_status(
+                "|updateuser| Test User|1|0", "testuser"
+            ),
+            "confirmed",
+        )
+        self.assertEqual(
+            run_foul_play.showdown_login_status(
+                "|nametaken|testuser|Your authentication token was invalid.",
+                "Test User",
+            ),
+            "rejected",
+        )
+        self.assertIsNone(
+            run_foul_play.showdown_login_status("|updateuser| Guest 1|0|0", "testuser")
+        )
+
     def test_r1_remains_default(self):
         args = launch.parse_args(["--username", "bot"])
         self.assertEqual(args.profile, "r1")
         self.assertEqual(args.games, 200)
         self.assertEqual(args.search_parallelism, launch.DEFAULT_SEARCH_PARALLELISM)
         self.assertEqual(args.search_threads, launch.DEFAULT_SEARCH_THREADS)
+        self.assertEqual(args.controller_mode, "search-first")
+        self.assertFalse(args.verifier_shadow)
+        self.assertEqual(
+            args.remote_mcts_timeout_seconds,
+            launch.DEFAULT_REMOTE_MCTS_TIMEOUT_SECONDS,
+        )
+        self.assertEqual(
+            args.websocket_receive_timeout_seconds,
+            launch.DEFAULT_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS,
+        )
         self.assertEqual(launch.SEARCH_TIME_MS, 500)
         self.assertEqual(launch.CPU_C_PUCT, 2.0)
+
+    def test_certified_controller_is_explicit_launcher_rollback(self):
+        args = launch.parse_args(
+            [
+                "--username",
+                "bot",
+                "--controller-mode",
+                "certified",
+                "--verifier-shadow",
+            ]
+        )
+
+        self.assertEqual(args.controller_mode, "certified")
+        self.assertTrue(args.verifier_shadow)
 
     def test_search_parallelism_is_configurable_and_positive(self):
         args = launch.parse_args(
@@ -1722,7 +2602,7 @@ class LaunchTest(unittest.TestCase):
         self.assertEqual(args.remote_mcts_app, launch.DEFAULT_REMOTE_MCTS_APP)
         self.assertEqual(args.remote_mcts_function, launch.DEFAULT_REMOTE_MCTS_FUNCTION)
 
-    def test_launcher_preflights_remote_search_and_holdout_before_matchmaking(self):
+    def test_launcher_preflights_all_remote_operations_before_matchmaking(self):
         args = launch.parse_args(
             [
                 "--username",
@@ -1734,7 +2614,12 @@ class LaunchTest(unittest.TestCase):
         )
         completed = SimpleNamespace(
             returncode=0,
-            stdout=json.dumps({"ok": True, "operations": ["search", "paired_holdout"]}),
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "operations": ["search", "paired_holdout", "shared_root"],
+                }
+            ),
             stderr="",
         )
 
@@ -1745,6 +2630,7 @@ class LaunchTest(unittest.TestCase):
         command = run.call_args.args[0]
         self.assertIn("srcs.metagross.remote_mcts_preflight", command)
         self.assertIn("paired_holdout", result["operations"])
+        self.assertIn("shared_root", result["operations"])
 
     def test_http_remote_mcts_requires_loopback_url_and_environment_token(self):
         base = [
@@ -1913,6 +2799,184 @@ class LaunchTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "SHA-256 mismatch"):
                 prior_server.verify_local_checkpoint(str(root), "r1", 5, "0" * 64)
 
+    def test_prior_health_requires_exact_spawned_instance_identity(self):
+        expected = {
+            "schema": 1,
+            "nonce": "a" * 64,
+            "pid": 123,
+            "checkpoint_sha256": "b" * 64,
+        }
+
+        class Response:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def read(self):
+                return json.dumps(self.payload).encode()
+
+        healthy = {"ok": True, "identity": dict(expected)}
+        with mock.patch.object(
+            launch.urllib.request, "urlopen", return_value=Response(healthy)
+        ):
+            self.assertTrue(launch.prior_is_healthy("http://127.0.0.1:8977", expected))
+
+        for field, value in (
+            ("nonce", "c" * 64),
+            ("pid", 456),
+            ("checkpoint_sha256", "d" * 64),
+        ):
+            stale = {"ok": True, "identity": {**expected, field: value}}
+            with self.subTest(field=field), mock.patch.object(
+                launch.urllib.request, "urlopen", return_value=Response(stale)
+            ):
+                self.assertFalse(
+                    launch.prior_is_healthy("http://127.0.0.1:8977", expected)
+                )
+
+        with mock.patch.object(
+            launch.urllib.request,
+            "urlopen",
+            return_value=Response({"ok": True, "sessions": 0}),
+        ):
+            self.assertFalse(launch.prior_is_healthy("http://127.0.0.1:8977", expected))
+
+    def test_prior_server_health_payload_reports_instance_contract(self):
+        self.assertEqual(
+            prior_server.prior_health_payload("a" * 64, "b" * 64, 3, pid=123),
+            {
+                "ok": True,
+                "sessions": 3,
+                "identity": {
+                    "schema": 1,
+                    "nonce": "a" * 64,
+                    "pid": 123,
+                    "checkpoint_sha256": "b" * 64,
+                },
+            },
+        )
+
+    def test_prior_request_cache_is_monotone_and_idempotent(self):
+        self.assertEqual(prior_server.request_cache_status(4, None), "new")
+        self.assertEqual(prior_server.request_cache_status(6, 4), "new")
+        self.assertEqual(prior_server.request_cache_status(6, 6), "cached")
+        with self.assertRaisesRegex(ValueError, "stale rqid"):
+            prior_server.request_cache_status(4, 6)
+
+        session = prior_server.BattleSession.__new__(prior_server.BattleSession)
+        session.pending_request = True
+        session.battle = SimpleNamespace(last_request={"rqid": 6})
+        session.cached_rqid = 6
+        session.cached_response = {"rqid": 6, "decision_idx": 2}
+        session.decision_idx = 3
+        self.assertEqual(
+            session.compute_priors(expected_rqid=6),
+            {"rqid": 6, "decision_idx": 2},
+        )
+        self.assertFalse(session.pending_request)
+        self.assertEqual(session.decision_idx, 3)
+
+    def test_wait_for_health_rejects_stale_listener_then_reports_child_exit(self):
+        process = SimpleNamespace(
+            poll=mock.Mock(side_effect=[None, 48]), returncode=48
+        )
+        with (
+            mock.patch.object(launch, "prior_is_healthy", return_value=False) as health,
+            mock.patch.object(launch.time, "sleep"),
+            self.assertRaisesRegex(RuntimeError, "prior server exited with code 48"),
+        ):
+            launch.wait_for_health(
+                "http://127.0.0.1:8977",
+                process,
+                {
+                    "schema": 1,
+                    "nonce": "a" * 64,
+                    "pid": 123,
+                    "checkpoint_sha256": "b" * 64,
+                },
+                timeout=10,
+            )
+
+        self.assertEqual(health.call_count, 1)
+
+    def test_launcher_never_starts_client_when_prior_identity_preflight_fails(self):
+        prior = SimpleNamespace(
+            pid=777,
+            returncode=48,
+            poll=mock.Mock(return_value=48),
+        )
+        account_lock = mock.Mock()
+        nonce = "a" * 64
+        checkpoint_sha = "b" * 64
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            mock.patch.dict(
+                os.environ, {"METAGROSS_SHOWDOWN_PASSWORD": "secret"}, clear=True
+            ),
+            mock.patch.object(
+                launch,
+                "verify_checkpoint",
+                return_value=(Path(temporary) / "policy.pt", checkpoint_sha),
+            ),
+            mock.patch.object(launch, "inspect_foul_play_engine", return_value={}),
+            mock.patch.object(launch, "preflight_remote_mcts", return_value=None),
+            mock.patch.object(launch, "build_world_manifest", return_value={}),
+            mock.patch.object(launch, "acquire_account_lock", return_value=account_lock),
+            mock.patch.object(launch.secrets, "token_hex", return_value=nonce),
+            mock.patch.object(launch.signal, "signal", return_value=None),
+            mock.patch.object(launch.subprocess, "Popen", return_value=prior) as popen,
+            mock.patch.object(
+                launch,
+                "wait_for_health",
+                side_effect=RuntimeError("prior server exited with code 48"),
+            ) as wait,
+        ):
+            with self.assertRaisesRegex(
+                RuntimeError, "prior server exited with code 48"
+            ):
+                launch.main(
+                    [
+                        "--username",
+                        "bot",
+                        "--games",
+                        "1",
+                        "--output-root",
+                        temporary,
+                    ]
+                )
+            run_dir = next(Path(temporary).iterdir())
+            manifest = json.loads((run_dir / "manifest.json").read_text())
+
+        self.assertEqual(popen.call_count, 1)
+        prior_environment = popen.call_args.kwargs["env"]
+        self.assertEqual(prior_environment["METAGROSS_PRIOR_INSTANCE_NONCE"], nonce)
+        expected_identity = {
+            "schema": 1,
+            "nonce": nonce,
+            "pid": prior.pid,
+            "checkpoint_sha256": checkpoint_sha,
+        }
+        self.assertEqual(wait.call_args.args[2], expected_identity)
+        self.assertEqual(manifest["status"], "failed")
+        self.assertEqual(
+            manifest["error"], "RuntimeError: prior server exited with code 48"
+        )
+        self.assertEqual(
+            manifest["prior_instance"],
+            {
+                "health_identity_schema": 1,
+                "pid": prior.pid,
+                "nonce_sha256": hashlib.sha256(nonce.encode()).hexdigest(),
+                "checkpoint_sha256": checkpoint_sha,
+            },
+        )
+        account_lock.close.assert_called_once_with()
+
     def test_profile_records_are_immutable(self):
         with self.assertRaises(Exception):
             launch.POLICY_PROFILES["g4"].checkpoint = 2
@@ -1951,6 +3015,8 @@ class LaunchTest(unittest.TestCase):
             "METAGROSS_VALUE_MODEL": "model.pt",
             "METAGROSS_LEARNED_VALUE_WEIGHT": "0.5",
             "METAGROSS_REMOTE_MCTS_TOKEN": "secret",
+            "METAGROSS_FAULT_DISCONNECT_AFTER_BATTLE_COMMANDS": "1",
+            "METAGROSS_FAULT_STALL_AFTER_BATTLE_COMMANDS": "1",
         }
         self.assertEqual(launch.production_environment(source), {"KEEP": "yes"})
 
@@ -1985,7 +3051,9 @@ class LaunchTest(unittest.TestCase):
         )
         base = {
             "side_one": [{"move_choice": "tackle", "total_score": 1.0, "visits": 1}],
-            "side_two": [],
+            "side_two": [
+                {"move_choice": "protect", "total_score": 0.0, "visits": 1}
+            ],
             "total_visits": 1,
         }
         for field, value in (
@@ -2128,6 +3196,234 @@ class LaunchTest(unittest.TestCase):
                 channel="certification-request",
             ),
         )
+
+    def test_remote_independent_ensemble_sends_one_bounded_correlated_batch(self):
+        captured = []
+        payload = {
+            "side_one": [
+                {"move_choice": "tackle", "total_score": 1.0, "visits": 1}
+            ],
+            "side_two": [
+                {"move_choice": "protect", "total_score": 0.0, "visits": 1}
+            ],
+            "total_visits": 1,
+        }
+
+        def remote(requests):
+            captured.extend(requests)
+            return [
+                {
+                    "schema": run_foul_play.REMOTE_MCTS_SCHEMA,
+                    "request_id": request["request_id"],
+                    "index": request["index"],
+                    "ok": True,
+                    "engine": {
+                        "contract": run_foul_play.REMOTE_ENGINE_CONTRACT,
+                        "source_sha256": run_foul_play.ENGINE_SOURCE_SHA256,
+                        "native_sha256": "a" * 64,
+                    },
+                    "result": payload,
+                    "timing": {"search_ms": 1.0, "batch_size": 1},
+                }
+                for request in requests
+            ]
+
+        previous = dict(run_foul_play._PRIOR_STATE)
+        run_foul_play._PRIOR_STATE.update(
+            {
+                "context": {"tag": "battle-ensemble", "decision_idx": 2},
+                "priors": [("tackle", 1.0)],
+                "opp_priors": None,
+                "cpuct": 2.0,
+            }
+        )
+        environment = {
+            "METAGROSS_RUN_SEED": "03" * 32,
+            "METAGROSS_RNG_SCHEME": run_foul_play.RNG_SCHEME,
+            "METAGROSS_REMOTE_ENGINE_SHA256": "a" * 64,
+        }
+        try:
+            with (
+                mock.patch.dict(os.environ, environment, clear=True),
+                mock.patch.object(run_foul_play, "_remote_mcts_call", side_effect=remote),
+            ):
+                results = run_foul_play._remote_mcts_ensemble_batch(
+                    ["state-a", "state-b"], 25, 1, 3
+                )
+                telemetry = dict(run_foul_play._PRIOR_STATE["remote_search"])
+                three_repeat_requests = list(captured)
+                captured.clear()
+                adaptive_results = run_foul_play._remote_mcts_ensemble_batch(
+                    [f"state-{index}" for index in range(32)], 25, 1, 2
+                )
+                adaptive_telemetry = dict(
+                    run_foul_play._PRIOR_STATE["remote_search"]
+                )
+        finally:
+            run_foul_play._PRIOR_STATE.clear()
+            run_foul_play._PRIOR_STATE.update(previous)
+
+        self.assertEqual(len(results), 6)
+        self.assertEqual(len(three_repeat_requests), 6)
+        self.assertEqual(
+            [request["index"] for request in three_repeat_requests], list(range(6))
+        )
+        self.assertEqual(
+            [request["state"] for request in three_repeat_requests],
+            ["state-a", "state-b"] * 3,
+        )
+        self.assertEqual(
+            len({request["request_id"] for request in three_repeat_requests}), 6
+        )
+        self.assertEqual(telemetry["operation"], "independent_ensemble")
+        self.assertEqual(telemetry["repeat_count"], 3)
+        self.assertEqual(telemetry["searches"], 6)
+        self.assertEqual(len(adaptive_results), 64)
+        self.assertEqual(len(captured), 64)
+        self.assertEqual(adaptive_telemetry["repeat_count"], 2)
+        self.assertEqual(adaptive_telemetry["searches"], 64)
+
+    def test_remote_shared_root_sends_one_complete_weighted_cohort(self):
+        captured = []
+        result = self.shared_root_result(particles=2, input_weights=[0.25, 0.75])
+
+        def remote(requests):
+            captured.extend(requests)
+            request = requests[0]
+            return [
+                {
+                    "schema": run_foul_play.REMOTE_MCTS_SCHEMA,
+                    "request_id": request["request_id"],
+                    "index": request["index"],
+                    "ok": True,
+                    "engine": {
+                        "contract": run_foul_play.REMOTE_ENGINE_CONTRACT,
+                        "source_sha256": run_foul_play.ENGINE_SOURCE_SHA256,
+                        "native_sha256": "a" * 64,
+                    },
+                    "result": result,
+                    "timing": {"search_ms": 1.0, "batch_size": 1},
+                }
+            ]
+
+        previous = dict(run_foul_play._PRIOR_STATE)
+        run_foul_play._PRIOR_STATE.update(
+            {
+                "context": {"tag": "battle-shared", "decision_idx": 5},
+                "priors": [("earthquake", 0.75), ("recover", 0.25)],
+                "opp_priors": [("protect", 1.0)],
+                "remote_search": None,
+            }
+        )
+        environment = {
+            "METAGROSS_RUN_SEED": "04" * 32,
+            "METAGROSS_RNG_SCHEME": run_foul_play.RNG_SCHEME,
+            "METAGROSS_REMOTE_ENGINE_SHA256": "a" * 64,
+            "METAGROSS_REQUIRE_REMOTE_MCTS": "1",
+            "METAGROSS_SHARED_ROOT_PRIOR_STRENGTH": "1.0",
+        }
+        try:
+            with (
+                mock.patch.dict(os.environ, environment, clear=True),
+                mock.patch.object(run_foul_play, "_remote_mcts_call", side_effect=remote),
+            ):
+                actual = run_foul_play._remote_shared_root_batch(
+                    ["state-a", "state-b"], [0.25, 0.75], 100, 8, 7
+                )
+            telemetry = run_foul_play._PRIOR_STATE["remote_search"]
+        finally:
+            run_foul_play._PRIOR_STATE.clear()
+            run_foul_play._PRIOR_STATE.update(previous)
+
+        self.assertEqual(actual, result)
+        self.assertEqual(len(captured), 1)
+        self.assertEqual(captured[0]["operation"], "shared_root")
+        self.assertEqual(captured[0]["states"], ["state-a", "state-b"])
+        self.assertEqual(captured[0]["particle_weights"], [0.25, 0.75])
+        self.assertEqual(
+            captured[0]["s2_priors"],
+            [[list(("protect", 1.0))], [list(("protect", 1.0))]],
+        )
+        self.assertEqual(telemetry["operation"], "shared_root")
+        self.assertEqual(telemetry["solver_diagnostics"], result["diagnostics"])
+
+    def test_local_shared_root_uses_the_same_typed_engine_contract(self):
+        payload = self.shared_root_result()
+        native = SimpleNamespace(
+            policy=[SimpleNamespace(**row) for row in payload["policy"]],
+            opponent_policies=[
+                [(row["action"], row["probability"]) for row in policy]
+                for policy in payload["opponent_policies"]
+            ],
+            diagnostics=SimpleNamespace(**payload["diagnostics"]),
+            replay_capture=SimpleNamespace(
+                **{
+                    **payload["replay_capture"],
+                    "configuration": SimpleNamespace(
+                        **payload["replay_capture"]["configuration"]
+                    ),
+                    "canonical_particles": [
+                        SimpleNamespace(
+                            **{
+                                **particle,
+                                "source_particles": [
+                                    SimpleNamespace(**source)
+                                    for source in particle["source_particles"]
+                                ],
+                                "continuations": [
+                                    [SimpleNamespace(**cell) for cell in row]
+                                    for row in particle["continuations"]
+                                ],
+                            }
+                        )
+                        for particle in payload["replay_capture"][
+                            "canonical_particles"
+                        ]
+                    ],
+                }
+            ),
+        )
+        engine = SimpleNamespace(
+            State=SimpleNamespace(from_string=lambda value: f"parsed:{value}"),
+            shared_information_set_root_search=mock.Mock(return_value=native),
+        )
+        previous = dict(run_foul_play._PRIOR_STATE)
+        run_foul_play._PRIOR_STATE.update(
+            {
+                "priors": [("earthquake", 1.0)],
+                "opp_priors": [("protect", 1.0)],
+                "remote_search": None,
+            }
+        )
+        try:
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {"METAGROSS_SHARED_ROOT_PRIOR_STRENGTH": "1.0"},
+                    clear=True,
+                ),
+                mock.patch.dict("sys.modules", {"poke_engine": engine}),
+            ):
+                result = run_foul_play._remote_shared_root_batch(
+                    ["state"], [1.0], 100, 8, 7
+                )
+            telemetry = run_foul_play._PRIOR_STATE["remote_search"]
+        finally:
+            run_foul_play._PRIOR_STATE.clear()
+            run_foul_play._PRIOR_STATE.update(previous)
+
+        self.assertEqual(result, payload)
+        engine.shared_information_set_root_search.assert_called_once_with(
+            ["parsed:state"],
+            [1.0],
+            100,
+            8,
+            7,
+            1.0,
+            [("earthquake", 1.0)],
+            [[("protect", 1.0)]],
+        )
+        self.assertEqual(telemetry["transport"], "local")
 
     def test_recursive_shadow_holdout_uses_separate_request_and_telemetry_channels(self):
         captured = []

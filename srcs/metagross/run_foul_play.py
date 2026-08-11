@@ -12,11 +12,12 @@ import json
 import math
 import multiprocessing as mp
 import os
+import queue
 import random
 import statistics
 import sys
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -33,12 +34,16 @@ from srcs.metagross.holdout_metrics import compute_holdout_metrics
 from srcs.metagross.mcts_contract import (
     ENGINE_CONTRACT,
     ENGINE_SOURCE_SHA256,
+    MAX_SHARED_ROOT_REPLAY_BYTES,
+    MAX_WIRE_BATCH_SIZE,
     MODAL_CONTAINER_BATCH_SIZE,
     MODAL_MAX_CONTAINERS,
     REQUEST_SCHEMA,
+    shared_root_result_payload,
     validate_holdout_result_payload,
-    validate_result_payload,
     validate_loopback_search_url,
+    validate_result_payload,
+    validate_shared_root_result_payload,
 )
 from srcs.metagross.world_provenance import (
     RNG_SCHEME,
@@ -58,10 +63,10 @@ _PRIOR_STATE = {
     "battle": None,
 }
 _REMOTE_FUNCTIONS: dict[int, object] = {}
-_MODAL_EXECUTOR: ThreadPoolExecutor | None = None
-_MODAL_EXECUTOR_PID: int | None = None
 _CAPPED_SETUP_STREAKS: dict[tuple[str, str, str], int] = {}
 _CHOICE_HISTORY: dict[str, list[tuple[object, str]]] = {}
+_REQUEST_CHOICE_CACHE: dict[tuple[str, int], tuple[str, str]] = {}
+_POKE_ENGINE_PROVENANCE: dict[str, object] | None = None
 _HOLDOUT_DECISION_SEQUENCE = 0
 REMOTE_MCTS_SCHEMA = REQUEST_SCHEMA
 REMOTE_ENGINE_CONTRACT = ENGINE_CONTRACT
@@ -91,6 +96,13 @@ HOLDOUT_MAX_CATASTROPHE_SEVERITY_GAP = 0.05
 HOLDOUT_MIN_EVALUATOR_DELTA_DIFFERENCE = -0.02
 HOLDOUT_ALPHA_CHECKS_PER_LOOK = 4
 HOLDOUT_OPPONENT_UNIFORM_MIX = 0.25
+CONTROLLER_MODES = ("certified", "search_first")
+DEFAULT_CONTROLLER_MODE = "search_first"
+ROOT_SEARCH_MODES = ("independent_mcts", "independent_ensemble", "shared_rm_plus")
+DEFAULT_ROOT_SEARCH_MODE = "independent_mcts"
+DEFAULT_SHARED_ROOT_ITERATIONS = 10_000
+DEFAULT_SHARED_ROOT_CONTINUATION_ITERATIONS = 8
+DEFAULT_SHARED_ROOT_PRIOR_STRENGTH = 1.0
 
 _PURE_BOOST_MOVES = {
     "acidarmor": ("defense",),
@@ -199,9 +211,125 @@ def _append_jsonl(environment_variable: str, row: dict) -> None:
     if not path:
         return
     payload = json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n"
-    with open(path, "a", encoding="utf-8") as handle:
+    flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags, 0o600)
+    if environment_variable == "METAGROSS_SEARCH_DUMP":
+        os.fchmod(descriptor, 0o600)
+    with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
         handle.write(payload)
         handle.flush()
+
+
+def _canonical_sha256(value: object) -> str:
+    payload = json.dumps(
+        value,
+        allow_nan=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def build_shared_root_replay_envelope(
+    *,
+    states: list[str],
+    source_weights: list[float],
+    normalized_weights: list[float],
+    iterations: int,
+    continuation_iterations: int,
+    solver_seed: int,
+    action_seed: int,
+    result: dict[str, object],
+    remote_search: dict[str, object],
+    request_actions: set[str],
+) -> dict[str, object]:
+    if not (
+        states
+        and len(states) == len(source_weights) == len(normalized_weights)
+        and isinstance(result.get("replay_capture"), dict)
+    ):
+        raise RuntimeError("shared-root replay inputs are incomplete")
+    source_weight_sum = math.fsum(source_weights)
+    if not math.isfinite(source_weight_sum) or source_weight_sum <= 0:
+        raise RuntimeError("shared-root replay source weights are invalid")
+    opponent_prior = [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])] or None
+    provenance = remote_search.get("engine")
+    if not isinstance(provenance, dict):
+        provenance = _POKE_ENGINE_PROVENANCE
+    if not isinstance(provenance, dict):
+        raise RuntimeError("shared-root replay has no engine provenance")
+    native_sha256 = provenance.get("native_sha256")
+    if not isinstance(native_sha256, str) or len(native_sha256) != 64:
+        raise RuntimeError("shared-root replay has invalid native provenance")
+    engine = {
+        "contract": provenance.get("contract", ENGINE_CONTRACT),
+        "source_sha256": provenance.get("source_sha256", ENGINE_SOURCE_SHA256),
+        "native_sha256": native_sha256,
+        "distribution_version": provenance.get("distribution_version"),
+    }
+    diagnostics = result.get("diagnostics")
+    if not isinstance(diagnostics, dict):
+        raise RuntimeError("shared-root replay result has no diagnostics")
+    policy = result.get("policy")
+    if not isinstance(policy, list) or not request_actions:
+        raise RuntimeError("shared-root replay has no action support")
+    action_aliases = []
+    mapped_actions = set()
+    for row in policy:
+        native_action = row.get("action") if isinstance(row, dict) else None
+        request_action = (
+            _authorized_action_name(native_action, request_actions)
+            if isinstance(native_action, str)
+            else None
+        )
+        if request_action is None or request_action in mapped_actions:
+            raise RuntimeError("shared-root replay action mapping is invalid")
+        mapped_actions.add(request_action)
+        action_aliases.append(
+            {"native_action": native_action, "request_action": request_action}
+        )
+    envelope = {
+        "schema_version": 1,
+        "capture_kind": "production_shared_root_replay_v1",
+        "source_particles": [
+            {
+                "source_index": index,
+                "serialized_state": state,
+                "state_sha256": state_sha256(state),
+                "source_weight": float(source_weight),
+                "normalized_weight": float(normalized_weight),
+            }
+            for index, (state, source_weight, normalized_weight) in enumerate(
+                zip(states, source_weights, normalized_weights, strict=True)
+            )
+        ],
+        "source_weight_sum": source_weight_sum,
+        "solver": {
+            "iterations": iterations,
+            "continuation_iterations": continuation_iterations,
+            "seed": solver_seed,
+            "prior_strength": diagnostics["prior_strength"],
+            "s1_prior": [list(row) for row in (_PRIOR_STATE["priors"] or [])] or None,
+            "s2_priors": [opponent_prior for _state in states],
+        },
+        "sampling": {
+            "world_channel": "selection-worlds",
+            "world_seed": remote_search.get("sampling_seed"),
+            "action_channel": "shared-root-action",
+            "action_seed": action_seed,
+        },
+        "request_ids": list(remote_search.get("request_ids") or []),
+        "request_action_support": sorted(request_actions),
+        "action_aliases": action_aliases,
+        "engine": engine,
+        "native_capture_sha256": _canonical_sha256(result["replay_capture"]),
+    }
+    if len(
+        json.dumps(envelope, allow_nan=False, separators=(",", ":")).encode("utf-8")
+    ) > MAX_SHARED_ROOT_REPLAY_BYTES:
+        raise RuntimeError("shared-root replay envelope exceeds the encoded size bound")
+    envelope["capture_sha256"] = _canonical_sha256(envelope)
+    return envelope
 
 
 def _decision_coordinates(*, required: bool = False) -> tuple[str, int] | None:
@@ -220,6 +348,25 @@ def _decision_coordinates(*, required: bool = False) -> tuple[str, int] | None:
             raise RuntimeError("deterministic remote execution requires decision context")
         return None
     return tag, decision_index
+
+
+def battle_request_identity(battle) -> tuple[tuple[str, int], str]:
+    tag = getattr(battle, "battle_tag", None)
+    rqid = getattr(battle, "rqid", None)
+    request_json = getattr(battle, "request_json", None)
+    if (
+        not isinstance(tag, str)
+        or not tag
+        or isinstance(rqid, bool)
+        or not isinstance(rqid, int)
+        or rqid < 0
+        or not isinstance(request_json, dict)
+    ):
+        raise RuntimeError("battle has no valid request identity")
+    fingerprint = hashlib.sha256(
+        json.dumps(request_json, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return (tag, rqid), fingerprint
 
 
 def _run_seed(*, required: bool = False) -> str | None:
@@ -402,6 +549,72 @@ def _mcts_actions_and_visit_mass(mcts_results) -> tuple[list[str], dict[str, flo
     return ordered, visit_mass
 
 
+def _shared_root_actions_and_probability_mass(
+    policy: object, request_actions: set[str] | None
+) -> tuple[list[str], dict[str, float], dict[str, float]]:
+    if not isinstance(policy, list) or not policy:
+        raise RuntimeError("shared-root policy is empty")
+    probability_mass: dict[str, float] = {}
+    counterfactual_values: dict[str, float] = {}
+    for row in policy:
+        if not isinstance(row, dict):
+            raise RuntimeError("shared-root policy entry is invalid")
+        action = row.get("action")
+        probability = row.get("probability")
+        value = row.get("counterfactual_value")
+        if (
+            not isinstance(action, str)
+            or isinstance(probability, bool)
+            or not isinstance(probability, (int, float))
+            or not math.isfinite(probability)
+            or probability < 0
+            or isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+        ):
+            raise RuntimeError("shared-root policy entry is invalid")
+        authorized = (
+            action
+            if request_actions is None
+            else _authorized_action_name(action, request_actions)
+        )
+        if authorized is None:
+            if probability > 0:
+                raise RuntimeError(
+                    f"shared-root policy assigns mass to request-illegal action: {action}"
+                )
+            continue
+        if authorized in probability_mass:
+            raise RuntimeError("shared-root policy aliases duplicate request actions")
+        probability_mass[authorized] = float(probability)
+        counterfactual_values[authorized] = float(value)
+    if not probability_mass or abs(math.fsum(probability_mass.values()) - 1.0) > 1e-8:
+        raise RuntimeError("shared-root request-valid policy is not normalized")
+    ordered = sorted(
+        probability_mass,
+        key=lambda action: (
+            -probability_mass[action],
+            -counterfactual_values[action],
+            action,
+        ),
+    )
+    return ordered, probability_mass, counterfactual_values
+
+
+def _sample_shared_root_action(
+    ordered: list[str], probability_mass: dict[str, float], seed: int
+) -> tuple[str, float]:
+    draw = random.Random(seed).random()
+    cumulative = 0.0
+    sampled = ordered[-1]
+    for action in ordered:
+        cumulative += probability_mass[action]
+        if draw < cumulative:
+            sampled = action
+            break
+    return sampled, draw
+
+
 def _authorized_action_name(action: str, allowed: set[str]) -> str | None:
     if action in allowed:
         return action
@@ -429,8 +642,6 @@ def derive_policy_baseline(
 ) -> tuple[str, list[str], dict[str, float]]:
     """Choose the highest request-valid player-prior action."""
     ordered, visit_mass = _mcts_actions_and_visit_mass(mcts_results)
-    if not ordered:
-        return "no move", [], visit_mass
     prior_by_action: dict[str, float] = {}
     for row in priors or ():
         try:
@@ -453,19 +664,16 @@ def derive_policy_baseline(
                 authorized_priors.get(authorized, 0.0), probability
             )
     prior_actions = list(authorized_priors)
-    if not prior_actions:
+    if prior_actions:
+        baseline = min(
+            prior_actions,
+            key=lambda action: (-authorized_priors[action], action),
+        )
+    else:
         authorized_search = [
             action for action in ordered if allowed is None or action in allowed
         ]
-        return (
-            (authorized_search[0] if authorized_search else "no move"),
-            ordered,
-            visit_mass,
-        )
-    baseline = min(
-        prior_actions,
-        key=lambda action: (-authorized_priors[action], action),
-    )
+        baseline = authorized_search[0] if authorized_search else "no move"
     return baseline, ordered, visit_mass
 
 
@@ -1044,6 +1252,31 @@ def _normalize_identifier(value) -> str:
     )
 
 
+def showdown_login_status(message: str, username: str) -> str | None:
+    expected = _normalize_identifier(username)
+    for line in message.splitlines():
+        parts = line.split("|")
+        if len(parts) >= 3 and parts[1] == "nametaken" and _normalize_identifier(parts[2]) == expected:
+            return "rejected"
+        if (
+            len(parts) >= 4
+            and parts[1] == "updateuser"
+            and _normalize_identifier(parts[2]) == expected
+            and parts[3] == "1"
+        ):
+            return "confirmed"
+    return None
+
+
+def _opponent_tera_used(opponent) -> bool:
+    pokemon = [getattr(opponent, "active", None)]
+    pokemon.extend(getattr(opponent, "reserve", ()) or ())
+    return any(
+        member is not None and bool(getattr(member, "terastallized", False))
+        for member in pokemon
+    )
+
+
 def sanitize_opponent_priors(battle, priors: object) -> list[tuple[str, float]] | None:
     """Keep only finite priors that match the current public opponent state."""
     if not priors:
@@ -1063,9 +1296,7 @@ def sanitize_opponent_priors(battle, priors: object) -> list[tuple[str, float]] 
         for pokemon in (getattr(opponent, "reserve", ()) or ())
         if float(getattr(pokemon, "hp", 0) or 0) > 0
     }
-    tera_available = not bool(getattr(active, "terastallized", False)) and not bool(
-        getattr(opponent, "tera_used", False)
-    )
+    tera_available = not _opponent_tera_used(opponent)
     expected_actions = set(move_names)
     expected_actions.update(f"switch {name}" for name in switch_names)
     if tera_available:
@@ -1092,8 +1323,6 @@ def sanitize_opponent_priors(battle, priors: object) -> list[tuple[str, float]] 
                 continue
             canonical = move + ("-tera" if tera else "")
         retained[canonical] = retained.get(canonical, 0.0) + float(raw_probability)
-    if not expected_actions.issubset(retained):
-        return None
     total = sum(retained.values())
     if total <= 0:
         return None
@@ -1342,6 +1571,14 @@ def _type_immunity_applies(battle, move: str, move_data, opponent) -> bool:
     if _normalize_identifier(getattr(opponent, "item", "")) == "ringtarget":
         return False
     target_types = _effective_defensive_types(opponent)
+    attacker = getattr(getattr(battle, "user", None), "active", None)
+    attacker_ability = _normalize_identifier(getattr(attacker, "ability", ""))
+    if (
+        move_type in {"normal", "fighting"}
+        and "ghost" in target_types
+        and attacker_ability in {"scrappy", "mindseye"}
+    ):
+        return False
     if move_type == "ground" and "flying" in target_types:
         grounded = (
             bool(getattr(battle, "gravity", False))
@@ -1725,19 +1962,57 @@ def select_final_choice(
     histories=None,
     independent_evidence=None,
     record_history: bool = True,
+    selection_mode: str = "certified",
+    search_policy: list[dict[str, object]] | None = None,
+    sampled_search_action: str | None = None,
 ) -> tuple[str, dict[str, object]]:
-    """Deterministically apply policy, paired evidence, no-op, and cycle gates."""
+    """Apply one declared controller and public-state deterministic safeguards."""
+    if selection_mode not in CONTROLLER_MODES:
+        raise ValueError(f"unsupported controller mode: {selection_mode}")
+    search_first = selection_mode == "search_first"
     request_actions = request_player_actions(battle)
-    baseline, ordered, visit_mass = derive_policy_baseline(
-        mcts_results, priors, request_actions
-    )
+    if search_policy is None:
+        baseline, ordered, visit_mass = derive_policy_baseline(
+            mcts_results, priors, request_actions
+        )
+        counterfactual_values = {}
+    else:
+        ordered, visit_mass, counterfactual_values = (
+            _shared_root_actions_and_probability_mass(search_policy, request_actions)
+        )
+        baseline, _unused_order, _unused_mass = derive_policy_baseline(
+            (), priors, request_actions
+        )
+        if baseline == "no move":
+            baseline = ordered[0]
+        if sampled_search_action is None or sampled_search_action not in ordered:
+            raise RuntimeError("shared-root sampled action is not in its policy")
+        ordered = [sampled_search_action] + [
+            action for action in ordered if action != sampled_search_action
+        ]
     raw_choice = ordered[0] if ordered else baseline
     baseline_missing_from_search = baseline not in ordered
-    evidence_by_action = {
-        action: paired_candidate_evidence(mcts_results, action, baseline)
-        for action in ordered
-        if action != baseline
-    }
+    if search_policy is None:
+        evidence_by_action = {
+            action: paired_candidate_evidence(mcts_results, action, baseline)
+            for action in ordered
+            if action != baseline
+        }
+    else:
+        evidence_by_action = {
+            action: {
+                "candidate": action,
+                "baseline": baseline,
+                "coverage": 1.0,
+                "complete": True,
+                "qualified": False,
+                "evidence_kind": "shared_rm_plus_policy",
+                "policy_probability": visit_mass[action],
+                "counterfactual_value": counterfactual_values[action],
+            }
+            for action in ordered
+            if action != baseline
+        }
     for action, holdout in (independent_evidence or {}).items():
         if action in evidence_by_action and isinstance(holdout, dict):
             evidence_by_action[action] = {
@@ -1757,7 +2032,22 @@ def select_final_choice(
         "heuristic_qualified": True,
     }
 
-    if baseline_missing_from_search:
+    valid_search_actions = [
+        action for action in ordered if _request_allows(action, request_actions)
+    ]
+    if search_first and valid_search_actions:
+        choice = valid_search_actions[0]
+        evidence = evidence_by_action.get(choice, baseline_evidence)
+        reason = (
+            "search_first_policy_agreement"
+            if choice == baseline
+            else "search_first_search_selection"
+        )
+    elif search_first:
+        choice = baseline
+        evidence = baseline_evidence
+        reason = "search_infrastructure_policy_fallback"
+    elif baseline_missing_from_search:
         choice = baseline
         reason = "policy_baseline_missing_from_search"
         evidence = baseline_evidence
@@ -1797,6 +2087,7 @@ def select_final_choice(
         history = histories.get(tag, [])
     state = public_battle_state(battle)
     blocked_safeguard = None
+    shadow_risks = []
 
     noop_reason = _known_noop_reason(battle, choice)
     if noop_reason:
@@ -1814,14 +2105,26 @@ def select_final_choice(
                 and _known_noop_reason(battle, action) is None
             ]
             qualified_safe = [action for action in safe if qualified(action)]
-            replacement = (qualified_safe or safe or [choice])[0]
+            replacement = (
+                (safe or [choice])[0]
+                if search_first
+                else (qualified_safe or safe or [choice])[0]
+            )
             if replacement != choice:
                 choice = replacement
                 reason = f"guaranteed_noop_{noop_reason}"
                 evidence = evidence_by_action.get(choice, baseline_evidence)
 
     prediction_reason = _prediction_sensitive_reason(battle, choice)
-    if prediction_reason:
+    if prediction_reason and search_first:
+        shadow_risks.append(
+            {
+                "reason": prediction_reason,
+                "action": choice,
+                "selection_eligible": False,
+            }
+        )
+    elif prediction_reason:
         repeated_prediction = any(
             previous_choice == choice for _state, previous_choice in history[-3:]
         )
@@ -1873,7 +2176,11 @@ def select_final_choice(
             and _repeated_no_progress_period(history, state, action) is None
         ]
         qualified_safe = [action for action in safe if qualified(action)]
-        replacement = (qualified_safe or [choice])[0]
+        replacement = (
+            (safe or [choice])[0]
+            if search_first
+            else (qualified_safe or [choice])[0]
+        )
         if replacement == choice and safe and blocked_safeguard is None:
             blocked_safeguard = {
                 "reason": f"repeated_no_progress_period_{period}",
@@ -1913,9 +2220,17 @@ def select_final_choice(
         elif semantic_reason == "losing_stall":
             switches = [action for action in safe if action.startswith("switch ")]
             qualified_switches = [action for action in switches if qualified(action)]
-            replacement = (qualified_switches or qualified_safe or [choice])[0]
+            replacement = (
+                (switches or safe or [choice])[0]
+                if search_first
+                else (qualified_switches or qualified_safe or [choice])[0]
+            )
         else:
-            replacement = (qualified_safe or [choice])[0]
+            replacement = (
+                (safe or [choice])[0]
+                if search_first
+                else (qualified_safe or [choice])[0]
+            )
         if (
             semantic_reason
             and replacement == choice
@@ -1939,7 +2254,25 @@ def select_final_choice(
         history.append((state, choice))
         del history[:-12]
 
+    qualified_shadow_actions = [
+        action
+        for action in ordered
+        if action != baseline and evidence_by_action.get(action, {}).get("qualified") is True
+    ]
+    deterministic_correction = reason.startswith(
+        ("guaranteed_noop_", "repeated_no_progress_", "semantic_no_progress_", "terminal_")
+    )
+    if deterministic_correction:
+        selection_class = "deterministic_correction"
+    elif reason == "search_infrastructure_policy_fallback":
+        selection_class = "infrastructure_fallback"
+    elif search_first:
+        selection_class = "search_selection"
+    else:
+        selection_class = "certified_selection"
     telemetry = {
+        "controller_mode": selection_mode,
+        "selection_class": selection_class,
         "baseline": baseline,
         "raw_choice": raw_choice,
         "final_choice": choice,
@@ -1952,12 +2285,90 @@ def select_final_choice(
             and choice != baseline
         ),
         "blocked_safeguard": blocked_safeguard,
+        "shadow_risks": shadow_risks,
+        "verifier_shadow": {
+            "selection_eligible": not search_first,
+            "evidence_provided": bool(independent_evidence),
+            "qualified_actions": qualified_shadow_actions,
+        },
         "visit_mass": visit_mass,
+        "search_mass_kind": (
+            "shared_policy_probability" if search_policy is not None else "weighted_visits"
+        ),
         "request_actions": sorted(request_actions or ()),
         "search_actions": ordered,
         "missing_request_actions": sorted((request_actions or set()) - set(ordered)),
     }
     return choice, telemetry
+
+
+def select_search_first_choice(
+    battle,
+    mcts_results,
+    priors=None,
+    histories=None,
+    independent_evidence=None,
+    record_history: bool = True,
+) -> tuple[str, dict[str, object]]:
+    """Select valid search output while keeping verifier evidence shadow-only."""
+    return select_final_choice(
+        battle,
+        mcts_results,
+        priors,
+        histories,
+        independent_evidence,
+        record_history,
+        selection_mode="search_first",
+    )
+
+
+def select_shared_root_choice(
+    battle,
+    shared_result: dict[str, object],
+    priors=None,
+    *,
+    seed: int,
+    histories=None,
+    record_history: bool = True,
+) -> tuple[str, dict[str, object]]:
+    """Sample one mixed shared-root action, then apply public-state safeguards."""
+    try:
+        validated = validate_shared_root_result_payload(shared_result)
+    except ValueError as exc:
+        raise RuntimeError(f"shared-root result is invalid: {exc}") from exc
+    request_actions = request_player_actions(battle)
+    ordered, probability_mass, _values = _shared_root_actions_and_probability_mass(
+        validated["policy"], request_actions
+    )
+    sampled, draw = _sample_shared_root_action(ordered, probability_mass, seed)
+    choice, telemetry = select_final_choice(
+        battle,
+        (),
+        priors,
+        histories,
+        None,
+        record_history,
+        selection_mode="search_first",
+        search_policy=validated["policy"],
+        sampled_search_action=sampled,
+    )
+    telemetry["root_search_mode"] = "shared_rm_plus"
+    telemetry["mixed_strategy"] = validated["policy"]
+    telemetry["mixed_strategy_seed"] = seed
+    telemetry["mixed_strategy_draw"] = draw
+    telemetry["sampled_action"] = sampled
+    telemetry["solver_diagnostics"] = validated["diagnostics"]
+    telemetry["opponent_policies"] = validated["opponent_policies"]
+    return choice, telemetry
+
+
+def controller_select_fn(mode: str | None = None):
+    mode = mode or os.environ.get("METAGROSS_CONTROLLER_MODE", DEFAULT_CONTROLLER_MODE)
+    if mode == "search_first":
+        return select_search_first_choice
+    if mode == "certified":
+        return select_final_choice
+    raise RuntimeError(f"unsupported METAGROSS_CONTROLLER_MODE: {mode}")
 
 
 def _mcts_result_from_payload(payload: object, engine_module=None):
@@ -2040,7 +2451,12 @@ def _http_mcts_call(payload: object) -> object:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
+        with urllib.request.urlopen(
+            request,
+            timeout=positive_environment_seconds(
+                "METAGROSS_REMOTE_MCTS_TIMEOUT_SECONDS", 10.0
+            ),
+        ) as response:
             body = response.read(MAX_REMOTE_RESPONSE_BYTES + 1)
     except Exception as exc:
         raise RuntimeError(
@@ -2058,29 +2474,49 @@ MODAL_BATCH_SIZE = MODAL_CONTAINER_BATCH_SIZE
 MODAL_MAX_CONCURRENT_BATCHES = MODAL_MAX_CONTAINERS
 
 
-def _modal_executor() -> ThreadPoolExecutor:
-    global _MODAL_EXECUTOR, _MODAL_EXECUTOR_PID
-    pid = os.getpid()
-    if _MODAL_EXECUTOR is None or _MODAL_EXECUTOR_PID != pid:
-        _MODAL_EXECUTOR = ThreadPoolExecutor(
-            max_workers=MODAL_MAX_CONCURRENT_BATCHES,
-            thread_name_prefix="modal-mcts",
-        )
-        _MODAL_EXECUTOR_PID = pid
-    return _MODAL_EXECUTOR
-
-
 def _modal_mcts_call(payload: object) -> object:
     function = _remote_mcts_function()
-    if not isinstance(payload, list) or len(payload) <= MODAL_BATCH_SIZE:
-        return function.remote(payload)
-    batches = [
-        payload[start : start + MODAL_BATCH_SIZE]
-        for start in range(0, len(payload), MODAL_BATCH_SIZE)
-    ]
+    timeout = positive_environment_seconds("METAGROSS_REMOTE_MCTS_TIMEOUT_SECONDS", 10.0)
+    batches = (
+        [payload]
+        if not isinstance(payload, list) or len(payload) <= MODAL_BATCH_SIZE
+        else [
+            payload[start : start + MODAL_BATCH_SIZE]
+            for start in range(0, len(payload), MODAL_BATCH_SIZE)
+        ]
+    )
     if len(batches) > MODAL_MAX_CONCURRENT_BATCHES:
         raise RuntimeError("remote Modal MCTS request exceeds shard concurrency")
-    responses = list(_modal_executor().map(function.remote, batches))
+    outcomes = [queue.Queue(maxsize=1) for _batch in batches]
+
+    def invoke(index: int, batch: object) -> None:
+        try:
+            outcomes[index].put((True, function.remote(batch)))
+        except BaseException as exc:
+            outcomes[index].put((False, exc))
+
+    for index, batch in enumerate(batches):
+        threading.Thread(
+            target=invoke,
+            args=(index, batch),
+            name=f"modal-mcts-{index}",
+            daemon=True,
+        ).start()
+    deadline = time.monotonic() + timeout
+    responses = []
+    for outcome in outcomes:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError(f"remote Modal MCTS exceeded {timeout:g}s")
+        try:
+            succeeded, value = outcome.get(timeout=remaining)
+        except queue.Empty as exc:
+            raise TimeoutError(f"remote Modal MCTS exceeded {timeout:g}s") from exc
+        if not succeeded:
+            raise value
+        responses.append(value)
+    if len(batches) == 1:
+        return responses[0]
     if any(not isinstance(response, list) for response in responses):
         raise RuntimeError("remote Modal MCTS shard returned an invalid response")
     return [row for response in responses for row in response]
@@ -2199,6 +2635,205 @@ def _remote_mcts_batch(state_strings: list[str], search_time_ms: int, threads: i
         "timings": timings,
     }
     return results
+
+
+def _remote_mcts_ensemble_batch(
+    state_strings: list[str], search_time_ms: int, threads: int, repeat_count: int
+):
+    if repeat_count <= 0 or repeat_count > 3:
+        raise RuntimeError("independent ensemble repeat count is outside its contract")
+    if not state_strings or len(state_strings) * repeat_count > MAX_WIRE_BATCH_SIZE:
+        raise RuntimeError("independent ensemble exceeds the remote batch bound")
+    requests = []
+    for repeat in range(repeat_count):
+        for world_index, state_string in enumerate(state_strings):
+            index = repeat * len(state_strings) + world_index
+            requests.append(
+                {
+                    "schema": REMOTE_MCTS_SCHEMA,
+                    "operation": "search",
+                    "request_id": _deterministic_request_id(
+                        "selection-ensemble-request", index
+                    ),
+                    "index": index,
+                    "state": state_string,
+                    "duration_ms": int(search_time_ms),
+                    "threads": int(threads),
+                    "s1_priors": [list(row) for row in (_PRIOR_STATE["priors"] or [])]
+                    or None,
+                    "s2_priors": [
+                        list(row) for row in (_PRIOR_STATE["opp_priors"] or [])
+                    ]
+                    or None,
+                    "c_puct": float(_PRIOR_STATE["cpuct"]),
+                }
+            )
+    started = time.monotonic()
+    responses = _remote_mcts_call(requests)
+    rpc_ms = round((time.monotonic() - started) * 1000, 3)
+    if not isinstance(responses, list) or len(responses) != len(requests):
+        raise RuntimeError("remote ensemble MCTS returned the wrong batch size")
+    import poke_engine
+
+    results = []
+    timings = []
+    for request, response in zip(requests, responses, strict=True):
+        validated = _validate_remote_response(
+            response, request["request_id"], request["index"]
+        )
+        results.append(_mcts_result_from_payload(validated.get("result"), poke_engine))
+        timings.append(validated.get("timing"))
+    _PRIOR_STATE["remote_search"] = {
+        "operation": "independent_ensemble",
+        "rpc_ms": rpc_ms,
+        "worlds": len(state_strings),
+        "repeat_count": repeat_count,
+        "searches": len(requests),
+        "engine": responses[0].get("engine"),
+        "state_hashes": [state_sha256(state) for state in state_strings],
+        "request_ids": [request["request_id"] for request in requests],
+        "timings": timings,
+    }
+    return results
+
+
+def _ensemble_weighted_results(results, battles, repeat_count: int):
+    if repeat_count <= 0 or len(results) != len(battles) * repeat_count:
+        raise ValueError("ensemble results do not exactly cover every world and repeat")
+    weights = []
+    for _sampled, chance in battles:
+        try:
+            weight = float(chance)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("ensemble world weight is invalid") from exc
+        if not math.isfinite(weight) or weight < 0:
+            raise ValueError("ensemble world weight is invalid")
+        weights.append(weight)
+    if math.fsum(weights) <= 0:
+        raise ValueError("ensemble world weights have no positive mass")
+    return [
+        (
+            results[repeat * len(battles) + world_index],
+            weights[world_index] / repeat_count,
+            repeat * len(battles) + world_index,
+        )
+        for repeat in range(repeat_count)
+        for world_index in range(len(battles))
+    ]
+
+
+def _adaptive_ensemble_repeat_count(world_count: int, maximum_repeats: int = 3) -> int:
+    if world_count <= 0 or world_count > MAX_WIRE_BATCH_SIZE:
+        raise RuntimeError("adaptive ensemble world count exceeds the wire batch bound")
+    if maximum_repeats <= 0:
+        raise RuntimeError("adaptive ensemble maximum repeats must be positive")
+    return min(maximum_repeats, MAX_WIRE_BATCH_SIZE // world_count)
+
+
+def _remote_shared_root_batch(
+    state_strings: list[str],
+    particle_weights: list[float],
+    iterations: int,
+    continuation_iterations: int,
+    seed: int,
+) -> dict[str, object]:
+    try:
+        prior_strength = float(
+            os.environ.get(
+                "METAGROSS_SHARED_ROOT_PRIOR_STRENGTH",
+                str(DEFAULT_SHARED_ROOT_PRIOR_STRENGTH),
+            )
+        )
+    except ValueError as exc:
+        raise RuntimeError(
+            "METAGROSS_SHARED_ROOT_PRIOR_STRENGTH must be numeric"
+        ) from exc
+    if not math.isfinite(prior_strength) or not 0 <= prior_strength <= 1_000:
+        raise RuntimeError(
+            "METAGROSS_SHARED_ROOT_PRIOR_STRENGTH must be finite and in [0, 1000]"
+        )
+    if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") != "1":
+        import poke_engine
+
+        states = [poke_engine.State.from_string(state) for state in state_strings]
+        opponent_prior = list(_PRIOR_STATE["opp_priors"] or ()) or None
+        started = time.monotonic()
+        native_result = poke_engine.shared_information_set_root_search(
+            states,
+            particle_weights,
+            iterations,
+            continuation_iterations,
+            seed,
+            prior_strength,
+            list(_PRIOR_STATE["priors"] or ()) or None,
+            [opponent_prior for _state in states],
+        )
+        result = shared_root_result_payload(
+            native_result,
+            expected_particles=len(states),
+            expected_iterations=iterations,
+            expected_continuation_iterations=continuation_iterations,
+            expected_seed=seed,
+            expected_prior_strength=prior_strength,
+        )
+        _PRIOR_STATE["remote_search"] = {
+            "operation": "shared_root",
+            "transport": "local",
+            "rpc_ms": round((time.monotonic() - started) * 1000, 3),
+            "worlds": len(state_strings),
+            "state_hashes": [state_sha256(state) for state in state_strings],
+            "particle_weights": particle_weights,
+            "request_ids": [],
+            "timings": [],
+            "solver_diagnostics": result["diagnostics"],
+        }
+        return result
+    request_id = _deterministic_request_id("shared-root-request", 0)
+    opponent_prior = [list(row) for row in (_PRIOR_STATE["opp_priors"] or [])] or None
+    request = {
+        "schema": REMOTE_MCTS_SCHEMA,
+        "operation": "shared_root",
+        "request_id": request_id,
+        "index": 0,
+        "states": state_strings,
+        "particle_weights": particle_weights,
+        "iterations": iterations,
+        "continuation_iterations": continuation_iterations,
+        "seed": seed,
+        "prior_strength": prior_strength,
+        "s1_prior": [list(row) for row in (_PRIOR_STATE["priors"] or [])] or None,
+        "s2_priors": [opponent_prior for _state in state_strings],
+    }
+    started = time.monotonic()
+    responses = _remote_mcts_call([request])
+    rpc_ms = round((time.monotonic() - started) * 1000, 3)
+    if not isinstance(responses, list) or len(responses) != 1:
+        raise RuntimeError("remote shared-root solve returned the wrong batch size")
+    validated = _validate_remote_response(responses[0], request_id, 0)
+    try:
+        result = validate_shared_root_result_payload(
+            validated.get("result"),
+            expected_particles=len(state_strings),
+            expected_iterations=iterations,
+            expected_continuation_iterations=continuation_iterations,
+            expected_seed=seed,
+            expected_prior_strength=prior_strength,
+            require_replay_capture=True,
+        )
+    except ValueError as exc:
+        raise RuntimeError(f"remote shared-root result is invalid: {exc}") from exc
+    _PRIOR_STATE["remote_search"] = {
+        "operation": "shared_root",
+        "rpc_ms": rpc_ms,
+        "worlds": len(state_strings),
+        "engine": responses[0].get("engine"),
+        "state_hashes": [state_sha256(state) for state in state_strings],
+        "particle_weights": particle_weights,
+        "request_ids": [request_id],
+        "timings": [validated.get("timing")],
+        "solver_diagnostics": result["diagnostics"],
+    }
+    return result
 
 
 def _remote_holdout_batch(
@@ -2329,6 +2964,39 @@ def _prepare_search_battles(battle, search_main, sampling_channel: str | None = 
     return battles, num_battles, search_time_ms
 
 
+def root_search_mode() -> str:
+    mode = os.environ.get("METAGROSS_ROOT_SEARCH_MODE", DEFAULT_ROOT_SEARCH_MODE)
+    if mode not in ROOT_SEARCH_MODES:
+        raise RuntimeError(f"unsupported METAGROSS_ROOT_SEARCH_MODE: {mode}")
+    if mode == "shared_rm_plus":
+        if os.environ.get("METAGROSS_ALLOW_EXPERIMENTAL_SHARED_ROOT") != "1":
+            raise RuntimeError(
+                "shared RM+ requires METAGROSS_ALLOW_EXPERIMENTAL_SHARED_ROOT=1"
+            )
+        controller_mode = os.environ.get(
+            "METAGROSS_CONTROLLER_MODE", DEFAULT_CONTROLLER_MODE
+        )
+        if controller_mode != "search_first":
+            raise RuntimeError("shared RM+ requires the search_first controller")
+    if mode == "independent_ensemble":
+        if os.environ.get("METAGROSS_ALLOW_EXPERIMENTAL_ENSEMBLE") != "1":
+            raise RuntimeError(
+                "independent ensemble requires METAGROSS_ALLOW_EXPERIMENTAL_ENSEMBLE=1"
+            )
+        if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") != "1":
+            raise RuntimeError("independent ensemble requires remote MCTS")
+        if os.environ.get("METAGROSS_ALLOW_INSECURE_LOOPBACK") != "1":
+            raise RuntimeError("independent ensemble is restricted to loopback experiments")
+        if positive_environment_int("METAGROSS_INDEPENDENT_ENSEMBLE_REPEATS", 3) != 3:
+            raise RuntimeError("independent ensemble requires exactly three repeats")
+        controller_mode = os.environ.get(
+            "METAGROSS_CONTROLLER_MODE", DEFAULT_CONTROLLER_MODE
+        )
+        if controller_mode != "search_first":
+            raise RuntimeError("independent ensemble requires the search_first controller")
+    return mode
+
+
 def _remote_find_best_move(battle, search_main, harness: DecisionHarness):
     battles, num_battles, search_time_ms = harness.belief.expand(
         battle, search_main, "selection-worlds"
@@ -2344,18 +3012,102 @@ def _remote_find_best_move(battle, search_main, harness: DecisionHarness):
     ]
     from config import FoulPlayConfig
 
-    results = harness.search.evaluate(
-        states, search_time_ms, FoulPlayConfig.search_threads
-    )
+    mode = root_search_mode()
+    if mode == "shared_rm_plus":
+        weights = []
+        for _sampled, chance in battles:
+            try:
+                weight = float(chance)
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError("belief expansion returned an invalid weight") from exc
+            if not math.isfinite(weight) or weight < 0:
+                raise RuntimeError("belief expansion returned an invalid weight")
+            weights.append(weight)
+        total_weight = math.fsum(weights)
+        if total_weight <= 0:
+            raise RuntimeError("belief expansion returned no positive particle mass")
+        normalized_weights = [weight / total_weight for weight in weights]
+        iterations = positive_environment_int(
+            "METAGROSS_SHARED_ROOT_ITERATIONS", DEFAULT_SHARED_ROOT_ITERATIONS
+        )
+        continuation_iterations = positive_environment_int(
+            "METAGROSS_SHARED_ROOT_CONTINUATION_ITERATIONS",
+            DEFAULT_SHARED_ROOT_CONTINUATION_ITERATIONS,
+        )
+        solver_seed = _derived_seed("shared-root-solver", 0, required=True)
+        action_seed = _derived_seed("shared-root-action", 0, required=True)
+        if solver_seed is None or action_seed is None:
+            raise RuntimeError("shared-root deterministic seed derivation failed")
+        result = harness.search.solve_shared_root(
+            states,
+            normalized_weights,
+            iterations,
+            continuation_iterations,
+            solver_seed,
+        )
+        _PRIOR_STATE["remote_search"]["sampling_seed"] = _derived_seed(
+            "selection-worlds", 0, required=True
+        )
+        _PRIOR_STATE["remote_search"]["action_seed"] = action_seed
+        choice, telemetry = harness.controller.select_shared(
+            battle,
+            result,
+            _PRIOR_STATE["priors"],
+            seed=action_seed,
+        )
+        if os.environ.get("METAGROSS_SEARCH_DUMP"):
+            replay_envelope = build_shared_root_replay_envelope(
+                states=states,
+                source_weights=weights,
+                normalized_weights=normalized_weights,
+                iterations=iterations,
+                continuation_iterations=continuation_iterations,
+                solver_seed=solver_seed,
+                action_seed=action_seed,
+                result=result,
+                remote_search=_PRIOR_STATE["remote_search"],
+                request_actions=request_player_actions(battle),
+            )
+            _append_jsonl(
+                "METAGROSS_SEARCH_DUMP",
+                {
+                    "schema": 4,
+                    "time_ns": time.time_ns(),
+                    "context": _PRIOR_STATE["context"],
+                    "choice": choice,
+                    "original_choice": telemetry["raw_choice"],
+                    "choice_override": telemetry,
+                    "player_priors": _PRIOR_STATE["priors"],
+                    "opponent_priors": _PRIOR_STATE["opp_priors"],
+                    "remote_search": _PRIOR_STATE["remote_search"],
+                    "shared_root": result,
+                    "shared_root_replay": replay_envelope,
+                },
+            )
+        return choice
+
+    if mode == "independent_ensemble":
+        maximum_repeat_count = positive_environment_int(
+            "METAGROSS_INDEPENDENT_ENSEMBLE_REPEATS", 3
+        )
+        repeat_count = _adaptive_ensemble_repeat_count(
+            len(states), maximum_repeat_count
+        )
+        results = _remote_mcts_ensemble_batch(
+            states, search_time_ms, FoulPlayConfig.search_threads, repeat_count
+        )
+        _PRIOR_STATE["remote_search"]["maximum_repeat_count"] = maximum_repeat_count
+        _PRIOR_STATE["remote_search"]["effective_repeat_count"] = repeat_count
+        _PRIOR_STATE["remote_search"]["wire_batch_limit"] = MAX_WIRE_BATCH_SIZE
+    else:
+        repeat_count = 1
+        results = harness.search.evaluate(
+            states, search_time_ms, FoulPlayConfig.search_threads
+        )
     _PRIOR_STATE["remote_search"]["sampling_seed"] = _derived_seed(
         "selection-worlds", 0, required=True
     )
-    weighted = [
-        (result, chance, index)
-        for index, (result, (_sampled, chance)) in enumerate(
-            zip(results, battles, strict=True)
-        )
-    ]
+    weighted = _ensemble_weighted_results(results, battles, repeat_count)
     return search_main.select_move_from_mcts_results(weighted)
 
 
@@ -2377,6 +3129,17 @@ def validate_poke_engine_provenance(provenance: dict, expected_source: Path) -> 
         )
     if "seed" in parameters:
         raise RuntimeError("experimental poke-engine MCTS signature detected")
+    if provenance.get("shared_root_parameters") != [
+        "states",
+        "particle_weights",
+        "iterations",
+        "continuation_iterations",
+        "seed",
+        "prior_strength",
+        "s1_prior",
+        "s2_priors",
+    ]:
+        raise RuntimeError("production poke-engine shared-root signature mismatch")
 
 
 def inspect_poke_engine() -> dict:
@@ -2402,9 +3165,252 @@ def inspect_poke_engine() -> dict:
         "mcts_parameters": list(
             inspect.signature(poke_engine.monte_carlo_tree_search).parameters
         ),
+        "shared_root_parameters": list(
+            inspect.signature(
+                poke_engine.shared_information_set_root_search
+            ).parameters
+        ),
     }
     validate_poke_engine_provenance(provenance, expected_source)
     return provenance
+
+
+def is_loopback_websocket_uri(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in {"ws", "wss"} and parsed.hostname in {
+        "127.0.0.1",
+        "::1",
+        "localhost",
+    }
+
+
+def require_local_ensemble_websocket(uri: str) -> None:
+    if root_search_mode() == "independent_ensemble" and not is_loopback_websocket_uri(uri):
+        raise RuntimeError("independent ensemble requires a loopback Showdown websocket")
+
+
+def positive_environment_seconds(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    try:
+        value = default if raw is None else float(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive number") from exc
+    if not math.isfinite(value) or value <= 0:
+        raise RuntimeError(f"{name} must be a positive number")
+    return value
+
+
+def positive_environment_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    try:
+        value = default if raw is None else int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive integer") from exc
+    if value <= 0 or (raw is not None and str(value) != raw):
+        raise RuntimeError(f"{name} must be a positive integer")
+    return value
+
+
+class ShowdownLivenessError(TimeoutError):
+    pass
+
+
+def websocket_connect_kwargs(source: dict[str, object]) -> dict[str, object]:
+    kwargs = dict(source)
+    if os.environ.get("METAGROSS_WEBSOCKET_KEEPALIVE") == "1":
+        kwargs.setdefault(
+            "ping_interval",
+            positive_environment_seconds(
+                "METAGROSS_WEBSOCKET_PING_INTERVAL_SECONDS", 20.0
+            ),
+        )
+        kwargs.setdefault(
+            "ping_timeout",
+            positive_environment_seconds(
+                "METAGROSS_WEBSOCKET_PING_TIMEOUT_SECONDS", 60.0
+            ),
+        )
+        kwargs.setdefault("close_timeout", 10)
+    else:
+        kwargs.setdefault("ping_interval", None)
+    return kwargs
+
+
+async def receive_websocket_message(receive) -> str:
+    receive_timeout = positive_environment_seconds(
+        "METAGROSS_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS", 120.0
+    )
+    try:
+        return await asyncio.wait_for(receive(), timeout=receive_timeout)
+    except asyncio.TimeoutError as exc:
+        raise ShowdownLivenessError(
+            f"no Showdown websocket message within {receive_timeout:g}s"
+        ) from exc
+
+
+def actionable_showdown_request(message: str) -> bool:
+    for line in message.splitlines():
+        if not line.startswith("|request|"):
+            continue
+        try:
+            request = json.loads(line.removeprefix("|request|"))
+        except json.JSONDecodeError:
+            return False
+        return isinstance(request, dict) and request.get("wait") is not True and any(
+            key in request for key in ("active", "forceSwitch", "teamPreview")
+        )
+    return False
+
+
+def showdown_request_payload(message: str) -> dict | None:
+    for line in reversed(message.splitlines()):
+        if not line.startswith("|request|"):
+            continue
+        try:
+            payload = json.loads(line.removeprefix("|request|"))
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Showdown sent malformed request JSON") from exc
+        if payload is None:
+            return None
+        if not isinstance(payload, dict):
+            raise RuntimeError("Showdown request payload is not an object")
+        return payload
+    return None
+
+
+def has_showdown_request(message: str) -> bool:
+    return any(line.startswith("|request|") for line in message.splitlines())
+
+
+def showdown_sent_choice(message: str) -> str | None:
+    for line in reversed(message.splitlines()):
+        if line.startswith("|sentchoice|"):
+            return line.removeprefix("|sentchoice|")
+    return None
+
+
+def showdown_choice_error(messages: list[str]) -> str | None:
+    for message in messages:
+        for line in message.splitlines():
+            if line.startswith(
+                ("|error|[Invalid choice]", "|error|[Unavailable choice]")
+            ):
+                return line
+    return None
+
+
+def outbound_choice_identity(message_list: list[str]) -> tuple[str, int]:
+    if len(message_list) != 2:
+        raise RuntimeError("battle command has no exact rqid")
+    command, rqid_text = message_list
+    if command.startswith("/choose "):
+        choice = command.removeprefix("/choose ")
+    elif command.startswith("/switch "):
+        choice = command.removeprefix("/")
+    elif command == "/choose default":
+        choice = "default"
+    else:
+        raise RuntimeError("unsupported battle command for recovery")
+    try:
+        rqid = int(rqid_text)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("battle command has an invalid rqid") from exc
+    if rqid < 0 or str(rqid) != rqid_text:
+        raise RuntimeError("battle command has an invalid rqid")
+    return choice, rqid
+
+
+def send_recovery_action(
+    request: dict | None,
+    sent_choice: str | None,
+    expected_choice: str,
+    expected_rqid: int,
+    *,
+    terminal: bool = False,
+) -> str:
+    if terminal:
+        return "terminal"
+    if request is None:
+        raise RuntimeError("nonterminal reconnect has no request object")
+    recovered_rqid = request.get("rqid")
+    if (
+        isinstance(recovered_rqid, bool)
+        or not isinstance(recovered_rqid, int)
+        or recovered_rqid < 0
+    ):
+        raise RuntimeError("reconnect request has an invalid rqid")
+    if recovered_rqid < expected_rqid:
+        raise RuntimeError("reconnect request regressed to an older rqid")
+    if request.get("wait") is True:
+        if sent_choice is not None:
+            raise RuntimeError("wait request unexpectedly has a pending choice")
+        return "wait"
+    if recovered_rqid > expected_rqid:
+        if sent_choice is not None:
+            raise RuntimeError("newer reconnect request already has a pending choice")
+        return "advanced"
+    if sent_choice is None:
+        return "resend"
+    if sent_choice != expected_choice:
+        raise RuntimeError("reconnect found a different pending choice for the same rqid")
+    return "confirmed"
+
+
+def terminal_showdown_message(message: str) -> bool:
+    return any(line.startswith(("|win|", "|tie|")) for line in message.splitlines())
+
+
+def canonical_showdown_public_lines(message: str, room: str) -> list[str]:
+    lines = message.splitlines()
+    if not lines or lines[0] != f">{room}":
+        return []
+    ignored_prefixes = (
+        "|request|",
+        "|sentchoice|",
+        "|inactive|",
+        "|inactiveoff|",
+        "|html|",
+        "|raw|",
+        "|j|",
+        "|J|",
+        "|l|",
+        "|L|",
+        "|n|",
+        "|player|",
+        "|title|",
+        "|init|",
+        "|c|",
+        "|c:|",
+    )
+    return [
+        line
+        for line in lines[1:]
+        if line not in ("", "|") and not line.startswith(ignored_prefixes)
+    ]
+
+
+def reconnect_delta_chunks(
+    messages: list[str], room: str, previously_seen: list[str]
+) -> tuple[list[str], list[str]]:
+    replayed_lines = []
+    latest_request = None
+    for message in messages:
+        replayed_lines.extend(canonical_showdown_public_lines(message, room))
+        for line in message.splitlines()[1:]:
+            if line.startswith("|request|"):
+                latest_request = f">{room}\n{line}"
+    terminal = any(terminal_showdown_message(message) for message in messages)
+    if latest_request is None and not terminal:
+        raise RuntimeError("reconnect replay has no current request")
+    if replayed_lines[: len(previously_seen)] != previously_seen:
+        raise RuntimeError("reconnect replay does not extend prior public history")
+    delta = replayed_lines[len(previously_seen) :]
+    chunks = []
+    if delta:
+        chunks.append(f">{room}\n" + "\n".join(delta))
+    if latest_request is not None and not terminal:
+        chunks.append(latest_request)
+    return chunks, replayed_lines
 
 
 def patch_foul_play_protocol() -> None:
@@ -2425,14 +3431,9 @@ def patch_foul_play_protocol() -> None:
     original_connect = websockets.connect
 
     def connect_with_safe_ping(address, *args, **kwargs):
-        if os.environ.get("METAGROSS_WEBSOCKET_KEEPALIVE") == "1":
-            # Keep proxy tunnels active, but never let a delayed pong terminate
-            # a battle while CPU-bound search is blocking the event loop.
-            kwargs.setdefault("ping_interval", 20)
-            kwargs.setdefault("ping_timeout", None)
-        else:
-            kwargs.setdefault("ping_interval", None)
-        return original_connect(address, *args, **kwargs)
+        return original_connect(
+            address, *args, **websocket_connect_kwargs(kwargs)
+        )
 
     websocket_client.websockets.connect = connect_with_safe_ping
 
@@ -2440,55 +3441,164 @@ def patch_foul_play_protocol() -> None:
         """Authenticate without the upstream three-second proxy-idle window."""
         websocket_client.logger.info("Logging in...")
         client_id, challstr = await self.get_id_and_challstr()
-        guest_login = self.password is None
-        if guest_login:
-            response = websocket_client.requests.post(
-                self.login_uri,
-                data={
-                    "act": "getassertion",
-                    "userid": self.username,
-                    "challstr": "|".join([client_id, challstr]),
-                },
-            )
-        else:
-            response = websocket_client.requests.post(
-                self.login_uri,
-                data={
-                    "name": self.username,
-                    "pass": self.password,
-                    "challstr": "|".join([client_id, challstr]),
-                },
-            )
-        if response.status_code != 200:
-            raise websocket_client.LoginError("Could not get assertion")
-        if guest_login:
-            assertion = response.text
+        local_no_security = (
+            os.environ.get("METAGROSS_ALLOW_INSECURE_LOOPBACK") == "1"
+            and is_loopback_websocket_uri(self.address)
+        )
+        if local_no_security:
+            await self.send_message("", [f"/trn {self.username},0,"])
             user_id = self.username
         else:
-            response_json = websocket_client.json.loads(response.text[1:])
-            if "actionsuccess" not in response_json:
-                raise websocket_client.LoginError(f"Could not log-in: {response_json}")
-            assertion = response_json.get("assertion")
-            user_id = response_json["curuser"]["userid"]
-        await self.send_message("", [f"/trn {self.username},0,{assertion}"])
-        return user_id
+            guest_login = self.password is None
+            if guest_login:
+                response = websocket_client.requests.post(
+                    self.login_uri,
+                    data={
+                        "act": "getassertion",
+                        "userid": self.username,
+                        "challstr": "|".join([client_id, challstr]),
+                    },
+                    timeout=positive_environment_seconds(
+                        "METAGROSS_SHOWDOWN_LOGIN_TIMEOUT_SECONDS", 10.0
+                    ),
+                )
+            else:
+                response = websocket_client.requests.post(
+                    self.login_uri,
+                    data={
+                        "name": self.username,
+                        "pass": self.password,
+                        "challstr": "|".join([client_id, challstr]),
+                    },
+                    timeout=positive_environment_seconds(
+                        "METAGROSS_SHOWDOWN_LOGIN_TIMEOUT_SECONDS", 10.0
+                    ),
+                )
+            if response.status_code != 200:
+                raise websocket_client.LoginError("Could not get assertion")
+            if guest_login:
+                assertion = response.text
+                user_id = self.username
+            else:
+                response_json = websocket_client.json.loads(response.text[1:])
+                if "actionsuccess" not in response_json:
+                    raise websocket_client.LoginError(f"Could not log-in: {response_json}")
+                assertion = response_json.get("assertion")
+                user_id = response_json["curuser"]["userid"]
+            await self.send_message("", [f"/trn {self.username},0,{assertion}"])
+
+        timeout = positive_environment_seconds(
+            "METAGROSS_SHOWDOWN_LOGIN_TIMEOUT_SECONDS", 10.0
+        )
+        while True:
+            try:
+                message = await asyncio.wait_for(self.receive_message(), timeout=timeout)
+            except asyncio.TimeoutError as exc:
+                raise websocket_client.LoginError(
+                    f"Showdown did not confirm username {self.username}"
+                ) from exc
+            status = showdown_login_status(message, self.username)
+            if status == "confirmed":
+                return user_id
+            if status == "rejected":
+                raise websocket_client.LoginError(
+                    f"Showdown rejected username {self.username}"
+                )
 
     websocket_client.PSWebsocketClient.login = login_without_idle_delay
 
     original_receive = websocket_client.PSWebsocketClient.receive_message
 
-    async def receive_with_rating_log(self):
-        message = await original_receive(self)
+    def record_protocol(message: str, direction: str = "received") -> None:
         if message.startswith(">battle-"):
             _append_jsonl(
                 "METAGROSS_PROTOCOL_DUMP",
                 {
                     "schema": 1,
                     "time_ns": time.time_ns(),
-                    "direction": "received",
+                    "direction": direction,
                     "message": message,
                 },
             )
+
+    async def recover_and_capture(
+        self, rooms: list[str], cause: BaseException, *, stop_on_any_request: bool
+    ) -> tuple[list[str], list[str]]:
+        reconnects = getattr(self, "metagross_reconnect_count", 0)
+        max_reconnects = positive_environment_int(
+            "METAGROSS_WEBSOCKET_MAX_RECONNECTS", 1
+        )
+        if len(rooms) != 1 or reconnects >= max_reconnects:
+            raise RuntimeError(
+                f"Showdown websocket recovery exhausted after {reconnects} reconnects"
+            ) from cause
+        self.metagross_reconnect_count = reconnects + 1
+        reconnect_timeout = positive_environment_seconds(
+            "METAGROSS_WEBSOCKET_RECONNECT_TIMEOUT_SECONDS", 30.0
+        )
+        try:
+            await asyncio.wait_for(reconnect(self, rooms), timeout=reconnect_timeout)
+        except asyncio.TimeoutError as reconnect_exc:
+            raise RuntimeError(
+                f"Showdown websocket reconnect exceeded {reconnect_timeout:g}s"
+            ) from reconnect_exc
+        captured = []
+        while True:
+            captured_message = await receive_websocket_message(
+                lambda: original_receive(self)
+            )
+            record_protocol(captured_message, "reconnect_received")
+            captured.append(captured_message)
+            if terminal_showdown_message(captured_message) or (
+                stop_on_any_request and has_showdown_request(captured_message)
+            ) or (
+                not stop_on_any_request
+                and actionable_showdown_request(captured_message)
+            ):
+                break
+        histories = getattr(self, "metagross_public_history", {})
+        chunks, replayed_lines = reconnect_delta_chunks(
+            captured, rooms[0], histories.get(rooms[0], [])
+        )
+        histories[rooms[0]] = replayed_lines
+        self.metagross_public_history = histories
+        return captured, chunks
+
+    async def receive_with_rating_log(self):
+        queued = getattr(self, "metagross_reconnect_message_queue", [])
+        if queued:
+            message = queued.pop(0)
+            record_protocol(message)
+            return message
+        try:
+            if getattr(self, "metagross_fault_stall_next_receive", False):
+                self.metagross_fault_stall_next_receive = False
+
+                async def injected_stall():
+                    await asyncio.Event().wait()
+
+                message = await receive_websocket_message(injected_stall)
+            else:
+                message = await receive_websocket_message(
+                    lambda: original_receive(self)
+                )
+        except (ShowdownLivenessError, websockets.exceptions.ConnectionClosed) as exc:
+            rooms = sorted(getattr(self, "metagross_active_battle_rooms", set()))
+            _captured, chunks = await recover_and_capture(
+                self, rooms, exc, stop_on_any_request=False
+            )
+            self.metagross_reconnect_message_queue = chunks[1:]
+            record_protocol(chunks[0])
+            return chunks[0]
+        record_protocol(message)
+        lines = message.splitlines()
+        if lines and lines[0].startswith(">battle-"):
+            room = lines[0].removeprefix(">")
+            histories = getattr(self, "metagross_public_history", {})
+            histories.setdefault(room, []).extend(
+                canonical_showdown_public_lines(message, room)
+            )
+            self.metagross_public_history = histories
         for line in message.splitlines():
             if line.startswith("|raw|") and (
                 "<strong>" in line or "rating:" in line.lower()
@@ -2501,20 +3611,251 @@ def patch_foul_play_protocol() -> None:
     original_send = websocket_client.PSWebsocketClient.send_message
 
     async def send_with_battle_log(self, room, message_list):
+        battle_command = room.startswith("battle-") and bool(message_list) and (
+            message_list[0].startswith("/choose move ")
+            or message_list[0].startswith("/switch ")
+            or message_list[0] == "/choose default"
+        )
         if room.startswith("battle-"):
-            _append_jsonl(
-                "METAGROSS_PROTOCOL_DUMP",
-                {
-                    "schema": 1,
-                    "time_ns": time.time_ns(),
-                    "direction": "sent",
-                    "room": room,
-                    "messages": list(message_list),
-                },
+            rooms = getattr(self, "metagross_active_battle_rooms", set())
+            rooms.add(room)
+            self.metagross_active_battle_rooms = rooms
+        send_timeout = positive_environment_seconds(
+            "METAGROSS_WEBSOCKET_SEND_TIMEOUT_SECONDS", 10.0
+        )
+        try:
+            prospective_count = (
+                getattr(self, "metagross_battle_command_count", 0) + 1
             )
-        return await original_send(self, room, message_list)
+            unacknowledged_fault = os.environ.get(
+                "METAGROSS_FAULT_SEND_UNACKNOWLEDGED_AFTER_BATTLE_COMMANDS"
+            )
+            acknowledged_fault = os.environ.get(
+                "METAGROSS_FAULT_SEND_ACKNOWLEDGED_AFTER_BATTLE_COMMANDS"
+            )
+            if battle_command and (unacknowledged_fault or acknowledged_fault):
+                if not is_loopback_websocket_uri(self.address):
+                    raise RuntimeError("websocket fault injection is loopback-only")
+            if (
+                battle_command
+                and unacknowledged_fault
+                and prospective_count
+                == positive_environment_int(
+                    "METAGROSS_FAULT_SEND_UNACKNOWLEDGED_AFTER_BATTLE_COMMANDS", 1
+                )
+            ):
+                await self.websocket.close(code=1012, reason="send fault injection")
+                raise asyncio.TimeoutError
+            result = await asyncio.wait_for(
+                original_send(self, room, message_list), timeout=send_timeout
+            )
+            if (
+                battle_command
+                and acknowledged_fault
+                and prospective_count
+                == positive_environment_int(
+                    "METAGROSS_FAULT_SEND_ACKNOWLEDGED_AFTER_BATTLE_COMMANDS", 1
+                )
+            ):
+                await self.websocket.close(code=1012, reason="send fault injection")
+                raise asyncio.TimeoutError
+        except (asyncio.TimeoutError, websockets.exceptions.ConnectionClosed) as exc:
+            if room.startswith("battle-"):
+                _append_jsonl(
+                    "METAGROSS_PROTOCOL_DUMP",
+                    {
+                        "schema": 1,
+                        "time_ns": time.time_ns(),
+                        "direction": "send_failure",
+                        "room": room,
+                        "messages": list(message_list),
+                        "error": type(exc).__name__,
+                    },
+                )
+            if not battle_command:
+                raise RuntimeError(
+                    "ambiguous Showdown command delivery outside a recoverable choice"
+                ) from exc
+            rooms = sorted(getattr(self, "metagross_active_battle_rooms", set()))
+            captured, chunks = await recover_and_capture(
+                self, rooms, exc, stop_on_any_request=True
+            )
+            terminal = any(terminal_showdown_message(message) for message in captured)
+            request = None if terminal else next(
+                (
+                    showdown_request_payload(message)
+                    for message in reversed(captured)
+                    if has_showdown_request(message)
+                ),
+                None,
+            )
+            sent_choice = next(
+                (
+                    showdown_sent_choice(message)
+                    for message in reversed(captured)
+                    if showdown_sent_choice(message) is not None
+                ),
+                None,
+            )
+            expected_choice, expected_rqid = outbound_choice_identity(message_list)
+            recovered_rqid = request.get("rqid") if isinstance(request, dict) else None
+            recovery_action = send_recovery_action(
+                request,
+                sent_choice,
+                expected_choice,
+                expected_rqid,
+                terminal=terminal,
+            )
+            choice_error = showdown_choice_error(captured)
+            if choice_error is not None and recovery_action in {
+                "resend",
+                "confirmed",
+            }:
+                raise RuntimeError(
+                    "same-rqid reconnect contained a choice rejection"
+                ) from exc
+            public_chunks = [
+                chunk for chunk in chunks if not has_showdown_request(chunk)
+            ]
+            self.metagross_reconnect_message_queue = public_chunks
+            if recovery_action == "wait":
+                self.metagross_reconnect_message_queue = chunks
+                result = None
+                direction = "sent" if choice_error is None else "send_rejected"
+                _append_jsonl(
+                    "METAGROSS_PROTOCOL_DUMP",
+                    {
+                        "schema": 1,
+                        "time_ns": time.time_ns(),
+                        "direction": direction,
+                        "room": room,
+                        "messages": list(message_list),
+                        "recovery": "advanced_to_wait_request",
+                        "choice_error": choice_error,
+                    },
+                )
+            elif recovery_action in {"resend", "confirmed"}:
+                if recovery_action == "resend":
+                    try:
+                        result = await asyncio.wait_for(
+                            original_send(self, room, message_list), timeout=send_timeout
+                        )
+                    except (
+                        asyncio.TimeoutError,
+                        websockets.exceptions.ConnectionClosed,
+                    ) as retry_exc:
+                        raise RuntimeError(
+                            "exact Showdown command resend failed"
+                        ) from retry_exc
+                    recovery = "resent_after_missing_sentchoice"
+                else:
+                    result = None
+                    recovery = "confirmed_by_sentchoice"
+                _append_jsonl(
+                    "METAGROSS_PROTOCOL_DUMP",
+                    {
+                        "schema": 1,
+                        "time_ns": time.time_ns(),
+                        "direction": "sent",
+                        "room": room,
+                        "messages": list(message_list),
+                        "recovery": recovery,
+                    },
+                )
+            else:
+                self.metagross_reconnect_message_queue = chunks
+                result = None
+                direction = "sent" if choice_error is None else "send_rejected"
+                _append_jsonl(
+                    "METAGROSS_PROTOCOL_DUMP",
+                    {
+                        "schema": 1,
+                        "time_ns": time.time_ns(),
+                        "direction": direction,
+                        "room": room,
+                        "messages": list(message_list),
+                        "recovery": f"{recovery_action}_after_reconnect",
+                        "recovered_rqid": recovered_rqid,
+                        "choice_error": choice_error,
+                    },
+                )
+        else:
+            if room.startswith("battle-"):
+                _append_jsonl(
+                    "METAGROSS_PROTOCOL_DUMP",
+                    {
+                        "schema": 1,
+                        "time_ns": time.time_ns(),
+                        "direction": "sent",
+                        "room": room,
+                        "messages": list(message_list),
+                    },
+                )
+        if room.startswith("battle-"):
+            if battle_command:
+                count = getattr(self, "metagross_battle_command_count", 0) + 1
+                self.metagross_battle_command_count = count
+                disconnect_after = os.environ.get(
+                    "METAGROSS_FAULT_DISCONNECT_AFTER_BATTLE_COMMANDS"
+                )
+                stall_after = os.environ.get(
+                    "METAGROSS_FAULT_STALL_AFTER_BATTLE_COMMANDS"
+                )
+                if disconnect_after or stall_after:
+                    if not is_loopback_websocket_uri(self.address):
+                        raise RuntimeError("websocket fault injection is loopback-only")
+                if disconnect_after and count == positive_environment_int(
+                    "METAGROSS_FAULT_DISCONNECT_AFTER_BATTLE_COMMANDS", 1
+                ):
+                    await self.websocket.close(code=1012, reason="fault injection")
+                if stall_after and count == positive_environment_int(
+                    "METAGROSS_FAULT_STALL_AFTER_BATTLE_COMMANDS", 1
+                ):
+                    self.metagross_fault_stall_next_receive = True
+        return result
 
     websocket_client.PSWebsocketClient.send_message = send_with_battle_log
+
+    original_pokemon_battle = run_battle.pokemon_battle
+
+    async def reconnect(self, rooms: list[str]) -> None:
+        websocket_client.logger.warning(
+            "Reconnecting Showdown websocket and rebuilding rooms: %s", rooms
+        )
+        try:
+            await asyncio.wait_for(self.websocket.close(), timeout=5)
+        except Exception:
+            pass
+        replacement = await websocket_client.PSWebsocketClient.create(
+            self.username, self.password, self.address
+        )
+        self.websocket = replacement.websocket
+        self.login_uri = replacement.login_uri
+        await self.login()
+        for room in rooms:
+            await self.send_message("", [f"/join {room}"])
+        _append_jsonl(
+            "METAGROSS_PROTOCOL_DUMP",
+            {
+                "schema": 1,
+                "time_ns": time.time_ns(),
+                "direction": "reconnect",
+                "rooms": rooms,
+            },
+        )
+
+    async def pokemon_battle_with_reconnect(
+        ps_websocket_client, pokemon_battle_type, team_dict
+    ):
+        try:
+            return await original_pokemon_battle(
+                ps_websocket_client, pokemon_battle_type, team_dict
+            )
+        finally:
+            ps_websocket_client.metagross_active_battle_rooms = set()
+            ps_websocket_client.metagross_reconnect_count = 0
+
+    run_battle.pokemon_battle = pokemon_battle_with_reconnect
 
 
 def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
@@ -2619,14 +3960,22 @@ def build_decision_harness() -> DecisionHarness:
                 "tag": full_tag,
                 "decision_idx": payload.get("decision_idx"),
                 "battle_turn": payload.get("battle_turn"),
+                "rqid": payload.get("rqid"),
             },
         )
 
     return DecisionHarness(
         policy=CallablePolicy(observe, propose),
         belief=CallableBelief(_prepare_search_battles),
-        search=CallableSearch(_remote_mcts_batch, _remote_holdout_batch),
-        controller=CallableController(select_final_choice),
+        search=CallableSearch(
+            _remote_mcts_batch,
+            _remote_holdout_batch,
+            _remote_shared_root_batch,
+        ),
+        controller=CallableController(
+            controller_select_fn(),
+            select_shared_root_choice,
+        ),
         verifier=CallableVerifier(
             robust_holdout_certificate, combined_robust_holdout_certificate
         ),
@@ -2681,6 +4030,11 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         global _HOLDOUT_DECISION_SEQUENCE
         alpha_sequence_index = _HOLDOUT_DECISION_SEQUENCE
         _HOLDOUT_DECISION_SEQUENCE += 1
+        controller_mode = os.environ.get(
+            "METAGROSS_CONTROLLER_MODE", DEFAULT_CONTROLLER_MODE
+        )
+        verifier_shadow_enabled = os.environ.get("METAGROSS_VERIFIER_SHADOW") == "1"
+        verifier_required = controller_mode == "certified"
         _provisional, provisional = harness.controller.select(
             _PRIOR_STATE["battle"],
             mcts_results,
@@ -2693,7 +4047,11 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         )
         holdout_by_action = {}
         holdout_panel = None
-        if candidate_panel and os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
+        if (
+            candidate_panel
+            and os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1"
+            and (verifier_required or verifier_shadow_enabled)
+        ):
             try:
                 fresh_battles, _count, _duration = harness.belief.expand(
                     _PRIOR_STATE["battle"], search_main, "certification-worlds"
@@ -2796,6 +4154,17 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         choice_override["holdout"] = selected_holdout
         choice_override["holdout_panel"] = holdout_panel
         choice_override["candidate_panel"] = candidate_panel
+        choice_override["verifier_execution"] = {
+            "mode": (
+                "admission"
+                if verifier_required
+                else "shadow"
+                if verifier_shadow_enabled
+                else "disabled"
+            ),
+            "executed": holdout_panel is not None,
+            "selection_eligible": verifier_required,
+        }
         if choice_override["overridden"]:
             logger.warning(
                 "final-choice override (%s): %s -> %s",
@@ -2860,6 +4229,14 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
     search_main.select_move_from_mcts_results = select_move_with_dump
 
     def find_best_move_with_priors(battle):
+        request_key, request_fingerprint = battle_request_identity(battle)
+        cached = _REQUEST_CHOICE_CACHE.get(request_key)
+        if cached is not None:
+            cached_fingerprint, cached_choice = cached
+            if cached_fingerprint != request_fingerprint:
+                raise RuntimeError("Showdown replay changed an existing rqid payload")
+            logger.warning("replaying cached choice for duplicate rqid %s", request_key)
+            return cached_choice
         _PRIOR_STATE["priors"] = None
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["context"] = None
@@ -2882,9 +4259,17 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
             if os.environ.get("METAGROSS_REQUIRE_PRIORS", "1") == "1":
                 raise RuntimeError(f"required prior fetch failed: {exc!r}") from exc
             logger.warning("prior fetch failed; using unguided search: %r", exc)
-        if os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1":
-            return _remote_find_best_move(battle, search_main, harness)
-        return original_find_best_move(battle)
+        if (
+            os.environ.get("METAGROSS_REQUIRE_REMOTE_MCTS") == "1"
+            or root_search_mode() == "shared_rm_plus"
+        ):
+            choice = _remote_find_best_move(battle, search_main, harness)
+        else:
+            choice = original_find_best_move(battle)
+        _REQUEST_CHOICE_CACHE[request_key] = (request_fingerprint, choice)
+        while len(_REQUEST_CHOICE_CACHE) > MAX_TRACKED_BATTLES:
+            _REQUEST_CHOICE_CACHE.pop(next(iter(_REQUEST_CHOICE_CACHE)))
+        return choice
 
     search_main.find_best_move = find_best_move_with_priors
     run_battle.find_best_move = find_best_move_with_priors
@@ -2894,8 +4279,14 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
 
 
 def main() -> None:
+    global _POKE_ENGINE_PROVENANCE
     root = Path(__file__).resolve().parents[2]
     provenance = inspect_poke_engine()
+    _POKE_ENGINE_PROVENANCE = {
+        **provenance,
+        "contract": ENGINE_CONTRACT,
+        "source_sha256": ENGINE_SOURCE_SHA256,
+    }
     print(
         f"POKE_ENGINE_PROVENANCE {json.dumps(provenance, sort_keys=True)}", flush=True
     )
@@ -2922,8 +4313,13 @@ def main() -> None:
 
     def configure_with_environment_password():
         original_configure()
+        require_local_ensemble_websocket(FoulPlayConfig.websocket_uri)
         password = os.environ.get("METAGROSS_SHOWDOWN_PASSWORD")
-        if not password:
+        local_no_security = (
+            os.environ.get("METAGROSS_ALLOW_INSECURE_LOOPBACK") == "1"
+            and is_loopback_websocket_uri(FoulPlayConfig.websocket_uri)
+        )
+        if not password and not local_no_security:
             raise RuntimeError("METAGROSS_SHOWDOWN_PASSWORD is required")
         FoulPlayConfig.password = password
 

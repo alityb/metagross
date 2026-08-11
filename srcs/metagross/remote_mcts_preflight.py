@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Fail-closed search and paired-holdout smoke test for a remote v5 provider."""
+"""Fail-closed search, holdout, and shared-root smoke for a remote v6 provider."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+from pathlib import Path
 import re
+import sys
 import urllib.request
 import uuid
 
@@ -18,6 +21,7 @@ from srcs.metagross.mcts_contract import (
     validate_loopback_search_url,
     validate_request,
     validate_result_payload,
+    validate_shared_root_result_payload,
 )
 
 
@@ -39,6 +43,16 @@ HOLDOUT_PARAMETERS = [
     "continuation_steps",
     "seed",
     "opponent_priors",
+]
+SHARED_ROOT_PARAMETERS = [
+    "states",
+    "particle_weights",
+    "iterations",
+    "continuation_iterations",
+    "seed",
+    "prior_strength",
+    "s1_prior",
+    "s2_priors",
 ]
 
 
@@ -118,6 +132,23 @@ def build_requests(state: str) -> list[dict[str, object]]:
             "seed": 7,
             "opponent_priors": [["ember", 0.75], ["tackle", 0.25]],
         },
+        {
+            "schema": REQUEST_SCHEMA,
+            "operation": "shared_root",
+            "request_id": uuid.uuid4().hex,
+            "index": 2,
+            "states": [state, state],
+            "particle_weights": [0.5, 0.5],
+            "iterations": 100,
+            "continuation_iterations": 2,
+            "seed": 11,
+            "prior_strength": 1.0,
+            "s1_prior": [["watergun", 0.75], ["tackle", 0.25]],
+            "s2_priors": [
+                [["ember", 0.75], ["tackle", 0.25]],
+                [["ember", 0.75], ["tackle", 0.25]],
+            ],
+        },
     ]
     for request in requests:
         validate_request(request)
@@ -139,6 +170,7 @@ def validate_engine_identity(
         "native_sha256": native_sha256,
         "mcts_parameters": MCTS_PARAMETERS,
         "holdout_parameters": HOLDOUT_PARAMETERS,
+        "shared_root_parameters": SHARED_ROOT_PARAMETERS,
     }
     for field, value in expected.items():
         if engine.get(field) != value:
@@ -232,7 +264,7 @@ def run_preflight(
             raise RuntimeError("remote preflight response correlation failed")
         if request["operation"] == "search":
             validate_result_payload(response.get("result"))
-        else:
+        elif request["operation"] == "paired_holdout":
             validate_holdout_result_payload(
                 response.get("result"),
                 expected_pairs=request["rollouts"],
@@ -243,10 +275,30 @@ def run_preflight(
                     * request["continuation_steps"]
                 ),
             )
+        else:
+            validate_shared_root_result_payload(
+                response.get("result"),
+                expected_particles=len(request["states"]),
+                expected_iterations=request["iterations"],
+                expected_continuation_iterations=request[
+                    "continuation_iterations"
+                ],
+                expected_seed=request["seed"],
+                expected_prior_strength=request["prior_strength"],
+            )
     return {
         "ok": True,
+        "preflight_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "schema": REQUEST_SCHEMA,
         "transport": transport,
+        "app": app if transport == "modal" else None,
+        "function": function,
+        "url": url if transport == "http" else None,
+        "python_executable": str(Path(sys.executable).resolve()),
+        "python_executable_sha256": hashlib.sha256(Path(sys.executable).resolve().read_bytes()).hexdigest(),
+        "python_prefix": str(Path(sys.prefix).resolve()),
+        "arguments": list(sys.argv[1:]),
+        "environment": dict(sorted(os.environ.items())),
         "engine": engine,
         "operations": [request["operation"] for request in requests],
     }
@@ -260,6 +312,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--function", default="search_batch")
     parser.add_argument("--url")
     parser.add_argument("--instance-type")
+    parser.add_argument("--output", type=Path)
     return parser.parse_args(argv)
 
 
@@ -273,6 +326,11 @@ def main(argv: list[str] | None = None) -> int:
         url=args.url,
         instance_type=args.instance_type,
     )
+    if args.output:
+        output = args.output.expanduser().resolve()
+        if output.exists():
+            raise FileExistsError(output)
+        output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, sort_keys=True))
     return 0
 

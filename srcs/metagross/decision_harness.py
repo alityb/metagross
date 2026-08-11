@@ -26,6 +26,15 @@ class BeliefInterface(Protocol):
 class SearchInterface(Protocol):
     def evaluate(self, states: list[str], duration_ms: int, threads: int): ...
 
+    def solve_shared_root(
+        self,
+        states: list[str],
+        particle_weights: list[float],
+        iterations: int,
+        continuation_iterations: int,
+        seed: int,
+    ): ...
+
     def holdout(
         self,
         states: list[str],
@@ -42,6 +51,10 @@ class SearchInterface(Protocol):
 
 class ControllerInterface(Protocol):
     def select(self, battle: object, mcts_results: object, priors: object, **kwargs): ...
+
+    def select_shared(
+        self, battle: object, shared_result: object, priors: object, seed: int, **kwargs
+    ): ...
 
 
 class VerifierInterface(Protocol):
@@ -83,6 +96,7 @@ class CallableBelief:
 class CallableSearch:
     evaluate_fn: Callable[..., Any]
     holdout_fn: Callable[..., Any]
+    solve_shared_root_fn: Callable[..., Any]
 
     def evaluate(self, states: list[str], duration_ms: int, threads: int):
         return self.evaluate_fn(states, duration_ms, threads)
@@ -110,13 +124,39 @@ class CallableSearch:
             telemetry_key=telemetry_key,
         )
 
+    def solve_shared_root(
+        self,
+        states: list[str],
+        particle_weights: list[float],
+        iterations: int,
+        continuation_iterations: int,
+        seed: int,
+    ):
+        return self.solve_shared_root_fn(
+            states,
+            particle_weights,
+            iterations,
+            continuation_iterations,
+            seed,
+        )
+
 
 @dataclass(frozen=True)
 class CallableController:
     select_fn: Callable[..., Any]
+    select_shared_fn: Callable[..., Any] | None = None
 
     def select(self, battle: object, mcts_results: object, priors: object, **kwargs):
         return self.select_fn(battle, mcts_results, priors, **kwargs)
+
+    def select_shared(
+        self, battle: object, shared_result: object, priors: object, seed: int, **kwargs
+    ):
+        if self.select_shared_fn is None:
+            raise RuntimeError("shared-root controller is not configured")
+        return self.select_shared_fn(
+            battle, shared_result, priors, seed=seed, **kwargs
+        )
 
 
 @dataclass(frozen=True)

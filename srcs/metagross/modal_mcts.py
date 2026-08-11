@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -17,12 +18,13 @@ from srcs.metagross.mcts_contract import (
     engine_identity,
     holdout_result_payload,
     result_payload,
+    shared_root_result_payload,
     validate_priors,
     validate_request,
 )
 
 
-APP_NAME = "metagross-mcts-r1-p16"
+APP_NAME = os.environ.get("METAGROSS_MODAL_MCTS_APP_NAME", "metagross-mcts-r1-p16")
 FUNCTION_NAME = "search_batch"
 MAX_BATCH_SIZE = MODAL_CONTAINER_BATCH_SIZE
 MAX_CONTAINERS = MODAL_MAX_CONTAINERS
@@ -128,8 +130,8 @@ def _search_one(request: dict[str, object], batch_size: int) -> dict[str, object
 
         import poke_engine
 
-        state = poke_engine.State.from_string(validated["state"])
         if validated["operation"] == "search":
+            state = poke_engine.State.from_string(validated["state"])
             result = poke_engine.monte_carlo_tree_search(
                 state,
                 validated["duration_ms"],
@@ -139,7 +141,8 @@ def _search_one(request: dict[str, object], batch_size: int) -> dict[str, object
                 c_puct=validated["c_puct"],
             )
             payload = _result_payload(result)
-        else:
+        elif validated["operation"] == "paired_holdout":
+            state = poke_engine.State.from_string(validated["state"])
             result = poke_engine.paired_root_policy_evaluation(
                 state,
                 validated["baseline_action"],
@@ -159,6 +162,31 @@ def _search_one(request: dict[str, object], batch_size: int) -> dict[str, object
                     * validated["continuation_iterations"]
                     * validated["continuation_steps"]
                 ),
+            )
+        else:
+            states = [
+                poke_engine.State.from_string(state)
+                for state in validated["states"]
+            ]
+            result = poke_engine.shared_information_set_root_search(
+                states,
+                validated["particle_weights"],
+                validated["iterations"],
+                validated["continuation_iterations"],
+                validated["seed"],
+                validated["prior_strength"],
+                validated["s1_prior"],
+                validated["s2_priors"],
+            )
+            payload = shared_root_result_payload(
+                result,
+                expected_particles=len(states),
+                expected_iterations=validated["iterations"],
+                expected_continuation_iterations=validated[
+                    "continuation_iterations"
+                ],
+                expected_seed=validated["seed"],
+                expected_prior_strength=validated["prior_strength"],
             )
         return {
             **base,

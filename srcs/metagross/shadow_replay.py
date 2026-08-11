@@ -292,6 +292,12 @@ def reconstruct_battles(
                     battle.opponent.name = role
                     battle.opponent.account_name = account
 
+        # Production checks the whole websocket message for a terminal outcome
+        # before applying any bundled request. Mirror that ordering so a final
+        # request+win message cannot create a phantom decision.
+        if any(line.startswith(("|win|", "|tie|")) for line in lines):
+            continue
+
         first_request = battle.user.active is None
         if first_request:
             request_line = next(

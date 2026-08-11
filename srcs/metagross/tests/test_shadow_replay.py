@@ -48,6 +48,35 @@ class ShadowReplayTest(unittest.TestCase):
             "1769ea5485f57061a31ba01c918839a2c0d3f5c9ca544cf82473318c1390fb06",
         )
 
+    def test_terminal_message_ignores_bundled_request(self):
+        protocol, searches, metadata = shadow_replay.load_capture(
+            shadow_replay.DEFAULT_CAPTURE
+        )
+        request_message = next(
+            row["message"]
+            for row in reversed(protocol)
+            if row.get("direction") == "received"
+            and "\n|request|" in row.get("message", "")
+        )
+        room, request_line = request_message.split("\n", 1)
+        request_line = next(
+            line for line in request_line.splitlines() if line.startswith("|request|")
+        )
+        terminal_protocol = protocol + [
+            {
+                "direction": "received",
+                "message": f"{room}\n{request_line}\n|win|winner",
+            }
+        ]
+
+        battles = shadow_replay.reconstruct_battles(
+            terminal_protocol,
+            searches,
+            metadata["manifest"]["ladder"]["username"],
+        )
+
+        self.assertEqual(set(battles), set(searches))
+
     def test_replay_seeds_exclude_action_identity(self):
         arguments = ("digest", "fresh-worlds", "battle", 3)
         self.assertEqual(

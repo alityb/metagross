@@ -13,6 +13,7 @@ from unittest import mock
 
 from srcs.metagross import aws_http_mcts
 from srcs.metagross.mcts_contract import REQUEST_SCHEMA, validate_request
+from srcs.metagross.tests.shared_root_fixture import native_shared_root_result
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -27,6 +28,10 @@ def load_probe():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def shared_root_result():
+    return native_shared_root_result()
 
 
 class AwsHttpMctsTest(unittest.TestCase):
@@ -111,6 +116,45 @@ class AwsHttpMctsTest(unittest.TestCase):
         self.assertNotIn("outcomes", response["result"])
         engine.paired_root_policy_evaluation.assert_called_once_with(
             "state", "tackle", "protect", 2, 2, 1, 7, [("protect", 1.0)]
+        )
+
+    def test_worker_dispatches_shared_root_as_one_particle_cohort(self):
+        engine = SimpleNamespace(
+            State=SimpleNamespace(from_string=lambda value: f"parsed:{value}"),
+            shared_information_set_root_search=mock.Mock(
+                return_value=shared_root_result()
+            ),
+        )
+        request = {
+            "schema": aws_http_mcts.REQUEST_SCHEMA,
+            "operation": "shared_root",
+            "request_id": "shared",
+            "index": 0,
+            "states": ["a", "b"],
+            "particle_weights": [0.25, 0.75],
+            "iterations": 100,
+            "continuation_iterations": 8,
+            "seed": 7,
+            "prior_strength": 1.0,
+            "s1_prior": [["tackle", 1.0]],
+            "s2_priors": [None, [["protect", 1.0]]],
+        }
+        with mock.patch.dict("sys.modules", {"poke_engine": engine}):
+            response = aws_http_mcts._search_one(
+                request, 1, {"contract": "test"}, time.monotonic()
+            )
+
+        self.assertTrue(response["ok"])
+        self.assertEqual(response["result"]["diagnostics"]["input_particle_count"], 2)
+        engine.shared_information_set_root_search.assert_called_once_with(
+            ["parsed:a", "parsed:b"],
+            [0.25, 0.75],
+            100,
+            8,
+            7,
+            1.0,
+            [("tackle", 1.0)],
+            [None, [("protect", 1.0)]],
         )
 
     def test_aws_resource_identity_is_explicit(self):

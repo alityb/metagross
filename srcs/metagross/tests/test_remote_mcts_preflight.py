@@ -20,6 +20,7 @@ class RemoteMctsPreflightTest(unittest.TestCase):
             "native_sha256": cls.NATIVE,
             "mcts_parameters": remote_mcts_preflight.MCTS_PARAMETERS,
             "holdout_parameters": remote_mcts_preflight.HOLDOUT_PARAMETERS,
+            "shared_root_parameters": remote_mcts_preflight.SHARED_ROOT_PARAMETERS,
             "resources": {
                 "physical_cores": 16.0,
                 "vcpus_equivalent": 32,
@@ -55,11 +56,59 @@ class RemoteMctsPreflightTest(unittest.TestCase):
             "continuation_iterations_executed": 8,
         }
 
-    def test_build_requests_exercises_search_and_holdout(self):
+    @staticmethod
+    def shared_root_result():
+        digest = "fnv1a64:" + "0" * 16
+        return {
+            "policy": [
+                {
+                    "action": "watergun",
+                    "probability": 1.0,
+                    "counterfactual_value": 0.5,
+                }
+            ],
+            "opponent_policies": [
+                [{"action": "ember", "probability": 1.0}]
+            ],
+            "diagnostics": {
+                "solver_contract": "weighted-shared-rm-plus-v1",
+                "iterations": 100,
+                "continuation_iterations": 2,
+                "seed": 11,
+                "prior_strength": 1.0,
+                "expected_value": 0.5,
+                "player_best_response_value": 0.5,
+                "opponent_best_response_value": 0.5,
+                "player_best_response_gain": 0.0,
+                "opponent_best_response_gain": 0.0,
+                "nash_conv": 0.0,
+                "exploitability": 0.0,
+                "player_regret_bound": 0.0,
+                "opponent_regret_bound": 0.0,
+                "total_regret_bound": 0.0,
+                "payoff_cells": 1,
+                "total_forced_continuation_iterations": 2,
+                "input_particle_count": 2,
+                "positive_particle_count": 2,
+                "canonical_particle_count": 1,
+                "normalized_weight_sum": 1.0,
+                "action_support_digest": digest,
+                "particle_digest": digest,
+                "payoff_digest": digest,
+                "player_prior_digest": digest,
+                "opponent_prior_digest": digest,
+            },
+        }
+
+    def test_build_requests_exercises_search_holdout_and_shared_root(self):
         requests = remote_mcts_preflight.build_requests("state")
 
-        self.assertEqual([row["operation"] for row in requests], ["search", "paired_holdout"])
+        self.assertEqual(
+            [row["operation"] for row in requests],
+            ["search", "paired_holdout", "shared_root"],
+        )
         self.assertEqual(requests[1]["opponent_priors"], [["ember", 0.75], ["tackle", 0.25]])
+        self.assertEqual(requests[2]["particle_weights"], [0.5, 0.5])
 
     def test_modal_preflight_validates_both_operations_and_full_identity(self):
         engine = self.engine()
@@ -93,6 +142,8 @@ class RemoteMctsPreflightTest(unittest.TestCase):
                             }
                             if request["operation"] == "search"
                             else self.holdout_result()
+                            if request["operation"] == "paired_holdout"
+                            else self.shared_root_result()
                         )
                         responses.append(
                             {
@@ -117,7 +168,9 @@ class RemoteMctsPreflightTest(unittest.TestCase):
             )
 
         self.assertTrue(result["ok"])
-        self.assertEqual(result["operations"], ["search", "paired_holdout"])
+        self.assertEqual(
+            result["operations"], ["search", "paired_holdout", "shared_root"]
+        )
 
     def test_preflight_rejects_partial_engine_identity(self):
         engine = self.engine()
