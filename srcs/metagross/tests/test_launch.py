@@ -2870,16 +2870,90 @@ class LaunchTest(unittest.TestCase):
 
         session = prior_server.BattleSession.__new__(prior_server.BattleSession)
         session.pending_request = True
-        session.battle = SimpleNamespace(last_request={"rqid": 6})
+        session.last_request_json = {"rqid": 6}
+        session.last_request_sha256 = "a" * 64
+        session.last_request_legality = {"actions": ["tackle"]}
         session.cached_rqid = 6
+        session.cached_request_sha256 = "a" * 64
         session.cached_response = {"rqid": 6, "decision_idx": 2}
         session.decision_idx = 3
         self.assertEqual(
-            session.compute_priors(expected_rqid=6),
+            session.compute_priors(
+                expected_rqid=6, expected_request_sha256="a" * 64
+            ),
             {"rqid": 6, "decision_idx": 2},
         )
         self.assertFalse(session.pending_request)
         self.assertEqual(session.decision_idx, 3)
+
+    def test_private_request_support_is_authoritative(self):
+        request = {
+            "rqid": 9,
+            "forceSwitch": [False],
+            "active": [{
+                "canTerastallize": "Fire",
+                "trapped": False,
+                "moves": [
+                    {"id": "encore", "pp": 5, "disabled": False},
+                    {"id": "protect", "pp": 10, "disabled": True},
+                    {"id": "recover", "pp": 0, "disabled": False},
+                ],
+            }],
+            "side": {"pokemon": [
+                {"active": True, "condition": "100/100", "details": "Testmon, L80"},
+                {"active": False, "condition": "50/100", "details": "Blissey, L80"},
+                {"active": False, "condition": "0 fnt", "details": "Mew, L80"},
+            ]},
+        }
+        expected = {
+            "encore",
+            "encore-tera",
+            "switch blissey",
+        }
+        support = prior_server.request_action_support(request)
+        self.assertEqual(set(support["actions"]), expected)
+        battle = SimpleNamespace(rqid=9, request_json=request)
+        self.assertEqual(run_foul_play.request_player_actions(battle), expected)
+        self.assertEqual(
+            prior_server.canonical_request_sha256(request),
+            run_foul_play.battle_request_identity(
+                SimpleNamespace(
+                    battle_tag="battle-test", rqid=9, request_json=request
+                )
+            )[1],
+        )
+
+    def test_private_request_force_switch_ignores_trapping(self):
+        request = {
+            "rqid": 10,
+            "forceSwitch": [True],
+            "active": [{"trapped": True, "moves": []}],
+            "side": {"pokemon": [
+                {"active": True, "condition": "0 fnt", "details": "Lead, L80"},
+                {"active": False, "condition": "1/100", "details": "Backup, L80"},
+            ]},
+        }
+        self.assertEqual(
+            set(prior_server.request_action_support(request)["actions"]),
+            {"switch backup"},
+        )
+        self.assertEqual(
+            run_foul_play.request_player_actions(
+                SimpleNamespace(rqid=10, request_json=request)
+            ),
+            {"switch backup"},
+        )
+
+    def test_private_request_hash_mismatch_fails_closed(self):
+        session = prior_server.BattleSession.__new__(prior_server.BattleSession)
+        session.pending_request = True
+        session.last_request_json = {"rqid": 6}
+        session.last_request_sha256 = "a" * 64
+        session.last_request_legality = {"actions": ["tackle"]}
+        with self.assertRaisesRegex(RuntimeError, "SHA-256 mismatch"):
+            session.compute_priors(
+                expected_rqid=6, expected_request_sha256="b" * 64
+            )
 
     def test_wait_for_health_rejects_stale_listener_then_reports_child_exit(self):
         process = SimpleNamespace(

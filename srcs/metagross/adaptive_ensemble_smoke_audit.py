@@ -12,8 +12,22 @@ import re
 
 from srcs.metagross import canary_audit, shadow_replay
 from srcs.metagross.h2h_audit import _read_jsonl, _sha256
-from srcs.metagross.mcts_contract import MAX_WIRE_BATCH_SIZE, validate_result_payload
+from srcs.metagross.mcts_contract import (
+    MAX_WIRE_BATCH_SIZE,
+    MODAL_CONTAINER_BATCH_SIZE,
+    validate_result_payload,
+)
 from srcs.metagross.world_provenance import deterministic_request_id
+
+
+def _expected_modal_batch_sizes(searches: int) -> list[int]:
+    if searches < 1:
+        raise ValueError("search count must be positive")
+    sizes = []
+    for start in range(0, searches, MODAL_CONTAINER_BATCH_SIZE):
+        size = min(MODAL_CONTAINER_BATCH_SIZE, searches - start)
+        sizes.extend([size] * size)
+    return sizes
 
 
 def audit(
@@ -230,13 +244,15 @@ def audit(
                 or any(not math.isfinite(weight) or weight < 0 for weight in sample_weights)
                 or not math.isclose(math.fsum(sample_weights), 1.0, abs_tol=1e-12)
                 or any(
-                    not isinstance(timing.get("batch_size"), int)
-                    or timing["batch_size"] != 16
+                    isinstance(timing.get("batch_size"), bool)
+                    or not isinstance(timing.get("batch_size"), int)
                     or not math.isfinite(float(timing.get("search_ms", math.nan)))
                     or float(timing["search_ms"]) < 0
                     for timing in timings
                 )
                 or len(timings) != searches
+                or [timing.get("batch_size") for timing in timings]
+                != _expected_modal_batch_sizes(searches)
             ):
                 failures.append(f"{search_path.name}/{key}: request evidence mismatch")
             request_id_count += len(request_ids)

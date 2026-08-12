@@ -15,6 +15,7 @@ This module intentionally contains only the accepted r1 inference path.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import hmac
 import json
@@ -33,6 +34,97 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def canonical_request_sha256(request: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(request, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def request_action_support(request: object) -> dict[str, object]:
+    """Derive exact own-side action support from a private Showdown request."""
+    if not isinstance(request, dict):
+        raise RuntimeError("battle request is not an object")
+    rqid = request.get("rqid")
+    if isinstance(rqid, bool) or not isinstance(rqid, int) or rqid < 0:
+        raise RuntimeError("battle request has an invalid rqid")
+    force_switch_rows = request.get("forceSwitch", [False])
+    if not isinstance(force_switch_rows, list) or not force_switch_rows:
+        raise RuntimeError("battle request has invalid forceSwitch metadata")
+    force_switch = force_switch_rows[0]
+    if not isinstance(force_switch, bool):
+        raise RuntimeError("battle request has invalid forceSwitch metadata")
+    active_rows = request.get("active", [])
+    if active_rows is None:
+        active_rows = []
+    if not isinstance(active_rows, list):
+        raise RuntimeError("battle request has invalid active metadata")
+    active = active_rows[0] if active_rows else {}
+    if not isinstance(active, dict):
+        raise RuntimeError("battle request has invalid active metadata")
+    trapped = active.get("trapped", False)
+    if not isinstance(trapped, bool):
+        raise RuntimeError("battle request has invalid trapped metadata")
+    can_tera = active.get("canTerastallize", False)
+    if can_tera is None:
+        can_tera = False
+    if not isinstance(can_tera, (bool, str)):
+        raise RuntimeError("battle request has invalid Tera metadata")
+    can_tera = bool(can_tera)
+
+    actions: set[str] = set()
+    if not force_switch:
+        moves = active.get("moves", [])
+        if not isinstance(moves, list):
+            raise RuntimeError("battle request has invalid move metadata")
+        for move in moves:
+            if not isinstance(move, dict):
+                raise RuntimeError("battle request has invalid move metadata")
+            move_id = norm(move.get("id", ""))
+            disabled = move.get("disabled", False)
+            if not isinstance(disabled, bool):
+                raise RuntimeError("battle request has invalid disabled metadata")
+            pp = move.get("pp")
+            if isinstance(pp, bool) or (pp is not None and not isinstance(pp, int)):
+                raise RuntimeError("battle request has invalid PP metadata")
+            if move_id and not disabled and pp != 0:
+                actions.add(move_id)
+                if can_tera:
+                    actions.add(f"{move_id}-tera")
+
+    side = request.get("side")
+    if not isinstance(side, dict) or not isinstance(side.get("pokemon"), list):
+        raise RuntimeError("battle request has invalid side metadata")
+    if force_switch or not trapped:
+        for pokemon in side["pokemon"]:
+            if not isinstance(pokemon, dict):
+                raise RuntimeError("battle request has invalid Pokemon metadata")
+            if pokemon.get("active") is True:
+                continue
+            condition = pokemon.get("condition")
+            if not isinstance(condition, str):
+                raise RuntimeError("battle request has invalid Pokemon condition")
+            hp_text = condition.split(" ", 1)[0].split("/", 1)[0]
+            fainted = condition.endswith(" fnt") or hp_text == "0"
+            if fainted:
+                continue
+            details = pokemon.get("details")
+            if not isinstance(details, str) or not details:
+                raise RuntimeError("battle request has invalid Pokemon details")
+            species = norm(details.split(",", 1)[0])
+            if species:
+                actions.add(f"switch {species}")
+    if not actions:
+        raise RuntimeError("battle request contains no legal actions")
+    return {
+        "authority": "private_showdown_request",
+        "rqid": rqid,
+        "force_switch": force_switch,
+        "trapped": trapped,
+        "can_tera": can_tera,
+        "actions": sorted(actions),
+    }
 
 
 def session_key(namespace: str, tag: str) -> str:
@@ -73,8 +165,8 @@ def correlated_request_rqid(
     return rqid
 
 
-def opponent_action_support_complete(battle) -> bool:
-    """Return whether public state covers the opponent's full root action support."""
+def opponent_action_catalog_complete(battle) -> bool:
+    """Return whether all public opponent moves and roster members are known."""
     try:
         active = battle.opponent_active_pokemon
         team = list(battle.opponent_team.values())
@@ -95,6 +187,9 @@ def opponent_action_support_complete(battle) -> bool:
         if member_value is not None and member_value == active_value:
             return True
     return False
+
+
+opponent_action_support_complete = opponent_action_catalog_complete
 
 
 def verify_local_checkpoint(
@@ -184,7 +279,11 @@ class BattleSession:
         self.last_state = None
         self.last_name_table: dict[str, int] = {}  # engine_move_str -> action idx
         self.pending_request = False
+        self.last_request_json: dict | None = None
+        self.last_request_sha256: str | None = None
+        self.last_request_legality: dict[str, object] | None = None
         self.cached_rqid: int | None = None
+        self.cached_request_sha256: str | None = None
         self.cached_response: dict | None = None
         # /lines and /priors arrive on different HTTP threads. Keep each battle
         # state consistent while allowing unrelated battles to proceed.
@@ -208,7 +307,13 @@ class BattleSession:
             payload = "|".join(parts[2:]).strip()
             if payload:
                 try:
-                    self.battle.parse_request(json.loads(payload))
+                    request = json.loads(payload)
+                    legality = request_action_support(request)
+                    request_sha256 = canonical_request_sha256(request)
+                    self.battle.parse_request(request)
+                    self.last_request_json = copy.deepcopy(request)
+                    self.last_request_sha256 = request_sha256
+                    self.last_request_legality = legality
                     self.pending_request = True
                 except Exception as e:  # noqa: BLE001
                     print(f"WARN request parse {self.tag}: {e!r}", flush=True)
@@ -251,13 +356,25 @@ class BattleSession:
         self,
         requester_username: str | None = None,
         expected_rqid: int | None = None,
+        expected_request_sha256: str | None = None,
     ) -> dict:
         rqid = correlated_request_rqid(
-            self.pending_request, self.battle.last_request, expected_rqid
+            self.pending_request, self.last_request_json, expected_rqid
         )
+        if (
+            not isinstance(expected_request_sha256, str)
+            or len(expected_request_sha256) != 64
+            or self.last_request_sha256 != expected_request_sha256
+        ):
+            raise RuntimeError("battle request SHA-256 mismatch")
+        if self.last_request_legality is None:
+            raise RuntimeError("battle request legality is unavailable")
         cache_status = request_cache_status(rqid, self.cached_rqid)
         if cache_status == "cached":
-            if self.cached_response is None:
+            if (
+                self.cached_response is None
+                or self.cached_request_sha256 != expected_request_sha256
+            ):
                 raise RuntimeError("cached rqid has no prior response")
             self.pending_request = False
             return dict(self.cached_response)
@@ -277,24 +394,53 @@ class BattleSession:
         self.last_state = state
 
         obs = self.server.obs_space.state_to_obs(state)
-        # legality mask
+        # name table: action idx -> engine move string
+        name_table: dict[str, int] = {}
+        try:
+            moves = consistent_move_order(
+                list(self.battle.active_pokemon.moves.values())
+            ) if self.battle.active_pokemon else []
+        except Exception:
+            moves = []
+        try:
+            bench = consistent_pokemon_order(
+                [p for p in self.battle.team.values() if not p.fainted and not p.active]
+            )
+        except Exception:
+            bench = []
+        for i, mv in enumerate(moves[:4]):
+            move_id = norm(mv.id)
+            name_table[move_id] = i
+            name_table[f"{move_id}-tera"] = i + 9
+        for i, p in enumerate(bench[:5]):
+            name_table[f"switch {norm(p.name)}"] = i + 4
+
+        request_actions = set(self.last_request_legality["actions"])
+        mapped_actions: dict[str, int] = {}
+        for action in request_actions:
+            if action in name_table:
+                mapped_actions[action] = name_table[action]
+                continue
+            if action.startswith("switch "):
+                target = norm(action.removeprefix("switch "))
+                candidates = [
+                    (name, index)
+                    for name, index in name_table.items()
+                    if name.startswith("switch ")
+                    and (
+                        target.startswith(norm(name.removeprefix("switch ")))
+                        or norm(name.removeprefix("switch ")).startswith(target)
+                    )
+                ]
+                if len(candidates) == 1:
+                    mapped_actions[candidates[0][0]] = candidates[0][1]
+                    continue
+            raise RuntimeError(f"request action is absent from policy table: {action}")
         illegal = np.ones(13, dtype=bool)
+        for index in mapped_actions.values():
+            illegal[index] = False
         mask_fallback = False
         mask_fallback_error = None
-        try:
-            for a in UniversalAction.definitely_valid_actions(state, self.battle):
-                illegal[a.action_idx] = False
-        except Exception as exc:
-            # Fail-open for serving (a missing mask must not stall the game),
-            # but flag it so schema-v3 consumers can count/reject these rows:
-            # their legality validation is vacuous.
-            illegal[:] = False
-            mask_fallback = True
-            mask_fallback_error = f"{type(exc).__name__}: {exc}"
-        if not mask_fallback:
-            mask_fallback, mask_fallback_error = recover_empty_legality_mask(
-                illegal, UniversalAction.maybe_valid_actions(state)
-            )
         obs = dict(obs)
         obs["illegal_actions"] = illegal
         # Stateless two-step inference is intentionally used here. The live
@@ -351,29 +497,10 @@ class BattleSession:
             probs = (~illegal).astype(float)
         probs = probs / probs.sum()
 
-        # name table: action idx -> engine move string
-        name_table: dict[str, int] = {}
-        try:
-            moves = consistent_move_order(
-                list(self.battle.active_pokemon.moves.values())
-            ) if self.battle.active_pokemon else []
-        except Exception:
-            moves = []
-        try:
-            bench = consistent_pokemon_order(
-                [p for p in self.battle.team.values() if not p.fainted and not p.active]
-            )
-        except Exception:
-            bench = []
-        for i, mv in enumerate(moves[:4]):
-            name_table[mv.id] = i
-            name_table[f"{mv.id}-tera"] = i + 9
-        for i, p in enumerate(bench[:5]):
-            name_table[f"switch {norm(p.name)}"] = i + 4
-        self.last_name_table = name_table
+        self.last_name_table = mapped_actions
 
         priors = {}
-        for name, idx in name_table.items():
+        for name, idx in mapped_actions.items():
             priors[name] = float(probs[idx])
 
         decision_idx = self.decision_idx
@@ -385,12 +512,14 @@ class BattleSession:
             # A decision must never be played whose observation was not
             # durably recorded.
             dump_row = {
-                "schema": 4,
+                "schema": 5,
                 "tag": self.tag,
                 "namespace": self.namespace,
                 "decision_idx": decision_idx,
                 "battle_turn": battle_turn,
                 "rqid": rqid,
+                "request_sha256": expected_request_sha256,
+                "own_legality": self.last_request_legality,
                 # The requester's actual PS username (per-game generated by
                 # eval.run) is the join key against decision logs; the launch
                 # --username is only a fallback label.
@@ -404,7 +533,7 @@ class BattleSession:
                 "illegal_actions": [bool(x) for x in illegal],
                 "mask_fallback": mask_fallback,
                 "mask_fallback_error": mask_fallback_error,
-                "name_table": name_table,
+                "name_table": mapped_actions,
                 "probs": [float(p) for p in probs],
                 "opponent_prior": self.last_opponent_prior_evidence,
             }
@@ -424,8 +553,12 @@ class BattleSession:
             "decision_idx": decision_idx,
             "battle_turn": battle_turn,
             "rqid": rqid,
+            "request_sha256": expected_request_sha256,
+            "own_legality": self.last_request_legality,
+            "opponent_support": self.last_opponent_prior_evidence,
         }
         self.cached_rqid = rqid
+        self.cached_request_sha256 = expected_request_sha256
         self.cached_response = response
         return dict(response)
 
@@ -447,6 +580,10 @@ class BattleSession:
 
         self.last_opponent_prior_evidence = {
             "support_complete": False,
+            "catalog_complete": False,
+            "authority": "public_inference",
+            "request_observed": False,
+            "support_kind": "publicly_possible_superset",
             "status": "ineligible",
             "reason": "incomplete_public_action_support",
             "name_table": {},
@@ -455,9 +592,9 @@ class BattleSession:
             "mass_sum": 0.0,
         }
         try:
-            support_complete = opponent_action_support_complete(self.battle)
-            self.last_opponent_prior_evidence["support_complete"] = support_complete
-            if not support_complete:
+            catalog_complete = opponent_action_catalog_complete(self.battle)
+            self.last_opponent_prior_evidence["catalog_complete"] = catalog_complete
+            if not catalog_complete:
                 return {}
             opp_battle = self._make_opp_battle()
             if opp_battle is None:
@@ -563,7 +700,11 @@ class BattleSession:
                 if not illegal[idx]:
                     opp_priors[name] = float(probs[idx])
             self.last_opponent_prior_evidence = {
-                "support_complete": True,
+                "support_complete": False,
+                "catalog_complete": True,
+                "authority": "public_inference",
+                "request_observed": False,
+                "support_kind": "publicly_possible_superset",
                 "status": "used",
                 "reason": None,
                 "name_table": opp_name_table,
@@ -784,9 +925,15 @@ def main() -> None:
                 return
             live_session = session_key(namespace, tag)
             if path == "/lines":
+                lines = data.get("lines")
+                if not isinstance(lines, list) or any(
+                    not isinstance(line, str) for line in lines
+                ):
+                    self._json(400, {"error": "lines must be a list of strings"})
+                    return
                 sess = server.session(live_session, tag, namespace)
                 with sess.lock:
-                    for line in data.get("lines", []):
+                    for line in lines:
                         sess.feed_line(line)
                 self._json(200, {"ok": True})
             elif path == "/end":
@@ -804,6 +951,7 @@ def main() -> None:
                 namespace = query.get("namespace", [""])[0]
                 requester_username = query.get("username", [""])[0] or None
                 rqid_text = query.get("rqid", [""])[0]
+                request_sha256 = query.get("request_sha256", [""])[0]
                 if not isinstance(tag, str) or not isinstance(namespace, str):
                     self._json(400, {"error": "tag and namespace must be strings"})
                     return
@@ -814,10 +962,15 @@ def main() -> None:
                 except ValueError:
                     self._json(400, {"error": "rqid must be a non-negative integer"})
                     return
+                if not re.fullmatch(r"[0-9a-f]{64}", request_sha256):
+                    self._json(400, {"error": "request_sha256 must be lowercase SHA-256"})
+                    return
                 try:
                     sess = server.session(session_key(namespace, tag), tag, namespace)
                     with sess.lock:
-                        result = sess.compute_priors(requester_username, expected_rqid)
+                        result = sess.compute_priors(
+                            requester_username, expected_rqid, request_sha256
+                        )
                     self._json(200, result)
                 except Exception as e:  # noqa: BLE001
                     import traceback

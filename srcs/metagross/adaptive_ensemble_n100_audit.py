@@ -287,7 +287,7 @@ def audit(
                 continue
             context = row["context"]
             if (
-                prior.get("schema") != 4
+                prior.get("schema") not in {4, 5}
                 or prior.get("rqid") != context.get("rqid")
                 or prior.get("battle_turn") != context.get("battle_turn")
                 or prior.get("username") != username

@@ -678,14 +678,89 @@ def derive_policy_baseline(
 
 
 def request_player_actions(battle) -> set[str] | None:
-    """Build the action names authorized by Foul Play's current request clone."""
+    """Build exact own-side actions from the private Showdown request."""
+    request = getattr(battle, "request_json", None)
+    rqid = getattr(battle, "rqid", None)
+    if request is None and rqid is None:
+        # Standalone controller fixtures and offline replay callers predate raw
+        # request retention. Live play is request-bound in propose() below.
+        return _legacy_clone_player_actions(battle)
+    if not isinstance(request, dict) or request.get("rqid") != rqid:
+        raise RuntimeError("battle has no correlated private request")
+    force_switch_rows = request.get("forceSwitch", [False])
+    if not isinstance(force_switch_rows, list) or not force_switch_rows:
+        raise RuntimeError("battle request has invalid forceSwitch metadata")
+    force_switch = force_switch_rows[0]
+    if not isinstance(force_switch, bool):
+        raise RuntimeError("battle request has invalid forceSwitch metadata")
+    active_rows = request.get("active", [])
+    if active_rows is None:
+        active_rows = []
+    if not isinstance(active_rows, list):
+        raise RuntimeError("battle request has invalid active metadata")
+    active = active_rows[0] if active_rows else {}
+    if not isinstance(active, dict):
+        raise RuntimeError("battle request has invalid active metadata")
+    actions: set[str] = set()
+    if not force_switch:
+        can_tera = active.get("canTerastallize", False)
+        if can_tera is None:
+            can_tera = False
+        if not isinstance(can_tera, (bool, str)):
+            raise RuntimeError("battle request has invalid Tera metadata")
+        moves = active.get("moves", [])
+        if not isinstance(moves, list):
+            raise RuntimeError("battle request has invalid move metadata")
+        for move in moves:
+            if not isinstance(move, dict):
+                raise RuntimeError("battle request has invalid move metadata")
+            disabled = move.get("disabled", False)
+            pp = move.get("pp")
+            if not isinstance(disabled, bool):
+                raise RuntimeError("battle request has invalid disabled metadata")
+            if isinstance(pp, bool) or (pp is not None and not isinstance(pp, int)):
+                raise RuntimeError("battle request has invalid PP metadata")
+            if disabled or pp == 0:
+                continue
+            name = _normalize_identifier(move.get("id", ""))
+            if not name:
+                continue
+            actions.add(name)
+            if can_tera:
+                actions.add(f"{name}-tera")
+    trapped = active.get("trapped", False)
+    if not isinstance(trapped, bool):
+        raise RuntimeError("battle request has invalid trapped metadata")
+    side = request.get("side")
+    if not isinstance(side, dict) or not isinstance(side.get("pokemon"), list):
+        raise RuntimeError("battle request has invalid side metadata")
+    if force_switch or not trapped:
+        for pokemon in side["pokemon"]:
+            if not isinstance(pokemon, dict):
+                raise RuntimeError("battle request has invalid Pokemon metadata")
+            if pokemon.get("active") is True:
+                continue
+            condition = pokemon.get("condition")
+            details = pokemon.get("details")
+            if not isinstance(condition, str) or not isinstance(details, str):
+                raise RuntimeError("battle request has invalid Pokemon metadata")
+            hp_text = condition.split(" ", 1)[0].split("/", 1)[0]
+            if condition.endswith(" fnt") or hp_text == "0":
+                continue
+            target = _normalize_identifier(details.split(",", 1)[0])
+            if target:
+                actions.add(f"switch {target}")
+    if not actions:
+        raise RuntimeError("battle request contains no legal actions")
+    return actions
+
+
+def _legacy_clone_player_actions(battle) -> set[str] | None:
     user = getattr(battle, "user", None)
     active = getattr(user, "active", None)
+    if active is None or not hasattr(active, "moves"):
+        return None
     actions: set[str] = set()
-    if active is None:
-        return None
-    if not hasattr(active, "moves"):
-        return None
     force_switch = bool(getattr(battle, "force_switch", False))
     if not force_switch:
         can_tera = bool(getattr(active, "can_terastallize", False))
@@ -693,12 +768,11 @@ def request_player_actions(battle) -> set[str] | None:
             if bool(getattr(move, "disabled", False)):
                 continue
             name = str(getattr(move, "name", getattr(move, "id", "")) or "")
-            if not name:
-                continue
-            actions.add(name)
-            if can_tera:
-                actions.add(f"{name}-tera")
-    if not bool(getattr(user, "trapped", False)):
+            if name:
+                actions.add(name)
+                if can_tera:
+                    actions.add(f"{name}-tera")
+    if force_switch or not bool(getattr(user, "trapped", False)):
         for pokemon in getattr(user, "reserve", ()) or ():
             try:
                 alive = float(getattr(pokemon, "hp", 0)) > 0
@@ -3932,12 +4006,11 @@ def build_decision_harness() -> DecisionHarness:
         from config import FoulPlayConfig
 
         username = quote(str(getattr(FoulPlayConfig, "username", "") or ""))
-        rqid = getattr(battle, "rqid", None)
-        if isinstance(rqid, bool) or not isinstance(rqid, int) or rqid < 0:
-            raise RuntimeError("battle has no valid rqid")
+        (_identity_tag, rqid), request_sha256 = battle_request_identity(battle)
         with urllib.request.urlopen(
             f"{server_url}/priors?tag={full_tag}"
-            f"&username={username}&namespace={quote(namespace)}&rqid={rqid}",
+            f"&username={username}&namespace={quote(namespace)}&rqid={rqid}"
+            f"&request_sha256={request_sha256}",
             timeout=30,
         ) as response:
             payload = json.loads(response.read())
@@ -3946,6 +4019,8 @@ def build_decision_harness() -> DecisionHarness:
             raise RuntimeError("policy server returned no player priors")
         if payload.get("rqid") != rqid:
             raise RuntimeError("policy server returned stale request priors")
+        if payload.get("request_sha256") != request_sha256:
+            raise RuntimeError("policy server returned priors for a different request")
         opponent_priors = sanitize_opponent_priors(
             battle, payload.get("opp_priors") or {}
         )
@@ -3961,6 +4036,9 @@ def build_decision_harness() -> DecisionHarness:
                 "decision_idx": payload.get("decision_idx"),
                 "battle_turn": payload.get("battle_turn"),
                 "rqid": payload.get("rqid"),
+                "request_sha256": payload.get("request_sha256"),
+                "own_legality": payload.get("own_legality"),
+                "opponent_support": payload.get("opponent_support"),
             },
         )
 
