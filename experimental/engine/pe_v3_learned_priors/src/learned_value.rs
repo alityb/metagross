@@ -1,6 +1,8 @@
 use crate::choices::{Choices, MoveCategory};
 use crate::engine::damage_calc::type_effectiveness_modifier;
+use crate::engine::items::Items;
 use crate::engine::state::MoveChoice;
+use crate::pokemon::PokemonName;
 use crate::state::{Pokemon, PokemonStatus, Side, State};
 use std::env;
 use std::fs;
@@ -24,6 +26,8 @@ use std::sync::OnceLock;
 // 12  speed_diff                (s1_eff_speed - s2_eff_speed) / 500 — who goes first
 // 13  outspeeds                 +1 if s1 faster, -1 if s2 faster, 0 if tied
 const FEATURE_COUNT: usize = 14;
+const RESOURCE_FEATURE_COUNT: usize = 23;
+const CONSERVED_RESOURCE_FEATURE_COUNT: usize = 21;
 
 #[derive(Debug)]
 enum LearnedValueModel {
@@ -41,6 +45,10 @@ enum LearnedValueModel {
         w3: Vec<f32>,
         b3: f32,
     },
+    ResourceLinear {
+        bias: f32,
+        weights: Vec<f32>,
+    },
 }
 
 static MODEL: OnceLock<Option<LearnedValueModel>> = OnceLock::new();
@@ -51,16 +59,14 @@ pub fn learned_eval_enabled() -> bool {
 
 pub fn learned_value(state: &State) -> Option<f32> {
     let model = model()?;
-    let features = extract_features(state);
-    let logit = model.predict(&features);
+    let logit = model.predict_state(state);
     Some(sigmoid(logit).clamp(0.0, 1.0))
 }
 
 /// Raw logit from the model (before sigmoid). Used for root-centered evaluation.
 pub fn learned_logit(state: &State) -> Option<f32> {
     let model = model()?;
-    let features = extract_features(state);
-    Some(model.predict(&features))
+    Some(model.predict_state(state))
 }
 
 /// Standard (unscaled) sigmoid for use with learned logits.
@@ -81,6 +87,10 @@ pub fn extract_features_vec(state: &State) -> Vec<f32> {
     extract_features(state).to_vec()
 }
 
+pub fn extract_resource_features_vec(state: &State) -> Vec<f32> {
+    extract_resource_features(state).to_vec()
+}
+
 fn model() -> Option<&'static LearnedValueModel> {
     MODEL.get_or_init(load_model).as_ref()
 }
@@ -97,6 +107,21 @@ fn load_model() -> Option<LearnedValueModel> {
 }
 
 impl LearnedValueModel {
+    fn predict_state(&self, state: &State) -> f32 {
+        match self {
+            Self::ResourceLinear { bias, weights } => {
+                let features = extract_resource_features(state);
+                *bias
+                    + weights
+                        .iter()
+                        .zip(features.iter())
+                        .map(|(weight, feature)| weight * feature)
+                        .sum::<f32>()
+            }
+            _ => self.predict(&extract_features(state)),
+        }
+    }
+
     fn predict(&self, features: &[f32; FEATURE_COUNT]) -> f32 {
         match self {
             LearnedValueModel::Linear { bias, weights } => {
@@ -138,6 +163,9 @@ impl LearnedValueModel {
                 }
                 logit
             }
+            LearnedValueModel::ResourceLinear { .. } => {
+                unreachable!("resource model requires resource features")
+            }
         }
     }
 }
@@ -155,6 +183,12 @@ fn parse_floats<'a, I: Iterator<Item = &'a str>>(
 }
 
 fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
+    if contents
+        .lines()
+        .any(|line| line.trim() == "metagross_resource_shadow_v1")
+    {
+        return parse_resource_model(contents).map(Some);
+    }
     if contents
         .lines()
         .any(|l| l.trim() == "metagross_value_mlp_v1")
@@ -199,6 +233,72 @@ fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
         bias: bias.ok_or("missing bias")?,
         weights: weights.ok_or("missing weights")?,
     }))
+}
+
+fn parse_resource_model(contents: &str) -> Result<LearnedValueModel, String> {
+    let mut dims = None;
+    let mut bias = None;
+    let mut weights = None;
+    for raw in contents.lines() {
+        let line = raw.split('#').next().unwrap_or("").trim();
+        if line.is_empty() || line == "metagross_resource_shadow_v1" {
+            continue;
+        }
+        let mut parts = line.split_whitespace();
+        match parts.next() {
+            Some("dims") => {
+                dims = Some(
+                    parts
+                        .next()
+                        .ok_or("resource dims missing value")?
+                        .parse::<usize>()
+                        .map_err(|error| format!("invalid resource dims: {}", error))?,
+                );
+            }
+            Some("bias") => {
+                bias = Some(
+                    parts
+                        .next()
+                        .ok_or("resource bias missing value")?
+                        .parse::<f32>()
+                        .map_err(|error| format!("invalid resource bias: {}", error))?,
+                );
+            }
+            Some("weights") => {
+                weights = Some(parse_floats(parts, "resource weight")?);
+            }
+            Some(other) => return Err(format!("unknown resource model line: {}", other)),
+            None => {}
+        }
+    }
+    if dims != Some(RESOURCE_FEATURE_COUNT) {
+        return Err(format!(
+            "resource model requires dims {}",
+            RESOURCE_FEATURE_COUNT
+        ));
+    }
+    let weights = weights.ok_or("missing resource weights")?;
+    if weights.len() != RESOURCE_FEATURE_COUNT {
+        return Err(format!(
+            "expected {} resource weights, found {}",
+            RESOURCE_FEATURE_COUNT,
+            weights.len()
+        ));
+    }
+    if weights[..CONSERVED_RESOURCE_FEATURE_COUNT]
+        .iter()
+        .any(|weight| !weight.is_finite() || *weight < 0.0)
+        || weights[CONSERVED_RESOURCE_FEATURE_COUNT..]
+            .iter()
+            .any(|weight| !weight.is_finite())
+    {
+        return Err("resource weights violate finite non-negative contract".to_string());
+    }
+    let bias = bias.ok_or("missing resource bias")?;
+    if !bias.is_finite() {
+        return Err("resource bias is non-finite".to_string());
+    }
+    Ok(LearnedValueModel::ResourceLinear { bias, weights })
 }
 
 fn parse_mlp_model(contents: &str) -> Result<LearnedValueModel, String> {
@@ -602,6 +702,150 @@ fn team_stat_total(side: &Side) -> f32 {
         / 6000.0
 }
 
+fn known_pokemon(pokemon: &Pokemon) -> bool {
+    pokemon.id != PokemonName::NONE
+}
+
+fn used_tera(side: &Side) -> bool {
+    side.pokemon
+        .into_iter()
+        .any(|pokemon| known_pokemon(pokemon) && pokemon.terastallized)
+}
+
+fn screen_score(side: &Side) -> f32 {
+    let conditions = &side.side_conditions;
+    ((conditions.reflect + conditions.light_screen + conditions.aurora_veil * 2) as f32 / 8.0)
+        .clamp(0.0, 1.0)
+}
+
+fn hazard_score(side: &Side) -> f32 {
+    let conditions = &side.side_conditions;
+    ((conditions.stealth_rock
+        + conditions.spikes
+        + conditions.toxic_spikes
+        + conditions.sticky_web * 2) as f32
+        / 8.0)
+        .clamp(0.0, 1.0)
+}
+
+fn boost_score(side: &Side) -> f32 {
+    ((side.attack_boost
+        + side.defense_boost
+        + side.special_attack_boost
+        + side.special_defense_boost
+        + side.speed_boost) as f32
+        / 30.0)
+        .clamp(-1.0, 1.0)
+}
+
+fn resource_pp(side: &Side) -> (f32, f32) {
+    let mut reserve = 0.0;
+    let mut available = 0.0;
+    let mut count = 0_u32;
+    for pokemon in side.pokemon.into_iter() {
+        if !known_pokemon(pokemon) || pokemon.hp <= 0 {
+            continue;
+        }
+        for pokemon_move in pokemon.moves.into_iter() {
+            if pokemon_move.id == Choices::NONE {
+                continue;
+            }
+            let pp = (pokemon_move.pp as f32).clamp(0.0, 64.0);
+            reserve += pp.ln_1p() / 65.0_f32.ln();
+            available += (pokemon_move.pp > 0 && !pokemon_move.disabled) as u8 as f32;
+            count += 1;
+        }
+    }
+    if count == 0 {
+        (0.0, 0.0)
+    } else {
+        (reserve / count as f32, available / count as f32)
+    }
+}
+
+/// Deployable resource-shadow features.
+///
+/// Indices 16-19 are reserved for public information but remain zero until a
+/// determinized search state carries the causal public reveal mask. Reading
+/// completed opponent reserves here would leak the sampled hidden world.
+fn extract_resource_features(state: &State) -> [f32; RESOURCE_FEATURE_COUNT] {
+    let own = &state.side_one;
+    let opponent = &state.side_two;
+    let own_active = &own.pokemon[own.active_index];
+    let opponent_active = &opponent.pokemon[opponent.active_index];
+    let own_alive = own
+        .pokemon
+        .into_iter()
+        .filter(|pokemon| known_pokemon(pokemon) && pokemon.hp > 0)
+        .count();
+    let live_bench = own
+        .pokemon
+        .into_iter()
+        .enumerate()
+        .filter(|(index, pokemon)| {
+            *index != own.active_index as usize && known_pokemon(pokemon) && pokemon.hp > 0
+        })
+        .count();
+    let bench_hp = own
+        .pokemon
+        .into_iter()
+        .enumerate()
+        .filter(|(index, pokemon)| *index != own.active_index as usize && known_pokemon(pokemon))
+        .map(|(_, pokemon)| hp_fraction(pokemon))
+        .sum::<f32>()
+        / 5.0;
+    let opponent_fainted = opponent
+        .pokemon
+        .into_iter()
+        .filter(|pokemon| known_pokemon(pokemon) && pokemon.hp <= 0)
+        .count();
+    let own_items = own
+        .pokemon
+        .into_iter()
+        .filter(|pokemon| {
+            known_pokemon(pokemon)
+                && pokemon.hp > 0
+                && pokemon.item != Items::NONE
+                && pokemon.item != Items::UNKNOWNITEM
+        })
+        .count();
+    let (pp_reserve, move_availability) = resource_pp(own);
+    [
+        own.pokemon
+            .into_iter()
+            .filter(|pokemon| known_pokemon(pokemon))
+            .map(hp_fraction)
+            .sum::<f32>()
+            / 6.0,
+        own_alive as f32 / 6.0,
+        hp_fraction(own_active),
+        bench_hp,
+        live_bench as f32 / 5.0,
+        (!used_tera(own)) as u8 as f32,
+        pp_reserve,
+        move_availability,
+        1.0 - hp_fraction(opponent_active),
+        opponent_fainted as f32 / 6.0,
+        (opponent_active.status != PokemonStatus::NONE) as u8 as f32,
+        used_tera(opponent) as u8 as f32,
+        ((boost_score(own) - boost_score(opponent) + 2.0) / 4.0).clamp(0.0, 1.0),
+        ((screen_score(own) - screen_score(opponent) + 1.0) / 2.0).clamp(0.0, 1.0),
+        ((hazard_score(opponent) - hazard_score(own) + 1.0) / 2.0).clamp(0.0, 1.0),
+        (((own.substitute_health > 0) as u8 as f32
+            - (opponent.substitute_health > 0) as u8 as f32
+            + 1.0)
+            / 2.0)
+            .clamp(0.0, 1.0),
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        own_items as f32 / 6.0,
+        0.0,
+        state.trick_room.active as u8 as f32,
+    ]
+}
+
 // ── Speed helpers ─────────────────────────────────────────────────────────────
 fn speed_boost_mult(boost: i8) -> f32 {
     match boost {
@@ -706,4 +950,41 @@ fn extract_features(state: &State) -> [f32; FEATURE_COUNT] {
         speed_diff,                                          // 12 NEW: speed advantage
         outspeeds,                                           // 13 NEW: turn order
     ]
+}
+
+#[cfg(test)]
+mod resource_shadow_tests {
+    use super::*;
+
+    fn resource_model(weight: f32) -> String {
+        format!(
+            "metagross_resource_shadow_v1\ndims 23\nbias 0\nweights {}\n",
+            std::iter::repeat(weight.to_string())
+                .take(RESOURCE_FEATURE_COUNT)
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+    }
+
+    #[test]
+    fn resource_model_requires_non_negative_conserved_prices() {
+        assert!(matches!(
+            parse_resource_model(&resource_model(0.25)),
+            Ok(LearnedValueModel::ResourceLinear { .. })
+        ));
+        let mut weights = vec!["0"; RESOURCE_FEATURE_COUNT];
+        weights[0] = "-0.1";
+        let invalid = format!(
+            "metagross_resource_shadow_v1\ndims 23\nbias 0\nweights {}\n",
+            weights.join(" ")
+        );
+        assert!(parse_resource_model(&invalid).is_err());
+    }
+
+    #[test]
+    fn deployable_information_features_are_inactive_and_bounded() {
+        let features = extract_resource_features(&State::default());
+        assert!(features.iter().all(|value| value.is_finite() && *value >= 0.0 && *value <= 1.0));
+        assert_eq!(&features[16..20], &[0.0, 0.0, 0.0, 0.0]);
+    }
 }

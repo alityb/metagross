@@ -1,0 +1,90 @@
+{
+  "development": {
+    "battles": 50,
+    "path": "experimental/runs/resource_aware_expert_20260814/development-panel.jsonl",
+    "sha256": "55105e7b336b68a2658e6456322f0e34dbe5ef394c15076b14acb3046862ac63"
+  },
+  "eligible_roots": 1000,
+  "holdout": {
+    "battles": 50,
+    "path": "experimental/runs/resource_aware_expert_20260814/holdout-panel.jsonl",
+    "sha256": "c622aa7d4a016c6d025c2f5562102add3404e2347440ee5f79a27d5b51636d5c"
+  },
+  "input_panel": {
+    "path": "experimental/runs/public_action_q_local_20260814/training-panel.jsonl",
+    "sha256": "9d8fbf40363dab02c80713cd3bcb5074b28d227dd2800ad83ac6276e78ab50c6"
+  },
+  "overlap_battles": 0,
+  "panel_schema": "metagross-public-mcts-root-panel/v1",
+  "report_sha256": "4cdf962a65a16833c9b68f181ae9847a3b2a98adfc094171410532f943a3a59a",
+  "schema": "metagross-resource-expert-panel-report/v1",
+  "selection_seed": 20260814,
+  "source_decision_logs": [
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w1/accepted_r1_vs_accepted_r1_peer/shard_00/agent_a_decisions.jsonl",
+      "sha256": "ad9bfa30bd65f4dca9e8731304116f294665460a36ece3d0e5be28b0948247e1"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w1/accepted_r1_vs_accepted_r1_peer/shard_01/agent_a_decisions.jsonl",
+      "sha256": "29ddc0e8f448eee74f36b2ab1b1b78486def6cee79c5f17c6ae68a4d575c113b"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w1/accepted_r1_vs_accepted_r1_peer/shard_02/agent_a_decisions.jsonl",
+      "sha256": "aab61864b636f4a1322c94ddc91647873f21f9e53ace5081fde2f903e098f62d"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w1/accepted_r1_vs_accepted_r1_peer/shard_03/agent_a_decisions.jsonl",
+      "sha256": "88dd9f692e667b81d087b6039b99f35ec54de7f0c8957bbdf1f84ca7ed4c6c12"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w2/accepted_r1_vs_accepted_r1_peer/shard_00/agent_a_decisions.jsonl",
+      "sha256": "10773eaeea1b23460915d0f79d0e27b1334d301f88ad9c262cf646cc911bec60"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w2/accepted_r1_vs_accepted_r1_peer/shard_01/agent_a_decisions.jsonl",
+      "sha256": "fd95859c2639391706f5f3125df9d0adb1b673233e6c11fa9798273335a4056a"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w2/accepted_r1_vs_accepted_r1_peer/shard_02/agent_a_decisions.jsonl",
+      "sha256": "772b31b7a5d469bebf0fbcc1809b52329f75e388e1f54e3654d7180f3a07ecdd"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w2/accepted_r1_vs_accepted_r1_peer/shard_03/agent_a_decisions.jsonl",
+      "sha256": "91e4ae1cfdbe0cf25ca4d1a5deec3a72f287613b0809674776501d4bd1fdba0d"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w3/accepted_r1_vs_accepted_r1_peer/shard_00/agent_a_decisions.jsonl",
+      "sha256": "5c1c352d3409fcabfe1792887714a01aac77de1b44cb1567598d8e0571875c9f"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w3/accepted_r1_vs_accepted_r1_peer/shard_01/agent_a_decisions.jsonl",
+      "sha256": "b06562dd6e7f142ba0488b4a16ef44524926c1b0a03eaf1ae319f67a201ada13"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w3/accepted_r1_vs_accepted_r1_peer/shard_02/agent_a_decisions.jsonl",
+      "sha256": "a11510606fba932babf793b804c7c7f8869af9631227b4aea45fc1c3d89cc9f7"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w3/accepted_r1_vs_accepted_r1_peer/shard_03/agent_a_decisions.jsonl",
+      "sha256": "df09b06d736c7bc39517ffe858f742fd8fca15ca0024305fad8181fa7a052eb9"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w4/accepted_r1_vs_accepted_r1_peer/shard_00/agent_a_decisions.jsonl",
+      "sha256": "ff2d0ff6a12c50aeb3693675688465cd9a64a18f9e443cd794e514e4e8076df8"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w4/accepted_r1_vs_accepted_r1_peer/shard_01/agent_a_decisions.jsonl",
+      "sha256": "e1f011b490f0b53a5f10f623e353e3839691f76c9764bdfc66b2bbaee7f55b3c"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w4/accepted_r1_vs_accepted_r1_peer/shard_02/agent_a_decisions.jsonl",
+      "sha256": "a7b8ff232a367fc6ee2b657b735442700c85c3c4c414975fe4d722734ff31cee"
+    },
+    {
+      "path": "experimental/runs/mcts_v3_final_snapshot/raw/w4/accepted_r1_vs_accepted_r1_peer/shard_03/agent_a_decisions.jsonl",
+      "sha256": "685354ff0a6579e4589a6a1425976e4c2cf2a3842513274c46f4d49ea96e3739"
+    }
+  ],
+  "split_contract": "one_root_per_battle; development/holdout battle-disjoint; 50/50 Tera stratum",
+  "status": "frozen_before_teacher_execution"
+}

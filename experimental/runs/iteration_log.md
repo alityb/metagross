@@ -2262,3 +2262,67 @@ one-second teacher. The next authorized performance experiment is:
    resource-stratified anchors;
 5. test the weights-only student inside the identical 500 ms controller;
 6. scale PFSP/league generation only after that equal-budget gate passes.
+
+## 2026-08-14: Resource-aware long-horizon expert development gate
+
+**Scope and correction:** The next authorized teacher experiment was executed
+locally on CPU. Auditing the retained 1,000-root / 2,000-schedule action-Q
+oracle found that it contained no `-tera` actions even though 437/1,000 source
+roots still admitted Tera under the corrected engine. It cannot measure Tera's
+option value and was not reused as the resource teacher. A fresh isolated Gen9
+engine build exposed Tera variants on 6,992/16,000 sampled worlds.
+
+Implemented an interpretable 23-term resource-shadow contract covering own HP,
+active/bench HP, switch depth, Tera, PP, move availability, opposing HP/faints,
+status/Tera, boosts, screens, hazards, Substitute, held-item reserve, and two
+context terms. The first 21 coefficients are nonnegative by construction. Four
+opponent-information positions are reserved but fixed to zero in deployable
+search: determinized leaves contain sampled hidden sets but no causal public
+reveal mask, so reading their apparent moves/items/abilities would leak the
+sampled world. Information option value remains blocked on the missing
+public-history-to-search bridge rather than being silently approximated.
+
+The Python and Rust extractors matched across 1,000 sampled roots with maximum
+absolute error `1.57e-7`. Three focused Python contract tests pass, the scripts
+compile, and the Gen9+Tera Rust library compiles. The constrained linear model
+was calibrated on the same 184,213 terminal-labeled decision states from 4,998
+self-play battles used by the earlier public value study, with a deterministic
+battle-disjoint 70/15/15 split and inverse decision-count battle weights. It
+reached 68.93% test accuracy and 0.19702 Brier versus 0.25000 constant Brier.
+This was treated only as calibration, never as a strength result. Model hashes:
+JSON `84e6176f72453db7eb718b49e5896b911c3d7556ae4624ce09b0f0c0b20345bf`;
+engine text
+`9ed2aa54ecc7d168f473d4db264f48b9850763ada048873c4f377a7b5f444dd5`.
+
+Frozen two battle-disjoint 50-root panels from the prior 1,000-battle source,
+each with 25 Tera-available and 25 Tera-spent/forbidden roots. Development
+panel SHA-256:
+`55105e7b336b68a2658e6456322f0e34dbe5ef394c15076b14acb3046862ac63`;
+untouched holdout SHA-256:
+`c622aa7d4a016c6d025c2f5562102add3404e2347440ee5f79a27d5b51636d5c`.
+Every root has two schedules and eight common worlds. The reference used 50k
+exact iterations/world under a separate seed namespace; both treatment arms
+used 20k iterations/world.
+
+On the 100 development schedule units, archived historical 500 ms actions had
+mean oracle regret 0.041663, 48% top-1, and 18 regrets at least 0.10. Equal-depth
+unmodified search had mean regret 0.001690, 88% top-1, and zero catastrophic
+regrets. The frozen resource blend 0.25 worsened mean regret to 0.003739. The
+single allowed development-only sweep also failed: weights 0.05/0.10/0.15
+produced mean regrets 0.00169049/0.00225136/0.00205994. Their mean improvements
+over equal-depth hand search were all negative, and no bootstrap lower endpoint
+was positive. Across weights, only 2-7 of 100 actions changed and none selected
+Tera.
+
+**Decision:** The explicit associational resource-shadow leaf does not improve
+the independently scored development actions. Stop it before holdout, H2H,
+target collection, distillation, or any GXE claim. The holdout remains
+untouched. Do not tune more weights or relax the gate. The strong gap between
+equal-depth search and archived historical actions is only a lead: it is biased
+toward the hand evaluator and the comparator predates causal-history R1. A
+future corrected high-budget teacher must compare against current causal R1 and
+survive outcome-grounded or live evidence before its deviations are distilled.
+
+All work was local CPU. No GPU, Modal, Nebius, Overshoot, public ladder games,
+or paid compute was used. Detailed protocol and results are in
+`experimental/runs/resource_aware_expert_20260814/`.

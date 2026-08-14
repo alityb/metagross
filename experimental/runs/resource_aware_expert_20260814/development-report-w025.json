@@ -1,0 +1,46 @@
+{
+  "battles": 50,
+  "gate": {
+    "beats_equal_iteration_hand": false,
+    "beats_historical_500ms": true,
+    "no_added_catastrophes_vs_hand": true,
+    "positive_battle_ci": false
+  },
+  "hand_sha256": "f0b9c10277b1aa93b9514202730ad01c991c24d1ff5674a194888dc3acb1fb2e",
+  "metrics": {
+    "hand": {
+      "catastrophic_regret_count": 0,
+      "mean_regret": 0.0016897216029459123,
+      "oracle_top1": 0.88,
+      "tera_rate": 0.0
+    },
+    "historical": {
+      "catastrophic_regret_count": 18,
+      "mean_regret": 0.041662955409909115,
+      "oracle_top1": 0.48,
+      "tera_rate": 0.02
+    },
+    "resource": {
+      "catastrophic_regret_count": 0,
+      "mean_regret": 0.0037389662163611896,
+      "oracle_top1": 0.85,
+      "tera_rate": 0.0
+    },
+    "resource_vs_hand": {
+      "battle_bootstrap_ci95": [
+        -0.0061767603004487,
+        0.000798242692000577
+      ],
+      "changed_units": 7,
+      "mean_regret_improvement": -0.0020492446134152773
+    }
+  },
+  "next": "stop_before_holdout_h2h_and_distillation",
+  "oracle_sha256": "288179bf443e08c7494cd22b54f29f3b6573ca4997d222d9d639b06f9ccbca80",
+  "pairs": 100,
+  "panel_sha256": "55105e7b336b68a2658e6456322f0e34dbe5ef394c15076b14acb3046862ac63",
+  "passed": false,
+  "report_sha256": "2042e314fbbe31b2e5716d37691c48b862cb239e41262140d4b7959a8d693343",
+  "resource_sha256": "cdf3cd12f8ccd4e82f9d7a8050e8fb6620db2d850d87a457a8ab7245e2bfc4d9",
+  "schema": "metagross-resource-expert-root-gate/v1"
+}

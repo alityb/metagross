@@ -1,0 +1,46 @@
+{
+  "battles": 50,
+  "gate": {
+    "beats_equal_iteration_hand": false,
+    "beats_historical_500ms": true,
+    "no_added_catastrophes_vs_hand": true,
+    "positive_battle_ci": false
+  },
+  "hand_sha256": "f0b9c10277b1aa93b9514202730ad01c991c24d1ff5674a194888dc3acb1fb2e",
+  "metrics": {
+    "hand": {
+      "catastrophic_regret_count": 0,
+      "mean_regret": 0.0016897216029459123,
+      "oracle_top1": 0.88,
+      "tera_rate": 0.0
+    },
+    "historical": {
+      "catastrophic_regret_count": 18,
+      "mean_regret": 0.041662955409909115,
+      "oracle_top1": 0.48,
+      "tera_rate": 0.02
+    },
+    "resource": {
+      "catastrophic_regret_count": 0,
+      "mean_regret": 0.001690492828321424,
+      "oracle_top1": 0.86,
+      "tera_rate": 0.0
+    },
+    "resource_vs_hand": {
+      "battle_bootstrap_ci95": [
+        -2.313676126535699e-06,
+        0.0
+      ],
+      "changed_units": 2,
+      "mean_regret_improvement": -7.712253755118998e-07
+    }
+  },
+  "next": "stop_before_holdout_h2h_and_distillation",
+  "oracle_sha256": "288179bf443e08c7494cd22b54f29f3b6573ca4997d222d9d639b06f9ccbca80",
+  "pairs": 100,
+  "panel_sha256": "55105e7b336b68a2658e6456322f0e34dbe5ef394c15076b14acb3046862ac63",
+  "passed": false,
+  "report_sha256": "b3d01b0b7b611bdbdb288c134b2779491b8d879833283e51c6e5104adc2737ad",
+  "resource_sha256": "741664c41a508b0b5ff0ab3b81bd2e38cdcce57f87f531b18d2b07b1c118e4b0",
+  "schema": "metagross-resource-expert-root-gate/v1"
+}
