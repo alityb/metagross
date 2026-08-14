@@ -2886,6 +2886,159 @@ class LaunchTest(unittest.TestCase):
         self.assertFalse(session.pending_request)
         self.assertEqual(session.decision_idx, 3)
 
+    def test_prior_observation_spaces_are_episode_owned_and_reset(self):
+        class FakeObservationSpace:
+            def __init__(self):
+                self.history = ["template"]
+
+            def reset(self):
+                self.history.clear()
+
+        template = FakeObservationSpace()
+        player = prior_server.fresh_observation_space(template)
+        opponent = prior_server.fresh_observation_space(template)
+        player.history.append("player")
+
+        self.assertIsNot(player, opponent)
+        self.assertEqual(opponent.history, [])
+        self.assertEqual(template.history, ["template"])
+
+    def test_prior_trajectory_is_reward_first_aligned_and_truncated(self):
+        import numpy as np
+
+        observations = [
+            {
+                "text_tokens": np.asarray([index], dtype=np.int32),
+                "numbers": np.asarray([float(index)], dtype=np.float32),
+                "illegal_actions": np.zeros(13, dtype=bool),
+            }
+            for index in range(4)
+        ]
+        batch, rl2s, time_indices = prior_server.aligned_trajectory_arrays(
+            observations, [2, 4, 1], [0.25, -0.5, 1.0], 3
+        )
+
+        self.assertEqual(batch["text_tokens"][:, 0].tolist(), [1, 2, 3])
+        self.assertEqual(time_indices[:, 0].tolist(), [1, 2, 3])
+        self.assertEqual(rl2s[:, 0].tolist(), [0.25, -0.5, 1.0])
+        self.assertEqual(rl2s[0, 1 + 2], 1.0)
+        self.assertEqual(rl2s[1, 1 + 4], 1.0)
+        self.assertEqual(rl2s[2, 1 + 1], 1.0)
+
+    def test_prior_trajectory_first_observation_matches_amago_timestep_zero(self):
+        import numpy as np
+
+        observation = {
+            "text_tokens": np.asarray([7], dtype=np.int32),
+            "numbers": np.asarray([3.0], dtype=np.float32),
+            "illegal_actions": np.zeros(13, dtype=bool),
+        }
+        batch, rl2s, time_indices = prior_server.aligned_trajectory_arrays(
+            [observation], [], [], 128
+        )
+
+        self.assertEqual(batch["text_tokens"][:, 0].tolist(), [7])
+        self.assertFalse(batch["illegal_actions"][0].any())
+        self.assertEqual(rl2s.shape, (1, 14))
+        self.assertEqual(time_indices[:, 0].tolist(), [0])
+
+    def test_legacy_stateless_trajectory_reproduces_frozen_two_step_input(self):
+        import numpy as np
+
+        observation = {
+            "text_tokens": np.asarray([7, 8], dtype=np.int32),
+            "numbers": np.asarray([3.0, np.nan], dtype=np.float32),
+            "illegal_actions": np.asarray(
+                [False, True, False] + [True] * 10, dtype=bool
+            ),
+        }
+
+        batch, rl2s, time_indices = (
+            prior_server.legacy_stateless_trajectory_arrays(observation)
+        )
+
+        self.assertEqual(batch["text_tokens"].tolist(), [[0, 0], [7, 8]])
+        self.assertEqual(batch["numbers"][0].tolist(), [0.0, 0.0])
+        self.assertTrue(np.isnan(batch["numbers"][1, 1]))
+        self.assertTrue(batch["illegal_actions"][0].all())
+        self.assertEqual(batch["illegal_actions"][1].tolist(), observation["illegal_actions"].tolist())
+        self.assertEqual(rl2s.shape, (2, 14))
+        self.assertFalse(rl2s.any())
+        self.assertEqual(time_indices[:, 0].tolist(), [0, 1])
+
+    def test_prior_trajectory_preserves_absolute_time_after_live_truncation(self):
+        import numpy as np
+
+        observations = [
+            {
+                "text_tokens": np.asarray([index], dtype=np.int32),
+                "numbers": np.asarray([float(index)], dtype=np.float32),
+                "illegal_actions": np.zeros(13, dtype=bool),
+            }
+            for index in range(3)
+        ]
+        _batch, _rl2s, time_indices = prior_server.aligned_trajectory_arrays(
+            observations, [2, 4], [0.25, -0.5], 3, time_offset=7
+        )
+
+        self.assertEqual(time_indices[:, 0].tolist(), [7, 8, 9])
+
+    def test_prior_trajectory_rejects_unaligned_boundaries(self):
+        import numpy as np
+
+        observation = {
+            "text_tokens": np.asarray([1]),
+            "numbers": np.asarray([1.0]),
+            "illegal_actions": np.zeros(13, dtype=bool),
+        }
+        with self.assertRaisesRegex(RuntimeError, "request-aligned"):
+            prior_server.aligned_trajectory_arrays(
+                [observation, observation], [], [], 128
+            )
+
+    def test_prior_action_acknowledgement_is_exact_and_idempotent(self):
+        session = prior_server.BattleSession.__new__(prior_server.BattleSession)
+        session.last_name_table = {
+            "tackle": 0,
+            "tackle-tera": 9,
+            "switch weezinggalar": 4,
+        }
+        session.obs_hist = [{}]
+        session.action_hist = []
+        session.action_receipts = []
+        session.cached_rqid = 7
+        session.cached_request_sha256 = "a" * 64
+        session.cached_response = {
+            "decision_idx": 3,
+            "priors": {"tackle": 0.4, "tackle-tera": 0.2, "switch weezinggalar": 0.4},
+        }
+
+        first = session.acknowledge_action(
+            "tackle-tera", 7, "a" * 64, 3
+        )
+        repeated = session.acknowledge_action(
+            "tackle-tera", 7, "a" * 64, 3
+        )
+        self.assertEqual(session.action_hist, [9])
+        self.assertFalse(first["idempotent"])
+        self.assertTrue(repeated["idempotent"])
+        self.assertEqual(session.action_receipts[0]["source"], "selected_action_ack")
+        with self.assertRaisesRegex(RuntimeError, "conflicting"):
+            session.acknowledge_action("tackle", 7, "a" * 64, 3)
+
+    def test_prior_action_acknowledgement_rejects_unserved_action(self):
+        session = prior_server.BattleSession.__new__(prior_server.BattleSession)
+        session.last_name_table = {"tackle": 0}
+        session.obs_hist = [{}]
+        session.action_hist = []
+        session.action_receipts = []
+        session.cached_rqid = 7
+        session.cached_request_sha256 = "a" * 64
+        session.cached_response = {"decision_idx": 3, "priors": {"tackle": 1.0}}
+
+        with self.assertRaisesRegex(RuntimeError, "absent from served"):
+            session.acknowledge_action("protect", 7, "a" * 64, 3)
+
     def test_private_request_support_is_authoritative(self):
         request = {
             "rqid": 9,
@@ -2943,6 +3096,173 @@ class LaunchTest(unittest.TestCase):
             ),
             {"switch backup"},
         )
+
+    def test_private_request_formats_switch_from_real_team_slot(self):
+        request = {
+            "rqid": 12,
+            "forceSwitch": [False],
+            "active": [{"trapped": False, "moves": []}],
+            "side": {"pokemon": [
+                {"active": True, "condition": "100/100", "details": "Lead, L80"},
+                {"active": False, "condition": "50/100", "details": "Morpeko, L80"},
+                {"active": False, "condition": "0 fnt", "details": "Mew, L80"},
+            ]},
+        }
+        battle = SimpleNamespace(rqid=12, request_json=request)
+        self.assertEqual(
+            run_foul_play.format_private_request_switch(battle, "switch morpeko"),
+            ["/switch 2", "12"],
+        )
+        with self.assertRaisesRegex(ValueError, "does not allow"):
+            run_foul_play.format_private_request_switch(battle, "switch mew")
+
+    def test_private_request_recognizes_forced_recharge(self):
+        request = {
+            "rqid": 11,
+            "active": [{
+                "trapped": True,
+                "moves": [{"move": "Recharge", "id": "recharge"}],
+            }],
+            "side": {"pokemon": [{
+                "active": True,
+                "condition": "100/100",
+                "details": "Slaking, L84",
+            }]},
+        }
+        support = prior_server.request_action_support(request)
+        self.assertEqual(support["actions"], ["recharge"])
+        self.assertEqual(
+            prior_server.forced_showdown_action(support["actions"]),
+            "recharge",
+        )
+        self.assertIsNone(prior_server.forced_showdown_action(["recharge", "tackle"]))
+
+    def test_prior_forced_action_is_cached_without_policy_inference(self):
+        session = prior_server.BattleSession.__new__(prior_server.BattleSession)
+        session.pending_request = True
+        session.last_request_json = {"rqid": 11}
+        session.last_request_sha256 = "a" * 64
+        session.last_request_legality = {"actions": ["recharge"]}
+        session.cached_rqid = None
+        session.cached_request_sha256 = None
+        session.cached_response = None
+        session.obs_hist = [{}]
+        session.action_hist = [2]
+        session.decision_idx = 4
+        session.battle = SimpleNamespace(turn=3)
+
+        response = session.compute_priors(
+            expected_rqid=11, expected_request_sha256="a" * 64
+        )
+
+        self.assertEqual(response["priors"], {"recharge": 1.0})
+        self.assertEqual(response["probs"], [0.0] * 13)
+        self.assertEqual(response["trajectory"]["automatic_action"], "recharge")
+        self.assertEqual(session.obs_hist, [{}])
+        self.assertEqual(session.action_hist, [2])
+        self.assertEqual(session.decision_idx, 5)
+        self.assertFalse(session.pending_request)
+
+    def test_struggle_with_switches_gets_neutral_request_only_prior(self):
+        priors = prior_server.add_unlearned_action_priors(
+            {"switch blissey": 0.75, "switch mew": 0.25},
+            {"struggle", "switch blissey", "switch mew"},
+        )
+        self.assertEqual(set(priors), {"struggle", "switch blissey", "switch mew"})
+        self.assertAlmostEqual(sum(priors.values()), 1.0)
+        self.assertAlmostEqual(priors["struggle"], 1.0 / 3.0)
+        self.assertGreater(priors["switch blissey"], priors["switch mew"])
+
+    def test_struggle_uses_four_live_slots_but_replay_index_zero(self):
+        table = {"struggle": 0, "switch blissey": 4}
+        self.assertEqual(
+            prior_server.request_action_policy_indices("struggle", table),
+            (0, 1, 2, 3),
+        )
+        self.assertEqual(
+            prior_server.request_action_policy_indices("switch blissey", table),
+            (4,),
+        )
+
+    def test_private_request_moves_define_policy_slots_after_forced_drag(self):
+        table = prior_server.private_request_move_name_table({
+            "focusblast",
+            "hypervoice",
+            "poltergeist",
+            "willowisp",
+            "willowisp-tera",
+            "switch scizor",
+        })
+        self.assertEqual(table, {
+            "focusblast": 0,
+            "hypervoice": 1,
+            "poltergeist": 2,
+            "willowisp": 3,
+            "willowisp-tera": 12,
+        })
+
+    def test_private_request_switches_define_policy_slots_after_tracking_mismatch(self):
+        table = prior_server.private_request_switch_name_table({
+            "willowisp",
+            "switch magmortar",
+            "switch amoonguss",
+        })
+        self.assertEqual(table, {
+            "switch amoonguss": 4,
+            "switch magmortar": 5,
+        })
+
+    def test_private_request_reconciles_illusion_active_identity(self):
+        disguise = SimpleNamespace(unique_id="abomasnow")
+        zoroark = SimpleNamespace(unique_id="zoroark")
+        active_slot = [disguise]
+        turn = SimpleNamespace(
+            get_active_pokemon=lambda player_one: active_slot,
+            get_pokemon=lambda player_one: [disguise, zoroark],
+        )
+        protocol = SimpleNamespace(
+            get_or_create_pokemon_from_details=lambda **kwargs: zoroark
+        )
+        battle = SimpleNamespace(
+            player_role="p1",
+            _current_turn=turn,
+            _sim_protocol=protocol,
+        )
+        request = {
+            "side": {"pokemon": [
+                {"active": False, "details": "Abomasnow, L84"},
+                {"active": True, "details": "Zoroark, L83"},
+            ]}
+        }
+
+        self.assertTrue(
+            prior_server.reconcile_private_active_pokemon(battle, request)
+        )
+        self.assertIs(active_slot[0], zoroark)
+        self.assertFalse(
+            prior_server.reconcile_private_active_pokemon(battle, request)
+        )
+
+    def test_private_request_refreshes_moves_after_identity_reconciliation(self):
+        active = SimpleNamespace(unique_id="zoroark")
+        updater = mock.Mock()
+        battle = SimpleNamespace(
+            player_role="p1",
+            _current_turn=SimpleNamespace(
+                get_active_pokemon=lambda player_one: [active]
+            ),
+            _update_turn_from_active_request=updater,
+        )
+        active_request = {
+            "moves": [{"id": "sludgebomb", "pp": 15, "disabled": False}],
+            "canTerastallize": "Poison",
+        }
+
+        prior_server.refresh_private_active_moves(
+            battle, {"active": [active_request]}
+        )
+
+        updater.assert_called_once_with(active_request, active)
 
     def test_private_request_hash_mismatch_fails_closed(self):
         session = prior_server.BattleSession.__new__(prior_server.BattleSession)
@@ -3611,6 +3931,26 @@ class LaunchTest(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertNotEqual(first, holdout)
+        self.assertEqual(random.getstate(), before)
+
+    def test_independent_ensemble_action_draw_is_seeded_and_restores_random(self):
+        import random
+
+        draws = []
+
+        def select(_weighted):
+            draws.append(random.random())
+            return "tackle"
+
+        search_main = SimpleNamespace(select_move_from_mcts_results=select)
+        random.seed(123)
+        before = random.getstate()
+        choice = run_foul_play._select_seeded_mcts_action(search_main, [], 42)
+        repeated = run_foul_play._select_seeded_mcts_action(search_main, [], 42)
+
+        self.assertEqual(choice, "tackle")
+        self.assertEqual(repeated, "tackle")
+        self.assertEqual(draws[0], draws[1])
         self.assertEqual(random.getstate(), before)
 
 

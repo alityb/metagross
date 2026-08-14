@@ -18,6 +18,8 @@ class PolicyInterface(Protocol):
 
     def propose(self, battle: object) -> PolicySnapshot: ...
 
+    def acknowledge(self, snapshot: PolicySnapshot, action: str) -> None: ...
+
 
 class BeliefInterface(Protocol):
     def expand(self, battle: object, search: object, channel: str): ...
@@ -76,12 +78,16 @@ class DecisionHarness:
 class CallablePolicy:
     observe_fn: Callable[[str, list[str]], None]
     propose_fn: Callable[[object], PolicySnapshot]
+    acknowledge_fn: Callable[[PolicySnapshot, str], None]
 
     def observe(self, tag: str, lines: list[str]) -> None:
         self.observe_fn(tag, lines)
 
     def propose(self, battle: object) -> PolicySnapshot:
         return self.propose_fn(battle)
+
+    def acknowledge(self, snapshot: PolicySnapshot, action: str) -> None:
+        self.acknowledge_fn(snapshot, action)
 
 
 @dataclass(frozen=True)

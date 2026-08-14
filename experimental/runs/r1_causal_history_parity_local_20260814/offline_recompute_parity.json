@@ -1,0 +1,13 @@
+{
+  "audit": "r1_online_dump_offline_recompute_parity_v1",
+  "checkpoint": "/Users/alityb/projects/metagross/srcs/models/randbats_exit_r1/ckpts/policy_weights/policy_epoch_5.pt",
+  "checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+  "decision_dump": "/Users/alityb/projects/metagross/experimental/runs/r1_causal_history_parity_local_20260814/live_replay_decisions_v2.jsonl",
+  "decision_dump_sha256": "b991cd221e45bcf0fbfdcb66029bfa73f719c9dc0748698d7493d0def13cd482",
+  "maximum_probability_absolute_difference": 0.0,
+  "mismatched_rows": 0,
+  "rows": 20,
+  "schema_version": 1,
+  "status": "pass",
+  "tolerance": 1e-07
+}

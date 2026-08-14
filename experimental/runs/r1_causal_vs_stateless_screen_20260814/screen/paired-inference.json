@@ -1,0 +1,22 @@
+{
+  "bootstrap": {
+    "ci95_high": 0.75,
+    "ci95_low": 0.35,
+    "resamples": 100000,
+    "seed": 2026081412
+  },
+  "candidate": "production_r1_search_first",
+  "claims": {
+    "positive_point_estimate": true,
+    "practical_margin_passed": false,
+    "statistically_better_than_search_guided_r1": false
+  },
+  "comparator": "production_r1_search_first",
+  "complete_pairs": 10,
+  "games": 20,
+  "pair_score_mean": 0.55,
+  "pair_splits": 5,
+  "pair_sweeps_candidate": 3,
+  "pair_sweeps_comparator": 2,
+  "schema_version": 1
+}

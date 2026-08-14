@@ -1,0 +1,137 @@
+{
+  "audit": "r1_causal_history_vs_legacy_stateless_v1",
+  "by_history_length": {
+    "1": {
+      "jensen_shannon": {
+        "mean": 0.04903146847085334,
+        "median": 0.023571292912822468,
+        "p90": 0.12377919529085882
+      },
+      "rows": 22,
+      "search_selected_action": {
+        "causal_mean_probability": 0.4660038567063483,
+        "causal_top1_agreement": 0.5909090909090909,
+        "stateless_mean_probability": 0.39750751785256644,
+        "stateless_top1_agreement": 0.45454545454545453
+      },
+      "selected_action_rows": 22,
+      "top1_change_rate": 0.36363636363636365,
+      "total_variation": {
+        "mean": 0.22207895368708044,
+        "median": 0.16648950561648235,
+        "p90": 0.4189190532779321
+      }
+    },
+    "11-20": {
+      "jensen_shannon": {
+        "mean": 0.08896695741062548,
+        "median": 0.05029537813638725,
+        "p90": 0.22543029625983252
+      },
+      "rows": 218,
+      "search_selected_action": {
+        "causal_mean_probability": 0.5117606603432187,
+        "causal_top1_agreement": 0.586046511627907,
+        "stateless_mean_probability": 0.4631525288493004,
+        "stateless_top1_agreement": 0.5069767441860465
+      },
+      "selected_action_rows": 215,
+      "top1_change_rate": 0.3532110091743119,
+      "total_variation": {
+        "mean": 0.2767148577595352,
+        "median": 0.22916316206101328,
+        "p90": 0.5950208553113043
+      }
+    },
+    "2-5": {
+      "jensen_shannon": {
+        "mean": 0.07984048802857541,
+        "median": 0.04268402282246827,
+        "p90": 0.21291858227669358
+      },
+      "rows": 88,
+      "search_selected_action": {
+        "causal_mean_probability": 0.4476241919513665,
+        "causal_top1_agreement": 0.5795454545454546,
+        "stateless_mean_probability": 0.4116189343278,
+        "stateless_top1_agreement": 0.5
+      },
+      "selected_action_rows": 88,
+      "top1_change_rate": 0.2727272727272727,
+      "total_variation": {
+        "mean": 0.2645660536548927,
+        "median": 0.20201222275500186,
+        "p90": 0.5943660088814795
+      }
+    },
+    "21+": {
+      "jensen_shannon": {
+        "mean": 0.10939063114923225,
+        "median": 0.049326888150283514,
+        "p90": 0.31791737992034297
+      },
+      "rows": 297,
+      "search_selected_action": {
+        "causal_mean_probability": 0.5599693135084524,
+        "causal_top1_agreement": 0.6187050359712231,
+        "stateless_mean_probability": 0.4788230642209017,
+        "stateless_top1_agreement": 0.5575539568345323
+      },
+      "selected_action_rows": 278,
+      "top1_change_rate": 0.30976430976430974,
+      "total_variation": {
+        "mean": 0.2908357621532369,
+        "median": 0.22740139334928244,
+        "p90": 0.6739046712173149
+      }
+    },
+    "6-10": {
+      "jensen_shannon": {
+        "mean": 0.09461428234436486,
+        "median": 0.04866302665172182,
+        "p90": 0.2621804003925147
+      },
+      "rows": 110,
+      "search_selected_action": {
+        "causal_mean_probability": 0.4618227433963594,
+        "causal_top1_agreement": 0.5818181818181818,
+        "stateless_mean_probability": 0.4121765365432525,
+        "stateless_top1_agreement": 0.4909090909090909
+      },
+      "selected_action_rows": 110,
+      "top1_change_rate": 0.33636363636363636,
+      "total_variation": {
+        "mean": 0.2972489074348811,
+        "median": 0.225927782303188,
+        "p90": 0.6494609194342047
+      }
+    }
+  },
+  "caveat": "Search-selected-action agreement is descriptive because the selected action was generated using the causal prior. Battle outcomes are the strength estimand.",
+  "checkpoint": "/Users/alityb/projects/metagross/srcs/models/randbats_exit_r1/ckpts/policy_weights/policy_epoch_5.pt",
+  "checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+  "decision_dump": "/Users/alityb/projects/metagross/experimental/runs/r1_causal_vs_stateless_screen_20260814/causal-prior-decisions.jsonl",
+  "decision_dump_sha256": "5c1d334ef8441fa8b854a3395fdf6c8a8d93485cfec734f9f2ff509309543f50",
+  "overall": {
+    "jensen_shannon": {
+      "mean": 0.09577692581985288,
+      "median": 0.04792273724974805,
+      "p90": 0.2553252544614971
+    },
+    "rows": 735,
+    "search_selected_action": {
+      "causal_mean_probability": 0.5135252828078559,
+      "causal_top1_agreement": 0.5974754558204769,
+      "stateless_mean_probability": 0.4530121405180518,
+      "stateless_top1_agreement": 0.5217391304347826
+    },
+    "selected_action_rows": 713,
+    "top1_change_rate": 0.3238095238095238,
+    "total_variation": {
+      "mean": 0.28240406785261674,
+      "median": 0.22376662376336753,
+      "p90": 0.625749402155634
+    }
+  },
+  "schema_version": 1
+}

@@ -621,6 +621,15 @@ def _authorized_action_name(action: str, allowed: set[str]) -> str | None:
     if not action.startswith("switch "):
         return None
     requested = "".join(character for character in action[7:] if character.isalnum())
+
+    def switch_family(name: str) -> str:
+        # poke-engine serializes every Minior shell colour as ``miniormeteor``;
+        # Showdown's private request retains the cosmetic colour.  They are the
+        # same switch slot and battle state, not interchangeable species.
+        if name.startswith("minior"):
+            return "minior"
+        return name
+
     candidates = []
     for candidate in allowed:
         if not candidate.startswith("switch "):
@@ -631,7 +640,11 @@ def _authorized_action_name(action: str, allowed: set[str]) -> str | None:
         if (
             requested
             and authorized
-            and (requested.startswith(authorized) or authorized.startswith(requested))
+            and (
+                requested.startswith(authorized)
+                or authorized.startswith(requested)
+                or switch_family(requested) == switch_family(authorized)
+            )
         ):
             candidates.append(candidate)
     return candidates[0] if len(candidates) == 1 else None
@@ -3182,7 +3195,14 @@ def _remote_find_best_move(battle, search_main, harness: DecisionHarness):
         "selection-worlds", 0, required=True
     )
     weighted = _ensemble_weighted_results(results, battles, repeat_count)
-    return search_main.select_move_from_mcts_results(weighted)
+    action_seed = _derived_seed("selection-action", 0, required=True)
+    _PRIOR_STATE["remote_search"]["action_seed"] = action_seed
+    return _select_seeded_mcts_action(search_main, weighted, action_seed)
+
+
+def _select_seeded_mcts_action(search_main, weighted: list, action_seed: int) -> str:
+    with seeded_global_random(action_seed):
+        return search_main.select_move_from_mcts_results(weighted)
 
 
 def validate_poke_engine_provenance(provenance: dict, expected_source: Path) -> None:
@@ -3487,6 +3507,30 @@ def reconnect_delta_chunks(
     return chunks, replayed_lines
 
 
+def format_private_request_switch(battle, decision: str) -> list[str] | None:
+    """Format a switch using its authoritative private-request team slot."""
+    if not decision.startswith("switch "):
+        return None
+    request = getattr(battle, "request_json", None)
+    rqid = getattr(battle, "rqid", None)
+    if not isinstance(request, dict) or request.get("rqid") != rqid:
+        return None
+    allowed = request_player_actions(battle)
+    authorized = _authorized_action_name(decision, allowed)
+    if authorized is None:
+        raise ValueError(f"Request does not allow switch: {decision}")
+    target = _normalize_identifier(authorized.removeprefix("switch "))
+    side = request.get("side", {})
+    for index, pokemon in enumerate(side.get("pokemon", ()), start=1):
+        details = pokemon.get("details") if isinstance(pokemon, dict) else None
+        if not isinstance(details, str):
+            continue
+        species = _normalize_identifier(details.split(",", 1)[0])
+        if species == target:
+            return [f"/switch {index}", str(rqid)]
+    raise ValueError(f"Request switch has no team slot: {authorized}")
+
+
 def patch_foul_play_protocol() -> None:
     """Apply the protocol safeguards used by the accepted deployment."""
     import fp.run_battle as run_battle
@@ -3498,6 +3542,13 @@ def patch_foul_play_protocol() -> None:
     def format_decision_with_default(battle, decision):
         if isinstance(decision, str) and decision.strip().lower() == "no move":
             return ["/choose default", str(battle.rqid)]
+        if isinstance(decision, str):
+            # MCTS runs on sampled battle copies whose reserve can differ from
+            # our actual hidden team.  The correlated private request is the
+            # authority for both legality and Showdown's one-based team slot.
+            formatted_switch = format_private_request_switch(battle, decision)
+            if formatted_switch is not None:
+                return formatted_switch
         return original_format_decision(battle, decision)
 
     run_battle.format_decision = format_decision_with_default
@@ -4042,8 +4093,29 @@ def build_decision_harness() -> DecisionHarness:
             },
         )
 
+    def acknowledge(snapshot: PolicySnapshot, action: str) -> None:
+        context = snapshot.context
+        request = urllib.request.Request(
+            f"{server_url}/action",
+            data=json.dumps(
+                {
+                    "tag": context.get("tag"),
+                    "namespace": namespace,
+                    "rqid": context.get("rqid"),
+                    "request_sha256": context.get("request_sha256"),
+                    "decision_idx": context.get("decision_idx"),
+                    "action": action,
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=5.0) as response:
+            result = json.loads(response.read())
+        if result.get("ok") is not True:
+            raise RuntimeError("policy server did not acknowledge selected action")
+
     return DecisionHarness(
-        policy=CallablePolicy(observe, propose),
+        policy=CallablePolicy(observe, propose, acknowledge),
         belief=CallableBelief(_prepare_search_battles),
         search=CallableSearch(
             _remote_mcts_batch,
@@ -4320,6 +4392,7 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         _PRIOR_STATE["context"] = None
         _PRIOR_STATE["remote_search"] = None
         _PRIOR_STATE["battle"] = battle
+        snapshot = None
         try:
             snapshot = harness.policy.propose(battle)
             _PRIOR_STATE["priors"] = list(snapshot.priors)
@@ -4344,6 +4417,10 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
             choice = _remote_find_best_move(battle, search_main, harness)
         else:
             choice = original_find_best_move(battle)
+        if snapshot is not None:
+            # This is the causal action boundary: persist the exact final
+            # choice before the caller is allowed to send it to Showdown.
+            harness.policy.acknowledge(snapshot, choice)
         _REQUEST_CHOICE_CACHE[request_key] = (request_fingerprint, choice)
         while len(_REQUEST_CHOICE_CACHE) > MAX_TRACKED_BATTLES:
             _REQUEST_CHOICE_CACHE.pop(next(iter(_REQUEST_CHOICE_CACHE)))

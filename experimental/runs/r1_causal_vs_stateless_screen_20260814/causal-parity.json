@@ -1,0 +1,14 @@
+{
+  "audit": "r1_online_dump_offline_recompute_parity_v1",
+  "checkpoint": "/Users/alityb/projects/metagross/srcs/models/randbats_exit_r1/ckpts/policy_weights/policy_epoch_5.pt",
+  "checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+  "decision_dump": "/Users/alityb/projects/metagross/experimental/runs/r1_causal_vs_stateless_screen_20260814/causal-prior-decisions.jsonl",
+  "decision_dump_sha256": "5c1d334ef8441fa8b854a3395fdf6c8a8d93485cfec734f9f2ff509309543f50",
+  "maximum_probability_absolute_difference": 0.0,
+  "mismatched_rows": 0,
+  "rows": 735,
+  "schema_version": 1,
+  "sessions": 22,
+  "status": "pass",
+  "tolerance": 1e-07
+}

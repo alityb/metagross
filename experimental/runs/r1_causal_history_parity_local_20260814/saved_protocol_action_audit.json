@@ -1,0 +1,191 @@
+{
+  "action_index_histogram": {
+    "0": 252,
+    "1": 155,
+    "10": 9,
+    "11": 5,
+    "12": 7,
+    "2": 180,
+    "3": 134,
+    "4": 114,
+    "5": 63,
+    "6": 61,
+    "7": 41,
+    "8": 16,
+    "9": 14
+  },
+  "audit": "r1_selected_action_boundary_v1",
+  "counts": {
+    "choice_rows": 1051,
+    "files": 40,
+    "idempotent_duplicate_choices": 0,
+    "private_requests": 1207,
+    "public_action_events_ignored_as_labels": 1960,
+    "skipped_default_choices": 0,
+    "unique_mapped_choices": 1051
+  },
+  "inputs": [
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y0208bd6.protocol.jsonl",
+      "sha256": "862cd6ba3268bdf9dba36b447a0e70611aa346570d8b03a6ee5fbf7b4588f6eb"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0202927.protocol.jsonl",
+      "sha256": "b952d1a894a2dd1cf857103e22d096dc3a6e9693d98b219f11d978c0d1dc626b"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y01738a8.protocol.jsonl",
+      "sha256": "101b3dcf9a11c27716e2bcf3d0816d542eb74fb291a0e2ef03d0c939fa518e8b"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y01598f2.protocol.jsonl",
+      "sha256": "d63316c027d5d660dea95cad991e2cdee03ec869eb91682e0cb4d31e37805d12"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y011849b.protocol.jsonl",
+      "sha256": "19a817528c34c0a715410160368a038daf27b293d6701400f4c6511719d0fcc3"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y0012e9a.protocol.jsonl",
+      "sha256": "dd00d28d287f72ffaf30ae953d220c6c050fc3c8b2348b765a4f79fc0e327025"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y019a58e.protocol.jsonl",
+      "sha256": "7f14df0787daae05a20ddb2f1be07e4a1ea80fc32228f4547dc7e463f110fe40"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y0054d87.protocol.jsonl",
+      "sha256": "257eefabb753831d59825f3c6dfbd8ffb036c2fd0a3373afb1b140e5f29c2623"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y010f3a8.protocol.jsonl",
+      "sha256": "f2592edfbafef1d2412ab26663725aa4883e5080503121501f3535b2ea5b0d77"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x01548be.protocol.jsonl",
+      "sha256": "3fcff824fd0fcf3b603f8cce5129795c0448d9301f4763c770527dd0826ce94a"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x003577f.protocol.jsonl",
+      "sha256": "de209c1514d890b6d0c48969727a38c181d14f5b6fb3ffa9c9cf9036e745ac90"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y014bad5.protocol.jsonl",
+      "sha256": "0e4ee065d3716f70f66f5f5dc5ea0d00ea7bf163a2a540c69516db0d2781b096"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x008ba03.protocol.jsonl",
+      "sha256": "66633be285fdc104444f9f319fd133fde152acc18aaf05b32ea6f4d5f572851e"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x009dcd7.protocol.jsonl",
+      "sha256": "d11fb8cacbb56649356ff9116ee34480b6cee1a5ce65ed258205c4583a630ad4"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0171e4a.protocol.jsonl",
+      "sha256": "0749601c7fa57eea0493e4514bfac0372b50f932d36deb882d769e41126d21cb"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x004cd57.protocol.jsonl",
+      "sha256": "85e008825852b5811cb81b4403c4fdd519bc813cf53924fcbfe6887b46330931"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x010680b.protocol.jsonl",
+      "sha256": "38e97ec7d7b8659081b4a90e8f6427597a6e4e40d58564f719d55f150aaba7a1"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0069a33.protocol.jsonl",
+      "sha256": "cbe4d3f9962ba5cc597e0fc45f0f00881a1b894df9289d7823cc6a348db163d5"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x014cf40.protocol.jsonl",
+      "sha256": "f7b8fe69d898e393bb7b6d531c7232996a970fb43672901dbbfd3a94a6100ec9"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x018659f.protocol.jsonl",
+      "sha256": "88c808e06499049187e2f1865f948aa89919fe43b32aa4096e542fd699813eac"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y00487a7.protocol.jsonl",
+      "sha256": "f65bc044487d0c4e06a438d6ba74ee9bd886491e44a3217739cc410091602211"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y01603bf.protocol.jsonl",
+      "sha256": "586e614bc653e88d32f4fcb7032f9b35f35ccd8f0ae57372233074a81aa1adc2"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y00752aa.protocol.jsonl",
+      "sha256": "6e7f4821913579b28d216858d52392058037340a116f4777bb1d197ef14ba556"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0072512.protocol.jsonl",
+      "sha256": "efafa5a6cad5b8ebf39df373d936a36d020b40058ca32ee3bbb21801df717a7a"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y00608a9.protocol.jsonl",
+      "sha256": "fea8f5b5a6507cf7e835e7c03616e3a43ce4202d55e0a5075643085d74d6e944"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0055f7e.protocol.jsonl",
+      "sha256": "7e8929d9ece16695246dbdd925001b7ed4b5d247921b35f2814cba4d422ee322"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y008ec44.protocol.jsonl",
+      "sha256": "0c35b1a4452a2aff82cc3189a5b3f4a24f7df0b44bf8653b4519421b458c193b"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y01210be.protocol.jsonl",
+      "sha256": "7c832f436b067c18de660d9466736abd0c96bd0457302a8beb3533c16e5d3de2"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0112654.protocol.jsonl",
+      "sha256": "f74b2650594b10a4aa1b793735a6eb049606925f6c929dc64b5bd81d463cda14"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x012eee6.protocol.jsonl",
+      "sha256": "7b55db5ee7f247291545ebcfbc68f3dd6240e37603398e4fec7bdf68a8fbe1b2"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x019460d.protocol.jsonl",
+      "sha256": "a5caa102e83eac5f30a901cd879cf350eb3a4c514973322ac4d115815f62aae0"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x002b534.protocol.jsonl",
+      "sha256": "fefd7af0644b72051e3718ac1c74a4cc85d51bdf100557e06c9ae924a2c43ce4"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y018014d.protocol.jsonl",
+      "sha256": "845c26e323080db21f0602c3926ada0ae2eaa69aec2c9add72d2807f528c6f9f"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y01305e7.protocol.jsonl",
+      "sha256": "c8b8db31a6e6997edf635f2671c0cf18ec3e2b1cf529cbca73215da2f264d591"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0161dd5.protocol.jsonl",
+      "sha256": "f57e5778643b3dced792c995d851e58ec604c6383a14cdc25357fc79d3a111fe"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x0135eb7.protocol.jsonl",
+      "sha256": "14c3f80d9064645090bd99ddf87bbfc13471b32e0c35b9c00950830c8dc2d042"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y0090c6d.protocol.jsonl",
+      "sha256": "a860f4ebc5d776e133dcdaa53f5d4fab189ee708e1ad37ec3a265aaf306923b6"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y003eb9d.protocol.jsonl",
+      "sha256": "ed9103c13b7ea171771f9ac6c4373dfb2a510ad9ce8b5b55aa8e20a89db33543"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1y002f45e.protocol.jsonl",
+      "sha256": "2d64c0379d8cb43281092b44538624d50bc1319af1bf26dc55deb382501687d3"
+    },
+    {
+      "path": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x00131b6.protocol.jsonl",
+      "sha256": "b4fce140b5444cf36b851c5c50e39b8d00756dfa25af4650e353a70d21d9b06a"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass"
+}

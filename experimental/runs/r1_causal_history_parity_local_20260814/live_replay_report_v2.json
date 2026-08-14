@@ -1,0 +1,19 @@
+{
+  "acknowledgements": 20,
+  "audit": "r1_live_server_history_replay_v1",
+  "decision_dump": "/Users/alityb/projects/metagross/experimental/runs/r1_causal_history_parity_local_20260814/live_replay_decisions_v2.jsonl",
+  "decision_dump_sha256": "b991cd221e45bcf0fbfdcb66029bfa73f719c9dc0748698d7493d0def13cd482",
+  "maximum_inference_length": 20,
+  "maximum_tensor_length": 20,
+  "missing_receipts": 0,
+  "ordinary_decisions": 20,
+  "protocol": "/Users/alityb/projects/metagross/experimental/runs/search_native_stage1_20260808/screen-logs/g1x003577f.protocol.jsonl",
+  "received_rows": 80,
+  "resets": 0,
+  "rl2_receipt_mismatches": 0,
+  "schema_version": 1,
+  "server_url": "http://127.0.0.1:8994",
+  "status": "pass",
+  "tensor_rows": 20,
+  "time_index_mismatches": 0
+}

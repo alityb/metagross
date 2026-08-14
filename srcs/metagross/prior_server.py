@@ -5,10 +5,11 @@ and serves per-turn root priors to Foul Play over localhost HTTP.
 Data flow (FP side patches in run_foul_play.py, METAGROSS_PRIOR_SERVER):
   POST /lines  {"tag": ..., "lines": [...]}   raw protocol lines (incl. |request|)
   GET  /priors?tag=...                        -> {"priors": {engine_move_str: prob}}
+  POST /action {request identity + chosen action} exact causal action boundary
   POST /end    {"tag": ...}                   cleanup
 
-The server infers FP's chosen actions from the protocol stream itself (our own
-|move|/|switch| lines), so FP only needs to tee messages and ask for priors.
+The final chosen action is acknowledged before Foul Play returns it to the
+Showdown sender. Public battle events are observations, never action labels.
 
 This module intentionally contains only the accepted r1 inference path.
 """
@@ -40,6 +41,77 @@ def canonical_request_sha256(request: dict) -> str:
     return hashlib.sha256(
         json.dumps(request, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def fresh_observation_space(template):
+    """Return an episode-owned copy of the loaded model observation space."""
+    observation_space = copy.deepcopy(template)
+    observation_space.reset()
+    return observation_space
+
+
+def aligned_trajectory_arrays(
+    observations: list[dict],
+    actions: list[int],
+    rewards: list[float],
+    max_seq_len: int,
+    time_offset: int = 0,
+) -> tuple[dict[str, object], object, object]:
+    """Build AMAGO's reward-first RL2 sequence from aligned request transitions."""
+    import numpy as np
+
+    if (
+        not observations
+        or len(actions) != len(rewards)
+        or len(observations) != len(actions) + 1
+    ):
+        raise RuntimeError("policy trajectory is not request-aligned")
+    if isinstance(max_seq_len, bool) or not isinstance(max_seq_len, int) or max_seq_len < 2:
+        raise ValueError("policy maximum sequence length is invalid")
+    if isinstance(time_offset, bool) or not isinstance(time_offset, int) or time_offset < 0:
+        raise ValueError("policy trajectory time offset is invalid")
+    for action in actions:
+        if isinstance(action, bool) or not isinstance(action, int) or not 0 <= action < 13:
+            raise RuntimeError("policy trajectory has an invalid action")
+    for reward in rewards:
+        if not math.isfinite(float(reward)):
+            raise RuntimeError("policy trajectory has a non-finite reward")
+
+    length = len(observations)
+    rl2 = np.zeros((length, 14), dtype=np.float32)
+    for index, (action, reward) in enumerate(zip(actions, rewards, strict=True), start=1):
+        rl2[index, 0] = float(reward)
+        rl2[index, 1 + action] = 1.0
+    start = max(0, length - max_seq_len)
+    batch = {
+        key: np.stack([observation[key] for observation in observations[start:]])
+        for key in ("text_tokens", "numbers", "illegal_actions")
+    }
+    time_indices = np.arange(
+        time_offset + start, time_offset + length, dtype=np.int64
+    ).reshape(-1, 1)
+    return batch, rl2[start:], time_indices
+
+
+def legacy_stateless_trajectory_arrays(current_observation: dict) -> tuple[
+    dict[str, object], object, object
+]:
+    """Reproduce the accepted pre-repair two-step inference input exactly."""
+    import numpy as np
+
+    text = np.asarray(current_observation["text_tokens"])
+    numbers = np.asarray(current_observation["numbers"])
+    illegal = np.asarray(current_observation["illegal_actions"], dtype=bool)
+    if illegal.shape != (13,):
+        raise RuntimeError("legacy stateless legality mask has invalid shape")
+    batch = {
+        "text_tokens": np.stack([np.zeros_like(text), text]),
+        "numbers": np.stack([np.zeros_like(numbers), numbers]),
+        "illegal_actions": np.stack([np.ones(13, dtype=bool), illegal]),
+    }
+    rl2 = np.zeros((2, 14), dtype=np.float32)
+    time_indices = np.arange(2, dtype=np.int64).reshape(-1, 1)
+    return batch, rl2, time_indices
 
 
 def request_action_support(request: object) -> dict[str, object]:
@@ -125,6 +197,157 @@ def request_action_support(request: object) -> dict[str, object]:
         "can_tera": can_tera,
         "actions": sorted(actions),
     }
+
+
+FORCED_SHOWDOWN_ACTIONS = frozenset({"recharge", "struggle"})
+UNLEARNED_REQUEST_ACTIONS = frozenset({"struggle"})
+
+
+def forced_showdown_action(actions: object) -> str | None:
+    """Return a sole automatic action that is outside the learned 13 actions."""
+    if not isinstance(actions, (list, tuple)) or len(actions) != 1:
+        return None
+    action = actions[0]
+    if not isinstance(action, str) or action not in FORCED_SHOWDOWN_ACTIONS:
+        return None
+    return action
+
+
+def add_unlearned_action_priors(
+    priors: dict[str, float], request_actions: set[str]
+) -> dict[str, float]:
+    """Give request-only actions an uninformative prior and renormalize."""
+    missing = request_actions.intersection(UNLEARNED_REQUEST_ACTIONS).difference(priors)
+    if not missing:
+        return dict(priors)
+    if not priors:
+        raise RuntimeError("unlearned request action has no learned alternatives")
+    neutral = sum(priors.values()) / len(priors)
+    completed = dict(priors)
+    completed.update({action: neutral for action in missing})
+    total = sum(completed.values())
+    return {action: probability / total for action, probability in completed.items()}
+
+
+def private_request_move_name_table(request_actions: set[str]) -> dict[str, int]:
+    """Map authoritative request moves to Metamon's alphabetical action slots."""
+    move_ids = sorted({
+        action.removesuffix("-tera")
+        for action in request_actions
+        if not action.startswith("switch ")
+        and action not in UNLEARNED_REQUEST_ACTIONS
+    })
+    if len(move_ids) > 4:
+        raise RuntimeError("private request contains more than four learned moves")
+    table: dict[str, int] = {}
+    for index, move_id in enumerate(move_ids):
+        table[move_id] = index
+        tera_action = f"{move_id}-tera"
+        if tera_action in request_actions:
+            table[tera_action] = index + 9
+    return table
+
+
+def private_request_switch_name_table(request_actions: set[str]) -> dict[str, int]:
+    """Map authoritative request switches to Metamon's alphabetical slots."""
+    switch_actions = sorted(
+        action for action in request_actions if action.startswith("switch ")
+    )
+    if len(switch_actions) > 5:
+        raise RuntimeError("private request contains more than five legal switches")
+    return {action: index + 4 for index, action in enumerate(switch_actions)}
+
+
+def request_action_policy_indices(
+    action: str, name_table: dict[str, int]
+) -> tuple[int, ...]:
+    """Return every R1 policy slot that executes one Showdown request action."""
+    if action == "struggle":
+        # Metamon presents all four ordinary move slots and maps each to
+        # Struggle, while replay supervision canonically records index 0.
+        return (0, 1, 2, 3)
+    index = name_table.get(action)
+    if index is None:
+        raise RuntimeError(f"request action is absent from policy table: {action}")
+    return (index,)
+
+
+def reconcile_private_active_pokemon(battle, request: object) -> bool:
+    """Make the live tracker honor our private side identity under Illusion.
+
+    Public switch protocol intentionally carries Zoroark's disguise.  The
+    private request carries our real active party member, but Metamon's online
+    request updater historically used that object only for available moves and
+    left the public disguise in the active slot.  Replace that one slot from
+    the authoritative request; no opponent information is involved.
+    """
+    if not isinstance(request, dict):
+        return False
+    side = request.get("side")
+    if not isinstance(side, dict):
+        return False
+    active_rows = [
+        row for row in side.get("pokemon", [])
+        if isinstance(row, dict) and row.get("active") is True
+    ]
+    if len(active_rows) != 1:
+        return False
+    details = active_rows[0].get("details")
+    role = getattr(battle, "player_role", None) or getattr(
+        battle, "_player_role", None
+    )
+    if not isinstance(details, str) or role not in {"p1", "p2"}:
+        return False
+    turn = battle._current_turn
+    player_one = role == "p1"
+    active_slot = turn.get_active_pokemon(player_one)
+    if not isinstance(active_slot, list) or len(active_slot) != 1:
+        return False
+    request_pokemon = battle._sim_protocol.get_or_create_pokemon_from_details(
+        details=details,
+        poke_list=turn.get_pokemon(player_one),
+    )
+    tracked = active_slot[0]
+    if tracked is not None and tracked.unique_id == request_pokemon.unique_id:
+        return False
+    active_slot[0] = request_pokemon
+    return True
+
+
+def refresh_private_active_moves(battle, request: object) -> None:
+    """Apply the authoritative move request after private identity repair.
+
+    Metamon applies the active request before we reconcile an Illusion or other
+    private/public identity mismatch.  Reapplying it to the now-current active
+    Pokemon prevents stale accumulated moves from shifting the learned four
+    move action slots.
+    """
+    if not isinstance(request, dict):
+        return
+    active_rows = request.get("active")
+    role = getattr(battle, "player_role", None) or getattr(
+        battle, "_player_role", None
+    )
+    active_slot = (
+        battle._current_turn.get_active_pokemon(role == "p1")
+        if role in {"p1", "p2"}
+        else None
+    )
+    active_pokemon = (
+        active_slot[0]
+        if isinstance(active_slot, list) and len(active_slot) == 1
+        else None
+    )
+    updater = getattr(battle, "_update_turn_from_active_request", None)
+    if (
+        not isinstance(active_rows, list)
+        or len(active_rows) != 1
+        or not isinstance(active_rows[0], dict)
+        or active_pokemon is None
+        or not callable(updater)
+    ):
+        return
+    updater(active_rows[0], active_pokemon)
 
 
 def session_key(namespace: str, tag: str) -> str:
@@ -260,6 +483,8 @@ class BattleSession:
         self.namespace = namespace
         self.username = username
         self.server = server
+        self.obs_space = fresh_observation_space(server.obs_space)
+        self.opponent_obs_space = fresh_observation_space(server.obs_space)
         logger = logging.getLogger(f"prior.{tag}")
         logger.setLevel(logging.ERROR)
         self.battle = MetamonBackendBattle(
@@ -271,6 +496,8 @@ class BattleSession:
         self.obs_hist: list[dict] = []      # tokenized obs per decision point
         self.action_hist: list[int] = []    # action idx actually taken (len = len(obs)-1)
         self.reward_hist: list[float] = []
+        self.action_receipts: list[dict[str, object]] = []
+        self.trajectory_time_offset = 0
         # Schema-v3: monotone per-battle decision counter. Incremented once per
         # successful /priors response; echoed to FP and written to the dump so
         # MCTS visit targets can be joined to the exact observation served,
@@ -278,6 +505,8 @@ class BattleSession:
         self.decision_idx = 0
         self.last_state = None
         self.last_name_table: dict[str, int] = {}  # engine_move_str -> action idx
+        self.trajectory_reset_reason: str | None = None
+        self.private_identity_corrections = 0
         self.pending_request = False
         self.last_request_json: dict | None = None
         self.last_request_sha256: str | None = None
@@ -311,6 +540,9 @@ class BattleSession:
                     legality = request_action_support(request)
                     request_sha256 = canonical_request_sha256(request)
                     self.battle.parse_request(request)
+                    if reconcile_private_active_pokemon(self.battle, request):
+                        self.private_identity_corrections += 1
+                    refresh_private_active_moves(self.battle, request)
                     self.last_request_json = copy.deepcopy(request)
                     self.last_request_sha256 = request_sha256
                     self.last_request_legality = legality
@@ -318,39 +550,86 @@ class BattleSession:
                 except Exception as e:  # noqa: BLE001
                     print(f"WARN request parse {self.tag}: {e!r}", flush=True)
             return
-        if msg_type in ("move", "switch", "drag") and len(parts) >= 3:
-            self._maybe_record_our_action(msg_type, parts)
         try:
             self.battle.parse_message(parts)
         except Exception as e:  # noqa: BLE001
             # SimProtocol can raise on exotic messages; never kill the stream
             print(f"WARN msg parse {self.tag} {msg_type}: {e!r}", flush=True)
 
-    def _maybe_record_our_action(self, msg_type: str, parts: list[str]) -> None:
-        """Infer FP's chosen action idx from our own move/switch lines."""
-        if not self.last_name_table:
-            return
-        ident = parts[2]  # e.g. "p1a: Weezing"
-        role = getattr(self.battle, "player_role", None) or getattr(
-            self.battle, "_player_role", None
+    def _reset_policy_trajectory(self, reason: str) -> None:
+        self.obs_hist.clear()
+        self.action_hist.clear()
+        self.reward_hist.clear()
+        self.action_receipts.clear()
+        self.trajectory_time_offset = 0
+        self.last_state = None
+        self.trajectory_reset_reason = reason
+
+    def acknowledge_action(
+        self,
+        action: str,
+        expected_rqid: int,
+        expected_request_sha256: str,
+        expected_decision_idx: int,
+    ) -> dict[str, object]:
+        """Record the exact action selected for a served request, once."""
+        if (
+            isinstance(expected_rqid, bool)
+            or not isinstance(expected_rqid, int)
+            or expected_rqid < 0
+            or isinstance(expected_decision_idx, bool)
+            or not isinstance(expected_decision_idx, int)
+            or expected_decision_idx < 0
+            or not isinstance(action, str)
+            or not action
+            or not re.fullmatch(r"[0-9a-f]{64}", expected_request_sha256)
+        ):
+            raise ValueError("invalid action acknowledgement")
+        if (
+            self.cached_rqid != expected_rqid
+            or self.cached_request_sha256 != expected_request_sha256
+            or self.cached_response is None
+            or self.cached_response.get("decision_idx") != expected_decision_idx
+        ):
+            raise RuntimeError("action acknowledgement does not match served priors")
+        served_actions = self.cached_response.get("priors")
+        if not isinstance(served_actions, dict) or action not in served_actions:
+            raise RuntimeError("chosen action was absent from served policy support")
+
+        forced_action = forced_showdown_action(list(served_actions))
+        if forced_action is not None:
+            if action != forced_action:
+                raise RuntimeError("automatic request acknowledged a different action")
+            return {"ok": True, "automatic": True, "idempotent": True}
+
+        if self.action_receipts and self.action_receipts[-1]["rqid"] == expected_rqid:
+            receipt = self.action_receipts[-1]
+            if (
+                receipt["request_sha256"] != expected_request_sha256
+                or receipt["decision_idx"] != expected_decision_idx
+                or receipt["action"] != action
+            ):
+                raise RuntimeError("conflicting action acknowledgement")
+            return {"ok": True, "automatic": False, "idempotent": True}
+        if len(self.action_hist) != len(self.obs_hist) - 1:
+            raise RuntimeError("policy trajectory already has an unresolved action boundary")
+        action_idx = self.last_name_table.get(action)
+        if action == "struggle":
+            action_idx = 0
+        if action_idx is None:
+            raise RuntimeError("chosen action has no RL2 action index")
+        self.action_hist.append(action_idx)
+        self.action_receipts.append(
+            {
+                "rqid": expected_rqid,
+                "request_sha256": expected_request_sha256,
+                "decision_idx": expected_decision_idx,
+                "action": action,
+                "action_idx": action_idx,
+                "source": "selected_action_ack",
+            }
         )
-        if role is None or not ident.startswith(role):
-            return
-        if msg_type == "move":
-            key = norm(parts[3])
-        else:
-            # switch target species from details: parts[3] like "Weezing-Galar, L84"
-            key = "switch " + norm(parts[3].split(",")[0])
-        # match against last emitted name table (tera variant folds to base move)
-        idx = None
-        for name, i in self.last_name_table.items():
-            base = name[:-5] if name.endswith("-tera") else name
-            if norm(base) == key or norm(name) == key:
-                idx = i
-                if not name.endswith("-tera"):
-                    break
-        if idx is not None and len(self.action_hist) < len(self.obs_hist):
-            self.action_hist.append(idx)
+        return {"ok": True, "automatic": False, "idempotent": False}
 
     def compute_priors(
         self,
@@ -378,46 +657,89 @@ class BattleSession:
                 raise RuntimeError("cached rqid has no prior response")
             self.pending_request = False
             return dict(self.cached_response)
+
+        # Recharge and Struggle requests have exactly one legal command and do
+        # not correspond to any of Metamon's learned 13 actions.  Showdown still
+        # asks the client to submit that command, so return an authoritative
+        # point mass without running or mutating the policy trajectory.  The
+        # next discretionary request will close the preceding learned-action
+        # transition across this automatic boundary, matching training data
+        # where forced rows are excluded.
+        forced_action = forced_showdown_action(
+            self.last_request_legality.get("actions")
+        )
+        if forced_action is not None:
+            decision_idx = self.decision_idx
+            response = {
+                "priors": {forced_action: 1.0},
+                "opp_priors": {},
+                "probs": [0.0] * 13,
+                "turn": len(self.obs_hist),
+                "decision_idx": decision_idx,
+                "battle_turn": getattr(self.battle, "turn", None),
+                "rqid": rqid,
+                "request_sha256": expected_request_sha256,
+                "own_legality": self.last_request_legality,
+                "opponent_support": {
+                    "status": "ineligible",
+                    "reason": "forced_player_action",
+                },
+                "trajectory": {
+                    "observations": len(self.obs_hist),
+                    "transitions": len(self.action_hist),
+                    "inference_length": 0,
+                    "reset_reason": None,
+                    "automatic_action": forced_action,
+                },
+            }
+            self.decision_idx += 1
+            self.pending_request = False
+            self.cached_rqid = rqid
+            self.cached_request_sha256 = expected_request_sha256
+            self.cached_response = response
+            return dict(response)
         import numpy as np
         import torch
 
-        from metamon.interface import UniversalState, UniversalAction, consistent_move_order, consistent_pokemon_order
+        from metamon.interface import UniversalState, UniversalAction
 
         state = UniversalState.from_Battle(self.battle)
-        # reward for rl2s bookkeeping
+        # Complete the previous request transition before appending this observation.
         if self.last_state is not None:
-            try:
-                r = self.server.reward_fn(self.last_state, state)
-            except Exception:
-                r = 0.0
-            self.reward_hist.append(float(r))
+            if len(self.action_hist) != len(self.obs_hist):
+                raise RuntimeError("missing selected-action acknowledgement")
+            else:
+                try:
+                    reward = self.server.reward_fn(self.last_state, state)
+                except Exception as exc:
+                    raise RuntimeError("reward boundary failed") from exc
+                else:
+                    reward = float(reward)
+                    if math.isfinite(reward):
+                        self.reward_hist.append(reward)
+                    else:
+                        raise RuntimeError("non-finite reward boundary")
+        if len(self.reward_hist) != len(self.action_hist):
+            raise RuntimeError("misaligned reward boundary")
+        if len(self.action_receipts) != len(self.action_hist):
+            raise RuntimeError("action receipt boundary is misaligned")
         self.last_state = state
 
-        obs = self.server.obs_space.state_to_obs(state)
-        # name table: action idx -> engine move string
-        name_table: dict[str, int] = {}
-        try:
-            moves = consistent_move_order(
-                list(self.battle.active_pokemon.moves.values())
-            ) if self.battle.active_pokemon else []
-        except Exception:
-            moves = []
-        try:
-            bench = consistent_pokemon_order(
-                [p for p in self.battle.team.values() if not p.fainted and not p.active]
-            )
-        except Exception:
-            bench = []
-        for i, mv in enumerate(moves[:4]):
-            move_id = norm(mv.id)
-            name_table[move_id] = i
-            name_table[f"{move_id}-tera"] = i + 9
-        for i, p in enumerate(bench[:5]):
-            name_table[f"switch {norm(p.name)}"] = i + 4
-
+        obs = self.obs_space.state_to_obs(state)
         request_actions = set(self.last_request_legality["actions"])
+        # The private Showdown request is authoritative for the current move
+        # set, including after Illusion and forced drag. Its learned move slots
+        # use the same normalized alphabetical ordering as Metamon.
+        name_table = private_request_move_name_table(request_actions)
+        name_table.update(private_request_switch_name_table(request_actions))
+
         mapped_actions: dict[str, int] = {}
         for action in request_actions:
+            if action == "struggle":
+                mapped_actions[action] = 0
+                continue
+            if action in UNLEARNED_REQUEST_ACTIONS:
+                continue
             if action in name_table:
                 mapped_actions[action] = name_table[action]
                 continue
@@ -437,39 +759,55 @@ class BattleSession:
                     continue
             raise RuntimeError(f"request action is absent from policy table: {action}")
         illegal = np.ones(13, dtype=bool)
-        for index in mapped_actions.values():
-            illegal[index] = False
+        for action in mapped_actions:
+            for index in request_action_policy_indices(action, mapped_actions):
+                illegal[index] = False
         mask_fallback = False
         mask_fallback_error = None
         obs = dict(obs)
         obs["illegal_actions"] = illegal
-        # Stateless two-step inference is intentionally used here. The live
-        # protocol occasionally misses an action boundary, which makes a
-        # history sequence and its RL2 action/reward stream differ by one
-        # timestep. The policy's current-state prior is still useful, while
-        # this fixed shape avoids silently falling back to no-prior MCTS.
         current_obs = obs
-        T = 2
-        A = 13
+        self.obs_hist.append(current_obs)
+        max_seq_len = int(getattr(self.server.agent, "max_seq_len", 128))
+        if len(self.obs_hist) > max_seq_len:
+            overflow = len(self.obs_hist) - max_seq_len
+            self.obs_hist[:] = self.obs_hist[-max_seq_len:]
+            self.action_hist[:] = self.action_hist[-(max_seq_len - 1):]
+            self.reward_hist[:] = self.reward_hist[-(max_seq_len - 1):]
+            self.action_receipts[:] = self.action_receipts[-(max_seq_len - 1):]
+            self.trajectory_time_offset += overflow
+        if self.server.trajectory_mode == "legacy-stateless":
+            trajectory_obs, trajectory_rl2, trajectory_time = (
+                legacy_stateless_trajectory_arrays(current_obs)
+            )
+        else:
+            trajectory_obs, trajectory_rl2, trajectory_time = aligned_trajectory_arrays(
+                self.obs_hist,
+                self.action_hist,
+                self.reward_hist,
+                max_seq_len,
+                self.trajectory_time_offset,
+            )
+        T = len(trajectory_time)
+        trajectory_reset_reason = self.trajectory_reset_reason
+        self.trajectory_reset_reason = None
         device = self.server.device
         text = torch.tensor(
-            np.stack([np.zeros_like(current_obs["text_tokens"]), current_obs["text_tokens"]]),
+            trajectory_obs["text_tokens"],
             dtype=torch.int32,
             device=device,
         ).unsqueeze(0)
         numbers = torch.tensor(
-            np.stack([np.zeros_like(current_obs["numbers"]), current_obs["numbers"]]),
+            trajectory_obs["numbers"],
             dtype=torch.float32,
             device=device,
         ).unsqueeze(0)
         numbers = torch.nan_to_num(numbers)
         ill = torch.tensor(
-            np.stack([np.ones(13, dtype=bool), current_obs["illegal_actions"]]), device=device
+            trajectory_obs["illegal_actions"], device=device
         ).unsqueeze(0)
-        rl2s = torch.zeros((1, T, A + 1), device=device)
-        # AMAGO's transformer squeezes the final dimension internally. Keep
-        # it explicit so a one-turn history stays [B, L] rather than [B].
-        time_idxs = torch.arange(T, device=device).long().unsqueeze(0).unsqueeze(-1)
+        rl2s = torch.tensor(trajectory_rl2, dtype=torch.float32, device=device).unsqueeze(0)
+        time_idxs = torch.tensor(trajectory_time, device=device).long().unsqueeze(0)
         obs_batch = {"text_tokens": text, "numbers": numbers, "illegal_actions": ill}
 
         agent = self.server.agent
@@ -480,9 +818,8 @@ class BattleSession:
             dists = agent.actor(
                 emb,
                 straight_from_obs={
-                    # The trajectory encoder emits one fewer transition than
-                    # raw observations. Match its sequence length for actor
-                    # side-channel tensors (especially numbers).
+                    # Match actor side-channel tensors (especially numbers)
+                    # to the state-embedding sequence exactly.
                     k: obs_batch[k][:, : emb.shape[1]]
                     for k in agent.pass_obs_keys_to_actor
                 },
@@ -501,7 +838,9 @@ class BattleSession:
 
         priors = {}
         for name, idx in mapped_actions.items():
-            priors[name] = float(probs[idx])
+            indices = request_action_policy_indices(name, mapped_actions)
+            priors[name] = float(sum(probs[index] for index in indices))
+        priors = add_unlearned_action_priors(priors, request_actions)
 
         decision_idx = self.decision_idx
         battle_turn = getattr(self.battle, "turn", None)
@@ -536,6 +875,17 @@ class BattleSession:
                 "name_table": mapped_actions,
                 "probs": [float(p) for p in probs],
                 "opponent_prior": self.last_opponent_prior_evidence,
+                "trajectory": {
+                    "mode": self.server.trajectory_mode,
+                    "observations": len(self.obs_hist),
+                    "transitions": len(self.action_hist),
+                    "inference_length": T,
+                    "reset_reason": trajectory_reset_reason,
+                    "action_receipts": list(self.action_receipts),
+                    "private_identity_corrections": self.private_identity_corrections,
+                    "rl2": trajectory_rl2.tolist(),
+                    "time_indices": trajectory_time[:, 0].tolist(),
+                },
             }
             line = json.dumps(dump_row, separators=(",", ":")) + "\n"
             with self.server.dump_lock:
@@ -556,6 +906,15 @@ class BattleSession:
             "request_sha256": expected_request_sha256,
             "own_legality": self.last_request_legality,
             "opponent_support": self.last_opponent_prior_evidence,
+            "trajectory": {
+                "mode": self.server.trajectory_mode,
+                "observations": len(self.obs_hist),
+                "transitions": len(self.action_hist),
+                "inference_length": T,
+                "reset_reason": trajectory_reset_reason,
+                "action_receipts": list(self.action_receipts),
+                "private_identity_corrections": self.private_identity_corrections,
+            },
         }
         self.cached_rqid = rqid
         self.cached_request_sha256 = expected_request_sha256
@@ -606,7 +965,7 @@ class BattleSession:
             # UniversalState field names. This gives state_to_obs the expected
             # player_active_pokemon / available_switches layout.
             flipped = UniversalState.from_Battle(opp_battle)
-            obs = self.server.obs_space.state_to_obs(flipped)
+            obs = self.opponent_obs_space.state_to_obs(flipped)
             # opponent's legal actions from the flipped battle
             illegal = np.ones(13, dtype=bool)
             try:
@@ -815,6 +1174,7 @@ class PriorServer:
         self.obs_space = model.observation_space
         self.reward_fn = model.reward_function
         self.username = args.username
+        self.trajectory_mode = args.trajectory_mode
         self.sessions: dict[str, BattleSession] = {}
         self.lock = threading.Lock()
         # Schema-v3 observation dump (one JSONL row per /priors decision)
@@ -851,6 +1211,12 @@ def main() -> None:
     parser.add_argument("--checkpoint-sha256", default=None)
     parser.add_argument("--username", required=True,
                         help="FP's showdown username (to identify our side)")
+    parser.add_argument(
+        "--trajectory-mode",
+        choices=("causal-history", "legacy-stateless"),
+        default="causal-history",
+        help="Frozen player-policy inference contract; default is repaired causal history.",
+    )
     parser.add_argument("--port", type=int, default=8977)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument(
@@ -936,6 +1302,21 @@ def main() -> None:
                     for line in lines:
                         sess.feed_line(line)
                 self._json(200, {"ok": True})
+            elif path == "/action":
+                try:
+                    sess = server.session(live_session, tag, namespace)
+                    with sess.lock:
+                        result = sess.acknowledge_action(
+                            data.get("action"),
+                            data.get("rqid"),
+                            data.get("request_sha256"),
+                            data.get("decision_idx"),
+                        )
+                    self._json(200, result)
+                except ValueError as exc:
+                    self._json(400, {"error": str(exc)})
+                except Exception as exc:  # noqa: BLE001
+                    self._json(409, {"error": f"{type(exc).__name__}: {exc}"})
             elif path == "/end":
                 with server.lock:
                     server.sessions.pop(live_session, None)
