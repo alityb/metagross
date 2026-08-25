@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "seed": 20260728,
+  "learner": "current_r1",
+  "battle_count": 8,
+  "opponents": [
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1",
+    "frozen_r1"
+  ]
+}

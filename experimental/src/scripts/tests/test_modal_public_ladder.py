@@ -22,7 +22,7 @@ class ModalPublicLadderTest(unittest.TestCase):
             self.assertIn("--checkpoint-root", command)
             self.assertEqual(
                 command[command.index("--search-parallelism") + 1],
-                "8",
+                "16",
             )
             self.assertEqual(command[command.index("--search-threads") + 1], "1")
             self.assertEqual(
@@ -37,6 +37,17 @@ class ModalPublicLadderTest(unittest.TestCase):
         self.assertEqual(environment["HTTPS_PROXY"], "http://proxy")
         self.assertEqual(environment["wss_proxy"], "http://proxy")
         self.assertEqual(environment["NO_PROXY"], "127.0.0.1,localhost")
+
+    def test_foul_play_login_has_no_proxy_idle_delay(self):
+        source = (
+            Path(modal_public_ladder.ROOT)
+            / "srcs/metagross/run_foul_play.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("login_without_idle_delay", source)
+        self.assertIn(
+            "websocket_client.PSWebsocketClient.login = login_without_idle_delay",
+            source,
+        )
 
     def test_sticky_proxy_url_adds_us_session_without_exposing_password(self):
         url = modal_public_ladder._sticky_proxy_url(
@@ -59,16 +70,32 @@ class ModalPublicLadderTest(unittest.TestCase):
     def test_campaign_proxy_uses_static_profile_url_without_rewriting(self):
         environment = {
             "METAGROSS_PROXY_URL": "http://fallback:pass@residential.byteful.com:8000",
-            "METAGROSS_R1_PROXY_URL": "http://user:pass@98.159.236.28:61234",
+            "METAGROSS_R1_PROXY_URL": "http://user:pass@residential.byteful.com:8000",
+            "METAGROSS_G3_PROXY_URL": "http://user:pass@98.159.236.28:61234",
         }
         self.assertEqual(
             modal_public_ladder._campaign_proxy_url(environment, "experiment", "r1", 0),
             environment["METAGROSS_R1_PROXY_URL"],
         )
-        self.assertIn(
-            "_s_",
+        self.assertEqual(
             modal_public_ladder._campaign_proxy_url(environment, "experiment", "g3", 0),
+            environment["METAGROSS_G3_PROXY_URL"],
         )
+
+    def test_cloud_max_resources_and_parallelism_are_explicit(self):
+        self.assertEqual(modal_public_ladder.DEPLOYMENT_VARIANT, "r1-p16-cloud-max")
+        self.assertEqual(modal_public_ladder.CLOUD_CPUS, 32.0)
+        self.assertEqual(modal_public_ladder.CLOUD_MEMORY_MIB, 32768)
+        self.assertEqual(modal_public_ladder.R1_SEARCH_PARALLELISM, 16)
+
+    def test_campaign_requires_static_profile_proxy(self):
+        with self.assertRaisesRegex(RuntimeError, "METAGROSS_R1_PROXY_URL"):
+            modal_public_ladder._campaign_proxy_url(
+                {"METAGROSS_PROXY_URL": "http://fallback:pass@proxy:8000"},
+                "experiment",
+                "r1",
+                0,
+            )
 
     def test_campaign_can_force_rotating_proxy(self):
         environment = {
@@ -137,6 +164,24 @@ class ModalPublicLadderTest(unittest.TestCase):
                 inventory["nested/rows.jsonl"]["sha256"],
                 "83ad05a6ffdb5c97fb81a8501561e30cc3458bed5a83525e931acb0f8486a393",
             )
+
+    def test_network_error_detects_disconnect_traceback(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            run_dir = Path(temporary)
+            (run_dir / "client.log").write_text(
+                "websockets.exceptions.ConnectionClosedError: no close frame received\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                modal_public_ladder._network_error(run_dir),
+                "websockets.exceptions.connectionclosed",
+            )
+
+    def test_network_error_accepts_clean_log(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            run_dir = Path(temporary)
+            (run_dir / "client.log").write_text("completed 5 battles\n", encoding="utf-8")
+            self.assertIsNone(modal_public_ladder._network_error(run_dir))
 
 
 if __name__ == "__main__":

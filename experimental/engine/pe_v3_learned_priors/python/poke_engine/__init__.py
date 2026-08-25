@@ -179,6 +179,10 @@ class SharedRootDiagnostics:
     baseline_advantage_effective_world_count: float
     lcb_z: float
     paired_evaluation_iterations: int
+    paired_evaluation_cells_evaluated: int
+    paired_evaluation_total_iterations: int
+    paired_evaluation_elapsed_ms: int
+    paired_evaluation_complete: bool
 
 
 @dataclass
@@ -253,6 +257,10 @@ def shared_information_set_root_search(
             baseline_advantage_effective_world_count=result.diagnostics.baseline_advantage_effective_world_count,
             lcb_z=result.diagnostics.lcb_z,
             paired_evaluation_iterations=result.diagnostics.paired_evaluation_iterations,
+            paired_evaluation_cells_evaluated=result.diagnostics.paired_evaluation_cells_evaluated,
+            paired_evaluation_total_iterations=result.diagnostics.paired_evaluation_total_iterations,
+            paired_evaluation_elapsed_ms=result.diagnostics.paired_evaluation_elapsed_ms,
+            paired_evaluation_complete=result.diagnostics.paired_evaluation_complete,
         ),
     )
 
@@ -265,6 +273,7 @@ def monte_carlo_tree_search(
     s1_priors=None,
     s2_priors=None,
     c_puct: float = 2.0,
+    seed: Optional[int] = None,
 ) -> MctsResult:
     """
     Perform monte-carlo-tree-search on the given state and for the given duration
@@ -277,6 +286,8 @@ def monte_carlo_tree_search(
     :type iterations: int
     :param threads: number of threads to use for the search
     :type threads: int
+    :param seed: deterministic RNG seed; requires iterations > 0 and threads == 1
+    :type seed: Optional[int]
     :return: the result of the search
     :rtype: MctsResult
     """
@@ -289,6 +300,7 @@ def monte_carlo_tree_search(
             s1_priors=s1_priors,
             s2_priors=s2_priors,
             c_puct=c_puct,
+            seed=seed,
         )
     )
 

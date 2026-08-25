@@ -18,6 +18,7 @@ import json
 import math
 import sys
 from pathlib import Path
+from statistics import median
 from typing import Any, Iterable, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,6 +66,11 @@ def validate_row(row: Any) -> tuple[Posterior, str | None, dict[str, Any]]:
         if not isinstance(label, str) or label not in posterior.posterior:
             raise CandidateValidationError("label must be an active candidate_id")
     metadata: dict[str, Any] = {}
+    metadata["evidence_type"] = (
+        "switch" if observed_action.startswith("switch ")
+        else "tera_move" if observed_action.endswith("-tera")
+        else "move"
+    )
     has_replay = "replay_id" in row or "time" in row
     if has_replay:
         if not isinstance(row.get("replay_id"), str) or not row["replay_id"]:
@@ -76,41 +82,137 @@ def validate_row(row: Any) -> tuple[Posterior, str | None, dict[str, Any]]:
 
 def _metric_summary(rows: Iterable[tuple[Posterior, str | None, dict[str, Any]]]) -> dict[str, Any]:
     rows = list(rows)
-    labeled = [(posterior, label) for posterior, label, _ in rows if label is not None]
+    labeled = [(posterior, label, metadata) for posterior, label, metadata in rows if label is not None]
     result: dict[str, Any] = {"rows": len(rows), "labeled_rows": len(labeled), "coverage": len(labeled) / len(rows) if rows else 0.0}
-    for name, posterior_mode in (("generator_only", False), ("posterior", True)):
+    for name, posterior_mode in (
+        ("generator_only", False),
+        ("posterior", True),
+        ("move_only_posterior", "move_only"),
+    ):
         if not labeled:
-            result[name] = {key: None for key in ("top1", "top3", "mrr", "mean_label_probability", "brier")}
+            result[name] = {key: None for key in ("top1", "top3", "mrr", "mean_label_probability", "brier", "nll", "ece")}
             continue
-        top1 = top3 = 0
+        topk_counts = {k: 0 for k in (1, 3, 5, 10)}
         reciprocal_ranks: list[float] = []
         label_probabilities: list[float] = []
         briers: list[float] = []
-        for belief, label in labeled:
+        nlls: list[float] = []
+        zero_label_probability = 0
+        reliability = [dict(count=0, confidence_sum=0.0, correct=0) for _ in range(10)]
+        for belief, label, metadata in labeled:
             assert label is not None
-            probabilities = belief.posterior if posterior_mode else belief.prior
-            ranking = belief.ranking(posterior=posterior_mode)
+            use_posterior = posterior_mode is True or (
+                posterior_mode == "move_only" and metadata.get("evidence_type") != "switch"
+            )
+            probabilities = belief.posterior if use_posterior else belief.prior
+            ranking = belief.ranking(posterior=use_posterior)
             rank = next(index for index, (candidate_id, _) in enumerate(ranking, start=1) if candidate_id == label)
-            top1 += rank == 1
-            top3 += rank <= 3
+            for k in topk_counts:
+                topk_counts[k] += rank <= min(k, len(ranking))
             reciprocal_ranks.append(1.0 / rank)
-            label_probabilities.append(probabilities[label])
+            label_probability = probabilities[label]
+            label_probabilities.append(label_probability)
+            if label_probability > 0.0:
+                nlls.append(-math.log(label_probability))
+            else:
+                zero_label_probability += 1
             briers.append(sum((probability - (candidate_id == label)) ** 2 for candidate_id, probability in probabilities.items()))
+            top_candidate, confidence = ranking[0]
+            bin_index = min(9, int(confidence * 10))
+            reliability[bin_index]["count"] += 1
+            reliability[bin_index]["confidence_sum"] += confidence
+            reliability[bin_index]["correct"] += top_candidate == label
         count = len(labeled)
+        reliability_rows = []
+        ece = 0.0
+        for index, values in enumerate(reliability):
+            bin_count = values["count"]
+            mean_confidence = values["confidence_sum"] / bin_count if bin_count else None
+            accuracy = values["correct"] / bin_count if bin_count else None
+            if bin_count:
+                ece += bin_count / count * abs(mean_confidence - accuracy)
+            reliability_rows.append({
+                "lower": index / 10,
+                "upper": (index + 1) / 10,
+                "count": bin_count,
+                "mean_confidence": mean_confidence,
+                "accuracy": accuracy,
+            })
         result[name] = {
-            "top1": top1 / count,
-            "top3": top3 / count,
+            "top1": topk_counts[1] / count,
+            "top3": topk_counts[3] / count,
+            "topk": {str(k): value / count for k, value in topk_counts.items()},
             "mrr": sum(reciprocal_ranks) / count,
             "mean_label_probability": sum(label_probabilities) / count,
             "brier": sum(briers) / count,
+            "nll": sum(nlls) / count if not zero_label_probability else "infinity",
+            "zero_label_probability": zero_label_probability,
+            "ece": ece,
+            "reliability": reliability_rows,
         }
+    if labeled:
+        evidence = [belief.evidence for belief, _label, _metadata in labeled]
+        bayes_factors = [belief.posterior[label] / belief.prior[label] for belief, label, _metadata in labeled]
+        finite_log_gains = [
+            math.log(belief.posterior[label]) - math.log(belief.prior[label])
+            for belief, label, _metadata in labeled if belief.posterior[label] > 0.0
+        ]
+        result["action_evidence"] = {
+            "mean": sum(evidence) / len(evidence),
+            "median": median(evidence),
+            "mean_truth_bayes_factor": sum(bayes_factors) / len(bayes_factors),
+            "mean_truth_log_probability_gain": (
+                sum(finite_log_gains) / len(finite_log_gains) if finite_log_gains else None
+            ),
+            "zero_posterior_truth_rows": len(labeled) - len(finite_log_gains),
+        }
+        prior_metrics = result["generator_only"]
+        posterior_metrics = result["posterior"]
+        move_only_metrics = result["move_only_posterior"]
+        result["delta_posterior_minus_generator"] = {
+            "brier": posterior_metrics["brier"] - prior_metrics["brier"],
+            "ece": posterior_metrics["ece"] - prior_metrics["ece"],
+            "nll": (
+                posterior_metrics["nll"] - prior_metrics["nll"]
+                if isinstance(posterior_metrics["nll"], float) and isinstance(prior_metrics["nll"], float)
+                else None
+            ),
+            "topk": {
+                key: posterior_metrics["topk"][key] - prior_metrics["topk"][key]
+                for key in prior_metrics["topk"]
+            },
+        }
+        result["delta_move_only_minus_generator"] = {
+            "brier": move_only_metrics["brier"] - prior_metrics["brier"],
+            "ece": move_only_metrics["ece"] - prior_metrics["ece"],
+            "nll": (
+                move_only_metrics["nll"] - prior_metrics["nll"]
+                if isinstance(move_only_metrics["nll"], float) and isinstance(prior_metrics["nll"], float)
+                else None
+            ),
+            "topk": {
+                key: move_only_metrics["topk"][key] - prior_metrics["topk"][key]
+                for key in prior_metrics["topk"]
+            },
+        }
+    return result
+
+
+def _slice_summary(rows: list[tuple[Posterior, str | None, dict[str, Any]]]) -> dict[str, Any]:
+    result = _metric_summary(rows)
+    result["evidence_strata"] = {
+        evidence_type: _metric_summary([
+            row for row in rows if row[2].get("evidence_type") == evidence_type
+        ])
+        for evidence_type in ("move", "switch", "tera_move")
+    }
     return result
 
 
 def benchmark_rows(rows: list[tuple[Posterior, str | None, dict[str, Any]]], holdout_fraction: float = 0.2) -> dict[str, Any]:
     """Report all rows and, with complete metadata, a chronological replay holdout."""
-    report = {"all": _metric_summary(rows)}
-    metadata_present = [bool(metadata) for _, _, metadata in rows]
+    report = {"all": _slice_summary(rows)}
+    metadata_present = ["replay_id" in metadata for _, _, metadata in rows]
     if any(metadata_present) and not all(metadata_present):
         raise CandidateValidationError("replay_id and time must be present on every row or no rows")
     if not all(metadata_present):
@@ -128,8 +230,8 @@ def benchmark_rows(rows: list[tuple[Posterior, str | None, dict[str, Any]]], hol
     report["chronological_holdout"] = {
         "available": True,
         "holdout_replay_ids": sorted(held_out),
-        "train": _metric_summary([row for row in rows if row[2]["replay_id"] not in held_out]),
-        "holdout": _metric_summary([row for row in rows if row[2]["replay_id"] in held_out]),
+        "train": _slice_summary([row for row in rows if row[2]["replay_id"] not in held_out]),
+        "holdout": _slice_summary([row for row in rows if row[2]["replay_id"] in held_out]),
     }
     return report
 
@@ -138,6 +240,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="JSONL benchmark input")
     parser.add_argument("--holdout-fraction", type=float, default=0.2)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if not math.isfinite(args.holdout_fraction) or not 0.0 < args.holdout_fraction < 1.0:
         parser.error("--holdout-fraction must be finite and in (0, 1)")
@@ -156,7 +259,11 @@ def main() -> None:
                 raise CandidateValidationError(f"line {line_number}: {exc}") from exc
         if not validated:
             raise CandidateValidationError("benchmark input contains no rows")
-        print(json.dumps(benchmark_rows(validated, args.holdout_fraction), sort_keys=True))
+        report = benchmark_rows(validated, args.holdout_fraction)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(json.dumps(report, sort_keys=True))
     except (OSError, CandidateValidationError) as exc:
         parser.error(str(exc))
 

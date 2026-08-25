@@ -31,6 +31,7 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--save-results-to", required=True)
     parser.add_argument("--save-trajectories-to", default=None)
+    parser.add_argument("--showdown-port", type=int, default=8000)
     parser.add_argument("--local-run-dir", default=None,
                         help="Load a LocalFinetunedModel from this --save_dir instead of the HF pretrained")
     parser.add_argument("--local-run-name", default=None)
@@ -38,6 +39,15 @@ def main() -> None:
     args = parser.parse_args()
 
     os.environ.setdefault("WANDB_MODE", "disabled")
+
+    from poke_env.ps_client.server_configuration import ServerConfiguration
+    import poke_env.player.player as player_module
+
+    server_configuration = ServerConfiguration(
+        f"ws://localhost:{args.showdown_port}/showdown/websocket",
+        "https://play.pokemonshowdown.com/action.php?",
+    )
+    player_module.LocalhostServerConfiguration = server_configuration
 
     from metamon import config as metamon_config
 
@@ -48,6 +58,9 @@ def main() -> None:
 
     from metamon.rl.pretrained import get_pretrained_model
     from metamon.rl.evaluate.__main__ import pretrained_vs_challenge
+    import metamon.env.wrappers as metamon_wrappers
+
+    metamon_wrappers.LocalhostServerConfiguration = server_configuration
 
     if args.local_run_dir:
         from metamon.rl.pretrained import LocalFinetunedModel, get_pretrained_model_names

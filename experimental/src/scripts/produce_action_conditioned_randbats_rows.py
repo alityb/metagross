@@ -72,11 +72,20 @@ def _is_forced_switch(turn: Any, side: int = 2) -> bool:
 
 
 def _is_tera_action(messages: list[list[str]], action_index: int, side: str) -> bool:
-    """Tera declaration follows the move in protocol but is part of that action."""
+    """Associate a side's Tera declaration with its move in either speed order."""
+    for message in reversed(messages[:action_index]):
+        if not message or message[0] == "turn":
+            break
+        if message[0] in {"move", "switch", "cant"} and message[1].startswith(side):
+            break
+        if message[0] == "-terastallize" and message[1].startswith(side):
+            return True
     for message in messages[action_index + 1 :]:
         if not message:
             continue
-        if message[0] in {"move", "switch", "drag", "turn", "cant"}:
+        if message[0] == "turn" or (
+            message[0] in {"move", "switch", "drag", "cant"} and message[1].startswith(side)
+        ):
             return False
         if message[0] == "-terastallize" and message[1].startswith(side):
             return True
@@ -147,13 +156,20 @@ def rows_from_replay(raw: Mapping[str, Any], pool: tuple[Candidate, ...], replay
     protocol = forward.SimProtocol(replay)
     captures: list[tuple[dict[str, Any], str, dict[str, Any], bool]] = []
     p2_cant_pending = False
+    p2_tera_pending: tuple[int, Any] | None = None
 
     for index, message in enumerate(messages):
+        if message and message[0] == "-terastallize" and message[1].startswith("p2"):
+            # The declaration is emitted before move resolution. Preserve the
+            # simultaneous-decision state before the declaration consumes Tera.
+            p2_tera_pending = (index, copy.deepcopy(protocol.curr_turn))
         if message and message[0] == "cant" and message[1].startswith("p2"):
             # Showdown does not provide a discretionary choice for this boundary.
             p2_cant_pending = True
         if message and message[0] in {"move", "switch"} and message[1].startswith("p2"):
-            turn = protocol.curr_turn
+            pending_tera = p2_tera_pending if message[0] == "move" else None
+            turn = pending_tera[1] if pending_tera else protocol.curr_turn
+            prefix_end = pending_tera[0] if pending_tera else index
             active = turn.active_pokemon_2[0]
             forced = p2_cant_pending or (message[0] == "switch" and _is_forced_switch(turn))
             # A move has intent; drag, forced replacement, and cant do not.
@@ -162,7 +178,7 @@ def rows_from_replay(raw: Mapping[str, Any], pool: tuple[Candidate, ...], replay
                 candidates = tuple(candidate for candidate in pool if _matches(candidate, prefix_facts))
                 if candidates:
                     if message[0] == "move":
-                        tera = _is_tera_action(messages, index, "p2")
+                        tera = pending_tera is not None or _is_tera_action(messages, index, "p2")
                         observed = f"move {_norm(message[2])}{'-tera' if tera else ''}"
                     else:
                         observed = f"switch {_norm(message[2].split(',', 1)[0])}"
@@ -187,13 +203,14 @@ def rows_from_replay(raw: Mapping[str, Any], pool: tuple[Candidate, ...], replay
                                     pokemon is not None and str(pokemon.status).endswith("FNT")
                                     for pokemon in turn.pokemon_2
                                 ),
-                                "protocol_prefix": messages[:index],
+                                "protocol_prefix": messages[:prefix_end],
                                 "handoff": "Replay protocol prefix is exclusive of observed_action; replay it with forward.SimProtocol and build ReplayState immediately before the action.",
                             },
                         }, active.unique_id, prefix_facts, False))
         protocol.interpret_message(message)
         if message and (message[0] == "turn" or (message[0] in {"move", "switch"} and message[1].startswith("p2"))):
             p2_cant_pending = False
+            p2_tera_pending = None
 
     rows: list[dict[str, Any]] = []
     for capture_index, (row, unique_id, prefix_facts, _) in enumerate(captures):

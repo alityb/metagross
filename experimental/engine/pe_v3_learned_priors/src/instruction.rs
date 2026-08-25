@@ -1,6 +1,7 @@
 use crate::choices::{Choices, MoveCategory};
 use crate::engine::items::Items;
 use crate::engine::state::{PokemonVolatileStatus, Terrain, Weather};
+use crate::public_reveal::RevealField;
 use crate::state::{
     LastUsedMove, PokemonBoostableStat, PokemonIndex, PokemonMoveIndex, PokemonSideCondition,
     PokemonStatus, PokemonType, SideReference,
@@ -89,6 +90,9 @@ pub enum Instruction {
     ToggleSideOneForceSwitch,
     ToggleSideTwoForceSwitch,
     ToggleTerastallized(ToggleTerastallizedInstruction),
+    RecordAction(RecordActionInstruction),
+    RecordItemActivation(RecordItemActivationInstruction),
+    PublicReveal(PublicRevealInstruction),
 }
 
 impl fmt::Debug for Instruction {
@@ -332,8 +336,51 @@ impl fmt::Debug for Instruction {
             Instruction::ToggleSideTwoForceSwitch => {
                 write!(f, "ToggleSideTwoForceSwitch")
             }
+            Instruction::RecordAction(r) => {
+                write!(
+                    f,
+                    "RecordAction {:?} {:?} {:?}",
+                    r.side_ref, r.pokemon_index, r.move_index
+                )
+            }
+            Instruction::RecordItemActivation(r) => {
+                write!(
+                    f,
+                    "RecordItemActivation {:?} {:?} {:?}",
+                    r.side_ref, r.pokemon_index, r.item
+                )
+            }
+            Instruction::PublicReveal(r) => {
+                write!(
+                    f,
+                    "PublicReveal {:?} {:?} {:?}",
+                    r.subject, r.pokemon_index, r.field
+                )
+            }
         }
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RecordActionInstruction {
+    pub side_ref: SideReference,
+    pub pokemon_index: PokemonIndex,
+    pub move_index: PokemonMoveIndex,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RecordItemActivationInstruction {
+    pub side_ref: SideReference,
+    pub pokemon_index: PokemonIndex,
+    pub item: Items,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct PublicRevealInstruction {
+    /// The side whose fact became visible; the observer is the other side.
+    pub subject: SideReference,
+    pub pokemon_index: PokemonIndex,
+    pub field: RevealField,
 }
 
 #[derive(Debug, PartialEq, Clone)]

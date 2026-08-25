@@ -474,5 +474,8 @@ pub fn perform_mcts_shared_tree(
             })
             .collect(),
         iteration_count: root.times_visited.load(Ordering::Acquire),
+        learned_evaluations: 0,
+        hand_evaluations: 0,
+        terminal_evaluations: 0,
     }
 }

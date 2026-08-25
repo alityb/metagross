@@ -32,8 +32,23 @@ SECRET = modal.Secret.from_name(SECRET_NAME)
 FORMAT = "gen9randombattle"
 WEBSOCKET_URI = "wss://sim3.psim.us/showdown/websocket"
 MAX_BLOCKS_PER_SEGMENT = 8
-R1_SEARCH_PARALLELISM = 8
+DEPLOYMENT_VARIANT = "r1-p16-cloud-max"
+CLOUD_CPUS = 32.0
+CLOUD_MEMORY_MIB = 32768
+R1_SEARCH_PARALLELISM = 16
 R1_SEARCH_THREADS = 1
+ARTIFACT_COMMIT_SECONDS = 60
+NETWORK_ERROR_MARKERS = (
+    "websockets.exceptions.connectionclosed",
+    "connectionclosederror",
+    "no close frame received",
+    "keepalive ping timeout",
+    "connection reset by peer",
+    "remote host closed",
+    "opening handshake failed",
+    "invalidproxystatus",
+    "proxyerror",
+)
 PROFILES = {
     "r1": {
         "run_name": "randbats_exit_r1",
@@ -281,10 +296,14 @@ def _campaign_proxy_url(
     *,
     use_profile_proxy: bool = True,
 ) -> str:
-    proxy_url = None
     if use_profile_proxy:
-        proxy_url = environment.get(f"METAGROSS_{profile.upper()}_PROXY_URL")
-    proxy_url = proxy_url or environment.get("METAGROSS_PROXY_URL")
+        variable = f"METAGROSS_{profile.upper()}_PROXY_URL"
+        proxy_url = environment.get(variable)
+        if not proxy_url:
+            raise RuntimeError(f"Modal secret did not provide {variable}")
+        return proxy_url
+    else:
+        proxy_url = environment.get("METAGROSS_PROXY_URL")
     if not proxy_url:
         raise RuntimeError(f"Modal secret did not provide a proxy URL for {profile}")
     if (urlsplit(proxy_url).hostname or "").lower() == "residential.byteful.com":
@@ -303,6 +322,42 @@ def _games_to_request(rating: dict[str, object], target_games: int, block_games:
     return min(block_games, max(0, target_games - _rated_games(rating)))
 
 
+def _network_error(run_dir: Path) -> str | None:
+    client_log = run_dir / "client.log"
+    if not client_log.is_file():
+        return "client log is missing"
+    content = client_log.read_text(encoding="utf-8", errors="replace").lower()
+    return next((marker for marker in NETWORK_ERROR_MARKERS if marker in content), None)
+
+
+def _run_with_periodic_commits(
+    command: list[str], environment: dict[str, str], wrapper_log_path: Path
+) -> int:
+    with wrapper_log_path.open("w", encoding="utf-8") as wrapper_log:
+        process = subprocess.Popen(
+            command,
+            cwd="/workspace",
+            env=environment,
+            stdout=wrapper_log,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        try:
+            while True:
+                try:
+                    return process.wait(timeout=ARTIFACT_COMMIT_SECONDS)
+                except subprocess.TimeoutExpired:
+                    VOLUME.commit()
+        except BaseException:
+            process.terminate()
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            raise
+
+
 @APP.function(
     image=IMAGE,
     cpu=1.0,
@@ -312,22 +367,41 @@ def _games_to_request(rating: dict[str, object], target_games: int, block_games:
     region="us-west",
     secrets=[SECRET],
 )
-def probe_showdown_proxy(username: str, profile: str = "r1") -> dict[str, object]:
+def probe_showdown_proxy(
+    username: str, profile: str = "r1", soak_seconds: int = 30
+) -> dict[str, object]:
     _validate_identifier(username, "username")
     if profile not in PROFILES:
         raise ValueError(f"unsupported profile: {profile}")
+    if not 0 <= soak_seconds <= 240:
+        raise ValueError("soak_seconds must be between 0 and 240")
     password = os.environ.get("METAGROSS_SHOWDOWN_PASSWORD")
     if not password:
         raise RuntimeError("Modal secret is missing Showdown credentials")
     proxy_url = _campaign_proxy_url(
-        os.environ, "probe", profile, 0, use_profile_proxy=False
+        os.environ, "probe", profile, 0, use_profile_proxy=True
     )
     environment = os.environ.copy()
     environment.update(_proxy_environment(proxy_url))
     environment["PYTHONPATH"] = "/workspace/srcs/vendor/foul-play"
     script = f'''import asyncio
+import json
 import os
+
+import requests
+import websockets
 from fp.websocket_client import PSWebsocketClient
+
+def indicators(messages):
+    content = "\\n".join(messages).lower()
+    return {{
+        "popup": "|popup|" in content,
+        "proxy": "proxy" in content,
+        "locked": "lock" in content,
+        "banned": "ban" in content,
+        "nametaken": "|nametaken|" in content,
+        "updateuser": "|updateuser|" in content,
+    }}
 
 async def probe():
     client = await PSWebsocketClient.create(
@@ -336,8 +410,64 @@ async def probe():
         {WEBSOCKET_URI!r},
     )
     try:
-        await client.login()
+        client_id, challstr = await client.get_id_and_challstr()
+        response = requests.post(
+            client.login_uri,
+            data={{
+                "name": client.username,
+                "pass": client.password,
+                "challstr": "|".join([client_id, challstr]),
+            }},
+        )
+        if response.status_code != 200:
+            raise RuntimeError(f"Showdown login HTTP status {{response.status_code}}")
+        response_json = json.loads(response.text[1:])
+        if "actionsuccess" not in response_json:
+            raise RuntimeError("Showdown rejected account login")
+        await client.send_message(
+            "", ["/trn " + client.username + ",0," + response_json["assertion"]]
+        )
+        messages = []
+        authenticated = False
+        try:
+            while len(messages) < 20:
+                message = await asyncio.wait_for(client.receive_message(), timeout=2)
+                messages.append(message)
+                if "|updateuser|" in message and "|1|" in message:
+                    authenticated = True
+                    break
+        except asyncio.TimeoutError:
+            pass
+        except websockets.exceptions.ConnectionClosed as exc:
+            raise RuntimeError(
+                "Showdown closed before authentication: "
+                f"code={{exc.code}} indicators={{json.dumps(indicators(messages), sort_keys=True)}}"
+            ) from exc
+        if not authenticated:
+            raise RuntimeError(
+                "Showdown did not confirm authentication: "
+                f"indicators={{json.dumps(indicators(messages), sort_keys=True)}}"
+            )
         await client.update_team("None")
+        deadline = asyncio.get_running_loop().time() + {soak_seconds!r}
+        while asyncio.get_running_loop().time() < deadline:
+            try:
+                message = await asyncio.wait_for(client.receive_message(), timeout=1)
+                messages.append(message)
+                status = indicators(messages)
+                if status["popup"] or status["nametaken"]:
+                    raise RuntimeError(
+                        "Showdown rejected the authenticated session: "
+                        f"indicators={{json.dumps(status, sort_keys=True)}}"
+                    )
+            except asyncio.TimeoutError:
+                pong = await client.websocket.ping()
+                await asyncio.wait_for(pong, timeout=10)
+            except websockets.exceptions.ConnectionClosed as exc:
+                raise RuntimeError(
+                    "Showdown closed during proxy soak: "
+                    f"code={{exc.code}} indicators={{json.dumps(indicators(messages), sort_keys=True)}}"
+                ) from exc
     finally:
         await client.close()
 
@@ -355,15 +485,20 @@ asyncio.run(probe())
         detail = (result.stderr or result.stdout).strip()
         raise RuntimeError(f"proxied Showdown probe failed: {detail[-2000:]}")
     print(f"PROXY_PROBE_OK username={username} websocket_uri={WEBSOCKET_URI}", flush=True)
-    return {"ok": True, "username": username, "websocket_uri": WEBSOCKET_URI}
+    return {
+        "ok": True,
+        "username": username,
+        "websocket_uri": WEBSOCKET_URI,
+        "soak_seconds": soak_seconds,
+    }
 
 
 @APP.function(
     image=IMAGE,
-    cpu=(8.0, 8.0),
-    memory=(16384, 16384),
+    cpu=(CLOUD_CPUS, CLOUD_CPUS),
+    memory=(CLOUD_MEMORY_MIB, CLOUD_MEMORY_MIB),
     timeout=24 * 3600,
-    max_containers=2,
+    max_containers=1,
     cloud="gcp",
     region="us-west",
     secrets=[SECRET],
@@ -409,6 +544,9 @@ def run_campaign_segment(
         "started_at": _utc_now(),
         "experiment_id": experiment_id,
         "profile": profile,
+        "deployment_variant": DEPLOYMENT_VARIANT,
+        "cloud_cpus": CLOUD_CPUS,
+        "search_parallelism": R1_SEARCH_PARALLELISM,
         "username": username,
         "checkpoint_sha256": actual_sha,
         "target_games": target_games,
@@ -438,6 +576,7 @@ def run_campaign_segment(
             environment["METAGROSS_SHOWDOWN_PASSWORD"] = os.environ[
                 "METAGROSS_SHOWDOWN_PASSWORD"
             ]
+            environment["METAGROSS_WEBSOCKET_KEEPALIVE"] = "1"
             environment.update(
                 _proxy_environment(
                     _campaign_proxy_url(
@@ -445,23 +584,18 @@ def run_campaign_segment(
                         experiment_id,
                         profile,
                         block_index,
-                        use_profile_proxy=False,
+                        use_profile_proxy=True,
                     )
                 )
             )
             if profile == "g3" and block_index == start_block:
                 time.sleep(30)
-            with wrapper_log_path.open("w", encoding="utf-8") as wrapper_log:
-                result = subprocess.run(
-                    command,
-                    cwd="/workspace",
-                    env=environment,
-                    stdout=wrapper_log,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                )
+            return_code = _run_with_periodic_commits(
+                command, environment, wrapper_log_path
+            )
             run_dir = _created_run_dir(output_root, before)
             manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+            network_error = _network_error(run_dir)
             try:
                 rating = _fetch_rating(username)
             except Exception as exc:
@@ -470,8 +604,9 @@ def run_campaign_segment(
                 "block_index": block_index,
                 "completed_at": _utc_now(),
                 "requested_games": games,
-                "return_code": result.returncode,
+                "return_code": return_code,
                 "manifest_status": manifest.get("status"),
+                "network_error": network_error,
                 "run_dir": str(run_dir),
                 "rating_before": rating_before,
                 "rating": rating,
@@ -481,11 +616,15 @@ def run_campaign_segment(
             segment["next_block"] = block_index + 1
             _atomic_json(segment_path, segment)
             VOLUME.commit()
+            if return_code != 0 or manifest.get("status") != "completed" or network_error:
+                raise RuntimeError(
+                    "ladder block failed closed: "
+                    f"return_code={return_code}, manifest_status={manifest.get('status')}, "
+                    f"network_error={network_error}"
+                )
             if _rated_games(rating) >= target_games:
                 target_reached = True
                 break
-            if result.returncode != 0 or manifest.get("status") != "completed":
-                time.sleep(30)
     except Exception as exc:
         segment["status"] = "failed"
         segment["finished_at"] = _utc_now()
@@ -519,6 +658,9 @@ def _upload_experiment(experiment_id: str, assignments: dict[str, str]) -> None:
         "created_at": _utc_now(),
         "experiment_id": experiment_id,
         "assignments": assignments,
+        "deployment_variant": DEPLOYMENT_VARIANT,
+        "cloud_cpus": CLOUD_CPUS,
+        "search_parallelism": R1_SEARCH_PARALLELISM,
         "profiles": PROFILES,
     }
     with tempfile.NamedTemporaryFile("w", suffix=".json", encoding="utf-8") as handle:
@@ -568,6 +710,9 @@ def main(
     report: dict[str, object] = {
         "experiment_id": experiment_id,
         "assignments": assignments,
+        "deployment_variant": DEPLOYMENT_VARIANT,
+        "cloud_cpus": CLOUD_CPUS,
+        "search_parallelism": R1_SEARCH_PARALLELISM,
         "target_games": target_games,
         "block_games": block_games,
         "function_call_id": call.object_id,

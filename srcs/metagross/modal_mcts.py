@@ -198,10 +198,16 @@ def _search_one(request: dict[str, object], batch_size: int) -> dict[str, object
             },
         }
     except Exception as exc:
+        code = None
+        if isinstance(exc, ValueError) and str(exc) == "duration must be 250 or 500 ms":
+            code = "invalid_search_duration"
         return {
             **base,
             "ok": False,
-            "error": {"kind": type(exc).__name__},
+            "error": {
+                "kind": type(exc).__name__,
+                **({"code": code} if code else {}),
+            },
             "timing": {
                 "search_ms": round((time.monotonic() - started) * 1000, 3),
                 "batch_size": batch_size,

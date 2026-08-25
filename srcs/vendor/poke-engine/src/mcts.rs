@@ -2,18 +2,47 @@ use crate::engine::evaluate::evaluate;
 use crate::engine::generate_instructions::generate_instructions_from_move_pair;
 use crate::engine::state::MoveChoice;
 use crate::instruction::StateInstructions;
-use crate::learned_value::{learned_eval_enabled, learned_value};
+use crate::learned_value::learned_value;
 use crate::state::State;
 use rand::distr::weighted::WeightedIndex;
 use rand::prelude::*;
 use rand::rng;
 use rand::rngs::StdRng;
 use std::collections::HashMap;
+use std::env;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 fn sigmoid(x: f32) -> f32 {
     // Tuned so that ~200 points is very close to 1.0
     1.0 / (1.0 + (-0.0125 * x).exp())
+}
+
+fn learned_value_weight() -> f32 {
+    static WEIGHT: OnceLock<f32> = OnceLock::new();
+    *WEIGHT.get_or_init(|| {
+        env::var("METAGROSS_LEARNED_VALUE_WEIGHT")
+            .ok()
+            .and_then(|value| value.parse::<f32>().ok())
+            // Preserve the legacy full-replacement behavior when a model is
+            // explicitly configured without a blend weight.
+            .unwrap_or(1.0)
+            .clamp(0.0, 1.0)
+    })
+}
+
+#[derive(Clone, Copy)]
+enum LeafEvaluationKind {
+    Learned,
+    Hand,
+    Terminal,
+}
+
+#[derive(Default)]
+struct LeafEvaluationCounts {
+    learned: u32,
+    hand: u32,
+    terminal: u32,
 }
 
 #[derive(Debug)]
@@ -206,19 +235,26 @@ impl Node {
         (*self.parent).backpropagate(score, state);
     }
 
-    pub fn rollout(&mut self, state: &mut State, root_eval: &f32) -> f32 {
+    fn rollout(&mut self, state: &mut State, root_eval: &f32) -> (f32, LeafEvaluationKind) {
         let battle_is_over = state.battle_is_over();
         if battle_is_over == 0.0 {
-            if let Some(value) = learned_value(state) {
-                return value;
-            }
             let eval = evaluate(state);
-            sigmoid(eval - root_eval)
+            let hand_value = sigmoid(eval - root_eval);
+            if let Some(value) = learned_value(state) {
+                let weight = learned_value_weight();
+                if weight > 0.0 {
+                    return (
+                        hand_value * (1.0 - weight) + value * weight,
+                        LeafEvaluationKind::Learned,
+                    );
+                }
+            }
+            (hand_value, LeafEvaluationKind::Hand)
         } else {
             if battle_is_over == -1.0 {
-                0.0
+                (0.0, LeafEvaluationKind::Terminal)
             } else {
-                battle_is_over
+                (battle_is_over, LeafEvaluationKind::Terminal)
             }
         }
     }
@@ -275,6 +311,9 @@ pub struct MctsResult {
     pub s1: Vec<MctsSideResult>,
     pub s2: Vec<MctsSideResult>,
     pub iteration_count: u32,
+    pub learned_evaluations: u32,
+    pub hand_evaluations: u32,
+    pub terminal_evaluations: u32,
 }
 
 fn mcts_iteration<R: Rng + ?Sized>(
@@ -282,11 +321,17 @@ fn mcts_iteration<R: Rng + ?Sized>(
     state: &mut State,
     root_eval: &f32,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+    counts: &mut LeafEvaluationCounts,
     rng: &mut R,
 ) {
     let (mut new_node, s1_move, s2_move) = unsafe { root_node.selection(state, children, rng) };
     new_node = unsafe { (*new_node).expand(state, s1_move, s2_move, children, rng) };
-    let rollout_result = unsafe { (*new_node).rollout(state, root_eval) };
+    let (rollout_result, kind) = unsafe { (*new_node).rollout(state, root_eval) };
+    match kind {
+        LeafEvaluationKind::Learned => counts.learned += 1,
+        LeafEvaluationKind::Hand => counts.hand += 1,
+        LeafEvaluationKind::Terminal => counts.terminal += 1,
+    }
     unsafe { (*new_node).backpropagate(rollout_result, state) }
 }
 
@@ -300,6 +345,7 @@ fn run_mcts_loop<R: Rng + ?Sized>(
     state: &mut State,
     root_eval: &f32,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+    counts: &mut LeafEvaluationCounts,
     limit: SearchLimit,
     rng: &mut R,
 ) {
@@ -307,12 +353,12 @@ fn run_mcts_loop<R: Rng + ?Sized>(
     match limit {
         SearchLimit::Iterations(iterations) => {
             while root_node.times_visited < iterations {
-                mcts_iteration(root_node, state, root_eval, children, rng);
+                mcts_iteration(root_node, state, root_eval, children, counts, rng);
             }
         }
         SearchLimit::Time(max_time) => loop {
             for _ in 0..1000 {
-                mcts_iteration(root_node, state, root_eval, children, rng);
+                mcts_iteration(root_node, state, root_eval, children, counts, rng);
             }
             if root_node.times_visited >= 10_000_000 || start_time.elapsed() >= max_time {
                 break;
@@ -331,8 +377,7 @@ pub fn perform_mcts(
     s2_priors: Option<Vec<Option<f32>>>,
     c_puct: f32,
 ) -> MctsResult {
-    let mut rng = rng();
-    perform_mcts_with_rng(
+    perform_mcts_with_optional_seed(
         state,
         side_one_options,
         side_two_options,
@@ -341,8 +386,52 @@ pub fn perform_mcts(
         s1_priors,
         s2_priors,
         c_puct,
-        &mut rng,
+        None,
     )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn perform_mcts_with_optional_seed(
+    state: &mut State,
+    side_one_options: Vec<MoveChoice>,
+    side_two_options: Vec<MoveChoice>,
+    max_time: Duration,
+    max_iterations: u32,
+    s1_priors: Option<Vec<Option<f32>>>,
+    s2_priors: Option<Vec<Option<f32>>>,
+    c_puct: f32,
+    seed: Option<u64>,
+) -> MctsResult {
+    match seed {
+        Some(seed) => {
+            let mut rng = StdRng::seed_from_u64(seed);
+            perform_mcts_with_rng(
+                state,
+                side_one_options,
+                side_two_options,
+                max_time,
+                max_iterations,
+                s1_priors,
+                s2_priors,
+                c_puct,
+                &mut rng,
+            )
+        }
+        None => {
+            let mut rng = rng();
+            perform_mcts_with_rng(
+                state,
+                side_one_options,
+                side_two_options,
+                max_time,
+                max_iterations,
+                s1_priors,
+                s2_priors,
+                c_puct,
+                &mut rng,
+            )
+        }
+    }
 }
 
 /// Run deterministic single-threaded MCTS without root priors.
@@ -389,12 +478,9 @@ fn perform_mcts_with_rng<R: Rng + ?Sized>(
     root_node.root = true;
     root_node.assign_root_priors(s1_priors, s2_priors, c_puct);
     let mut children: HashMap<(usize, usize, usize), Box<[Node]>> = HashMap::new();
+    let mut counts = LeafEvaluationCounts::default();
 
-    let root_eval = if learned_eval_enabled() {
-        0.0
-    } else {
-        evaluate(state)
-    };
+    let root_eval = evaluate(state);
     let search_limit = if max_iterations > 0 {
         SearchLimit::Iterations(max_iterations)
     } else {
@@ -405,6 +491,7 @@ fn perform_mcts_with_rng<R: Rng + ?Sized>(
         state,
         &root_eval,
         &mut children,
+        &mut counts,
         search_limit,
         rng,
     );
@@ -433,6 +520,9 @@ fn perform_mcts_with_rng<R: Rng + ?Sized>(
             })
             .collect(),
         iteration_count: root_node.times_visited,
+        learned_evaluations: counts.learned,
+        hand_evaluations: counts.hand,
+        terminal_evaluations: counts.terminal,
     };
 
     result

@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> None:
     ):
         raise RuntimeError("N=100 runner identity or authorization check failed")
     frozen = prereg["execution"]["evaluation_argv"]
-    executable = (root / frozen[0]).resolve()
+    executable = (root / frozen[0]).absolute()
     if not executable.is_file():
         raise FileNotFoundError(executable)
     environment = prereg["execution"]["environment"]

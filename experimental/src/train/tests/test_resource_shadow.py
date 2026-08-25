@@ -60,6 +60,7 @@ def _state():
         s1_can_tera=True,
         s2_can_tera=True,
         trick_room=SimpleNamespace(active=False),
+        s1_public_reveals=0,
     )
 
 
@@ -87,6 +88,27 @@ def test_resource_features_track_conserved_resources():
     depleted = extract_resource_features(state)
     for index in (0, 1, 3, 4, 5, 6, 7):
         assert depleted[index] < rich[index]
+
+
+def test_public_information_features_use_only_packed_mask():
+    state = _state()
+    state.s1_public_reveals = 1 | (1 << 6) | (1 << 30) | (1 << 36)
+    first = extract_resource_features(state, include_public_information=True)
+    assert first[16:20] == pytest.approx([1 / 6, 1 / 24, 1 / 6, 1 / 6])
+    hidden = state.side_two.pokemon[1]
+    hidden.id = "SECRET"
+    hidden.item = "LIFEORB"
+    hidden.ability = "INTIMIDATE"
+    hidden.moves = [_move("EARTHQUAKE") for _ in range(4)]
+    second = extract_resource_features(state, include_public_information=True)
+    assert first[16:20] == second[16:20]
+
+
+def test_public_information_features_fail_closed_without_mask():
+    state = _state()
+    del state.s1_public_reveals
+    with pytest.raises(ValueError, match="causal reveal mask"):
+        extract_resource_features(state, include_public_information=True)
 
 
 def test_shadow_utility_rejects_negative_resource_prices():

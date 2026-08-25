@@ -367,6 +367,30 @@ class Instruction:
     """Represents a single instruction."""
     def __repr__(self) -> str: ...
 
+class StepDebugResult:
+    """Omniscient transition diagnostics; never use as policy observation."""
+
+    state: "State"
+    branch_index: int
+    branch_probability: float
+    selected_instructions: StateInstructions
+
+class R1SemanticEvent:
+    kind: str
+    side: Optional[str]
+    pokemon_index: Optional[str]
+    move_id: Optional[str]
+    amount: Optional[int]
+    detail: Optional[str]
+
+class R1SemanticStepResult:
+    state: "State"
+    branch_index: int
+    branch_probability: float
+    selected_instructions: StateInstructions
+    events: List[R1SemanticEvent]
+    unaccounted_instruction_kinds: List[str]
+
 class State:
     """
     Represents a Pokemon battle state
@@ -396,6 +420,8 @@ class State:
     trick_room: bool
     trick_room_turns_remaining: int
     team_preview: bool
+    s1_public_reveals: int
+    s2_public_reveals: int
 
     def __init__(
         self,
@@ -408,7 +434,14 @@ class State:
         trick_room: bool = False,
         trick_room_turns_remaining: int = 0,
         team_preview: bool = False,
+        s1_public_reveals: int = 0,
+        s2_public_reveals: int = 0,
     ) -> None: ...
+    def initialize_side_one_public_reveals(self) -> State: ...
+    def with_side_one_public_reveals(self, bits: int) -> State: ...
+    def with_side_two_public_reveals(self, bits: int) -> State: ...
+    def with_side_one_pokemon_ability(self, slot: int, ability: str, update_base: bool) -> State: ...
+    def with_side_two_pokemon_ability(self, slot: int, ability: str, update_base: bool) -> State: ...
     def apply_instructions(self, instructions: StateInstructions) -> State: ...
     def reverse_instructions(self, instructions: StateInstructions) -> State: ...
     @classmethod
@@ -458,6 +491,10 @@ class SharedRootDiagnostics:
     baseline_advantage_effective_world_count: float
     lcb_z: float
     paired_evaluation_iterations: int
+    paired_evaluation_cells_evaluated: int
+    paired_evaluation_total_iterations: int
+    paired_evaluation_elapsed_ms: int
+    paired_evaluation_complete: bool
 
 class SharedInformationSetRootResult:
     policy: List[SharedRootPolicyEntry]
@@ -479,8 +516,49 @@ def shared_information_set_root_search(
     lcb_z: float = 1.645,
     paired_evaluation_iterations: int = 512,
 ) -> SharedInformationSetRootResult: ...
+def root_options(state: State) -> Tuple[List[str], List[str]]: ...
+def terminal_value(state: State) -> float:
+    """Return -1 for a side-one loss, 0 while nonterminal, or 1 for a win."""
+    ...
+def transition_debug_contract() -> str:
+    """Return the pinned raw-instruction diagnostic grammar identifier."""
+    ...
+def r1_semantic_contract() -> str:
+    """Return the pinned r1 semantic trace contract identifier."""
+    ...
+def step_with_uniform(
+    state: State,
+    side_one_action: str,
+    side_two_action: str,
+    u: float,
+) -> Tuple[State, int, float]:
+    """Apply the branch selected by ``u`` and return state, index, probability."""
+    ...
+def step_with_uniform_debug(
+    state: State,
+    side_one_action: str,
+    side_two_action: str,
+    u: float,
+) -> StepDebugResult:
+    """Resolve one branch and expose its raw instructions for diagnostics only."""
+    ...
+def step_with_uniform_r1_semantic(
+    state: State,
+    side_one_action: str,
+    side_two_action: str,
+    u: float,
+) -> R1SemanticStepResult:
+    """Resolve one branch with ordered, typed r1-relevant semantic events."""
+    ...
 def mcts(
-    py_state: State, duration_ms: int, iterations: int, threads: int
+    py_state: State,
+    duration_ms: int,
+    iterations: int,
+    threads: int,
+    s1_priors: Optional[List[Tuple[str, float]]] = None,
+    s2_priors: Optional[List[Tuple[str, float]]] = None,
+    c_puct: float = 2.0,
+    seed: Optional[int] = None,
 ) -> MctsResult:
     """
     Perform Monte Carlo Tree Search on the given state.
@@ -491,6 +569,20 @@ def mcts(
     :param threads: Number of threads to use for MCTS
     :return: MCTS results for both sides
     """
+    ...
+
+def mcts_with_s1_request(
+    py_state: State,
+    request_actions: List[str],
+    duration_ms: int,
+    iterations: int,
+    threads: int,
+    s1_priors: Optional[List[Tuple[str, float]]] = None,
+    s2_priors: Optional[List[Tuple[str, float]]] = None,
+    c_puct: float = 2.0,
+    seed: Optional[int] = None,
+) -> MctsResult:
+    """Run MCTS with an exact side-one request action set at the root."""
     ...
 
 def mcts_leaf_counterfactual_sample(

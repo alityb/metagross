@@ -3160,7 +3160,9 @@ class LaunchTest(unittest.TestCase):
         self.assertEqual(response["trajectory"]["automatic_action"], "recharge")
         self.assertEqual(session.obs_hist, [{}])
         self.assertEqual(session.action_hist, [2])
-        self.assertEqual(session.decision_idx, 5)
+        # Recharge/Struggle are Showdown transport commands, not learned
+        # decisions.  They must not create a hole in the causal trajectory.
+        self.assertEqual(session.decision_idx, 4)
         self.assertFalse(session.pending_request)
 
     def test_struggle_with_switches_gets_neutral_request_only_prior(self):
@@ -3915,7 +3917,9 @@ class LaunchTest(unittest.TestCase):
         random.seed(123)
         before = random.getstate()
         try:
-            with mock.patch.dict(os.environ, environment, clear=True):
+            with mock.patch.dict(os.environ, environment, clear=True), mock.patch.object(
+                run_foul_play, "freeze_and_attach_battle_ledger"
+            ), mock.patch.object(run_foul_play, "verify_sampled_ledgers"):
                 first = run_foul_play._prepare_search_battles(
                     battle, search_main, "selection-worlds"
                 )[0]

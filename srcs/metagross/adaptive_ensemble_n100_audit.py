@@ -461,6 +461,9 @@ def audit(
         "python_runtime_manifest_matches": runtime_preflight.get("python_runtime_manifest_sha256") == _sha256(python_runtime_manifest_path),
         "remote_preflight_passed": (
             remote_preflight.get("ok") is True
+            and remote_preflight.get("operations")
+            == ["search", "paired_holdout", "shared_root"]
+            and remote_preflight.get("search_durations_ms") == [250, 500]
             and remote_preflight.get("preflight_source_sha256")
             == prereg.get("source_identity", {}).get("remote_preflight.py")
             and remote_preflight.get("transport") == "modal"

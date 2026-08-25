@@ -7,13 +7,17 @@ use poke_engine::choices::{Choices, MoveCategory, MOVES};
 use poke_engine::engine::abilities::Abilities;
 use poke_engine::engine::generate_instructions::{
     calculate_both_damage_rolls, generate_instructions_from_move_pair,
+    generate_instructions_from_move_pair_with_public_reveals,
 };
 use poke_engine::engine::items::Items;
 use poke_engine::engine::state::{MoveChoice, PokemonVolatileStatus, Terrain, Weather};
 use poke_engine::instruction::{Instruction, StateInstructions};
-use poke_engine::mcts::{perform_mcts, rollout_leaf_to_terminal, MctsResult, MctsSideResult};
+use poke_engine::mcts::{
+    perform_mcts, perform_mcts_with_seed, rollout_leaf_to_terminal, MctsResult, MctsSideResult,
+};
 use poke_engine::mcts_threaded::perform_mcts_shared_tree;
 use poke_engine::pokemon::PokemonName;
+use poke_engine::public_reveal::PublicRevealMask;
 use poke_engine::search::iterative_deepen_expectiminimax;
 use poke_engine::shared_information_set::{
     shared_information_set_root_search as engine_shared_information_set_root_search,
@@ -53,6 +57,8 @@ pub struct PyState {
     pub scout_value: f32,
     pub threat_matrix: Vec<f32>,
     pub wincon_matrix: Vec<f32>,
+    pub s1_public_reveals: u64,
+    pub s2_public_reveals: u64,
 }
 
 impl From<State> for PyState {
@@ -72,6 +78,8 @@ impl From<State> for PyState {
             scout_value: other.scout_value,
             threat_matrix: other.threat_matrix.to_vec(),
             wincon_matrix: other.wincon_matrix.to_vec(),
+            s1_public_reveals: other.s1_public_reveals.bits(),
+            s2_public_reveals: other.s2_public_reveals.bits(),
         }
     }
 }
@@ -96,6 +104,9 @@ impl Into<State> for PyState {
             team_preview: self.team_preview,
             use_last_used_move: false,
             use_damage_dealt: false,
+            trace_actions: false,
+            s1_public_reveals: PublicRevealMask::from_bits(self.s1_public_reveals),
+            s2_public_reveals: PublicRevealMask::from_bits(self.s2_public_reveals),
             s1_threat: self.s1_threat,
             s2_threat: self.s2_threat,
             scout_value: self.scout_value,
@@ -137,6 +148,8 @@ impl PyState {
         scout_value=0.0,
         threat_matrix=vec![0.0; 36],
         wincon_matrix=vec![0.0; 36],
+        s1_public_reveals=0,
+        s2_public_reveals=0,
     ))]
     fn new(
         side_one: PySide,
@@ -153,6 +166,8 @@ impl PyState {
         scout_value: f32,
         threat_matrix: Vec<f32>,
         wincon_matrix: Vec<f32>,
+        s1_public_reveals: u64,
+        s2_public_reveals: u64,
     ) -> Self {
         PyState {
             side_one,
@@ -169,7 +184,49 @@ impl PyState {
             scout_value,
             threat_matrix,
             wincon_matrix,
+            s1_public_reveals,
+            s2_public_reveals,
         }
+    }
+    /// Initialize side one's mask from an undeterminized public opponent side.
+    /// Call this before filling any hidden fields.
+    fn initialize_side_one_public_reveals(&self) -> PyState {
+        let mut state: State = self.clone().into();
+        state.initialize_public_reveals(poke_engine::state::SideReference::SideOne);
+        state.into()
+    }
+    /// Install a mask compiled from the causal public-event ledger.
+    fn with_side_one_public_reveals(&self, bits: u64) -> PyState {
+        let mut state: State = self.clone().into();
+        state.s1_public_reveals = PublicRevealMask::from_bits(bits);
+        state.into()
+    }
+    /// Install a side-two mask compiled from the causal public-event ledger.
+    fn with_side_two_public_reveals(&self, bits: u64) -> PyState {
+        let mut state: State = self.clone().into();
+        state.s2_public_reveals = PublicRevealMask::from_bits(bits);
+        state.into()
+    }
+    /// Install a causally certified current ability into one side-one slot.
+    /// `update_base` is reserved for form mechanics whose exact public target
+    /// form has a unique rule-implied ability; transient public replacements
+    /// must leave base ability untouched.
+    fn with_side_one_pokemon_ability(
+        &self,
+        slot: usize,
+        ability: String,
+        update_base: bool,
+    ) -> PyResult<PyState> {
+        with_pokemon_ability(self, true, slot, &ability, update_base)
+    }
+    /// Symmetric side-two causal current-ability installation.
+    fn with_side_two_pokemon_ability(
+        &self,
+        slot: usize,
+        ability: String,
+        update_base: bool,
+    ) -> PyResult<PyState> {
+        with_pokemon_ability(self, false, slot, &ability, update_base)
     }
     fn apply_instructions(&self, instructions: PyStateInstructions) -> PyState {
         let mut state: State = self.clone().into();
@@ -192,6 +249,36 @@ impl PyState {
         let state: State = self.clone().into();
         state.serialize()
     }
+}
+
+fn with_pokemon_ability(
+    source: &PyState,
+    side_one: bool,
+    slot: usize,
+    ability: &str,
+    update_base: bool,
+) -> PyResult<PyState> {
+    if slot >= 6 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Pokemon ability slot must be in [0, 5]",
+        ));
+    }
+    let parsed = Abilities::from_str(ability).map_err(|_| {
+        pyo3::exceptions::PyValueError::new_err(format!(
+            "Unknown Pokemon ability: {}", ability
+        ))
+    })?;
+    let mut state: State = source.clone().into();
+    let pokemon = if side_one {
+        &mut state.side_one.pokemon.pkmn[slot]
+    } else {
+        &mut state.side_two.pokemon.pkmn[slot]
+    };
+    pokemon.ability = parsed;
+    if update_base {
+        pokemon.base_ability = parsed;
+    }
+    Ok(state.into())
 }
 
 #[derive(Clone)]
@@ -941,6 +1028,10 @@ struct PySharedRootDiagnostics {
     baseline_advantage_effective_world_count: f32,
     lcb_z: f32,
     paired_evaluation_iterations: u32,
+    paired_evaluation_cells_evaluated: u64,
+    paired_evaluation_total_iterations: u64,
+    paired_evaluation_elapsed_ms: u64,
+    paired_evaluation_complete: bool,
 }
 
 #[derive(Clone)]
@@ -992,6 +1083,14 @@ impl From<SharedRootResult> for PySharedRootResult {
                     .baseline_advantage_effective_world_count,
                 lcb_z: result.diagnostics.lcb_z,
                 paired_evaluation_iterations: result.diagnostics.paired_evaluation_iterations,
+                paired_evaluation_cells_evaluated: result
+                    .diagnostics
+                    .paired_evaluation_cells_evaluated,
+                paired_evaluation_total_iterations: result
+                    .diagnostics
+                    .paired_evaluation_total_iterations,
+                paired_evaluation_elapsed_ms: result.diagnostics.paired_evaluation_elapsed_ms,
+                paired_evaluation_complete: result.diagnostics.paired_evaluation_complete,
             },
         }
     }
@@ -1069,7 +1168,427 @@ fn match_priors_to_options(
 }
 
 #[pyfunction]
-#[pyo3(signature = (py_state, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0))]
+fn root_options(state: PyRef<'_, PyState>) -> (Vec<String>, Vec<String>) {
+    let engine_state: State = (*state).clone().into();
+    let (s1_options, s2_options) = engine_state.root_get_all_options();
+    (
+        s1_options
+            .iter()
+            .map(|choice| movechoice_to_string(&engine_state.side_one, choice))
+            .collect(),
+        s2_options
+            .iter()
+            .map(|choice| movechoice_to_string(&engine_state.side_two, choice))
+            .collect(),
+    )
+}
+
+fn request_authoritative_s1_options(
+    state: &State,
+    request_actions: &[String],
+) -> PyResult<Vec<MoveChoice>> {
+    if request_actions.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "exact request action set is empty",
+        ));
+    }
+    let mut options = Vec::with_capacity(request_actions.len());
+    for action in request_actions {
+        let parsed = action.strip_prefix("switch ").unwrap_or(action.as_str());
+        let choice = MoveChoice::from_string(parsed, &state.side_one).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "exact request action is absent from mechanical state: {}", action
+            ))
+        })?;
+        if movechoice_to_string(&state.side_one, &choice) != *action {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "exact request action is not canonical: {}", action
+            )));
+        }
+        if options.contains(&choice) {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "duplicate exact request action: {}", action
+            )));
+        }
+        options.push(choice);
+    }
+    Ok(options)
+}
+
+/// Root-only tri-state legality contract: the private Showdown request is
+/// authoritative for side-one actions, including switches allowed despite a
+/// sampled hidden trapping ability. Interior nodes continue to use simulator
+/// mechanics via `root_get_all_options`/`get_all_options`.
+#[pyfunction]
+fn root_options_with_s1_request(
+    state: PyRef<'_, PyState>,
+    request_actions: Vec<String>,
+) -> PyResult<(Vec<String>, Vec<String>)> {
+    let engine_state: State = (*state).clone().into();
+    let s1_options = request_authoritative_s1_options(&engine_state, &request_actions)?;
+    let (_, s2_options) = engine_state.root_get_all_options();
+    Ok((
+        s1_options.iter().map(|choice| movechoice_to_string(&engine_state.side_one, choice)).collect(),
+        s2_options.iter().map(|choice| movechoice_to_string(&engine_state.side_two, choice)).collect(),
+    ))
+}
+
+fn parse_root_action(
+    action: &str,
+    options: &[MoveChoice],
+    side: &Side,
+    side_name: &str,
+) -> PyResult<MoveChoice> {
+    let mut matched = None;
+    for option in options {
+        if movechoice_to_string(side, option) == action {
+            if matched.is_some() {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Ambiguous duplicate action for {}: {}",
+                    side_name, action
+                )));
+            }
+            matched = Some(option.clone());
+        }
+    }
+    matched.ok_or_else(|| {
+        pyo3::exceptions::PyValueError::new_err(format!(
+            "Invalid canonical action for {}: {}",
+            side_name, action
+        ))
+    })
+}
+
+#[pyfunction]
+fn terminal_value(state: PyRef<'_, PyState>) -> f32 {
+    let engine_state: State = (*state).clone().into();
+    engine_state.battle_is_over()
+}
+
+#[pyfunction]
+fn transition_debug_contract() -> &'static str {
+    "poke-engine-0.0.47-r1-switch-v1"
+}
+
+fn resolve_step_with_uniform(
+    state: &PyState,
+    side_one_action: String,
+    side_two_action: String,
+    u: f64,
+    trace_actions: bool,
+    carry_public_reveals: bool,
+    s1_request_actions: Option<&[String]>,
+) -> PyResult<(PyState, usize, f64, PyStateInstructions)> {
+    if !u.is_finite() || !(0.0..1.0).contains(&u) {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "u must be finite and in [0, 1)",
+        ));
+    }
+
+    let mut engine_state: State = state.clone().into();
+    engine_state.trace_actions = trace_actions;
+    let (native_s1_options, s2_options) = engine_state.root_get_all_options();
+    let s1_options = match s1_request_actions {
+        Some(actions) => request_authoritative_s1_options(&engine_state, actions)?,
+        None => native_s1_options,
+    };
+    let s1_move = parse_root_action(
+        &side_one_action,
+        &s1_options,
+        &engine_state.side_one,
+        "side one",
+    )?;
+    let s2_move = parse_root_action(
+        &side_two_action,
+        &s2_options,
+        &engine_state.side_two,
+        "side two",
+    )?;
+    let outcomes = if carry_public_reveals {
+        generate_instructions_from_move_pair_with_public_reveals(
+            &mut engine_state,
+            &s1_move,
+            &s2_move,
+            true,
+        )
+    } else {
+        generate_instructions_from_move_pair(&mut engine_state, &s1_move, &s2_move, true)
+    };
+
+    let mut total = 0.0f64;
+    for outcome in &outcomes {
+        let weight = outcome.percentage as f64;
+        if !weight.is_finite() || weight < 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "generated branch percentages must be finite and nonnegative",
+            ));
+        }
+        total += weight;
+    }
+    if !total.is_finite() || total <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "generated branch percentages must have a positive finite total",
+        ));
+    }
+
+    let target = u * total;
+    let mut cumulative = 0.0f64;
+    let mut selected = None;
+    let mut last_positive = None;
+    for (index, outcome) in outcomes.iter().enumerate() {
+        let weight = outcome.percentage as f64;
+        if weight > 0.0 {
+            last_positive = Some(index);
+        }
+        cumulative += weight;
+        if target < cumulative {
+            selected = Some(index);
+            break;
+        }
+    }
+    let branch_index = selected.or(last_positive).ok_or_else(|| {
+        pyo3::exceptions::PyValueError::new_err("generated instructions contained no branch")
+    })?;
+    let branch_probability = outcomes[branch_index].percentage as f64 / total;
+    engine_state.apply_instructions(&outcomes[branch_index].instruction_list);
+
+    Ok((
+        engine_state.into(),
+        branch_index,
+        branch_probability,
+        outcomes[branch_index].clone().into(),
+    ))
+}
+
+#[pyfunction]
+fn step_with_uniform(
+    state: PyRef<'_, PyState>,
+    side_one_action: String,
+    side_two_action: String,
+    u: f64,
+) -> PyResult<(PyState, usize, f64)> {
+    let (next_state, branch_index, branch_probability, _) =
+        resolve_step_with_uniform(&state, side_one_action, side_two_action, u, false, false, None)?;
+    Ok((next_state, branch_index, branch_probability))
+}
+
+#[derive(Clone)]
+#[pyclass(name = "StepDebugResult", module = "poke_engine", get_all)]
+struct PyStepDebugResult {
+    pub state: PyState,
+    pub branch_index: usize,
+    pub branch_probability: f64,
+    pub selected_instructions: PyStateInstructions,
+}
+
+#[pyfunction]
+fn step_with_uniform_debug(
+    state: PyRef<'_, PyState>,
+    side_one_action: String,
+    side_two_action: String,
+    u: f64,
+) -> PyResult<PyStepDebugResult> {
+    let (state, branch_index, branch_probability, selected_instructions) =
+        resolve_step_with_uniform(&state, side_one_action, side_two_action, u, false, false, None)?;
+    Ok(PyStepDebugResult {
+        state,
+        branch_index,
+        branch_probability,
+        selected_instructions,
+    })
+}
+
+#[derive(Clone)]
+#[pyclass(name = "R1SemanticEvent", module = "poke_engine", get_all)]
+struct PyR1SemanticEvent {
+    pub kind: String,
+    pub side: Option<String>,
+    pub pokemon_index: Option<String>,
+    pub move_id: Option<String>,
+    pub amount: Option<i16>,
+    pub detail: Option<String>,
+}
+
+fn side_name(side_ref: &poke_engine::state::SideReference) -> String {
+    match side_ref {
+        poke_engine::state::SideReference::SideOne => "side_one".to_string(),
+        poke_engine::state::SideReference::SideTwo => "side_two".to_string(),
+    }
+}
+
+fn semantic_events_from_instructions(
+    initial_state: &State,
+    instructions: &[Instruction],
+) -> (Vec<PyR1SemanticEvent>, Vec<String>) {
+    let mut state = initial_state.clone();
+    let mut events = Vec::new();
+    let mut unaccounted = Vec::new();
+    for instruction in instructions {
+        let event = match instruction {
+            Instruction::RecordAction(record) => Some(PyR1SemanticEvent {
+                kind: "action_executed".to_string(),
+                side: Some(side_name(&record.side_ref)),
+                pokemon_index: Some(record.pokemon_index.serialize()),
+                move_id: Some(
+                    state.get_side_immutable(&record.side_ref).pokemon[record.pokemon_index].moves
+                        [&record.move_index]
+                        .id
+                        .to_string(),
+                ),
+                amount: None,
+                detail: None,
+            }),
+            Instruction::RecordItemActivation(record) => Some(PyR1SemanticEvent {
+                kind: "item_activated".to_string(),
+                side: Some(side_name(&record.side_ref)),
+                pokemon_index: Some(record.pokemon_index.serialize()),
+                move_id: None,
+                amount: None,
+                detail: Some(record.item.to_string()),
+            }),
+            Instruction::Damage(damage) => {
+                let pokemon_index = state.get_side_immutable(&damage.side_ref).active_index;
+                Some(PyR1SemanticEvent {
+                    kind: "damage".to_string(),
+                    side: Some(side_name(&damage.side_ref)),
+                    pokemon_index: Some(pokemon_index.serialize()),
+                    move_id: None,
+                    amount: Some(damage.damage_amount),
+                    detail: None,
+                })
+            }
+            Instruction::Heal(heal) => {
+                let pokemon_index = state.get_side_immutable(&heal.side_ref).active_index;
+                Some(PyR1SemanticEvent {
+                    kind: "heal".to_string(),
+                    side: Some(side_name(&heal.side_ref)),
+                    pokemon_index: Some(pokemon_index.serialize()),
+                    move_id: None,
+                    amount: Some(heal.heal_amount),
+                    detail: None,
+                })
+            }
+            Instruction::ChangeStatus(status) => Some(PyR1SemanticEvent {
+                kind: "status_changed".to_string(),
+                side: Some(side_name(&status.side_ref)),
+                pokemon_index: Some(status.pokemon_index.serialize()),
+                move_id: None,
+                amount: None,
+                detail: Some(status.new_status.to_string()),
+            }),
+            Instruction::Boost(boost) => {
+                let pokemon_index = state.get_side_immutable(&boost.side_ref).active_index;
+                Some(PyR1SemanticEvent {
+                    kind: "boost_changed".to_string(),
+                    side: Some(side_name(&boost.side_ref)),
+                    pokemon_index: Some(pokemon_index.serialize()),
+                    move_id: None,
+                    amount: Some(boost.amount as i16),
+                    detail: Some(format!("{:?}", boost.stat).to_lowercase()),
+                })
+            }
+            Instruction::Switch(switch) => Some(PyR1SemanticEvent {
+                kind: "switch".to_string(),
+                side: Some(side_name(&switch.side_ref)),
+                pokemon_index: Some(switch.next_index.serialize()),
+                move_id: None,
+                amount: None,
+                detail: None,
+            }),
+            Instruction::SetLastUsedMove(_)
+            | Instruction::DecrementPP(_)
+            | Instruction::ChangeDamageDealtDamage(_)
+            | Instruction::ChangeDamageDealtMoveCatagory(_)
+            | Instruction::ToggleDamageDealtHitSubstitute(_)
+            | Instruction::PublicReveal(_) => None,
+            other => {
+                let name = format!("{:?}", other)
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("Unknown")
+                    .to_string();
+                if !unaccounted.contains(&name) {
+                    unaccounted.push(name);
+                }
+                None
+            }
+        };
+        if let Some(value) = event {
+            events.push(value);
+        }
+        state.apply_one_instruction(instruction);
+    }
+    (events, unaccounted)
+}
+
+#[derive(Clone)]
+#[pyclass(name = "R1SemanticStepResult", module = "poke_engine", get_all)]
+struct PyR1SemanticStepResult {
+    pub state: PyState,
+    pub branch_index: usize,
+    pub branch_probability: f64,
+    pub selected_instructions: PyStateInstructions,
+    pub events: Vec<PyR1SemanticEvent>,
+    pub unaccounted_instruction_kinds: Vec<String>,
+}
+
+#[pyfunction]
+fn r1_semantic_contract() -> &'static str {
+    "poke-engine-0.0.47-r1-item-activation-v1"
+}
+
+#[pyfunction]
+fn step_with_uniform_r1_semantic(
+    state: PyRef<'_, PyState>,
+    side_one_action: String,
+    side_two_action: String,
+    u: f64,
+) -> PyResult<PyR1SemanticStepResult> {
+    let initial_state: State = (*state).clone().into();
+    let (next_state, branch_index, branch_probability, selected_instructions) =
+        resolve_step_with_uniform(&state, side_one_action, side_two_action, u, true, true, None)?;
+    let rust_instructions: StateInstructions = selected_instructions.clone().into();
+    let (events, unaccounted_instruction_kinds) =
+        semantic_events_from_instructions(&initial_state, &rust_instructions.instruction_list);
+    Ok(PyR1SemanticStepResult {
+        state: next_state,
+        branch_index,
+        branch_probability,
+        selected_instructions,
+        events,
+        unaccounted_instruction_kinds,
+    })
+}
+
+#[pyfunction]
+fn step_with_uniform_r1_semantic_s1_request(
+    state: PyRef<'_, PyState>,
+    request_actions: Vec<String>,
+    side_one_action: String,
+    side_two_action: String,
+    u: f64,
+) -> PyResult<PyR1SemanticStepResult> {
+    let initial_state: State = (*state).clone().into();
+    let (next_state, branch_index, branch_probability, selected_instructions) =
+        resolve_step_with_uniform(
+            &state, side_one_action, side_two_action, u, true, true,
+            Some(&request_actions),
+        )?;
+    let rust_instructions: StateInstructions = selected_instructions.clone().into();
+    let (events, unaccounted_instruction_kinds) =
+        semantic_events_from_instructions(&initial_state, &rust_instructions.instruction_list);
+    Ok(PyR1SemanticStepResult {
+        state: next_state,
+        branch_index,
+        branch_probability,
+        selected_instructions,
+        events,
+        unaccounted_instruction_kinds,
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (py_state, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0, seed=None))]
 fn mcts(
     py_state: PyState,
     duration_ms: u64,
@@ -1078,7 +1597,18 @@ fn mcts(
     s1_priors: Option<Vec<(String, f32)>>,
     s2_priors: Option<Vec<(String, f32)>>,
     c_puct: f32,
+    seed: Option<u64>,
 ) -> PyResult<PyMctsResult> {
+    if seed.is_some() && iterations == 0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "seeded MCTS requires an exact positive iteration count",
+        ));
+    }
+    if seed.is_some() && threads > 1 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "seeded MCTS requires threads=1",
+        ));
+    }
     let mut state: State = py_state.into();
     let duration = Duration::from_millis(duration_ms);
     let (s1_options, s2_options) = state.root_get_all_options();
@@ -1089,7 +1619,7 @@ fn mcts(
             &mut state, s1_options, s2_options, duration, iterations, threads,
         )
     } else {
-        perform_mcts(
+        perform_mcts_with_seed(
             &mut state,
             s1_options,
             s2_options,
@@ -1098,11 +1628,63 @@ fn mcts(
             s1_priors_vec,
             s2_priors_vec,
             c_puct,
+            seed,
         )
     };
 
     let py_mcts_result = PyMctsResult::from_mcts_result(mcts_result, &state);
     Ok(py_mcts_result)
+}
+
+/// Run MCTS with the exact side-one Showdown request as the root action set.
+/// Only the root is overridden; descendant legality is generated by the
+/// simulator in the ordinary MCTS loop.
+#[pyfunction]
+#[pyo3(signature = (py_state, request_actions, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0, seed=None))]
+fn mcts_with_s1_request(
+    py_state: PyState,
+    request_actions: Vec<String>,
+    duration_ms: u64,
+    iterations: u32,
+    threads: usize,
+    s1_priors: Option<Vec<(String, f32)>>,
+    s2_priors: Option<Vec<(String, f32)>>,
+    c_puct: f32,
+    seed: Option<u64>,
+) -> PyResult<PyMctsResult> {
+    if seed.is_some() && iterations == 0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "seeded MCTS requires an exact positive iteration count",
+        ));
+    }
+    if seed.is_some() && threads > 1 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "seeded MCTS requires threads=1",
+        ));
+    }
+    if threads > 1 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "request-authoritative MCTS currently requires threads=1",
+        ));
+    }
+    let mut state: State = py_state.into();
+    let duration = Duration::from_millis(duration_ms);
+    let s1_options = request_authoritative_s1_options(&state, &request_actions)?;
+    let (_, s2_options) = state.root_get_all_options();
+    let s1_priors_vec = match_priors_to_options(&s1_priors, &s1_options, &state.side_one);
+    let s2_priors_vec = match_priors_to_options(&s2_priors, &s2_options, &state.side_two);
+    let mcts_result = perform_mcts_with_seed(
+        &mut state,
+        s1_options,
+        s2_options,
+        duration,
+        iterations,
+        s1_priors_vec,
+        s2_priors_vec,
+        c_puct,
+        seed,
+    );
+    Ok(PyMctsResult::from_mcts_result(mcts_result, &state))
 }
 
 #[pyfunction(name = "shared_information_set_root_search")]
@@ -1420,7 +2002,10 @@ fn generate_instructions(
             )))
         }
     }
-    let instructions = generate_instructions_from_move_pair(&mut state, &s1_move, &s2_move, true);
+    // Preserve the historical mechanics-only contract of this generic endpoint.
+    // Search and semantic stepping opt into public-reveal propagation explicitly.
+    let instructions =
+        generate_instructions_from_move_pair(&mut state, &s1_move, &s2_move, true);
     let py_instructions = instructions.iter().map(|i| i.clone().into()).collect();
 
     Ok(py_instructions)
@@ -1482,19 +2067,36 @@ fn compute_value_features(state: PyState) -> Vec<f32> {
     poke_engine::learned_value::extract_features_vec(&s)
 }
 
+#[pyfunction]
+fn compute_resource_features(state: PyState) -> Vec<f32> {
+    let state: poke_engine::state::State = state.into();
+    poke_engine::learned_value::extract_resource_features_vec(&state)
+}
+
 #[pymodule]
 #[pyo3(name = "poke_engine")]
 fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calculate_damage, m)?)?;
     m.add_function(wrap_pyfunction!(generate_instructions, m)?)?;
+    m.add_function(wrap_pyfunction!(root_options, m)?)?;
+    m.add_function(wrap_pyfunction!(root_options_with_s1_request, m)?)?;
+    m.add_function(wrap_pyfunction!(terminal_value, m)?)?;
+    m.add_function(wrap_pyfunction!(transition_debug_contract, m)?)?;
+    m.add_function(wrap_pyfunction!(r1_semantic_contract, m)?)?;
+    m.add_function(wrap_pyfunction!(step_with_uniform, m)?)?;
+    m.add_function(wrap_pyfunction!(step_with_uniform_debug, m)?)?;
+    m.add_function(wrap_pyfunction!(step_with_uniform_r1_semantic, m)?)?;
+    m.add_function(wrap_pyfunction!(step_with_uniform_r1_semantic_s1_request, m)?)?;
     m.add_function(wrap_pyfunction!(id, m)?)?;
     m.add_function(wrap_pyfunction!(mcts, m)?)?;
+    m.add_function(wrap_pyfunction!(mcts_with_s1_request, m)?)?;
     m.add_function(wrap_pyfunction!(py_shared_information_set_root_search, m)?)?;
     m.add_function(wrap_pyfunction!(mcts_leaf_sample, m)?)?;
     m.add_function(wrap_pyfunction!(mcts_leaf_counterfactual_sample, m)?)?;
     m.add_function(wrap_pyfunction!(mcts_leaf_state_sample, m)?)?;
     m.add_function(wrap_pyfunction!(mcts_rollout_to_terminal, m)?)?;
     m.add_function(wrap_pyfunction!(compute_value_features, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_resource_features, m)?)?;
     m.add_function(wrap_pyfunction!(set_belief, m)?)?;
     m.add_function(wrap_pyfunction!(set_threat_matrix, m)?)?;
     m.add_function(wrap_pyfunction!(set_wincon_matrix, m)?)?;
@@ -1506,6 +2108,9 @@ fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMove>()?;
     m.add_class::<PyStateInstructions>()?;
     m.add_class::<PyInstruction>()?;
+    m.add_class::<PyStepDebugResult>()?;
+    m.add_class::<PyR1SemanticEvent>()?;
+    m.add_class::<PyR1SemanticStepResult>()?;
     m.add_class::<PySharedRootAction>()?;
     m.add_class::<PySharedRootDiagnostics>()?;
     m.add_class::<PySharedRootResult>()?;

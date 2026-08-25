@@ -25,6 +25,11 @@ from train.resource_shadow import (  # noqa: E402
     SCHEMA,
     extract_resource_features,
 )
+from belief.public_reveal_mask import (  # noqa: E402
+    from_replay_facts,
+    information_fractions,
+    replay_reveal_snapshots,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -49,7 +54,36 @@ def _split(group: tuple[str, str, str], seed: int) -> str:
     return "test"
 
 
-def _load(paths: list[Path], seed: int) -> tuple[torch.Tensor, torch.Tensor, list[tuple[str, str, str]], dict[str, Any]]:
+def _replay_index(path: Path) -> dict[str, Path]:
+    replay_dir = path.parent / "replays"
+    if not replay_dir.is_dir():
+        return {}
+    index: dict[str, Path] = {}
+    for replay_path in sorted(replay_dir.glob("*.json")):
+        try:
+            payload = json.loads(replay_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        battle_id = payload.get("id")
+        if isinstance(battle_id, str) and battle_id and battle_id not in index:
+            index[battle_id] = replay_path
+    return index
+
+
+def _public_snapshots(
+    replay_path: Path,
+    observer_name: str,
+) -> dict[int, Any]:
+    payload = json.loads(replay_path.read_text(encoding="utf-8"))
+    return replay_reveal_snapshots(payload.get("log", ""), observer_name)
+
+
+def _load(
+    paths: list[Path],
+    seed: int,
+    *,
+    public_reveals: bool = False,
+) -> tuple[torch.Tensor, torch.Tensor, list[tuple[str, str, str]], dict[str, Any]]:
     import poke_engine
 
     labels: dict[tuple[str, str, str], int] = {}
@@ -67,6 +101,11 @@ def _load(paths: list[Path], seed: int) -> tuple[torch.Tensor, torch.Tensor, lis
     targets: list[float] = []
     groups: list[tuple[str, str, str]] = []
     skipped: Counter[str] = Counter()
+    replay_indices = {path: _replay_index(path) for path in paths} if public_reveals else {}
+    snapshot_cache: dict[tuple[Path, str, str], dict[int, Any]] = {}
+    decision_turn_counts: Counter[tuple[tuple[str, str, str], int]] = Counter()
+    public_fraction_sums = [0.0] * 4
+    public_nonzero_rows = 0
     for path in paths:
         with path.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -83,7 +122,35 @@ def _load(paths: list[Path], seed: int) -> tuple[torch.Tensor, torch.Tensor, lis
                     continue
                 try:
                     state = poke_engine.State.from_string(row["state"])
-                    vector = extract_resource_features(state, turn=int(row.get("turn", 0)))
+                    turn = int(row.get("turn", 0))
+                    if public_reveals:
+                        battle_tag = str(row.get("battle_tag"))
+                        observer_name = str(row.get("username"))
+                        replay_path = replay_indices[path].get(battle_tag)
+                        if replay_path is None:
+                            skipped["missing_replay"] += 1
+                            continue
+                        cache_key = (path, battle_tag, observer_name)
+                        if cache_key not in snapshot_cache:
+                            snapshot_cache[cache_key] = _public_snapshots(
+                                replay_path, observer_name
+                            )
+                        facts = snapshot_cache[cache_key].get(turn)
+                        if facts is None:
+                            skipped["missing_turn_snapshot"] += 1
+                            continue
+                        bits = from_replay_facts(state, facts)
+                        state = state.with_side_one_public_reveals(bits)
+                        fractions = information_fractions(bits)
+                        for index, value in enumerate(fractions):
+                            public_fraction_sums[index] += value
+                        public_nonzero_rows += int(bits != 0)
+                        decision_turn_counts[(group, turn)] += 1
+                    vector = extract_resource_features(
+                        state,
+                        turn=turn,
+                        include_public_information=public_reveals,
+                    )
                 except (TypeError, ValueError, OverflowError):
                     skipped["feature_extract_failed"] += 1
                     continue
@@ -102,6 +169,18 @@ def _load(paths: list[Path], seed: int) -> tuple[torch.Tensor, torch.Tensor, lis
         {
             "sources": [{"path": str(path), "sha256": _sha256(path)} for path in paths],
             "skipped": dict(skipped),
+            "public_reveals": {
+                "enabled": public_reveals,
+                "alignment": "conservative_start_of_turn",
+                "matched_replays": len(snapshot_cache),
+                "rows_with_nonzero_mask": public_nonzero_rows,
+                "mean_fractions": [
+                    value / len(features) for value in public_fraction_sums
+                ] if public_reveals else [0.0] * 4,
+                "same_battle_turn_extra_decisions": sum(
+                    max(0, count - 1) for count in decision_turn_counts.values()
+                ),
+            },
         },
     )
 
@@ -142,7 +221,11 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.set_num_threads(max(1, args.cpu_threads))
-    x, y, groups, provenance = _load(args.decision_log, args.seed)
+    x, y, groups, provenance = _load(
+        args.decision_log,
+        args.seed,
+        public_reveals=args.public_reveals,
+    )
     masks = {
         name: torch.tensor([_split(group, args.seed) == name for group in groups])
         for name in ("train", "validation", "test")
@@ -211,11 +294,17 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "provenance": provenance,
         },
         "claim_limit": "associational shadow prices; action utility requires an independent root/outcome gate",
+        "public_reveals_enabled": args.public_reveals,
     }
     if args.engine_model_out is not None:
         args.engine_model_out.parent.mkdir(parents=True, exist_ok=True)
         args.engine_model_out.write_text(
-            "metagross_resource_shadow_v1\n"
+            (
+                "metagross_resource_shadow_v2\n"
+                if args.public_reveals
+                else "metagross_resource_shadow_v1\n"
+            )
+            +
             f"dims {FEATURE_COUNT}\n"
             f"bias {float(model.bias.detach()):.9g}\n"
             + "weights "
@@ -247,6 +336,11 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--cpu-threads", type=int, default=8)
+    parser.add_argument(
+        "--public-reveals",
+        action="store_true",
+        help="join each decision to its replay and train on causal reveal masks",
+    )
     args = parser.parse_args()
     print(json.dumps(train(args), sort_keys=True))
 

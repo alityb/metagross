@@ -10,6 +10,12 @@ was trained on 4,792 self-play trajectories only, without the human anchor used
 for r1. Its public ladder gate was stopped. Do not use it as evidence about
 whether strong-search ExIt works.
 
+The corpus composition and split rules in this document predate the public-
+belief data program. For new Gen 9 Random Battle training, the authoritative
+source registry and 40/40/20 human/search/league mixture are in
+`experimental/configs/data_sources_v1.json` and `docs/data_contract_v1.md`.
+The 90/10 mixtures below describe historical rounds only.
+
 ## What Literature Supports
 
 The relevant recipe is not pure self-play behavioral cloning.

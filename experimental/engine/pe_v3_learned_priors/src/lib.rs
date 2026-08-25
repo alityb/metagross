@@ -22,6 +22,7 @@ pub mod learned_value;
 pub mod mcts;
 pub mod mcts_threaded;
 pub mod pokemon;
+pub mod public_reveal;
 pub mod search;
 pub mod shared_information_set;
 pub mod state;

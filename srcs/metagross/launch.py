@@ -10,6 +10,7 @@ import hmac
 import json
 import os
 import re
+import secrets
 import signal
 import subprocess
 import sys
@@ -32,12 +33,17 @@ from srcs.metagross import world_provenance
 
 ROOT = Path(__file__).resolve().parents[2]
 FORMAT = "gen9randombattle"
-SEARCH_TIME_MS = 500
+# Iteration-matched budgets for slower platforms: override via env, default
+# unchanged. Calibrated 2026-08-19: Modal cpu=8 needs ~915 ms to match the
+# M4's 472k iterations per 500 ms move.
+SEARCH_TIME_MS = int(os.environ.get("METAGROSS_SEARCH_TIME_MS", "500"))
 DEFAULT_SEARCH_PARALLELISM = 8
 DEFAULT_SEARCH_THREADS = 1
 CPU_C_PUCT = 2.0
 DEFAULT_REMOTE_MCTS_APP = "metagross-mcts-r1-p16"
 DEFAULT_REMOTE_MCTS_FUNCTION = "search_batch"
+DEFAULT_REMOTE_MCTS_TIMEOUT_SECONDS = 10.0
+DEFAULT_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS = 120.0
 
 
 @dataclass(frozen=True)
@@ -107,6 +113,7 @@ def verify_checkpoint(profile: PolicyProfile, checkpoint_root: Path) -> tuple[Pa
 def wait_for_health(
     url: str,
     process: subprocess.Popen,
+    expected_identity: dict[str, object],
     timeout: int = 240,
     stop: threading.Event | None = None,
 ) -> None:
@@ -116,16 +123,33 @@ def wait_for_health(
             raise InterruptedError("shutdown requested while waiting for prior server")
         if process.poll() is not None:
             raise RuntimeError(f"prior server exited with code {process.returncode}")
-        if prior_is_healthy(url):
+        if prior_is_healthy(url, expected_identity):
+            if process.poll() is not None:
+                raise RuntimeError(f"prior server exited with code {process.returncode}")
             return
         time.sleep(2)
     raise TimeoutError(f"prior server did not become healthy within {timeout}s")
 
 
-def prior_is_healthy(url: str) -> bool:
+def prior_is_healthy(url: str, expected_identity: dict[str, object]) -> bool:
     try:
         with urllib.request.urlopen(f"{url}/health", timeout=5) as response:
-            return json.loads(response.read()).get("ok") is True
+            payload = json.loads(response.read())
+        identity = payload.get("identity")
+        if payload.get("ok") is not True or not isinstance(identity, dict):
+            return False
+        if identity.get("schema") != expected_identity.get("schema"):
+            return False
+        if identity.get("pid") != expected_identity.get("pid"):
+            return False
+        for key in ("nonce", "checkpoint_sha256"):
+            actual = identity.get(key)
+            expected = expected_identity.get(key)
+            if not isinstance(actual, str) or not isinstance(expected, str):
+                return False
+            if not hmac.compare_digest(actual, expected):
+                return False
+        return True
     except Exception:
         return False
 
@@ -158,6 +182,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--username", required=True)
     parser.add_argument("--profile", choices=sorted(POLICY_PROFILES), default="r1")
     parser.add_argument("--games", type=int, default=200)
+    parser.add_argument(
+        "--controller-mode",
+        choices=("certified", "search-first"),
+        default="search-first",
+        help="search-first is the candidate; certified is the frozen rollback comparator",
+    )
+    parser.add_argument(
+        "--verifier-shadow",
+        action="store_true",
+        help="run positive-superiority holdouts for telemetry without admitting actions",
+    )
     parser.add_argument(
         "--confirm-g4-canary",
         action="store_true",
@@ -214,6 +249,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--remote-mcts-url")
     parser.add_argument("--remote-mcts-instance-type")
     parser.add_argument("--remote-engine-sha256")
+    parser.add_argument(
+        "--remote-mcts-timeout-seconds",
+        type=float,
+        default=DEFAULT_REMOTE_MCTS_TIMEOUT_SECONDS,
+    )
+    parser.add_argument(
+        "--websocket-receive-timeout-seconds",
+        type=float,
+        default=DEFAULT_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS,
+    )
     parser.add_argument("--stall-timeout-seconds", type=int, default=1200)
     parser.add_argument(
         "--max-runtime-seconds",
@@ -239,6 +284,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "stall_timeout_seconds",
         "search_parallelism",
         "search_threads",
+        "remote_mcts_timeout_seconds",
+        "websocket_receive_timeout_seconds",
     ):
         if getattr(args, name) <= 0:
             parser.error(f"--{name.replace('_', '-')} must be positive")
@@ -378,6 +425,8 @@ def production_environment(source: dict[str, str]) -> dict[str, str]:
     environment.pop("METAGROSS_VALUE_MODEL", None)
     environment.pop("METAGROSS_LEARNED_VALUE_WEIGHT", None)
     environment.pop("METAGROSS_REMOTE_MCTS_TOKEN", None)
+    environment.pop("METAGROSS_FAULT_DISCONNECT_AFTER_BATTLE_COMMANDS", None)
+    environment.pop("METAGROSS_FAULT_STALL_AFTER_BATTLE_COMMANDS", None)
     return environment
 
 
@@ -439,6 +488,12 @@ def main(argv: list[str] | None = None) -> int:
             "c_puct": CPU_C_PUCT,
             "execution": args.remote_mcts_transport if args.remote_mcts else "local",
         },
+        "controller": {
+            "mode": args.controller_mode,
+            "positive_superiority_admission": args.controller_mode == "certified",
+            "verifier_shadow": args.verifier_shadow,
+            "rollback_argument": "--controller-mode certified",
+        },
         "safeguards": {
             "max_consecutive_capped_swords_dance": 1,
             "replacement_ranking": "sample-weighted-mean-mcts-score",
@@ -446,6 +501,9 @@ def main(argv: list[str] | None = None) -> int:
         "limits": {
             "stall_timeout_seconds": args.stall_timeout_seconds,
             "max_runtime_seconds": args.max_runtime_seconds,
+            "remote_mcts_timeout_seconds": args.remote_mcts_timeout_seconds,
+            "websocket_receive_timeout_seconds": args.websocket_receive_timeout_seconds,
+            "websocket_max_reconnects": 1,
         },
         "outputs": {
             "client_log": str(client_log_path),
@@ -476,6 +534,8 @@ def main(argv: list[str] | None = None) -> int:
     prior_env.pop("MODAL_TOKEN_ID", None)
     prior_env.pop("MODAL_TOKEN_SECRET", None)
     prior_env.pop("METAGROSS_REMOTE_MCTS_TOKEN", None)
+    prior_instance_nonce = secrets.token_hex(32)
+    prior_env["METAGROSS_PRIOR_INSTANCE_NONCE"] = prior_instance_nonce
     prior_command = [
         str(args.metamon_python),
         "-u",
@@ -495,6 +555,11 @@ def main(argv: list[str] | None = None) -> int:
         "--decision-dump",
         str(decision_dump_path),
     ]
+    # Contemporaneous-baseline support: serve the legacy-stateless comparator
+    # when explicitly requested; absent env = unchanged default (causal).
+    trajectory_mode = os.environ.get("METAGROSS_TRAJECTORY_MODE")
+    if trajectory_mode:
+        prior_command.extend(["--trajectory-mode", trajectory_mode])
     client_command = [
         str(args.foul_play_python),
         "-u",
@@ -553,7 +618,26 @@ def main(argv: list[str] | None = None) -> int:
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
             )
-            wait_for_health(prior_url, prior, args.health_timeout_seconds, shutdown)
+            prior_identity = {
+                "schema": 1,
+                "nonce": prior_instance_nonce,
+                "pid": prior.pid,
+                "checkpoint_sha256": checkpoint_sha,
+            }
+            manifest["prior_instance"] = {
+                "health_identity_schema": prior_identity["schema"],
+                "pid": prior.pid,
+                "nonce_sha256": hashlib.sha256(prior_instance_nonce.encode()).hexdigest(),
+                "checkpoint_sha256": checkpoint_sha,
+            }
+            write_json(manifest_path, manifest)
+            wait_for_health(
+                prior_url,
+                prior,
+                prior_identity,
+                args.health_timeout_seconds,
+                shutdown,
+            )
             client_env = common_env.copy()
             client_env.update(
                 {
@@ -563,9 +647,21 @@ def main(argv: list[str] | None = None) -> int:
                     "METAGROSS_PRIOR_SERVER": prior_url,
                     "METAGROSS_CPUCT": "2.0",
                     "METAGROSS_REQUIRE_PRIORS": "1",
+                    "METAGROSS_CONTROLLER_MODE": args.controller_mode.replace("-", "_"),
+                    "METAGROSS_VERIFIER_SHADOW": "1" if args.verifier_shadow else "0",
                     "METAGROSS_PROTOCOL_DUMP": str(protocol_dump_path),
                     "METAGROSS_SEARCH_DUMP": str(search_dump_path),
                     "METAGROSS_HOLDOUT_LEDGER": str(holdout_ledger_path),
+                    "METAGROSS_WEBSOCKET_KEEPALIVE": "1",
+                    "METAGROSS_WEBSOCKET_PING_INTERVAL_SECONDS": "20",
+                    "METAGROSS_WEBSOCKET_PING_TIMEOUT_SECONDS": "60",
+                    "METAGROSS_WEBSOCKET_RECEIVE_TIMEOUT_SECONDS": str(
+                        args.websocket_receive_timeout_seconds
+                    ),
+                    "METAGROSS_WEBSOCKET_MAX_RECONNECTS": "1",
+                    "METAGROSS_REMOTE_MCTS_TIMEOUT_SECONDS": str(
+                        args.remote_mcts_timeout_seconds
+                    ),
                 }
             )
             if args.remote_mcts:
@@ -639,12 +735,20 @@ def main(argv: list[str] | None = None) -> int:
                 if prior.poll() is not None:
                     raise RuntimeError(f"prior server exited with code {prior.returncode}")
                 if now - last_health >= args.health_poll_seconds:
-                    if not prior_is_healthy(prior_url):
+                    if not prior_is_healthy(prior_url, prior_identity):
                         raise RuntimeError("prior server health check failed during ladder run")
                     last_health = now
                 if now - started > args.max_runtime_seconds:
                     raise TimeoutError("maximum ladder runtime exceeded")
-                if time.time() - client_log_path.stat().st_mtime > args.stall_timeout_seconds:
+                activity_paths = (
+                    client_log_path,
+                    protocol_dump_path,
+                    search_dump_path,
+                )
+                latest_activity = max(
+                    path.stat().st_mtime for path in activity_paths if path.exists()
+                )
+                if time.time() - latest_activity > args.stall_timeout_seconds:
                     raise TimeoutError("ladder client output stalled")
             else:
                 status = "interrupted"

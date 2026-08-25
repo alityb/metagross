@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import atexit
+import math
 import hashlib
 import json
 import multiprocessing as mp
@@ -400,6 +401,12 @@ _PRIOR_STATE = {
     "cpuct": 2.0,
     "root_prior_count": 0,
     "opponent_prior_count": 0,
+    "namespace": None,
+    "battle_tag": None,
+    "username": None,
+    "prior_decision_idx": None,
+    "prior_battle_turn": None,
+    "r1_policy_snapshot": None,
 }
 
 _ACTION_CONDITIONED_DIAGNOSTICS = {
@@ -408,6 +415,25 @@ _ACTION_CONDITIONED_DIAGNOSTICS = {
     "fallback_count": 0,
     "effective_particle_count": 0,
 }
+
+
+def discard_nonfinite_priors(priors, label, log):
+    """Fail closed on unusable policy output: any empty key, non-finite,
+    negative, or >1 probability discards the whole mapping for this decision
+    (stock search), rather than crashing the engine's strict validation."""
+    if not priors:
+        return priors
+    for key, value in priors.items():
+        probability = float(value)
+        if not key or not math.isfinite(probability) or probability < 0.0 or probability > 1.0:
+            log.warning(
+                "discarding %s priors for this decision: unusable entry %r=%r",
+                label, key, value,
+            )
+        else:
+            continue
+        return {}
+    return priors
 
 
 def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
@@ -623,6 +649,7 @@ def patch_belief_aware_eval() -> None:
 
     # type chart (same as belief/live_belief.py)
     from belief.live_belief import TYPE_CHART, effectiveness
+    from belief.public_reveal_mask import from_live_belief_tracker
 
     def _rough_damage_pct(atk_types, atk_stats, atk_moves, def_types, def_stats, def_maxhp, def_level=100):
         """Approximate best damage % our mon can do to their mon in one turn."""
@@ -723,6 +750,12 @@ def patch_belief_aware_eval() -> None:
             # belief threat matrix (only if tracker is active)
             if tracker is None:
                 return state
+            # The sampled battle contains a full hidden team. Install only the
+            # facts carried by the causal live tracker before serializing it
+            # into any search worker.
+            state = state.with_side_one_public_reveals(
+                from_live_belief_tracker(state, tracker)
+            )
             # our mons' current types, straight from the engine state so the
             # matrix indices are guaranteed to match engine indices
             s1_types = []
@@ -836,18 +869,194 @@ def patch_root_priors() -> None:
 
     search_main.get_result_from_mcts = _mcts_with_root_priors
 
+    # ------------------------------------------------------------------
+    # Gate B: Gumbel-style completed-Q root decision + search telemetry.
+    # Replaces the visit-share decision rule (which inherits prior
+    # overconfidence, since PUCT visits track the prior) with the Gumbel
+    # AlphaZero evaluation-time rule: argmax over searched root actions of
+    # log pi(a) + (c_visit + max_visits) * c_scale * qhat(a), pooled across
+    # the sampled worlds. Env contract mirrors D/C: absent = byte-identical;
+    # set-but-malformed = raise; active = one-time "GUMBEL_ROOT ACTIVE" line.
+    # Per-arm gating: METAGROSS_GUMBEL_ROOT_PORTS lists the prior-server
+    # ports the rule applies to (each agent client knows its own port via
+    # METAGROSS_PRIOR_SERVER), so one shared env can differentiate arms.
+    # Telemetry (all arms, when METAGROSS_SEARCH_TELEMETRY_DIR is set):
+    # one JSON line per decision with prior/visit entropies, KL, pooled Q,
+    # both decision rules' choices and whether they flip.
+    # ------------------------------------------------------------------
+    import math as _math
+    import re as _re
+
+    original_select_move = search_main.select_move_from_mcts_results
+    _GUMBEL_LOGGED = {"done": False}
+
+    def _own_prior_port():
+        m = _re.search(r":(\d+)", os.environ.get("METAGROSS_PRIOR_SERVER") or "")
+        return m.group(1) if m else None
+
+    def _ports_env(name):
+        raw = os.environ.get(name)
+        if raw is None:
+            return None
+        ports = {p.strip() for p in raw.split(",") if p.strip()}
+        if not ports or not all(p.isdigit() for p in ports):
+            raise RuntimeError(f"{name} is set but invalid: {raw!r}")
+        return ports
+
+    def _entropy(dist):
+        total = sum(dist.values())
+        if total <= 0:
+            return None
+        return -sum((v / total) * _math.log(v / total)
+                    for v in dist.values() if v > 0)
+
+    def _telemetry_write(record):
+        directory = os.environ.get("METAGROSS_SEARCH_TELEMETRY_DIR")
+        if not directory:
+            return
+        try:
+            os.makedirs(directory, exist_ok=True)
+            path = os.path.join(
+                directory, f"search-telemetry-{_own_prior_port() or 'na'}.jsonl")
+            with open(path, "a") as fh:
+                fh.write(json.dumps(record) + "\n")
+        except OSError:
+            pass
+
+    def select_move_tracked(mcts_results):
+        priors = dict(_PRIOR_STATE.get("priors") or [])
+        pooled_v, pooled_s, raw_v = {}, {}, {}
+        for res, sample_chance, _idx in mcts_results:
+            for opt in res.side_one:
+                a = opt.move_choice
+                pooled_v[a] = pooled_v.get(a, 0.0) + sample_chance * opt.visits
+                pooled_s[a] = pooled_s.get(a, 0.0) + sample_chance * opt.total_score
+                raw_v[a] = raw_v.get(a, 0) + opt.visits
+        visited = {a: v for a, v in pooled_v.items() if v > 0}
+        q = {a: pooled_s[a] / pooled_v[a] for a in visited}
+        visit_choice = max(visited, key=visited.get) if visited else None
+
+        gumbel_ports = _ports_env("METAGROSS_GUMBEL_ROOT_PORTS")
+        apply_gumbel = bool(
+            gumbel_ports and _own_prior_port() in gumbel_ports
+            and visited and priors)
+        if apply_gumbel:
+            c_visit = float(os.environ.get("METAGROSS_GUMBEL_C_VISIT", "50"))
+            c_scale = float(os.environ.get("METAGROSS_GUMBEL_C_SCALE", "0.1"))
+            max_n = max(raw_v.values())
+            # Candidates are nominated FROM the prior (Gumbel-paper
+            # semantics); off-prior actions are never candidates. This also
+            # keeps every choice inside the server's served support, which
+            # the selected-action acknowledgement requires.
+            candidates = [a for a in visited if a in priors]
+            if not candidates:
+                candidates = list(visited)
+            def _score(a):
+                return (_math.log(max(priors.get(a, 1e-12), 1e-12))
+                        + (c_visit + max_n) * c_scale * q[a])
+            choice = max(candidates, key=_score)
+            if not _GUMBEL_LOGGED["done"]:
+                logger.info(
+                    "GUMBEL_ROOT ACTIVE (c_visit=%s c_scale=%s max_n=%s)",
+                    c_visit, c_scale, max_n)
+                _GUMBEL_LOGGED["done"] = True
+        else:
+            choice = None
+
+        _telemetry_write({
+            "turn": _PRIOR_STATE.get("prior_battle_turn"),
+            "decision_idx": _PRIOR_STATE.get("prior_decision_idx"),
+            "prior_entropy": _entropy(priors) if priors else None,
+            "visit_entropy": _entropy(visited) if visited else None,
+            "n_worlds": len(mcts_results),
+            "total_raw_visits": sum(raw_v.values()),
+            "top_prior": (max(priors, key=priors.get) if priors else None),
+            "visit_choice": visit_choice,
+            "pooled_q": {a: round(q[a], 4) for a in
+                         sorted(q, key=lambda x: -visited[x])[:6]},
+            "gumbel_applied": apply_gumbel,
+            "gumbel_choice": choice,
+            "flip": (apply_gumbel and choice != visit_choice),
+        })
+        if apply_gumbel:
+            return choice
+        return original_select_move(mcts_results)
+
+    search_main.select_move_from_mcts_results = select_move_tracked
+
     # 3) fetch priors before each search
     import fp.run_battle as run_battle_module
+
+    # Self-contained prior temperature flattening (mechanism prediction 2).
+    # No repo-root import: the previous guarded import was silently inert in
+    # harness clients (PYTHONPATH lacked the repo root). Contract:
+    #  - env METAGROSS_PRIOR_TEMP_SCHEDULE absent -> byte-identical no-op;
+    #  - env set but malformed -> RAISE (fail-closed; a screen must never
+    #    silently measure the wrong condition again);
+    #  - env set and applicable -> one-time "schedule ACTIVE" log line
+    #    (activation must be observable).
+    _TEMP_LOGGED = {"done": False}
+
+    def flatten_priors(pairs, turn, mode=None):
+        raw = os.environ.get("METAGROSS_PRIOR_TEMP_SCHEDULE")
+        if not raw:
+            return pairs
+        try:
+            schedule = {int(k): float(v) for k, v in json.loads(raw).items()}
+        except Exception as exc:
+            raise RuntimeError(
+                f"METAGROSS_PRIOR_TEMP_SCHEDULE is set but unparseable: {exc}"
+            )
+        if not schedule:
+            raise RuntimeError("METAGROSS_PRIOR_TEMP_SCHEDULE is set but empty")
+        if not pairs or turn is None:
+            return pairs
+        if mode is not None and mode != "causal-history":
+            return pairs
+        # Optional per-arm gate for combo lanes where BOTH arms are causal:
+        # apply only to clients whose own prior-server port is listed.
+        ports_raw = os.environ.get("METAGROSS_PRIOR_TEMP_PORTS")
+        if ports_raw:
+            ports = {p.strip() for p in ports_raw.split(",") if p.strip()}
+            if not ports or not all(p.isdigit() for p in ports):
+                raise RuntimeError(
+                    f"METAGROSS_PRIOR_TEMP_PORTS is set but invalid: {ports_raw!r}")
+            import re as _re2
+            m = _re2.search(r":(\d+)",
+                            os.environ.get("METAGROSS_PRIOR_SERVER") or "")
+            if not m or m.group(1) not in ports:
+                return pairs
+        tau = 1.0
+        for threshold in sorted(schedule):
+            if int(turn) >= threshold:
+                tau = schedule[threshold]
+        if not _TEMP_LOGGED["done"]:
+            logger.info(
+                "prior temperature schedule ACTIVE (tau=%s at turn %s)", tau, turn
+            )
+            _TEMP_LOGGED["done"] = True
+        if tau <= 1.0:
+            return pairs
+        raised = [(a, float(p) ** (1.0 / tau)) for a, p in pairs]
+        total = sum(p for _, p in raised)
+        if total <= 0:
+            return pairs
+        return [(a, p / total) for a, p in raised]
 
     original_find_best_move = search_main.find_best_move
 
     def find_best_move_with_priors(battle):
         _PRIOR_STATE["priors"] = None
+        _PRIOR_STATE["ack_context"] = None
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["root_prior_count"] = 0
         _PRIOR_STATE["opponent_prior_count"] = 0
         _PRIOR_STATE["prior_decision_idx"] = None
         _PRIOR_STATE["prior_battle_turn"] = None
+        _PRIOR_STATE["r1_policy_snapshot"] = None
+        _PRIOR_STATE["namespace"] = prior_namespace
+        _PRIOR_STATE["battle_tag"] = None
+        _PRIOR_STATE["username"] = None
         try:
             tag = getattr(battle, "battle_tag", None)
             if tag:
@@ -860,26 +1069,66 @@ def patch_root_priors() -> None:
                 from config import FoulPlayConfig as _cfg
                 username_param = _quote(str(getattr(_cfg, "username", "") or ""))
                 namespace_param = _quote(prior_namespace)
+                _PRIOR_STATE["battle_tag"] = full_tag
+                _PRIOR_STATE["username"] = str(getattr(_cfg, "username", "") or "")
+                # The production prior server binds priors to the exact
+                # Showdown request (rqid + canonical request SHA-256); send
+                # the same identity the ladder client sends so the harness
+                # can talk to the trajectory-mode-aware server.
+                import hashlib as _hashlib
+                rqid = getattr(battle, "rqid", None)
+                request_json = getattr(battle, "request_json", None)
+                if (isinstance(rqid, bool) or not isinstance(rqid, int)
+                        or rqid < 0 or not isinstance(request_json, dict)):
+                    raise RuntimeError("battle has no valid request identity")
+                request_sha256 = _hashlib.sha256(
+                    json.dumps(request_json, sort_keys=True,
+                               separators=(",", ":")).encode()).hexdigest()
                 with _url.urlopen(
                     f"{server_url}/priors?tag={full_tag}&username={username_param}"
-                    f"&namespace={namespace_param}",
+                    f"&namespace={namespace_param}"
+                    f"&rqid={rqid}&request_sha256={request_sha256}",
                     timeout=30,
                 ) as resp:
                     data = json.loads(resp.read())
                 # Schema-v3 join key: the server's per-battle decision counter
                 # for the observation that produced these priors.
                 _PRIOR_STATE["prior_decision_idx"] = data.get("decision_idx")
+                # Arm the selected-action acknowledgement for this decision
+                # (production-server causal boundary). Forced/automatic
+                # decisions create no action boundary — do not ack those.
+                if (data.get("decision_idx") is not None
+                        and data.get("automatic_action") is None
+                        and data.get("status") != "ineligible"):
+                    _PRIOR_STATE["ack_context"] = {
+                        "tag": full_tag,
+                        "namespace": prior_namespace,
+                        "rqid": rqid,
+                        "request_sha256": request_sha256,
+                        "decision_idx": data.get("decision_idx"),
+                    }
                 _PRIOR_STATE["prior_battle_turn"] = data.get("battle_turn")
+                _PRIOR_STATE["r1_policy_snapshot"] = data.get("r1_policy_snapshot")
                 opp_only = os.environ.get("METAGROSS_OPP_PRIORS_ONLY") == "1"
                 if opp_only:
                     priors = {}
                 else:
                     priors = data.get("priors") or {}
                 opp_priors = data.get("opp_priors") or {}
+                # A decision the policy vocabulary cannot represent (e.g. the
+                # Revival Blessing revive prompt) yields an all-masked softmax
+                # of NaN. Never forward non-finite mass to the engine: discard
+                # that side's priors for this one decision and run stock
+                # search, symmetrically for both agents.
+                priors = discard_nonfinite_priors(priors, "root", logger)
+                opp_priors = discard_nonfinite_priors(opp_priors, "opp", logger)
                 if opp_only and (data.get("priors") or {}):
                     logger.info("opp-only mode: discarding %d s1 priors", len(data.get("priors") or {}))
                 if priors:
-                    _PRIOR_STATE["priors"] = [(k, float(v)) for k, v in priors.items()]
+                    _PRIOR_STATE["priors"] = flatten_priors(
+                        [(k, float(v)) for k, v in priors.items()],
+                        data.get("battle_turn"),
+                        (data.get("trajectory") or {}).get("mode"))
                     _PRIOR_STATE["root_prior_count"] = len(priors)
                     logger.info("root priors ({}): {}".format(
                         len(priors),
@@ -899,11 +1148,140 @@ def patch_root_priors() -> None:
             if os.environ.get("METAGROSS_REQUIRE_PRIORS") == "1":
                 raise RuntimeError(f"required prior fetch failed: {exc!r}") from exc
             logger.warning(f"prior fetch failed, searching without priors: {exc!r}")
-        return original_find_best_move(battle)
+        best_move = original_find_best_move(battle)
+        # The production prior server (trajectory-mode aware) requires the
+        # selected action to be acknowledged before the next request can be
+        # served — that is how the causal trajectory records its exact action
+        # boundary. Ack failures raise: an unacked boundary would crash the
+        # NEXT fetch with a far less legible error.
+        context = _PRIOR_STATE.get("ack_context")
+        _PRIOR_STATE["ack_context"] = None
+        if context is not None:
+            try:
+                result = json.loads(_post_sync("/action", {
+                    "tag": context["tag"],
+                    "namespace": context["namespace"],
+                    "rqid": context["rqid"],
+                    "request_sha256": context["request_sha256"],
+                    "decision_idx": context["decision_idx"],
+                    "action": best_move,
+                }).read())
+                if result.get("ok") is not True:
+                    raise RuntimeError(f"ack not ok: {result}")
+            except Exception as ack_exc:
+                # Rare off-support choice (an action the policy vocabulary
+                # could not serve, so the causal boundary cannot record it).
+                # Reset the server session rather than killing a whole lane:
+                # the trajectory restarts fresh next decision (logged loudly;
+                # counted via ACK_RESET lines in the client log).
+                logger.warning(
+                    "ACK_RESET tag=%s action=%r rejected (%r); resetting session",
+                    context["tag"], best_move, ack_exc)
+                try:
+                    _post_sync("/end", {"tag": context["tag"],
+                                        "namespace": context["namespace"]})
+                except Exception:
+                    pass
+        return best_move
 
     search_main.find_best_move = find_best_move_with_priors
     run_battle_module.find_best_move = find_best_move_with_priors
     logger.info(f"root-priors patch active (server={server_url}, c_puct={_PRIOR_STATE['cpuct']})")
+
+
+def patch_teacher_root_bundle_capture() -> None:
+    from teacher_root_bundle import (
+        append_root_capture,
+        build_root_capture,
+        capture_config_from_environment,
+        derive_schedule_seed,
+    )
+
+    teacher_config = capture_config_from_environment()
+    if teacher_config is None:
+        return
+    unsupported = [
+        name
+        for name in (
+            "METAGROSS_SHARED_ROOT_SEARCH",
+            "METAGROSS_RANDBATS_CONDITIONAL_SCRIPT",
+            "METAGROSS_RANDBATS_POOL",
+        )
+        if os.environ.get(name)
+    ]
+    if unsupported:
+        raise RuntimeError(
+            "schedule-aware teacher capture does not support alternate samplers: "
+            + ", ".join(unsupported)
+        )
+
+    import fp.search.main as search_main
+
+    original_sampler = search_main.prepare_random_battles
+    original_selector = search_main.select_move_from_mcts_results
+    pending = threading.local()
+
+    def identity_from_prior_state():
+        return {
+            "namespace": _PRIOR_STATE.get("namespace"),
+            "battle_tag": _PRIOR_STATE.get("battle_tag"),
+            "username": _PRIOR_STATE.get("username"),
+            "decision_idx": _PRIOR_STATE.get("prior_decision_idx"),
+            "battle_turn": _PRIOR_STATE.get("prior_battle_turn"),
+        }
+
+    def serialize_schedule(sampled_battles):
+        return [
+            (search_main.battle_to_poke_engine_state(battle).to_string(), float(weight))
+            for battle, weight in sampled_battles
+        ]
+
+    def sample_with_teacher_schedules(battle, num_battles):
+        pending.capture = None
+        behavior_schedule = original_sampler(battle, num_battles)
+        identity = identity_from_prior_state()
+        schedules = [serialize_schedule(behavior_schedule)]
+        post_behavior_rng = random.getstate()
+        try:
+            for schedule_id in range(1, teacher_config.schedule_count):
+                random.seed(
+                    derive_schedule_seed(
+                        teacher_config.base_seed, identity, schedule_id
+                    )
+                )
+                schedules.append(
+                    serialize_schedule(original_sampler(battle, num_battles))
+                )
+        finally:
+            random.setstate(post_behavior_rng)
+        pending.capture = build_root_capture(
+            identity=identity,
+            player_priors=_PRIOR_STATE.get("priors"),
+            opponent_priors=_PRIOR_STATE.get("opp_priors"),
+            r1_policy_snapshot=_PRIOR_STATE.get("r1_policy_snapshot"),
+            schedules=schedules,
+            config=teacher_config,
+        )
+        return behavior_schedule
+
+    def select_with_teacher_bundle(mcts_results):
+        choice = original_selector(mcts_results)
+        capture = getattr(pending, "capture", None)
+        if capture is None:
+            raise RuntimeError("teacher root capture is missing for behavior selection")
+        append_root_capture(teacher_config.output_path, capture)
+        pending.capture = None
+        return choice
+
+    search_main.prepare_random_battles = sample_with_teacher_schedules
+    search_main.select_move_from_mcts_results = select_with_teacher_bundle
+    print(
+        "TEACHER_ROOT_BUNDLE: "
+        f"path={teacher_config.output_path} capture_only=1 "
+        f"determinization_schedules={teacher_config.schedule_count}",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 def patch_state_dump() -> None:
@@ -1449,6 +1827,11 @@ def patch_randbats_generator_belief() -> None:
         for history_event in events:
             if history_event["actor"] != current_active:
                 continue
+            if (
+                os.environ.get("METAGROSS_ACTION_EVIDENCE_MOVES_ONLY") == "1"
+                and history_event["observed_action"].startswith("switch ")
+            ):
+                continue
             history_public_active = ""
             for message in history_event["protocol_prefix"]:
                 if (
@@ -1620,6 +2003,9 @@ def patch_shared_root_search() -> None:
     paired_evaluation_iterations = int(
         os.environ.get("METAGROSS_SELECTIVE_SHARED_ROOT_PAIRED_EVAL_ITERS", "512")
     )
+    require_paired_evaluation = (
+        os.environ.get("METAGROSS_REQUIRE_SELECTIVE_PAIRED_EVALUATION") == "1"
+    )
     if continuation_iterations <= 0:
         raise RuntimeError("METAGROSS_SHARED_ROOT_CONTINUATION_ITERS must be positive")
     if not 0.0 <= human_prior_mix <= 1.0:
@@ -1648,6 +2034,7 @@ def patch_shared_root_search() -> None:
                 "lcb_scale": lcb_scale,
                 "continuation_iterations": continuation_iterations,
                 "paired_evaluation_iterations": paired_evaluation_iterations,
+                "require_paired_evaluation": require_paired_evaluation,
                 "human_prior_mix": human_prior_mix,
                 "player_prior_mix": player_prior_mix,
                 "min_policy_probability": min_policy_probability,
@@ -1677,6 +2064,16 @@ def patch_shared_root_search() -> None:
                 "paired_se": values.pop("paired_se", None),
                 "paired_lcb": values.pop("paired_lcb", None),
                 "paired_available": values.pop("paired_available", False),
+                "paired_evaluation_complete": values.pop(
+                    "paired_evaluation_complete", False
+                ),
+                "paired_evaluation_cells": values.pop("paired_evaluation_cells", 0),
+                "paired_evaluation_total_iterations": values.pop(
+                    "paired_evaluation_total_iterations", 0
+                ),
+                "paired_evaluation_elapsed_ms": values.pop(
+                    "paired_evaluation_elapsed_ms", 0
+                ),
                 "mode": selective_mode,
                 "overridden": values.pop("overridden", False),
                 "alpha": values.pop("alpha", None),
@@ -1810,6 +2207,13 @@ def patch_shared_root_search() -> None:
             if not policy or policy_mass <= 0.0:
                 raise RuntimeError("shared-root solver returned no policy mass")
             diagnostics = result.diagnostics
+            paired_complete = bool(diagnostics.paired_evaluation_complete)
+            if require_paired_evaluation and not paired_complete:
+                raise RuntimeError(
+                    "declared paired evaluation did not complete "
+                    f"(cells={diagnostics.paired_evaluation_cells_evaluated}, "
+                    f"iterations={diagnostics.paired_evaluation_iterations})"
+                )
             paired_available = bool(diagnostics.baseline_advantage_available)
             paired_lcb = diagnostics.baseline_advantage_lcb
             top_action, top_probability = max(policy, key=lambda entry: entry[1])
@@ -1872,6 +2276,12 @@ def patch_shared_root_search() -> None:
                 paired_se=diagnostics.baseline_advantage_standard_error,
                 paired_lcb=paired_lcb,
                 paired_available=paired_available,
+                paired_evaluation_complete=paired_complete,
+                paired_evaluation_cells=diagnostics.paired_evaluation_cells_evaluated,
+                paired_evaluation_total_iterations=(
+                    diagnostics.paired_evaluation_total_iterations
+                ),
+                paired_evaluation_elapsed_ms=diagnostics.paired_evaluation_elapsed_ms,
                 overridden=overridden,
                 alpha=round(alpha, 4) if alpha > 0.0 else 0.0,
                 blended_summary=blended_summary,
@@ -1882,6 +2292,8 @@ def patch_shared_root_search() -> None:
         except Exception as exc:
             timing["shared_ms"] = round((time.perf_counter() - shared_started) * 1000.0, 3)
             shared_logger.warning(f"selective shared-root fallback: {exc!r}")
+            if require_paired_evaluation:
+                raise
             decision = decide_selective_action(
                 mode=selective_mode,
                 baseline_action=baseline_choice,
@@ -2369,8 +2781,10 @@ def patch_replay_capture() -> None:
 
 
 def main() -> None:
-    root_dir = Path(__file__).resolve().parents[2]
-    foul_play_dir = Path(os.environ.get("FOUL_PLAY_DIR", root_dir / "external" / "foul-play"))
+    workspace_root = Path(__file__).resolve().parents[3]
+    foul_play_dir = Path(
+        os.environ.get("FOUL_PLAY_DIR", workspace_root / "srcs" / "vendor" / "foul-play")
+    )
 
     env_password = os.environ.get("METAGROSS_SHOWDOWN_PASSWORD")
     if env_password and "--ps-password" not in sys.argv:
@@ -2398,6 +2812,7 @@ def main() -> None:
     patch_shared_root_search()
     patch_root_priors()
     patch_decision_logging()
+    patch_teacher_root_bundle_capture()
     patch_replay_capture()
 
     from run import run_foul_play

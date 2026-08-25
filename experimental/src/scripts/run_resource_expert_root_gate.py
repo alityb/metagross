@@ -23,6 +23,7 @@ from scripts.run_public_mcts_leaf_gate import _load_oracle, _load_panel, _seed, 
 
 RESULT_SCHEMA = "metagross-resource-expert-root-arm/v1"
 REPORT_SCHEMA = "metagross-resource-expert-root-gate/v1"
+REVEAL_SIDECAR_SCHEMA = "metagross-resource-reveal-sidecar/v1"
 
 
 def _write(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -51,6 +52,9 @@ def _arm_task(task: tuple[dict[str, Any], int, str]) -> dict[str, Any]:
     pair_id = schedule["pair_id"]
     for world in schedule["worlds"]:
         state = poke_engine.State.from_string(world["state"])
+        reveal_bits = world.get("public_reveal_bits")
+        if reveal_bits is not None:
+            state = state.with_side_one_public_reveals(int(reveal_bits))
         result = poke_engine.monte_carlo_tree_search(
             state,
             iterations=iterations,
@@ -79,7 +83,22 @@ def _arm_task(task: tuple[dict[str, Any], int, str]) -> dict[str, Any]:
         "total_iterations": total,
         "visit_policy": visits,
         "mean_action_values": {action: values[action] / masses[action] for action in values},
+        "reveal_sidecar_sha256": schedule.get("reveal_sidecar_sha256"),
     }
+
+
+def _load_reveal_sidecar(path: Path, panel_hash: str) -> tuple[dict[tuple[str, int, str], int], str]:
+    payload = json.loads(path.read_text())
+    if payload.get("schema") != REVEAL_SIDECAR_SCHEMA or payload.get("panel_sha256") != panel_hash:
+        raise ValueError("reveal sidecar does not belong to this panel")
+    mapping: dict[tuple[str, int, str], int] = {}
+    for row in payload.get("rows", []):
+        key = (str(row["pair_id"]), int(row["world_index"]), str(row["state_sha256"]))
+        bits = row.get("bits")
+        if key in mapping or isinstance(bits, bool) or not isinstance(bits, int) or not 0 <= bits < (1 << 42):
+            raise ValueError("invalid reveal sidecar entry")
+        mapping[key] = bits
+    return mapping, _sha256(path)
 
 
 def run_arm(args: argparse.Namespace) -> dict[str, Any]:
@@ -92,18 +111,37 @@ def run_arm(args: argparse.Namespace) -> dict[str, Any]:
         os.environ.pop("METAGROSS_VALUE_MODEL", None)
         os.environ.pop("METAGROSS_LEARNED_VALUE_WEIGHT", None)
     panel, panel_hash = _load_panel(args.panel)
+    reveal_mapping: dict[tuple[str, int, str], int] = {}
+    reveal_hash = None
+    if args.reveal_sidecar is not None:
+        reveal_mapping, reveal_hash = _load_reveal_sidecar(args.reveal_sidecar, panel_hash)
     tasks = []
     for root in panel:
         for schedule in root["schedules"]:
+            worlds = []
+            for world in schedule["worlds"]:
+                copied = dict(world)
+                if reveal_hash is not None:
+                    key = (
+                        f"{root['root_id']}:{schedule['schedule_id']}",
+                        int(world["world_index"]),
+                        str(world["state_sha256"]),
+                    )
+                    if key not in reveal_mapping:
+                        raise ValueError("reveal sidecar is incomplete for the panel")
+                    copied["public_reveal_bits"] = reveal_mapping[key]
+                worlds.append(copied)
             tasks.append(
                 (
                     {
                         **schedule,
+                        "worlds": worlds,
                         "battle_id": root["battle_id"],
                         "root_id": root["root_id"],
                         "pair_id": f"{root['root_id']}:{schedule['schedule_id']}",
                         "historical_500ms_action": root["historical_500ms_action"],
                         "resource_stratum": root["resource_stratum"],
+                        "reveal_sidecar_sha256": reveal_hash,
                     },
                     args.iterations,
                     args.arm,
@@ -122,6 +160,7 @@ def run_arm(args: argparse.Namespace) -> dict[str, Any]:
         "learned_weight": args.learned_weight if args.arm == "resource" else 0.0,
         "iterations_per_world": args.iterations,
         "output_sha256": _sha256(args.output),
+        "reveal_sidecar_sha256": reveal_hash,
     }
 
 
@@ -140,6 +179,10 @@ def report(args: argparse.Namespace) -> dict[str, Any]:
     panel, panel_hash = _load_panel(args.panel)
     oracle, oracle_hash = _load_oracle(args.oracle, panel_hash)
     arm_rows = {arm: {row["pair_id"]: row for row in _read(path)} for arm, path in (("hand", args.hand), ("resource", args.resource))}
+    if args.no_information is not None:
+        arm_rows["no_information"] = {
+            row["pair_id"]: row for row in _read(args.no_information)
+        }
     roots = {row["root_id"]: row for row in panel}
     units = []
     for root_id, root in roots.items():
@@ -157,6 +200,11 @@ def report(args: argparse.Namespace) -> dict[str, Any]:
                 ("historical", root["historical_500ms_action"]),
                 ("hand", arm_rows["hand"][pair_id]["selected_action"]),
                 ("resource", arm_rows["resource"][pair_id]["selected_action"]),
+                *(
+                    (("no_information", arm_rows["no_information"][pair_id]["selected_action"]),)
+                    if "no_information" in arm_rows
+                    else ()
+                ),
             ):
                 if action not in action_values:
                     raise ValueError(f"{arm} action is absent from corrected oracle: {action}")
@@ -165,7 +213,10 @@ def report(args: argparse.Namespace) -> dict[str, Any]:
             units.append(row)
 
     metrics = {}
-    for arm in ("historical", "hand", "resource"):
+    metric_arms = ["historical", "hand", "resource"]
+    if "no_information" in arm_rows:
+        metric_arms.append("no_information")
+    for arm in metric_arms:
         regrets = [row[f"{arm}_regret"] for row in units]
         metrics[arm] = {
             "mean_regret": math.fsum(regrets) / len(regrets),
@@ -185,18 +236,54 @@ def report(args: argparse.Namespace) -> dict[str, Any]:
         "battle_bootstrap_ci95": interval,
         "changed_units": sum(row["resource_action"] != row["hand_action"] for row in units),
     }
+    if "no_information" in arm_rows:
+        information_deltas = []
+        for battle_id in sorted({row["battle_id"] for row in units}):
+            rows = [row for row in units if row["battle_id"] == battle_id]
+            information_deltas.append(
+                math.fsum(
+                    row["no_information_regret"] - row["resource_regret"]
+                    for row in rows
+                )
+                / len(rows)
+            )
+        information_interval = _bootstrap(information_deltas, args.seed + 1)
+        metrics["information_ablation"] = {
+            "mean_regret_improvement": math.fsum(information_deltas) / len(information_deltas),
+            "battle_bootstrap_ci95": information_interval,
+            "changed_units": sum(
+                row["resource_action"] != row["no_information_action"] for row in units
+            ),
+            "resource_better_units": sum(
+                row["resource_regret"] < row["no_information_regret"] for row in units
+            ),
+            "resource_worse_units": sum(
+                row["resource_regret"] > row["no_information_regret"] for row in units
+            ),
+        }
     gate = {
         "beats_historical_500ms": metrics["resource"]["mean_regret"] < metrics["historical"]["mean_regret"],
         "beats_equal_iteration_hand": metrics["resource"]["mean_regret"] < metrics["hand"]["mean_regret"],
         "positive_battle_ci": interval[0] > 0.0,
         "no_added_catastrophes_vs_hand": metrics["resource"]["catastrophic_regret_count"] <= metrics["hand"]["catastrophic_regret_count"],
     }
+    if "information_ablation" in metrics:
+        gate["beats_no_information_ablation"] = (
+            metrics["resource"]["mean_regret"]
+            < metrics["no_information"]["mean_regret"]
+        )
+        gate["positive_information_ablation_ci"] = (
+            metrics["information_ablation"]["battle_bootstrap_ci95"][0] > 0.0
+        )
     result = {
         "schema": REPORT_SCHEMA,
         "panel_sha256": panel_hash,
         "oracle_sha256": oracle_hash,
         "hand_sha256": _sha256(args.hand),
         "resource_sha256": _sha256(args.resource),
+        "no_information_sha256": (
+            _sha256(args.no_information) if args.no_information is not None else None
+        ),
         "pairs": len(units),
         "battles": len(roots),
         "metrics": metrics,
@@ -220,6 +307,7 @@ def main() -> None:
     arm.add_argument("--arm", choices=("hand", "resource"), required=True)
     arm.add_argument("--model", type=Path)
     arm.add_argument("--learned-weight", type=float, default=0.25)
+    arm.add_argument("--reveal-sidecar", type=Path)
     arm.add_argument("--iterations", type=int, default=20_000)
     arm.add_argument("--workers", type=int, default=8)
     score = sub.add_parser("report")
@@ -227,6 +315,7 @@ def main() -> None:
     score.add_argument("--oracle", type=Path, required=True)
     score.add_argument("--hand", type=Path, required=True)
     score.add_argument("--resource", type=Path, required=True)
+    score.add_argument("--no-information", type=Path)
     score.add_argument("--output", type=Path, required=True)
     score.add_argument("--seed", type=int, default=20260814)
     args = parser.parse_args()

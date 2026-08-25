@@ -53,6 +53,11 @@ def main() -> None:
     parser.add_argument("--prev-checkpoint", type=int, default=None)
     parser.add_argument("--run-name", default=None)
     parser.add_argument(
+        "--reward-function",
+        default=None,
+        help="Registered Metamon reward function (for example BinaryReward).",
+    )
+    parser.add_argument(
         "--mcts-policy-sidecar",
         default=None,
         help="Verified JSONL from build_mcts_policy_sidecar.py; enables MCTS policy distillation.",
@@ -185,6 +190,8 @@ def main() -> None:
                 "--prev_checkpoint", str(args.prev_checkpoint),
             ]
         )
+    if args.reward_function is not None:
+        argv.extend(["--reward_function", args.reward_function])
     print(f"VARIANT={args.variant} train_gin={train_gin} argv={argv}", flush=True)
 
     # metamon.rl.finetune's logic lives under `if __name__ == "__main__"`;

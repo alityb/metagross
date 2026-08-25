@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "run_tag": "g5_league_5k_20260730",
+  "candidate_suffix": "league",
+  "start_generation": 5,
+  "generations": 1,
+  "collection_games": 5000,
+  "collection_backend": "modal",
+  "workers": 4,
+  "chunk_games": 25,
+  "collector_torch_threads": 2,
+  "arena_games": 500,
+  "learner_steps": 3000,
+  "batch_size": 24,
+  "showdown_port": 8011,
+  "lineage_floor": 0.45,
+  "promotion_min_games": 500,
+  "automatic_promotion": false,
+  "retain_fresh_generations": "current",
+  "seed": 20260729,
+  "anchor_artifact": "online_rl_artifacts/randbats_online_g1_smoke_20260729",
+  "initial_current": {
+    "id": "online_g4_freshfix",
+    "run_name": "randbats_online_g4_autonomous_freshfix_20260729",
+    "checkpoint": 1,
+    "sha256": "cd21dbb22bfc7a92836c7c75c6287ffc1b79c58e0a2dca3d402b76b001ff7505"
+  },
+  "initial_accepted": {
+    "id": "online_g4_freshfix",
+    "run_name": "randbats_online_g4_autonomous_freshfix_20260729",
+    "checkpoint": 1,
+    "sha256": "cd21dbb22bfc7a92836c7c75c6287ffc1b79c58e0a2dca3d402b76b001ff7505"
+  },
+  "collection_opponents": [
+    {"source": "current", "base_weight": 0.8},
+    {
+      "base_weight": 0.1,
+      "snapshot": {
+        "id": "online_g3_freshfix",
+        "run_name": "randbats_online_g3_autonomous_freshfix_20260729",
+        "checkpoint": 1,
+        "sha256": "0c754bb96953b900e282de91c570aaae5c2c6f002dc2419e149d01132888815c"
+      }
+    },
+    {
+      "base_weight": 0.1,
+      "snapshot": {
+        "id": "frozen_r1",
+        "run_name": "randbats_exit_r1",
+        "checkpoint": 5,
+        "sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93"
+      }
+    }
+  ]
+}

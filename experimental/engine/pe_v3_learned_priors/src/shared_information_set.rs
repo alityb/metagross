@@ -39,6 +39,10 @@ pub struct SharedRootDiagnostics {
     pub baseline_advantage_effective_world_count: f32,
     pub lcb_z: f32,
     pub paired_evaluation_iterations: u32,
+    pub paired_evaluation_cells_evaluated: u64,
+    pub paired_evaluation_total_iterations: u64,
+    pub paired_evaluation_elapsed_ms: u64,
+    pub paired_evaluation_complete: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +66,9 @@ pub struct OracleResult {
     pub baseline_advantage_lcb: Option<f32>,
     pub baseline_advantage_world_count: u32,
     pub baseline_advantage_effective_world_count: f32,
+    pub paired_evaluation_cells_evaluated: u64,
+    pub paired_evaluation_elapsed_ms: u64,
+    pub paired_evaluation_complete: bool,
 }
 
 #[derive(Debug, Default)]
@@ -414,6 +421,9 @@ where
         })
         .collect();
     let mut paired_advantage = PairedAdvantage::default();
+    let mut paired_evaluation_cells_evaluated = 0_u64;
+    let mut paired_evaluation_elapsed_ms = 0_u64;
+    let mut paired_evaluation_complete = false;
     if let Some(baseline_action) = baseline_action {
         let positive_world_count = world_weights.iter().filter(|weight| **weight > 0.0).count();
         let weight_total: f64 = world_weights.iter().sum();
@@ -429,9 +439,10 @@ where
             .iter()
             .zip(&world_pulls)
             .all(|(weight, pulls)| *weight == 0.0 || *pulls > 0);
-        let mut complete = averages_exist;
+        let complete = averages_exist;
         let mut paired_payoff_cache: HashMap<(usize, usize, usize), f64> = HashMap::new();
-        'worlds: for (world, weight) in world_weights.iter().enumerate() {
+        let paired_start = Instant::now();
+        for (world, weight) in world_weights.iter().enumerate() {
             if *weight == 0.0 || !complete {
                 continue;
             }
@@ -449,10 +460,6 @@ where
                     if paired_payoff_cache.contains_key(&key) {
                         continue;
                     }
-                    if round_limit == 0 && start.elapsed() >= duration {
-                        complete = false;
-                        break 'worlds;
-                    }
                     let value =
                         oracle(world, opponent_action, action, paired_evaluation_iterations)?;
                     if !value.is_finite() {
@@ -462,6 +469,9 @@ where
                 }
             }
         }
+        paired_evaluation_cells_evaluated = paired_payoff_cache.len() as u64;
+        paired_evaluation_elapsed_ms =
+            paired_start.elapsed().as_millis().min(u64::MAX as u128) as u64;
         if complete {
             if let Some(result) = paired_advantage_from_cache(
                 action_count,
@@ -473,25 +483,7 @@ where
                 &paired_payoff_cache,
             ) {
                 paired_advantage = result;
-            }
-        } else {
-            // Deeper paired evaluation could not complete within the deadline.
-            // Fall back to the cached RM+ optimization cells so diagnostics
-            // remain available, just with lower-quality estimates.
-            let fallback_cache: HashMap<(usize, usize, usize), f64> = payoff_cache
-                .iter()
-                .map(|(key, value)| (*key, *value as f64))
-                .collect();
-            if let Some(result) = paired_advantage_from_cache(
-                action_count,
-                world_weights,
-                &opponent_probabilities,
-                &probabilities,
-                baseline_action,
-                lcb_z,
-                &fallback_cache,
-            ) {
-                paired_advantage = result;
+                paired_evaluation_complete = true;
             }
         }
     }
@@ -518,6 +510,9 @@ where
         baseline_advantage_lcb: paired_advantage.lcb.map(|value| value as f32),
         baseline_advantage_world_count: paired_advantage.world_count,
         baseline_advantage_effective_world_count: paired_advantage.effective_world_count as f32,
+        paired_evaluation_cells_evaluated,
+        paired_evaluation_elapsed_ms,
+        paired_evaluation_complete,
     })
 }
 
@@ -815,6 +810,12 @@ pub fn shared_information_set_root_search(
                 .baseline_advantage_effective_world_count,
             lcb_z: lcb_z as f32,
             paired_evaluation_iterations,
+            paired_evaluation_cells_evaluated: oracle_result.paired_evaluation_cells_evaluated,
+            paired_evaluation_total_iterations: oracle_result
+                .paired_evaluation_cells_evaluated
+                .saturating_mul(paired_evaluation_iterations as u64),
+            paired_evaluation_elapsed_ms: oracle_result.paired_evaluation_elapsed_ms,
+            paired_evaluation_complete: oracle_result.paired_evaluation_complete,
         },
     })
 }
@@ -1112,7 +1113,7 @@ mod tests {
     }
 
     #[test]
-    fn timed_diagnostic_is_unavailable_when_required_cells_are_incomplete() {
+    fn timed_diagnostic_completes_after_optimization_deadline() {
         let result = solve_shared_root_with_oracle(
             2,
             &[1.0],
@@ -1136,8 +1137,9 @@ mod tests {
         )
         .unwrap();
 
-        assert!(!result.baseline_advantage_available);
-        assert_eq!(result.baseline_advantage_mean, None);
+        assert!(result.baseline_advantage_available);
+        assert!(result.paired_evaluation_complete);
+        assert!(result.paired_evaluation_cells_evaluated > 0);
     }
 
     #[test]
@@ -1284,6 +1286,50 @@ mod tests {
         assert!(
             result.baseline_advantage_available,
             "paired advantage should be available when baseline_action is supplied"
+        );
+        assert!(result.paired_evaluation_complete);
+        assert_eq!(
+            result.paired_evaluation_cells_evaluated,
+            paired_calls as u64
+        );
+    }
+
+    #[test]
+    fn timed_optimization_deadline_does_not_cancel_paired_evaluation() {
+        let mut paired_calls = 0u32;
+        let result = solve_shared_root_with_oracle(
+            2,
+            &[1.0],
+            &[1],
+            &[None],
+            0.0,
+            None,
+            0.0,
+            0.0,
+            Duration::from_millis(1),
+            0,
+            11,
+            Some(0),
+            0.0,
+            128,
+            512,
+            |_world, _opponent, action, iterations| {
+                if iterations == 128 {
+                    std::thread::sleep(Duration::from_millis(2));
+                } else if iterations == 512 {
+                    paired_calls += 1;
+                }
+                Ok(if action == 0 { 1.0 } else { 0.0 })
+            },
+        )
+        .unwrap();
+
+        assert!(result.paired_evaluation_complete);
+        assert!(result.baseline_advantage_available);
+        assert!(paired_calls > 0);
+        assert_eq!(
+            result.paired_evaluation_cells_evaluated,
+            paired_calls as u64
         );
     }
 }

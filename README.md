@@ -1,21 +1,30 @@
 # Metagross
 
-**Learned policy guidance for imperfect-information Pokemon search.**
+**Reinforcement learning meets imperfect-information search for Pokemon Showdown.**
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-poke--engine-000000?style=flat-square&logo=rust&logoColor=white)
 ![Format](https://img.shields.io/badge/Showdown-gen9randombattle-5A67D8?style=flat-square)
+![Learning](https://img.shields.io/badge/learning-offline%20RL%20%2B%20ExIt-B45F06?style=flat-square)
 ![Status](https://img.shields.io/badge/status-accepted%20r1-2E8B57?style=flat-square)
 
-[Overview](#overview) | [Architecture](#architecture) | [Accepted r1](#accepted-r1) | [Getting started](#getting-started) | [Repository](#repository)
+[Overview](#overview) | [Architecture](#architecture) | [Learning](#reinforcement-learning-and-expert-iteration) | [Accepted r1](#accepted-r1) | [Getting started](#getting-started) | [Repository](#repository)
 
 ## Overview
 
-Metagross is a hybrid learned-search research agent for Pokemon Showdown
-`gen9randombattle`. It connects a fine-tuned 142M-parameter
-[Metamon](https://github.com/UT-Austin-RPL/metamon) policy to a patched
-[Foul Play](https://github.com/pmariglia/foul-play) and
-[poke-engine](https://github.com/pmariglia/poke-engine) search stack.
+Metagross is a reinforcement-learning and search project for Pokemon Showdown
+`gen9randombattle`. Its central idea is a policy-improvement loop: start from a
+strong offline-RL policy, use that policy to guide imperfect-information search,
+generate self-play trajectories with search, and push the selected-action
+trajectories and outcomes back into the policy through offline actor-critic
+fine-tuning.
+
+The accepted r1 agent starts from the 142M-parameter Kakuna transformer from
+[Metamon](https://github.com/UT-Austin-RPL/metamon), trained with the AMAGO
+offline-RL stack on human replays and self-play. Metagross pushes that policy
+back through self-play search and fine-tuning, then deploys the r1 policy
+inside a patched [Foul Play](https://github.com/pmariglia/foul-play) and
+[poke-engine](https://github.com/pmariglia/poke-engine) stack.
 
 Rather than asking the neural policy to play alone, Metagross uses its action
 distribution to guide root-only PUCT searches through many plausible hidden
@@ -26,6 +35,9 @@ world, and the policy contributes strategic player and modeled-opponent priors.
 
 - **Learned search guidance:** turns a 13-action policy into root priors for a
   Rust MCTS engine instead of replacing search with direct policy play.
+- **RL policy-improvement loop:** builds on Metamon's offline-RL policy, updates
+  it with search-generated replay data, and feeds the fine-tuned policy
+  back into the next search agent.
 - **Imperfect-information reasoning:** searches 8-32 adaptive hidden-team
   determinizations and combines their world-level policies.
 - **Two-sided roots:** requires player priors and uses opponent priors whenever
@@ -59,6 +71,65 @@ engine:
    starts both processes, waits for health, and owns their shutdown lifecycle.
 
 See [`docs/architecture.md`](docs/architecture.md) for the full search contract.
+
+## Reinforcement learning and expert iteration
+
+Metagross closes part of the loop between learning and search. The learned
+policy guides search; search then acts as the behavior policy that generates
+training data for the next policy.
+
+```mermaid
+flowchart LR
+    BASE[Kakuna offline-RL policy] --> SEARCH[Policy-guided self-play search]
+    SEARCH --> DATA[Selected-action trajectories and outcomes]
+    HUMAN[Human replay data] --> TRAIN[Offline actor-critic fine-tuning]
+    DATA --> TRAIN
+    BASE -->|Initialization| TRAIN
+    TRAIN --> R1[randbats_exit_r1]
+    R1 --> SEARCH
+```
+
+Why this counts as reinforcement learning, rather than plain behavior cloning:
+replay transitions reconstruct shaped rewards, AMAGO trains bootstrapped TD
+critics, and critic-estimated advantages weight the logged-action actor loss.
+The actor update is therefore filtered behavior cloning within an offline
+actor-critic objective. A separate behavior-model head also receives an
+auxiliary BC loss, although r1 disables that head's optional importance-sampling
+correction.
+
+The implementation is visible in Metamon's pinned
+[`finetune.gin`](https://github.com/UT-Austin-RPL/metamon/blob/0a00a759c9a4382a2877088d828302ec294a05a5/metamon/rl/configs/training/finetune.gin),
+[`AggressiveShapedReward`](https://github.com/UT-Austin-RPL/metamon/blob/0a00a759c9a4382a2877088d828302ec294a05a5/metamon/interface.py), and
+[`MetamonFinetuneAgent`](https://github.com/UT-Austin-RPL/metamon/blob/0a00a759c9a4382a2877088d828302ec294a05a5/metamon/rl/custom_agent.py).
+
+The accepted checkpoint came from one recorded ExIt-style round:
+
+| Training component | r1 provenance |
+|---|---|
+| Starting policy | Metamon/Kakuna, using the AMAGO offline-RL stack |
+| Self-play generation | 6,480 logical battles, captured by both clients as 12,960 replay files |
+| Parsed training data | 23,870 indexed trajectory files from non-strict legacy parsing |
+| Data mix | Documented 90% self-play, 10% retained human trajectories by sampling weight |
+| RL objective | TD critic loss, advantage-weighted logged-action actor loss, and a separate behavior-model BC loss |
+| Conditioning | `A_rating` enabled; the exact unrated self-play band is not reconstructable |
+| Fine-tuning | 6 epochs on an H200 |
+
+The human anchor matters because pure self-play optimizes against the agent's
+own population rather than the human ladder distribution. Retaining human data
+was intended to limit that drift while the policy learned from search behavior.
+
+r1 learned from the action that search actually played and the resulting reward
+trajectory. It did not train on retained MCTS visit distributions, so the exact
+classification is **search-guided offline RL in an Expert-Iteration-style
+feedback cycle**, not canonical AlphaZero policy distillation. Only one accepted
+policy-improvement round completed; later candidates did not supersede r1.
+
+> [!NOTE]
+> Reinforcement learning and expert iteration happen during training, not during
+> live battles. The accepted deployment freezes epoch 5 and performs inference
+> plus search only. The r1 training figures are retained historical provenance;
+> the release does not include every external dataset and asset needed to replay
+> the complete training run from scratch.
 
 ## Accepted r1
 
@@ -167,5 +238,7 @@ retained in the [`iteration log`](experimental/runs/iteration_log.md).
 - [Artifact manifest](results/accepted-r1/artifacts.json): expected paths and
   SHA-256 digests.
 
-Metagross is an accepted research artifact, not a hosted service or a claim of
-state-of-the-art performance across all Pokemon agents.
+Metagross r1 is the project's strongest validated agent and achieved elite
+`gen9randombattle` public-ladder performance. This repository publishes the
+accepted runtime, its learning and search stack, and the evidence behind that
+result as a research release rather than a hosted service.

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_tag": "autonomous_freshfix_20260729",
+  "candidate_suffix": "freshfix",
+  "start_generation": 2,
+  "generations": 3,
+  "collection_games": 256,
+  "arena_games": 200,
+  "learner_steps": 200,
+  "batch_size": 24,
+  "showdown_port": 8011,
+  "lineage_floor": 0.45,
+  "promotion_min_games": 400,
+  "seed": 20260729,
+  "anchor_artifact": "online_rl_artifacts/randbats_online_g1_smoke_20260729",
+  "initial_current": {
+    "id": "online_g1_smoke",
+    "run_name": "randbats_online_g1_smoke_20260729",
+    "checkpoint": 1,
+    "sha256": "5bf55431478ea6ee10841dd44ef2eb654db1dde6015dece6f2774470699963b8"
+  }
+}

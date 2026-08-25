@@ -11,7 +11,7 @@ use poke_engine::engine::generate_instructions::{
 use poke_engine::engine::items::Items;
 use poke_engine::engine::state::{MoveChoice, PokemonVolatileStatus, Terrain, Weather};
 use poke_engine::instruction::{Instruction, StateInstructions};
-use poke_engine::mcts::{perform_mcts, MctsResult, MctsSideResult};
+use poke_engine::mcts::{perform_mcts_with_optional_seed, MctsResult, MctsSideResult};
 use poke_engine::mcts_threaded::perform_mcts_shared_tree;
 use poke_engine::paired_root::{
     paired_root_policy_evaluation_with_opponent_priors as evaluate_paired_root,
@@ -19,6 +19,11 @@ use poke_engine::paired_root::{
 };
 use poke_engine::pokemon::PokemonName;
 use poke_engine::search::iterative_deepen_expectiminimax;
+use poke_engine::shared_information_set::{
+    shared_information_set_root_search as solve_shared_root, SharedRootAction, SharedRootConfig,
+    SharedRootContinuation, SharedRootDiagnostics, SharedRootReplayCapture,
+    SharedRootReplayParticle, SharedRootResult, SharedRootSourceParticle,
+};
 use poke_engine::state::{
     LastUsedMove, Move, Pokemon, PokemonIndex, PokemonMoves, PokemonNature, PokemonStatus,
     PokemonType, Side, SideConditions, SidePokemon, State, StateTerrain, StateTrickRoom,
@@ -917,6 +922,9 @@ struct PyMctsResult {
     s1: Vec<PyMctsSideResult>,
     s2: Vec<PyMctsSideResult>,
     iteration_count: u32,
+    learned_evaluations: u32,
+    hand_evaluations: u32,
+    terminal_evaluations: u32,
 }
 
 impl PyMctsResult {
@@ -933,6 +941,9 @@ impl PyMctsResult {
                 .map(|r| PyMctsSideResult::from_mcts_side_result(r.clone(), &state.side_two))
                 .collect(),
             iteration_count: result.iteration_count,
+            learned_evaluations: result.learned_evaluations,
+            hand_evaluations: result.hand_evaluations,
+            terminal_evaluations: result.terminal_evaluations,
         }
     }
 }
@@ -987,6 +998,238 @@ impl From<PairedRootPolicyEvaluation> for PyPairedRootPolicyEvaluation {
             baseline_nonterminal_count: result.baseline_nonterminal_count,
             candidate_nonterminal_count: result.candidate_nonterminal_count,
             continuation_iterations_executed: result.continuation_iterations_executed,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootAction {
+    action: String,
+    probability: f64,
+    counterfactual_value: f64,
+}
+
+impl From<SharedRootAction> for PySharedRootAction {
+    fn from(action: SharedRootAction) -> Self {
+        Self {
+            action: action.action,
+            probability: action.probability,
+            counterfactual_value: action.counterfactual_value,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootSourceParticle {
+    input_index: u32,
+    input_weight: f64,
+}
+
+impl From<SharedRootSourceParticle> for PySharedRootSourceParticle {
+    fn from(source: SharedRootSourceParticle) -> Self {
+        Self {
+            input_index: source.input_index,
+            input_weight: source.input_weight,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootContinuation {
+    seed: u64,
+    requested_iterations: u32,
+    executed_iterations: u32,
+    visits: u32,
+    total_score: f32,
+    total_score_bits: u32,
+    payoff: f64,
+    payoff_bits: u64,
+}
+
+impl From<SharedRootContinuation> for PySharedRootContinuation {
+    fn from(continuation: SharedRootContinuation) -> Self {
+        Self {
+            seed: continuation.seed,
+            requested_iterations: continuation.requested_iterations,
+            executed_iterations: continuation.executed_iterations,
+            visits: continuation.visits,
+            total_score: continuation.total_score,
+            total_score_bits: continuation.total_score_bits,
+            payoff: continuation.payoff,
+            payoff_bits: continuation.payoff_bits,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootReplayConfiguration {
+    iterations: u32,
+    continuation_iterations: u32,
+    seed: u64,
+    prior_strength: f64,
+}
+
+impl From<SharedRootConfig> for PySharedRootReplayConfiguration {
+    fn from(configuration: SharedRootConfig) -> Self {
+        Self {
+            iterations: configuration.iterations,
+            continuation_iterations: configuration.continuation_iterations,
+            seed: configuration.seed,
+            prior_strength: configuration.prior_strength,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootReplayParticle {
+    canonical_index: u32,
+    state: String,
+    normalized_weight: f64,
+    source_particles: Vec<PySharedRootSourceParticle>,
+    opponent_action_support: Vec<String>,
+    normalized_opponent_prior: Option<Vec<f64>>,
+    payoff_matrix: Vec<Vec<f64>>,
+    continuations: Vec<Vec<PySharedRootContinuation>>,
+    opponent_policy: Vec<f64>,
+}
+
+impl From<SharedRootReplayParticle> for PySharedRootReplayParticle {
+    fn from(particle: SharedRootReplayParticle) -> Self {
+        Self {
+            canonical_index: particle.canonical_index,
+            state: particle.state,
+            normalized_weight: particle.normalized_weight,
+            source_particles: particle
+                .source_particles
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            opponent_action_support: particle.opponent_action_support,
+            normalized_opponent_prior: particle.normalized_opponent_prior,
+            payoff_matrix: particle.payoff_matrix,
+            continuations: particle
+                .continuations
+                .into_iter()
+                .map(|row| row.into_iter().map(Into::into).collect())
+                .collect(),
+            opponent_policy: particle.opponent_policy,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootReplayCapture {
+    schema_version: u32,
+    solver_contract: String,
+    configuration: PySharedRootReplayConfiguration,
+    own_action_support: Vec<String>,
+    normalized_player_prior: Option<Vec<f64>>,
+    canonical_particles: Vec<PySharedRootReplayParticle>,
+}
+
+impl From<SharedRootReplayCapture> for PySharedRootReplayCapture {
+    fn from(capture: SharedRootReplayCapture) -> Self {
+        Self {
+            schema_version: capture.schema_version,
+            solver_contract: capture.solver_contract,
+            configuration: capture.configuration.into(),
+            own_action_support: capture.own_action_support,
+            normalized_player_prior: capture.normalized_player_prior,
+            canonical_particles: capture
+                .canonical_particles
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootDiagnostics {
+    solver_contract: String,
+    iterations: u32,
+    continuation_iterations: u32,
+    seed: u64,
+    prior_strength: f64,
+    expected_value: f64,
+    player_best_response_value: f64,
+    opponent_best_response_value: f64,
+    player_best_response_gain: f64,
+    opponent_best_response_gain: f64,
+    nash_conv: f64,
+    exploitability: f64,
+    player_regret_bound: f64,
+    opponent_regret_bound: f64,
+    total_regret_bound: f64,
+    payoff_cells: u64,
+    total_forced_continuation_iterations: u64,
+    input_particle_count: u32,
+    positive_particle_count: u32,
+    canonical_particle_count: u32,
+    normalized_weight_sum: f64,
+    action_support_digest: String,
+    particle_digest: String,
+    payoff_digest: String,
+    player_prior_digest: String,
+    opponent_prior_digest: String,
+}
+
+impl From<SharedRootDiagnostics> for PySharedRootDiagnostics {
+    fn from(diagnostics: SharedRootDiagnostics) -> Self {
+        Self {
+            solver_contract: diagnostics.solver_contract,
+            iterations: diagnostics.iterations,
+            continuation_iterations: diagnostics.continuation_iterations,
+            seed: diagnostics.seed,
+            prior_strength: diagnostics.prior_strength,
+            expected_value: diagnostics.expected_value,
+            player_best_response_value: diagnostics.player_best_response_value,
+            opponent_best_response_value: diagnostics.opponent_best_response_value,
+            player_best_response_gain: diagnostics.player_best_response_gain,
+            opponent_best_response_gain: diagnostics.opponent_best_response_gain,
+            nash_conv: diagnostics.nash_conv,
+            exploitability: diagnostics.exploitability,
+            player_regret_bound: diagnostics.player_regret_bound,
+            opponent_regret_bound: diagnostics.opponent_regret_bound,
+            total_regret_bound: diagnostics.total_regret_bound,
+            payoff_cells: diagnostics.payoff_cells,
+            total_forced_continuation_iterations: diagnostics.total_forced_continuation_iterations,
+            input_particle_count: diagnostics.input_particle_count,
+            positive_particle_count: diagnostics.positive_particle_count,
+            canonical_particle_count: diagnostics.canonical_particle_count,
+            normalized_weight_sum: diagnostics.normalized_weight_sum,
+            action_support_digest: diagnostics.action_support_digest,
+            particle_digest: diagnostics.particle_digest,
+            payoff_digest: diagnostics.payoff_digest,
+            player_prior_digest: diagnostics.player_prior_digest,
+            opponent_prior_digest: diagnostics.opponent_prior_digest,
+        }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(get_all)]
+struct PySharedRootResult {
+    policy: Vec<PySharedRootAction>,
+    opponent_policies: Vec<Vec<(String, f64)>>,
+    diagnostics: PySharedRootDiagnostics,
+    replay_capture: PySharedRootReplayCapture,
+}
+
+impl From<SharedRootResult> for PySharedRootResult {
+    fn from(result: SharedRootResult) -> Self {
+        Self {
+            policy: result.policy.into_iter().map(Into::into).collect(),
+            opponent_policies: result.opponent_policies,
+            diagnostics: result.diagnostics.into(),
+            replay_capture: result.replay_capture.into(),
         }
     }
 }
@@ -1070,7 +1313,7 @@ fn match_priors_to_options(
 }
 
 #[pyfunction]
-#[pyo3(signature = (py_state, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0))]
+#[pyo3(signature = (py_state, duration_ms, iterations, threads, s1_priors=None, s2_priors=None, c_puct=2.0, seed=None))]
 fn mcts(
     py_state: PyState,
     duration_ms: u64,
@@ -1079,10 +1322,16 @@ fn mcts(
     s1_priors: Option<Vec<(String, f32)>>,
     s2_priors: Option<Vec<(String, f32)>>,
     c_puct: f32,
+    seed: Option<u64>,
 ) -> PyResult<PyMctsResult> {
     if threads > 1 && (s1_priors.is_some() || s2_priors.is_some()) {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "root priors require single-threaded MCTS",
+        ));
+    }
+    if threads > 1 && seed.is_some() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "seeded MCTS requires threads=1",
         ));
     }
     let mut state: State = py_state.into();
@@ -1095,7 +1344,7 @@ fn mcts(
             &mut state, s1_options, s2_options, duration, iterations, threads,
         )
     } else {
-        perform_mcts(
+        perform_mcts_with_optional_seed(
             &mut state,
             s1_options,
             s2_options,
@@ -1104,6 +1353,7 @@ fn mcts(
             s1_priors_vec,
             s2_priors_vec,
             c_puct,
+            seed,
         )
     };
 
@@ -1133,6 +1383,36 @@ fn paired_root_policy_evaluation(
         continuation_steps,
         seed,
         opponent_priors.as_deref(),
+    )
+    .map(Into::into)
+    .map_err(|error| pyo3::exceptions::PyValueError::new_err(error.to_string()))
+}
+
+#[pyfunction]
+#[pyo3(signature = (py_states, particle_weights, iterations, continuation_iterations, seed, prior_strength=0.0, s1_prior=None, s2_priors=None))]
+fn shared_information_set_root_search(
+    py_states: Vec<PyState>,
+    particle_weights: Vec<f64>,
+    iterations: u32,
+    continuation_iterations: u32,
+    seed: u64,
+    prior_strength: f64,
+    s1_prior: Option<Vec<(String, f64)>>,
+    s2_priors: Option<Vec<Option<Vec<(String, f64)>>>>,
+) -> PyResult<PySharedRootResult> {
+    let states: Vec<State> = py_states.into_iter().map(Into::into).collect();
+    let config = SharedRootConfig {
+        iterations,
+        continuation_iterations,
+        seed,
+        prior_strength,
+    };
+    solve_shared_root(
+        &states,
+        &particle_weights,
+        &config,
+        s1_prior.as_deref(),
+        s2_priors.as_deref(),
     )
     .map(Into::into)
     .map_err(|error| pyo3::exceptions::PyValueError::new_err(error.to_string()))
@@ -1343,14 +1623,29 @@ fn calculate_damage(
     Ok((s1_py_rolls, s2_py_rolls))
 }
 
+#[pyfunction]
+fn compute_public_value_features(py_state: PyState) -> Vec<f32> {
+    let state: State = py_state.into();
+    poke_engine::learned_value::extract_public_features_vec(&state)
+}
+
+#[pyfunction]
+fn compute_learned_value(py_state: PyState) -> Option<f32> {
+    let state: State = py_state.into();
+    poke_engine::learned_value::learned_value(&state)
+}
+
 #[pymodule]
 #[pyo3(name = "poke_engine")]
 fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calculate_damage, m)?)?;
     m.add_function(wrap_pyfunction!(generate_instructions, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_public_value_features, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_learned_value, m)?)?;
     m.add_function(wrap_pyfunction!(id, m)?)?;
     m.add_function(wrap_pyfunction!(mcts, m)?)?;
     m.add_function(wrap_pyfunction!(paired_root_policy_evaluation, m)?)?;
+    m.add_function(wrap_pyfunction!(shared_information_set_root_search, m)?)?;
     m.add_function(wrap_pyfunction!(set_belief, m)?)?;
     m.add_function(wrap_pyfunction!(set_threat_matrix, m)?)?;
     m.add_function(wrap_pyfunction!(set_wincon_matrix, m)?)?;
@@ -1363,5 +1658,13 @@ fn py_poke_engine(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyStateInstructions>()?;
     m.add_class::<PyInstruction>()?;
     m.add_class::<PyPairedRootPolicyEvaluation>()?;
+    m.add_class::<PySharedRootAction>()?;
+    m.add_class::<PySharedRootSourceParticle>()?;
+    m.add_class::<PySharedRootContinuation>()?;
+    m.add_class::<PySharedRootReplayConfiguration>()?;
+    m.add_class::<PySharedRootReplayParticle>()?;
+    m.add_class::<PySharedRootReplayCapture>()?;
+    m.add_class::<PySharedRootDiagnostics>()?;
+    m.add_class::<PySharedRootResult>()?;
     Ok(())
 }

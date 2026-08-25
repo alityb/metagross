@@ -257,6 +257,7 @@ fn continuation_choices(
         s1,
         s2,
         iteration_count,
+        ..
     } = perform_mcts_seeded(state, side_one_options, side_two_options, iterations, seed);
     Ok((
         select_by_visits(&state.side_one, &s1)?,

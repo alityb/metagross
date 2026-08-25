@@ -1,0 +1,219 @@
+{
+  "schema": "metagross-data-source-registry/v1",
+  "frozen_at": "2026-08-12",
+  "target_format": "gen9randombattle",
+  "identity": {
+    "group_key": "canonical_battle_sha256",
+    "split_unit": "battle",
+    "derived_rows_inherit_split": true,
+    "cross_source_deduplication_required": true
+  },
+  "splits": {
+    "historical_train": {
+      "hash_buckets": "0000-9499",
+      "eligible_sources": "approved historical data",
+      "may_select_checkpoints": true
+    },
+    "historical_development": {
+      "hash_buckets": "9500-9999",
+      "eligible_sources": "approved historical data",
+      "may_select_checkpoints": true
+    },
+    "fresh_confirmation": {
+      "hash_buckets": "separate post-freeze collection",
+      "eligible_sources": "new battles and roots collected after this registry was frozen",
+      "may_select_checkpoints": false
+    },
+    "h2h_only": {
+      "hash_buckets": "separate evaluation ledgers",
+      "eligible_sources": "paired agent matches",
+      "may_select_checkpoints": false
+    },
+    "ladder_only": {
+      "hash_buckets": "public Showdown ladder",
+      "eligible_sources": "human ladder matches",
+      "may_select_checkpoints": false
+    }
+  },
+  "sources": [
+    {
+      "id": "local_human_randbats",
+      "kind": "human_replay",
+      "location": "experimental/data/parsed_replays",
+      "formats": ["gen9randombattle"],
+      "license": "upstream-public-replay-terms",
+      "status": "approved",
+      "uses": ["representation", "policy_anchor", "opponent_model", "terminal_value"],
+      "forbidden_uses": ["search_q_truth", "final_confirmation"],
+      "notes": "Historical local corpus; audit observed 11,842 unique battle tags and 23,685 POV trajectories. Recount and hash before training."
+    },
+    {
+      "id": "local_search_teacher_history",
+      "kind": "search_selfplay",
+      "location": "experimental/data/{mcts_v3_final,mcts_high_budget_verified_parsed,strict_round2_parsed,gate1_pfsp_learner_only}",
+      "formats": ["gen9randombattle"],
+      "license": "project-generated",
+      "status": "approved_after_audit",
+      "uses": ["representation", "search_policy", "search_q", "terminal_value"],
+      "forbidden_uses": ["final_confirmation", "h2h_evaluation"],
+      "notes": "Derived generations overlap. Canonicalize by battle identity and prefer the newest strict, fully manifested version of each battle."
+    },
+    {
+      "id": "local_league_g5",
+      "kind": "league_selfplay",
+      "location": "experimental/runs/online_rl_g5_league_5k_20260730/generation_005/collection",
+      "formats": ["gen9randombattle"],
+      "license": "project-generated",
+      "status": "approved_after_audit",
+      "uses": ["representation", "terminal_value", "policy_behavior"],
+      "forbidden_uses": ["search_q_truth", "final_confirmation", "h2h_evaluation"],
+      "notes": "Manifest reports 5,000 completed battles and 5,000 learner trajectories."
+    },
+    {
+      "id": "local_information_state_q_pilot",
+      "kind": "search_root",
+      "location": "experimental/runs/known_team_decision_v2/information-state-q-development.jsonl",
+      "formats": ["gen9randombattle"],
+      "license": "project-generated",
+      "status": "development_only",
+      "uses": ["pipeline_test", "development"],
+      "forbidden_uses": ["promotion_training", "final_confirmation", "h2h_evaluation"],
+      "notes": "411 battle-grouped roots. This validates the exporter; it is not the production search-teacher corpus."
+    },
+    {
+      "id": "metamon_human_v6",
+      "kind": "human_replay",
+      "location": "hf://datasets/jakegrigsby/metamon-parsed-replays@v6",
+      "revision": "7d82b873647dee35a62e7b63cd253e5d273cbe87",
+      "upstream_code_revision": "0a00a759c9a4382a2877088d828302ec294a05a5",
+      "selected_artifacts": [
+        {
+          "path": "gen9ou.tar.gz",
+          "size_bytes": 20391119136,
+          "sha256": "f1cebcd5ba3215946270c31e16c30092aa47b4114941bb7b298ec584c02ab32e"
+        }
+      ],
+      "formats": ["gen1nu", "gen1ou", "gen1ubers", "gen1uu", "gen2nu", "gen2ou", "gen2ubers", "gen2uu", "gen3nu", "gen3ou", "gen3ubers", "gen3uu", "gen4nu", "gen4ou", "gen4ubers", "gen4uu", "gen9ou"],
+      "license": "CC-BY-NC-4.0",
+      "status": "approved_noncommercial_research",
+      "uses": ["representation_pretrain", "cross_format_policy_anchor", "opponent_model", "terminal_value"],
+      "forbidden_uses": ["format_matched_search_q", "final_confirmation", "commercial_release"],
+      "notes": "Current card reports about 5.3M reconstructed trajectories overall. Use gen9ou only for the current Gen 9 warm start. Never treat inferred/backfilled hidden sets as ground-truth belief labels."
+    },
+    {
+      "id": "metamon_raw_v6",
+      "kind": "raw_human_replay",
+      "location": "hf://datasets/jakegrigsby/metamon-raw-replays@v6",
+      "revision": "792a86b5cdbcab9696032e947483b218453a0d4f",
+      "formats": ["multi-format-including-gen9ou"],
+      "license": "dataset-card-does-not-declare-license",
+      "status": "provenance_only",
+      "uses": ["deduplication", "parser_validation", "future_reparse"],
+      "forbidden_uses": ["direct_training", "final_confirmation", "commercial_release"],
+      "notes": "2,681,841 raw battles in the pinned revision. Do not download the full 5.7GB compressed corpus unless reparsing or identity audit requires it."
+    },
+    {
+      "id": "metamon_pac_base",
+      "kind": "external_selfplay",
+      "location": "hf://datasets/jakegrigsby/metamon-parsed-pile@4f800783dd2078928969f1515ac466af858f0e48/pac-base",
+      "revision": "4f800783dd2078928969f1515ac466af858f0e48",
+      "selected_artifacts": [
+        {
+          "path": "pac-base/gen9ou.tar.lz4",
+          "size_bytes": 35800565636,
+          "sha256": "b14aa354c518dc06dcd7eb8acdb209f2343a219b3c60964316df2be6dbd88013"
+        }
+      ],
+      "formats": ["gen1ou", "gen2ou", "gen3ou", "gen4ou", "gen9ou"],
+      "license": "not-declared-on-dataset-card",
+      "status": "quarantined_pending_license",
+      "uses": ["research_only_ablation"],
+      "forbidden_uses": ["promotion_training", "final_confirmation", "commercial_release"],
+      "notes": "11M trajectories overall; not format-matched to Gen 9 Random Battle."
+    },
+    {
+      "id": "metamon_pac_exploratory",
+      "kind": "external_selfplay",
+      "location": "hf://datasets/jakegrigsby/metamon-parsed-pile@4f800783dd2078928969f1515ac466af858f0e48/pac-exploratory",
+      "revision": "4f800783dd2078928969f1515ac466af858f0e48",
+      "selected_artifacts": [
+        {
+          "path": "pac-exploratory/gen9ou.tar.lz4",
+          "size_bytes": 18936404267,
+          "sha256": "99d2909cd1e5320efba03e02a06b80336162015c481aeb3826906e3a107bbccc"
+        }
+      ],
+      "formats": ["gen1ou", "gen2ou", "gen3ou", "gen4ou", "gen9ou"],
+      "license": "not-declared-on-dataset-card",
+      "status": "quarantined_pending_license",
+      "uses": ["research_only_ablation"],
+      "forbidden_uses": ["promotion_training", "final_confirmation", "commercial_release"],
+      "notes": "7M higher-temperature trajectories overall; potentially useful for suboptimal-action coverage after license clearance."
+    },
+    {
+      "id": "metamon_pac_tauros",
+      "kind": "external_selfplay",
+      "location": "hf://datasets/jakegrigsby/metamon-parsed-pile@4f800783dd2078928969f1515ac466af858f0e48/pac-tauros",
+      "revision": "4f800783dd2078928969f1515ac466af858f0e48",
+      "formats": ["gen1ou"],
+      "license": "not-declared-on-dataset-card",
+      "status": "quarantined_pending_license",
+      "uses": ["future_gen1_research_only_ablation"],
+      "forbidden_uses": ["gen9_training", "promotion_training", "final_confirmation", "commercial_release"],
+      "notes": "4M Gen 1 OU trajectories; excluded from the current Gen 9 program."
+    },
+    {
+      "id": "evaluation_artifacts",
+      "kind": "evaluation",
+      "location": "experimental/runs/*{h2h,gate,ladder,holdout}*",
+      "formats": ["any"],
+      "license": "mixed",
+      "status": "evaluation_only",
+      "uses": ["evaluation"],
+      "forbidden_uses": ["training", "replay_buffer", "checkpoint_selection_as_examples"],
+      "notes": "H2H and ladder games never become training examples."
+    }
+  ],
+  "training_stages": [
+    {
+      "id": "gen9_representation_warm_start",
+      "purpose": "Learn public battle dynamics and a human-strategy prior before expensive search labeling.",
+      "sources": [
+        {"id": "metamon_human_v6", "weight": 0.70, "format_filter": ["gen9ou"], "objectives": ["masked_representation", "behavior_cloning", "terminal_value"]},
+        {"id": "local_human_randbats", "weight": 0.30, "format_filter": ["gen9randombattle"], "objectives": ["masked_representation", "behavior_cloning", "terminal_value"]}
+      ],
+      "rules": [
+        "Sample at most 500,000 Metamon POV trajectories for the first warm start; scale only after an ablation.",
+        "Inputs contain only the acting player's information state.",
+        "Do not use reconstructed opponent hidden sets as labels."
+      ]
+    },
+    {
+      "id": "gen9randombattle_primary_multitask",
+      "purpose": "Train the deployable format-matched policy and information-state value heads.",
+      "sources": [
+        {"id": "local_human_randbats", "weight": 0.40, "format_filter": ["gen9randombattle"], "objectives": ["behavior_cloning", "policy_anchor", "terminal_value"]},
+        {"id": "local_search_teacher_history", "weight": 0.40, "format_filter": ["gen9randombattle"], "objectives": ["search_policy", "q_advantage", "uncertainty"]},
+        {"id": "local_league_g5", "weight": 0.20, "format_filter": ["gen9randombattle"], "objectives": ["terminal_value", "policy_behavior"]}
+      ],
+      "rules": [
+        "Replace the historical search source with a fresh 25,000-50,000-root stratified teacher corpus before promotion training.",
+        "Retain human examples in every batch and regularize the policy toward the frozen human warm start.",
+        "Search targets include visit distributions, Q advantages, independent seeds, and uncertainty; selected actions alone are insufficient.",
+        "Terminal outcomes remain the non-circular value target."
+      ]
+    }
+  ],
+  "minimum_new_data": {
+    "format_matched_human_battles": 50000,
+    "search_teacher_roots": 25000,
+    "search_teacher_preferred_roots": 50000,
+    "distinct_search_teacher_battles": 10000,
+    "league_battles_pilot": 25000,
+    "league_battles_promotion_target": 100000,
+    "fresh_confirmation_roots": 2000,
+    "paired_h2h_games": 1000,
+    "public_ladder_games_initial": 400,
+    "public_ladder_games_claim": 1000
+  }
+}

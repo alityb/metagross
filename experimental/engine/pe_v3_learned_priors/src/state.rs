@@ -5,6 +5,7 @@ use crate::engine::items::Items;
 use crate::engine::state::{PokemonVolatileStatus, Terrain, Weather};
 use crate::instruction::{BoostInstruction, EnableMoveInstruction, Instruction};
 use crate::pokemon::PokemonName;
+use crate::public_reveal::PublicRevealMask;
 use std::ops::{Index, IndexMut};
 use std::str::FromStr;
 
@@ -1317,6 +1318,11 @@ pub struct State {
     pub team_preview: bool,
     pub use_last_used_move: bool,
     pub use_damage_dealt: bool,
+    pub trace_actions: bool,
+    /// Facts about side two that side one has causally observed.
+    pub s1_public_reveals: PublicRevealMask,
+    /// Facts about side one that side two has causally observed.
+    pub s2_public_reveals: PublicRevealMask,
     // metagross belief/eval plumbing (serialized so values survive into
     // forked/parallel search workers; not read by evaluate() in this build)
     pub s1_threat: f32,
@@ -1345,6 +1351,9 @@ impl Default for State {
             team_preview: false,
             use_damage_dealt: false,
             use_last_used_move: false,
+            trace_actions: false,
+            s1_public_reveals: PublicRevealMask::default(),
+            s2_public_reveals: PublicRevealMask::default(),
             s1_threat: 0.0,
             s2_threat: 0.0,
             scout_value: 0.0,
@@ -1971,6 +1980,12 @@ impl State {
                 let active = self.get_side(&instruction.side_ref).get_active();
                 active.id = PokemonName::from(active.id as i16 + instruction.name_change);
             }
+            Instruction::RecordAction(_) | Instruction::RecordItemActivation(_) => {}
+            Instruction::PublicReveal(instruction) => self.reveal_to_opponent(
+                instruction.subject,
+                instruction.pokemon_index,
+                instruction.field,
+            ),
         }
     }
 
@@ -1989,6 +2004,12 @@ impl State {
                 &instruction.side_ref,
                 instruction.next_index,
                 instruction.previous_index,
+            ),
+            Instruction::RecordAction(_) | Instruction::RecordItemActivation(_) => {}
+            Instruction::PublicReveal(instruction) => self.hide_from_opponent(
+                instruction.subject,
+                instruction.pokemon_index,
+                instruction.field,
             ),
             Instruction::ApplyVolatileStatus(instruction) => {
                 self.remove_volatile_status(&instruction.side_ref, instruction.volatile_status)
@@ -2202,7 +2223,7 @@ impl State {
             .collect::<Vec<String>>()
             .join(";");
         format!(
-            "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}",
+            "{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}/{}",
             self.side_one.serialize(),
             self.side_two.serialize(),
             self.weather.serialize(),
@@ -2214,6 +2235,8 @@ impl State {
             self.scout_value,
             tm,
             wc,
+            self.s1_public_reveals.bits(),
+            self.s2_public_reveals.bits(),
         )
     }
 
@@ -2419,6 +2442,13 @@ impl State {
             team_preview: split[5].parse::<bool>().unwrap(),
             use_damage_dealt: false,
             use_last_used_move: false,
+            trace_actions: false,
+            s1_public_reveals: PublicRevealMask::from_bits(
+                split.get(11).and_then(|s| s.parse().ok()).unwrap_or(0),
+            ),
+            s2_public_reveals: PublicRevealMask::from_bits(
+                split.get(12).and_then(|s| s.parse().ok()).unwrap_or(0),
+            ),
             s1_threat: split.get(6).and_then(|s| s.parse().ok()).unwrap_or(0.0),
             s2_threat: split.get(7).and_then(|s| s.parse().ok()).unwrap_or(0.0),
             scout_value: split.get(8).and_then(|s| s.parse().ok()).unwrap_or(0.0),

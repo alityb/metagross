@@ -64,6 +64,22 @@ class ActionConditionedRandbatsTests(unittest.TestCase):
         self.assertEqual(metrics["posterior"]["top1"], 1.0)
         self.assertAlmostEqual(metrics["posterior"]["mean_label_probability"], 4 / 7)
         self.assertAlmostEqual(metrics["posterior"]["brier"], 18 / 49)
+        self.assertAlmostEqual(metrics["posterior"]["nll"], -__import__("math").log(4 / 7))
+        self.assertEqual(metrics["posterior"]["topk"]["10"], 1.0)
+        self.assertAlmostEqual(metrics["action_evidence"]["mean"], 0.35)
+        self.assertAlmostEqual(metrics["action_evidence"]["mean_truth_bayes_factor"], 16 / 7)
+        self.assertEqual(metrics["posterior"]["reliability"][5]["count"], 1)
+
+    def test_evidence_strata_and_zero_probability_nll(self):
+        switch = valid_row()
+        switch["observed_action"] = "switch pikachu"
+        impossible = valid_row()
+        impossible["action_likelihoods"] = {"set-a": 1.0, "set-b": 0.0}
+        report = benchmark_rows([validate_row(switch), validate_row(impossible)])
+        self.assertEqual(report["all"]["evidence_strata"]["switch"]["rows"], 1)
+        self.assertEqual(report["all"]["evidence_strata"]["move"]["rows"], 1)
+        self.assertEqual(report["all"]["posterior"]["nll"], "infinity")
+        self.assertEqual(report["all"]["posterior"]["zero_label_probability"], 1)
 
     def test_chronological_holdout_keeps_replays_together(self):
         earlier = valid_row()

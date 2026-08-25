@@ -105,10 +105,11 @@ class RemoteMctsPreflightTest(unittest.TestCase):
 
         self.assertEqual(
             [row["operation"] for row in requests],
-            ["search", "paired_holdout", "shared_root"],
+            ["search", "search", "paired_holdout", "shared_root"],
         )
-        self.assertEqual(requests[1]["opponent_priors"], [["ember", 0.75], ["tackle", 0.25]])
-        self.assertEqual(requests[2]["particle_weights"], [0.5, 0.5])
+        self.assertEqual([requests[0]["duration_ms"], requests[1]["duration_ms"]], [250, 500])
+        self.assertEqual(requests[2]["opponent_priors"], [["ember", 0.75], ["tackle", 0.25]])
+        self.assertEqual(requests[3]["particle_weights"], [0.5, 0.5])
 
     def test_modal_preflight_validates_both_operations_and_full_identity(self):
         engine = self.engine()
@@ -171,6 +172,7 @@ class RemoteMctsPreflightTest(unittest.TestCase):
         self.assertEqual(
             result["operations"], ["search", "paired_holdout", "shared_root"]
         )
+        self.assertEqual(result["search_durations_ms"], [250, 500])
 
     def test_preflight_rejects_partial_engine_identity(self):
         engine = self.engine()

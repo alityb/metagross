@@ -10,6 +10,7 @@ from poke_engine import (
     calculate_damage,
     iterative_deepening_expectiminimax,
     paired_root_policy_evaluation,
+    shared_information_set_root_search,
     Weather,
     Terrain,
 )
@@ -68,6 +69,8 @@ state = State(
     terrain_turns_remaining=-1,
     trick_room=False,
     trick_room_turns_remaining=-1,
+    s1_can_tera=False,
+    s2_can_tera=False,
 )
 
 
@@ -266,3 +269,114 @@ def test_paired_root_policy_evaluation_rejects_malformed_bounds(field, value, er
     arguments[field] = value
     with pytest.raises(error):
         paired_root_policy_evaluation(state, "watergun", "tackle", **arguments)
+
+
+def test_shared_root_search_is_reproducible_complete_and_nonmutating():
+    before = state.to_string()
+    first = shared_information_set_root_search(
+        [state], [1.0], 2_000, 16, 41, s1_prior=[("watergun", 1.0)]
+    )
+    second = shared_information_set_root_search(
+        [state], [1.0], 2_000, 16, 41, s1_prior=[("watergun", 1.0)]
+    )
+
+    assert first == second
+    assert state.to_string() == before
+    assert sum(entry.probability for entry in first.policy) == pytest.approx(1.0)
+    assert {entry.action for entry in first.policy} == {
+        "watergun",
+        "tackle",
+        "quickattack",
+        "leer",
+    }
+    assert all(entry.probability >= 0 for entry in first.policy)
+    assert first.diagnostics.solver_contract == "weighted-shared-rm-plus-v1"
+    assert first.diagnostics.iterations == 2_000
+    assert first.diagnostics.seed == 41
+    assert first.diagnostics.payoff_cells == 16
+    assert first.diagnostics.nash_conv == pytest.approx(
+        first.diagnostics.player_best_response_gain
+        + first.diagnostics.opponent_best_response_gain
+    )
+    assert first.diagnostics.exploitability == pytest.approx(
+        first.diagnostics.nash_conv / 2
+    )
+    assert first.diagnostics.total_regret_bound == pytest.approx(
+        first.diagnostics.player_regret_bound
+        + first.diagnostics.opponent_regret_bound
+    )
+    assert len(first.opponent_policies) == 1
+    assert sum(probability for _, probability in first.opponent_policies[0]) == pytest.approx(1.0)
+    capture = first.replay_capture
+    assert capture.schema_version == 1
+    assert capture.configuration.iterations == 2_000
+    assert capture.configuration.continuation_iterations == 16
+    assert capture.configuration.seed == 41
+    assert capture.own_action_support == tuple(sorted(entry.action for entry in first.policy))
+    assert capture.normalized_player_prior == (0.0, 0.0, 0.0, 1.0)
+    assert len(capture.canonical_particles) == 1
+    particle = capture.canonical_particles[0]
+    assert particle.state == before
+    assert particle.normalized_weight == 1.0
+    assert particle.source_particles[0].input_index == 0
+    assert len(particle.payoff_matrix) == len(capture.own_action_support)
+    assert len(particle.opponent_policy) == len(particle.opponent_action_support)
+    for payoff_row, continuation_row in zip(
+        particle.payoff_matrix, particle.continuations, strict=True
+    ):
+        assert len(payoff_row) == len(particle.opponent_action_support)
+        for payoff, continuation in zip(payoff_row, continuation_row, strict=True):
+            assert continuation.payoff == payoff
+            assert continuation.requested_iterations == 16
+            assert continuation.executed_iterations == 16
+            assert continuation.visits == 16
+
+
+def test_shared_root_search_merges_split_particles_and_ignores_zero_weight():
+    single = shared_information_set_root_search([state], [1.0], 1_000, 8, 7)
+    split = shared_information_set_root_search(
+        [state, State.from_string(state.to_string())], [0.25, 0.75], 1_000, 8, 7
+    )
+    zero = shared_information_set_root_search(
+        [state, State()], [1.0, 0.0], 1_000, 8, 7
+    )
+
+    assert single.policy == split.policy == zero.policy
+    assert split.diagnostics.input_particle_count == 2
+    assert split.diagnostics.positive_particle_count == 2
+    assert split.diagnostics.canonical_particle_count == 1
+    assert zero.diagnostics.positive_particle_count == 1
+    assert [
+        (source.input_index, source.input_weight)
+        for source in split.replay_capture.canonical_particles[0].source_particles
+    ] == [(0, 0.25), (1, 0.75)]
+    assert [
+        (source.input_index, source.input_weight)
+        for source in zero.replay_capture.canonical_particles[0].source_particles
+    ] == [(0, 1.0)]
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"particle_weights": [0.9]},
+        {"particle_weights": [-1.0]},
+        {"iterations": 0},
+        {"continuation_iterations": 0},
+        {"seed": -1},
+        {"prior_strength": float("nan")},
+        {"s1_prior": [("watergun", 0.5), ("watergun", 0.5)]},
+        {"s2_priors": []},
+    ],
+)
+def test_shared_root_search_rejects_invalid_contract(kwargs):
+    arguments = {
+        "states": [state],
+        "particle_weights": [1.0],
+        "iterations": 10,
+        "continuation_iterations": 1,
+        "seed": 0,
+    }
+    arguments.update(kwargs)
+    with pytest.raises((TypeError, ValueError)):
+        shared_information_set_root_search(**arguments)

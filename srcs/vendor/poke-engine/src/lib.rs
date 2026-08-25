@@ -24,6 +24,7 @@ pub mod mcts_threaded;
 pub mod paired_root;
 pub mod pokemon;
 pub mod search;
+pub mod shared_information_set;
 pub mod state;
 
 #[macro_export]

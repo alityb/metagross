@@ -153,6 +153,8 @@ class SelectiveSharedRootAgentTests(unittest.TestCase):
                 "--agent-a",
                 "production_r1_search_first",
                 "--production-remote-mcts",
+                "--foul-play-search-time-ms",
+                "500",
                 "--production-run-seed",
                 "11" * 32,
             ]
@@ -224,6 +226,8 @@ class SelectiveSharedRootAgentTests(unittest.TestCase):
                 "--agent-b",
                 "production_r1_search_first",
                 "--production-remote-mcts",
+                "--foul-play-search-time-ms",
+                "500",
                 "--production-run-seed",
                 "33" * 32,
             ]
@@ -530,6 +534,18 @@ class SelectiveSharedRootAgentTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "gate path must be fresh"):
                 parse_args(base)
 
+    def test_production_remote_mcts_requires_500_ms_base_budget(self):
+        base = [
+            "--agent-a", "production_r1_search_first",
+            "--production-run-seed", "f" * 64,
+            "--production-remote-mcts",
+            "--production-remote-engine-sha256", "a" * 64,
+        ]
+        with self.assertRaisesRegex(ValueError, "effective 500 ms"):
+            parse_args(base)
+        parsed = parse_args(base + ["--foul-play-search-time-ms", "500"])
+        self.assertEqual(parsed.foul_play_search_time_ms, 500)
+
     def test_operational_gate_requires_and_binds_complete_evidence(self):
         import asyncio
         import hashlib
@@ -545,7 +561,13 @@ class SelectiveSharedRootAgentTests(unittest.TestCase):
             for index in range(4):
                 tag = f"battle-{1 if index < 2 else 2}"
                 (logs / f"p{index}.protocol.jsonl").write_text(
-                    json.dumps({"direction": "received", "message": f">{tag}\n|turn|1"}) + "\n",
+                    json.dumps({
+                        "direction": "received",
+                        "message": (
+                            f">{tag}\n|turn|1\n|html|"
+                            '<div class="message-error">chat registration required</div>'
+                        ),
+                    }) + "\n",
                     encoding="utf-8",
                 )
                 (logs / f"p{index}.search.jsonl").write_text(

@@ -465,6 +465,84 @@ class PairedRootPolicyEvaluation:
     baseline_nonterminal_count: int
     candidate_nonterminal_count: int
 
+class SharedRootAction:
+    action: str
+    probability: float
+    counterfactual_value: float
+
+class SharedRootSourceParticle:
+    input_index: int
+    input_weight: float
+
+class SharedRootContinuation:
+    seed: int
+    requested_iterations: int
+    executed_iterations: int
+    visits: int
+    total_score: float
+    total_score_bits: int
+    payoff: float
+    payoff_bits: int
+
+class SharedRootReplayConfiguration:
+    iterations: int
+    continuation_iterations: int
+    seed: int
+    prior_strength: float
+
+class SharedRootReplayParticle:
+    canonical_index: int
+    state: str
+    normalized_weight: float
+    source_particles: List[SharedRootSourceParticle]
+    opponent_action_support: List[str]
+    normalized_opponent_prior: Optional[List[float]]
+    payoff_matrix: List[List[float]]
+    continuations: List[List[SharedRootContinuation]]
+    opponent_policy: List[float]
+
+class SharedRootReplayCapture:
+    schema_version: int
+    solver_contract: str
+    configuration: SharedRootReplayConfiguration
+    own_action_support: List[str]
+    normalized_player_prior: Optional[List[float]]
+    canonical_particles: List[SharedRootReplayParticle]
+
+class SharedRootDiagnostics:
+    solver_contract: str
+    iterations: int
+    continuation_iterations: int
+    seed: int
+    prior_strength: float
+    expected_value: float
+    player_best_response_value: float
+    opponent_best_response_value: float
+    player_best_response_gain: float
+    opponent_best_response_gain: float
+    nash_conv: float
+    exploitability: float
+    player_regret_bound: float
+    opponent_regret_bound: float
+    total_regret_bound: float
+    payoff_cells: int
+    total_forced_continuation_iterations: int
+    input_particle_count: int
+    positive_particle_count: int
+    canonical_particle_count: int
+    normalized_weight_sum: float
+    action_support_digest: str
+    particle_digest: str
+    payoff_digest: str
+    player_prior_digest: str
+    opponent_prior_digest: str
+
+class SharedRootResult:
+    policy: List[SharedRootAction]
+    opponent_policies: List[List[Tuple[str, float]]]
+    diagnostics: SharedRootDiagnostics
+    replay_capture: SharedRootReplayCapture
+
 def paired_root_policy_evaluation(
     state: State,
     baseline_action: str,
@@ -476,8 +554,26 @@ def paired_root_policy_evaluation(
     opponent_priors: Optional[List[Tuple[str, float]]] = None,
 ) -> PairedRootPolicyEvaluation: ...
 
+def shared_information_set_root_search(
+    states: List[State],
+    particle_weights: List[float],
+    iterations: int,
+    continuation_iterations: int,
+    seed: int,
+    prior_strength: float = 0.0,
+    s1_prior: Optional[List[Tuple[str, float]]] = None,
+    s2_priors: Optional[List[Optional[List[Tuple[str, float]]]]] = None,
+) -> SharedRootResult: ...
+
 def mcts(
-    py_state: State, duration_ms: int, iterations: int, threads: int
+    py_state: State,
+    duration_ms: int,
+    iterations: int,
+    threads: int,
+    s1_priors: Optional[List[Tuple[str, float]]] = None,
+    s2_priors: Optional[List[Tuple[str, float]]] = None,
+    c_puct: float = 2.0,
+    seed: Optional[int] = None,
 ) -> MctsResult:
     """
     Perform Monte Carlo Tree Search on the given state.
@@ -489,6 +585,10 @@ def mcts(
     :return: MCTS results for both sides
     """
     ...
+
+def compute_public_value_features(py_state: State) -> List[float]: ...
+
+def compute_learned_value(py_state: State) -> Optional[float]: ...
 
 def generate_instructions(
     py_state: State,

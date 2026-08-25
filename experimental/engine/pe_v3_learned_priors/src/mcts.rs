@@ -1,5 +1,5 @@
 use crate::engine::evaluate::evaluate;
-use crate::engine::generate_instructions::generate_instructions_from_move_pair;
+use crate::engine::generate_instructions::generate_instructions_from_move_pair_with_public_reveals;
 use crate::engine::state::MoveChoice;
 use crate::instruction::StateInstructions;
 use crate::learned_value::{learned_logit, learned_rollout_value};
@@ -7,6 +7,7 @@ use crate::state::State;
 use rand::distr::weighted::WeightedIndex;
 use rand::prelude::*;
 use rand::rng;
+use rand::rngs::StdRng;
 use std::collections::HashMap;
 use std::env;
 use std::time::Duration;
@@ -129,10 +130,11 @@ impl Node {
         choice
     }
 
-    pub unsafe fn selection(
+    pub unsafe fn selection<R: Rng + ?Sized>(
         &mut self,
         state: &mut State,
         children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+        rng: &mut R,
     ) -> (*mut Node, usize, usize) {
         if self.s1_options.is_none() {
             let (s1_options, s2_options) = state.get_all_options();
@@ -145,32 +147,36 @@ impl Node {
         match children.get_mut(&key) {
             Some(child_vector) => {
                 let child_vec_ptr = child_vector as *mut Box<[Node]>;
-                let chosen_child = self.sample_node(child_vec_ptr);
+                let chosen_child = self.sample_node(child_vec_ptr, rng);
                 state.apply_instructions(&(*chosen_child).instructions.instruction_list);
-                (*chosen_child).selection(state, children)
+                (*chosen_child).selection(state, children, rng)
             }
             None => (self as *mut Node, s1_mc_index, s2_mc_index),
         }
     }
 
-    unsafe fn sample_node(&self, move_vector: *mut Box<[Node]>) -> *mut Node {
-        let mut rng = rng();
+    unsafe fn sample_node<R: Rng + ?Sized>(
+        &self,
+        move_vector: *mut Box<[Node]>,
+        rng: &mut R,
+    ) -> *mut Node {
         let weights: Vec<f64> = (*move_vector)
             .iter()
             .map(|x| x.instructions.percentage as f64)
             .collect();
         let dist = WeightedIndex::new(weights).unwrap();
-        let chosen_node = &mut (&mut *move_vector)[dist.sample(&mut rng)];
+        let chosen_node = &mut (&mut *move_vector)[dist.sample(rng)];
         let chosen_node_ptr = chosen_node as *mut Node;
         chosen_node_ptr
     }
 
-    pub unsafe fn expand(
+    pub unsafe fn expand<R: Rng + ?Sized>(
         &mut self,
         state: &mut State,
         s1_move_index: usize,
         s2_move_index: usize,
         children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
+        rng: &mut R,
     ) -> *mut Node {
         let s1_move = &self.s1_options.as_ref().unwrap()[s1_move_index].move_choice;
         let s2_move = &self.s2_options.as_ref().unwrap()[s2_move_index].move_choice;
@@ -182,7 +188,12 @@ impl Node {
         }
         let should_branch_on_damage = self.root || (*self.parent).root;
         let mut new_instructions =
-            generate_instructions_from_move_pair(state, s1_move, s2_move, should_branch_on_damage);
+            generate_instructions_from_move_pair_with_public_reveals(
+                state,
+                s1_move,
+                s2_move,
+                should_branch_on_damage,
+            );
         let mut this_pair_vec = Vec::with_capacity(new_instructions.len());
         for state_instructions in new_instructions.drain(..) {
             let mut new_node = Node::new();
@@ -200,7 +211,7 @@ impl Node {
         // makes it a type that cannot be resized, which ensures the node
         // addresses are stable for the children map keys
         let mut boxed = this_pair_vec.into_boxed_slice();
-        let new_node_ptr = self.sample_node(&mut boxed);
+        let new_node_ptr = self.sample_node(&mut boxed, rng);
         state.apply_instructions(&(*new_node_ptr).instructions.instruction_list);
 
         let key = (self as *mut Node as usize, s1_move_index, s2_move_index);
@@ -208,12 +219,13 @@ impl Node {
         new_node_ptr
     }
 
-    pub unsafe fn backpropagate(
+    pub unsafe fn backpropagate<R: Rng + ?Sized>(
         &mut self,
         score: f32,
         terminal: bool,
         state: &mut State,
         collector: &mut LeafCollector,
+        rng: &mut R,
     ) {
         self.times_visited += 1;
         self.value_sum += score;
@@ -225,7 +237,7 @@ impl Node {
             collector.eligible_seen += 1;
             // Reservoir sample across eligible deep nodes, rather than
             // retaining the first early winning branch encountered.
-            if rng().random_range(0..collector.eligible_seen) == 0 {
+            if rng.random_range(0..collector.eligible_seen) == 0 {
                 self.sampled_features = Some(crate::learned_value::extract_features_vec(state));
                 collector.sample = Some(self as *mut Node);
                 collector.sampled_state = Some(state.clone());
@@ -246,7 +258,7 @@ impl Node {
         parent_s2_movenode.visits += 1;
 
         state.reverse_instructions(&self.instructions.instruction_list);
-        (*self.parent).backpropagate(score, terminal, state, collector);
+        (*self.parent).backpropagate(score, terminal, state, collector, rng);
     }
 
     pub fn rollout(&mut self, state: &mut State, context: &RolloutContext) -> (f32, bool) {
@@ -344,17 +356,18 @@ struct LeafCollector {
     sampled_state: Option<State>,
 }
 
-fn mcts_iteration(
+fn mcts_iteration<R: Rng + ?Sized>(
     root_node: &mut Node,
     state: &mut State,
     context: &RolloutContext,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
     collector: &mut LeafCollector,
+    rng: &mut R,
 ) {
-    let (mut new_node, s1_move, s2_move) = unsafe { root_node.selection(state, children) };
-    new_node = unsafe { (*new_node).expand(state, s1_move, s2_move, children) };
+    let (mut new_node, s1_move, s2_move) = unsafe { root_node.selection(state, children, rng) };
+    new_node = unsafe { (*new_node).expand(state, s1_move, s2_move, children, rng) };
     let (rollout_result, terminal) = unsafe { (*new_node).rollout(state, context) };
-    unsafe { (*new_node).backpropagate(rollout_result, terminal, state, collector) }
+    unsafe { (*new_node).backpropagate(rollout_result, terminal, state, collector, rng) }
 }
 
 enum SearchLimit {
@@ -362,13 +375,14 @@ enum SearchLimit {
     Iterations(u32),
 }
 
-fn run_mcts_loop(
+fn run_mcts_loop<R: Rng + ?Sized>(
     root_node: &mut Node,
     state: &mut State,
     context: &RolloutContext,
     children: &mut HashMap<(usize, usize, usize), Box<[Node]>>,
     collector: &mut LeafCollector,
     limit: SearchLimit,
+    rng: &mut R,
 ) {
     let start_time = std::time::Instant::now();
     loop {
@@ -380,7 +394,7 @@ fn run_mcts_loop(
             break;
         }
         for _ in 0..batch_size {
-            mcts_iteration(root_node, state, context, children, collector);
+            mcts_iteration(root_node, state, context, children, collector, rng);
         }
         if root_node.times_visited >= 10_000_000 {
             break;
@@ -408,6 +422,7 @@ pub fn rollout_leaf_to_terminal(
     rollout_iterations: u32,
     max_decisions: u32,
 ) -> Option<f32> {
+    let mut rng = rng();
     for _ in 0..max_decisions {
         let terminal = state.battle_is_over();
         if terminal != 0.0 {
@@ -416,7 +431,7 @@ pub fn rollout_leaf_to_terminal(
 
         let (s1_options, s2_options) = state.root_get_all_options();
         let mut planning_state = state.clone();
-        let result = perform_mcts(
+        let result = perform_mcts_with_rng(
             &mut planning_state,
             s1_options,
             s2_options,
@@ -425,6 +440,7 @@ pub fn rollout_leaf_to_terminal(
             None,
             None,
             2.0,
+            &mut rng,
         );
         let s1_move = result
             .s1
@@ -438,13 +454,18 @@ pub fn rollout_leaf_to_terminal(
             .max_by_key(|entry| entry.visits)?
             .move_choice
             .clone();
-        let outcomes = generate_instructions_from_move_pair(&mut state, &s1_move, &s2_move, false);
+        let outcomes = generate_instructions_from_move_pair_with_public_reveals(
+            &mut state,
+            &s1_move,
+            &s2_move,
+            false,
+        );
         let weights: Vec<f64> = outcomes
             .iter()
             .map(|outcome| outcome.percentage.max(0.0) as f64)
             .collect();
         let distribution = WeightedIndex::new(weights).ok()?;
-        let choice = distribution.sample(&mut rng());
+        let choice = distribution.sample(&mut rng);
         state.apply_instructions(&outcomes[choice].instruction_list);
     }
 
@@ -461,6 +482,73 @@ pub fn perform_mcts(
     s1_priors: Option<Vec<Option<f32>>>,
     s2_priors: Option<Vec<Option<f32>>>,
     c_puct: f32,
+) -> MctsResult {
+    perform_mcts_with_seed(
+        state,
+        side_one_options,
+        side_two_options,
+        max_time,
+        max_iterations,
+        s1_priors,
+        s2_priors,
+        c_puct,
+        None,
+    )
+}
+
+pub fn perform_mcts_with_seed(
+    state: &mut State,
+    side_one_options: Vec<MoveChoice>,
+    side_two_options: Vec<MoveChoice>,
+    max_time: Duration,
+    max_iterations: u32,
+    s1_priors: Option<Vec<Option<f32>>>,
+    s2_priors: Option<Vec<Option<f32>>>,
+    c_puct: f32,
+    seed: Option<u64>,
+) -> MctsResult {
+    match seed {
+        Some(seed) => {
+            let mut rng = StdRng::seed_from_u64(seed);
+            perform_mcts_with_rng(
+                state,
+                side_one_options,
+                side_two_options,
+                max_time,
+                max_iterations,
+                s1_priors,
+                s2_priors,
+                c_puct,
+                &mut rng,
+            )
+        }
+        None => {
+            let mut rng = rng();
+            perform_mcts_with_rng(
+                state,
+                side_one_options,
+                side_two_options,
+                max_time,
+                max_iterations,
+                s1_priors,
+                s2_priors,
+                c_puct,
+                &mut rng,
+            )
+        }
+    }
+}
+
+fn perform_mcts_with_rng<R: Rng + ?Sized>(
+    state: &mut State,
+    side_one_options: Vec<MoveChoice>,
+    side_two_options: Vec<MoveChoice>,
+    max_time: Duration,
+    max_iterations: u32,
+    s1_priors: Option<Vec<Option<f32>>>,
+    s2_priors: Option<Vec<Option<f32>>>,
+    c_puct: f32,
+    rng: &mut R,
 ) -> MctsResult {
     let mut root_node = Node::new();
     unsafe {
@@ -493,6 +581,7 @@ pub fn perform_mcts(
         &mut children,
         &mut collector,
         search_limit,
+        rng,
     );
 
     let leaf_sample = collector.sample.map(|node| unsafe {
@@ -542,4 +631,118 @@ pub fn perform_mcts(
     };
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::choices::Choices;
+    use crate::state::{PokemonIndex, PokemonMoveIndex};
+
+    fn stochastic_state() -> State {
+        let mut state = State::default();
+        for index in [
+            PokemonIndex::P1,
+            PokemonIndex::P2,
+            PokemonIndex::P3,
+            PokemonIndex::P4,
+            PokemonIndex::P5,
+        ] {
+            state.side_one.pokemon[index].hp = 0;
+            state.side_two.pokemon[index].hp = 0;
+        }
+        for (index, move_name) in [
+            (PokemonMoveIndex::M0, Choices::TACKLE),
+            (PokemonMoveIndex::M1, Choices::WATERGUN),
+            (PokemonMoveIndex::M2, Choices::QUICKATTACK),
+            (PokemonMoveIndex::M3, Choices::LEER),
+        ] {
+            state.side_one.get_active().replace_move(index, move_name);
+        }
+        for (index, move_name) in [
+            (PokemonMoveIndex::M0, Choices::EMBER),
+            (PokemonMoveIndex::M1, Choices::TACKLE),
+            (PokemonMoveIndex::M2, Choices::QUICKATTACK),
+            (PokemonMoveIndex::M3, Choices::LEER),
+        ] {
+            state.side_two.get_active().replace_move(index, move_name);
+        }
+        state
+    }
+
+    fn seeded_search(
+        seed: u64,
+        iterations: u32,
+        s1_priors: Option<Vec<Option<f32>>>,
+        c_puct: f32,
+    ) -> MctsResult {
+        let mut state = stochastic_state();
+        let (s1_options, s2_options) = state.root_get_all_options();
+        perform_mcts_with_seed(
+            &mut state,
+            s1_options,
+            s2_options,
+            Duration::ZERO,
+            iterations,
+            s1_priors,
+            None,
+            c_puct,
+            Some(seed),
+        )
+    }
+
+    fn result_bits(result: &MctsResult) -> (Vec<(u32, u32)>, Vec<(u32, u32)>) {
+        let side = |entries: &[MctsSideResult]| {
+            entries
+                .iter()
+                .map(|entry| (entry.visits, entry.total_score.to_bits()))
+                .collect()
+        };
+        (side(&result.s1), side(&result.s2))
+    }
+
+    #[test]
+    fn seeded_search_is_bit_reproducible_and_exact() {
+        let first = seeded_search(42, 257, None, 2.0);
+        let second = seeded_search(42, 257, None, 2.0);
+
+        assert_eq!(first.iteration_count, 257);
+        assert_eq!(second.iteration_count, 257);
+        assert_eq!(result_bits(&first), result_bits(&second));
+    }
+
+    #[test]
+    fn different_seeds_can_change_root_visits() {
+        let first = seeded_search(7, 257, None, 2.0);
+        let second = seeded_search(8, 257, None, 2.0);
+        let visits = |result: &MctsResult| {
+            result
+                .s1
+                .iter()
+                .chain(&result.s2)
+                .map(|entry| entry.visits)
+                .collect::<Vec<_>>()
+        };
+
+        assert_ne!(visits(&first), visits(&second));
+    }
+
+    #[test]
+    fn seeded_search_uses_root_priors() {
+        let favor_first = seeded_search(
+            42,
+            64,
+            Some(vec![Some(1.0), Some(0.0), Some(0.0), Some(0.0)]),
+            100.0,
+        );
+        let favor_second = seeded_search(
+            42,
+            64,
+            Some(vec![Some(0.0), Some(1.0), Some(0.0), Some(0.0)]),
+            100.0,
+        );
+
+        assert!(favor_first.s1[0].visits > favor_first.s1[1].visits);
+        assert!(favor_second.s1[1].visits > favor_second.s1[0].visits);
+    }
 }

@@ -10,10 +10,20 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from belief.action_conditioned_randbats import load_generator_pool_active_candidates  # noqa: E402
-from scripts.produce_action_conditioned_randbats_rows import replay_state_from_public_state, rows_from_replay  # noqa: E402
+from scripts.produce_action_conditioned_randbats_rows import _is_tera_action, replay_state_from_public_state, rows_from_replay  # noqa: E402
 
 
 class ReplayRowProducerTests(unittest.TestCase):
+    def test_tera_declaration_before_move_survives_opponent_speed_order(self):
+        messages = [
+            ["turn", "4"],
+            ["-terastallize", "p2a: Mew", "Water"],
+            ["move", "p1a: Pikachu", "Thunderbolt", "p2a: Mew"],
+            ["move", "p2a: Mew", "Surf", "p1a: Pikachu"],
+        ]
+        self.assertTrue(_is_tera_action(messages, 3, "p2"))
+        self.assertFalse(_is_tera_action(messages, 2, "p1"))
+
     def test_prefix_candidates_exclude_future_move_and_suffix_sets_label(self):
         fixture = Path(__file__).parent / "fixtures" / "action_conditioned_randbats_replay.json"
         raw = json.loads(fixture.read_text(encoding="utf-8"))

@@ -8,7 +8,7 @@ use crate::define_enum_with_from_str;
 use crate::engine::generate_instructions::add_remove_status_instructions;
 use crate::instruction::{
     ChangeItemInstruction, ChangeStatusInstruction, DamageInstruction, DisableMoveInstruction,
-    HealInstruction, Instruction, StateInstructions,
+    HealInstruction, Instruction, RecordItemActivationInstruction, StateInstructions,
 };
 use crate::pokemon::PokemonName;
 use crate::state::{
@@ -861,7 +861,9 @@ pub fn item_end_of_turn(
     side_ref: &SideReference,
     instructions: &mut StateInstructions,
 ) {
+    let trace_actions = state.trace_actions;
     let attacking_side = state.get_side(side_ref);
+    let active_index = attacking_side.active_index;
     let active_pkmn = attacking_side.get_active();
     match active_pkmn.item {
         Items::LUMBERRY if active_pkmn.status != PokemonStatus::NONE => {
@@ -912,6 +914,17 @@ pub fn item_end_of_turn(
         Items::LEFTOVERS => {
             let attacker = state.get_side(side_ref).get_active();
             if attacker.hp < attacker.maxhp {
+                if trace_actions {
+                    instructions
+                        .instruction_list
+                        .push(Instruction::RecordItemActivation(
+                            RecordItemActivationInstruction {
+                                side_ref: side_ref.clone(),
+                                pokemon_index: active_index,
+                                item: Items::LEFTOVERS,
+                            },
+                        ));
+                }
                 let heal_amount = cmp::min(attacker.maxhp / 16, attacker.maxhp - attacker.hp);
                 let ins = Instruction::Heal(HealInstruction {
                     side_ref: side_ref.clone(),

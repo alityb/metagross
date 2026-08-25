@@ -11,6 +11,8 @@ from __future__ import annotations
 import math
 from typing import Any, Sequence
 
+from belief.public_reveal_mask import information_fractions
+
 
 SCHEMA = "metagross-resource-shadow/v1"
 FEATURE_NAMES = (
@@ -192,10 +194,10 @@ def extract_resource_features(
     """Extract player-information resource features from a side-one state.
 
     Opponent reserve HP, stats, PP, items, and abilities are never valued.
-    Information features default to zero because a determinized search state
-    does not retain which fields were public before hidden-world completion.
-    They may be enabled only on an undeterminized public tracker state for
-    offline analysis; the deployable leaf contract keeps them inactive.
+    Information features default to zero for backwards-compatible calibration.
+    When enabled, they are read only from the causal packed reveal mask. The
+    completed opponent fields are never counted as evidence of their own
+    visibility.
     """
     own_side = state.side_one
     opponent_side = state.side_two
@@ -211,11 +213,12 @@ def extract_resource_features(
     live_bench = [pokemon for pokemon in bench if _known_pokemon(pokemon) and float(getattr(pokemon, "hp", 0) or 0) > 0]
     pp_reserve, move_availability = _pp_features(own)
 
-    revealed_moves = sum(
-        _known_move(move)
-        for pokemon in known_opponent
-        for move in list(getattr(pokemon, "moves", ()))
-    )
+    public_information = (0.0, 0.0, 0.0, 0.0)
+    if include_public_information:
+        bits = getattr(state, "s1_public_reveals", None)
+        if isinstance(bits, bool) or not isinstance(bits, int):
+            raise ValueError("public-information features require a causal reveal mask")
+        public_information = information_fractions(bits)
     values = [
         sum(_hp(pokemon) for pokemon in known_own) / 6.0,
         len(alive_own) / 6.0,
@@ -242,14 +245,7 @@ def extract_resource_features(
             + 1.0
         )
         / 2.0,
-        len(known_opponent) / 6.0 if include_public_information else 0.0,
-        revealed_moves / 24.0 if include_public_information else 0.0,
-        sum(_known_item(pokemon) for pokemon in known_opponent) / 6.0
-        if include_public_information
-        else 0.0,
-        sum(_known_ability(pokemon) for pokemon in known_opponent) / 6.0
-        if include_public_information
-        else 0.0,
+        *public_information,
         sum(_known_item(pokemon) and float(getattr(pokemon, "hp", 0) or 0) > 0 for pokemon in known_own)
         / 6.0,
         min(1.0, max(0.0, float(turn) / 100.0)),

@@ -23,7 +23,9 @@ use crate::instruction::{
 };
 use crate::instruction::{ChangeAbilityInstruction, ToggleTerastallizedInstruction};
 use crate::instruction::{DecrementFutureSightInstruction, FormeChangeInstruction};
-use crate::instruction::{DecrementPPInstruction, SetLastUsedMoveInstruction};
+use crate::instruction::{
+    DecrementPPInstruction, RecordActionInstruction, SetLastUsedMoveInstruction,
+};
 
 use super::damage_calc::calculate_futuresight_damage;
 use super::damage_calc::{calculate_damage, type_effectiveness_modifier, DamageRolls};
@@ -2261,6 +2263,16 @@ pub fn generate_instructions_from_move(
         return;
     }
 
+    if state.trace_actions {
+        incoming_instructions
+            .instruction_list
+            .push(Instruction::RecordAction(RecordActionInstruction {
+                side_ref: attacking_side,
+                pokemon_index: state.get_side_immutable(&attacking_side).active_index,
+                move_index: choice.move_index,
+            }));
+    }
+
     if move_has_no_effect(state, &choice, &attacking_side) {
         state.reverse_instructions(&incoming_instructions.instruction_list);
         final_instructions.push(incoming_instructions);
@@ -3856,6 +3868,43 @@ pub fn generate_instructions_from_move_pair(
     side_two_move: &MoveChoice,
     branch_on_damage: bool,
 ) -> Vec<StateInstructions> {
+    generate_instructions_from_move_pair_impl(
+        state,
+        side_one_move,
+        side_two_move,
+        branch_on_damage,
+        false,
+    )
+}
+
+/// Search/binding transition that additionally carries reversible public
+/// history. The legacy mechanics API stays byte-for-byte compatible.
+pub fn generate_instructions_from_move_pair_with_public_reveals(
+    state: &mut State,
+    side_one_move: &MoveChoice,
+    side_two_move: &MoveChoice,
+    branch_on_damage: bool,
+) -> Vec<StateInstructions> {
+    generate_instructions_from_move_pair_impl(
+        state,
+        side_one_move,
+        side_two_move,
+        branch_on_damage,
+        true,
+    )
+}
+
+fn generate_instructions_from_move_pair_impl(
+    state: &mut State,
+    side_one_move: &MoveChoice,
+    side_two_move: &MoveChoice,
+    branch_on_damage: bool,
+    carry_public_reveals: bool,
+) -> Vec<StateInstructions> {
+    let caller_trace_actions = state.trace_actions;
+    if carry_public_reveals {
+        state.trace_actions = true;
+    }
     let mut side_one_choice;
     let mut s1_tera = false;
     let mut s1_mega = false;
@@ -4065,6 +4114,10 @@ pub fn generate_instructions_from_move_pair(
             state_instructions_vec.extend(side_two_moves_first_si);
         }
     }
+    state.trace_actions = caller_trace_actions;
+    if carry_public_reveals {
+        crate::public_reveal::append_causal_reveal_instructions(state, &mut state_instructions_vec);
+    }
     state_instructions_vec
 }
 
@@ -4204,7 +4257,8 @@ mod tests {
     use crate::instruction::{
         ApplyVolatileStatusInstruction, BoostInstruction, ChangeItemInstruction,
         ChangeStatusInstruction, ChangeSubsituteHealthInstruction, ChangeTerrain,
-        DamageInstruction, EnableMoveInstruction, SwitchInstruction,
+        DamageInstruction, EnableMoveInstruction, RecordItemActivationInstruction,
+        SwitchInstruction,
     };
     use crate::state::{
         Move, PokemonBoostableStat, PokemonIndex, PokemonMoveIndex, PokemonSideCondition,
@@ -9487,6 +9541,38 @@ mod tests {
                 side_ref: SideReference::SideOne,
                 heal_amount: 6,
             })],
+        };
+
+        assert_eq!(expected_instructions, incoming_instructions)
+    }
+
+    #[test]
+    fn test_leftovers_records_public_activation_only_when_tracing() {
+        let mut state = State::default();
+        state.trace_actions = true;
+        state.side_one.get_active().hp = 50;
+        state.side_one.get_active().item = Items::LEFTOVERS;
+
+        let mut incoming_instructions = StateInstructions::default();
+        add_end_of_turn_instructions(
+            &mut state,
+            &mut incoming_instructions,
+            &SideReference::SideOne,
+        );
+
+        let expected_instructions = StateInstructions {
+            percentage: 100.0,
+            instruction_list: vec![
+                Instruction::RecordItemActivation(RecordItemActivationInstruction {
+                    side_ref: SideReference::SideOne,
+                    pokemon_index: PokemonIndex::P0,
+                    item: Items::LEFTOVERS,
+                }),
+                Instruction::Heal(HealInstruction {
+                    side_ref: SideReference::SideOne,
+                    heal_amount: 6,
+                }),
+            ],
         };
 
         assert_eq!(expected_instructions, incoming_instructions)

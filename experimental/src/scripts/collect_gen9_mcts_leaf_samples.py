@@ -9,26 +9,38 @@ import random
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(REPO_ROOT / "src"), str(REPO_ROOT / "external" / "foul-play")]
+EXPERIMENTAL_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = EXPERIMENTAL_ROOT.parent
+sys.path[:0] = [
+    str(EXPERIMENTAL_ROOT / "src"),
+    str(WORKSPACE_ROOT / "srcs" / "vendor" / "foul-play"),
+]
 
 from belief.randbats_determinize import RandbatsDeterminizer
 
 _DETERMINIZER = None
 
 
-def determinize_leaf_state(state, poke_engine):
+def determinize_leaf_state(state, poke_engine, *, determinizer=None):
     """Fill only hidden opponents; keep the search leaf and input features public."""
     global _DETERMINIZER
+    # Freeze the public snapshot before any sampled team fields are installed.
+    # Existing causal metadata (for example from a prior simulated turn) wins.
+    if int(getattr(state, "s1_public_reveals", 0)) == 0:
+        state = state.initialize_side_one_public_reveals()
     unknown = [pokemon for pokemon in state.side_two.pokemon if pokemon.id == "NONE"]
     if not unknown:
         return state
-    if _DETERMINIZER is None:
+    if determinizer is None and _DETERMINIZER is None:
         _DETERMINIZER = RandbatsDeterminizer(
-            REPO_ROOT / "data" / "randbats_pools" / "gen9randombattle_pool_50000.json"
+            EXPERIMENTAL_ROOT
+            / "data"
+            / "randbats_pools"
+            / "gen9randombattle_pool_50000.json"
         )
+    determinizer = determinizer or _DETERMINIZER
     revealed = [pokemon for pokemon in state.side_two.pokemon if pokemon.id != "NONE"]
-    team = _DETERMINIZER.sample_team(revealed)
+    team = determinizer.sample_team(revealed)
     if team is None:
         return None
 
@@ -98,6 +110,8 @@ def determinize_leaf_state(state, poke_engine):
         scout_value=state.scout_value,
         threat_matrix=state.threat_matrix,
         wincon_matrix=state.wincon_matrix,
+        s1_public_reveals=state.s1_public_reveals,
+        s2_public_reveals=state.s2_public_reveals,
     )
 
 

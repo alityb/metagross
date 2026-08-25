@@ -146,6 +146,10 @@ def preflight(
             and "--prepare-mirrored-pairs-only" not in frozen_eval_argv
             and frozen_eval_argv.count("--operational-gate-prior-decisions") == 2
             and "--operational-gate-showdown-launch" in frozen_eval_argv
+            and frozen_eval_argv.count("--foul-play-search-time-ms") == 1
+            and frozen_eval_argv[
+                frozen_eval_argv.index("--foul-play-search-time-ms") + 1
+            ] == "500"
             and prereg.get("execution", {}).get("environment", {}).get(
                 "METAGROSS_PAIR_MANIFEST_SHA256"
             )
@@ -207,6 +211,11 @@ def preflight(
             for mode, health in zip(("candidate", "comparator"), prior_health, strict=True)
         ),
         "remote_preflight_passed": remote.get("ok") is True,
+        "remote_preflight_coverage_exact": (
+            remote.get("operations")
+            == ["search", "paired_holdout", "shared_root"]
+            and remote.get("search_durations_ms") == [250, 500]
+        ),
         "remote_preflight_source_exact": remote.get("preflight_source_sha256")
         == prereg.get("source_identity", {}).get("remote_preflight.py"),
         "remote_identity_exact": remote.get("engine") == prereg.get("expected_engine_identity"),

@@ -49,6 +49,28 @@ class ModalMctsTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 modal_mcts._validate_priors(value, "priors")
 
+    def test_worker_reports_invalid_search_duration_without_loading_engine(self):
+        request = {
+            "schema": modal_mcts.REQUEST_SCHEMA,
+            "operation": "search",
+            "request_id": "invalid-duration",
+            "index": 0,
+            "state": "not parsed",
+            "duration_ms": 50,
+            "threads": 1,
+            "s1_priors": None,
+            "s2_priors": None,
+            "c_puct": 2.0,
+        }
+        with mock.patch.object(modal_mcts, "_engine_identity", return_value={}):
+            response = modal_mcts._search_one(request, 1)
+
+        self.assertFalse(response["ok"])
+        self.assertEqual(
+            response["error"],
+            {"kind": "ValueError", "code": "invalid_search_duration"},
+        )
+
     def test_worker_dispatches_holdout_with_validated_opponent_priors(self):
         aggregate = SimpleNamespace(
             pairs=2,

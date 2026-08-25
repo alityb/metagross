@@ -185,9 +185,15 @@ fn parse_floats<'a, I: Iterator<Item = &'a str>>(
 fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
     if contents
         .lines()
+        .any(|line| line.trim() == "metagross_resource_shadow_v2")
+    {
+        return parse_resource_model(contents, true).map(Some);
+    }
+    if contents
+        .lines()
         .any(|line| line.trim() == "metagross_resource_shadow_v1")
     {
-        return parse_resource_model(contents).map(Some);
+        return parse_resource_model(contents, false).map(Some);
     }
     if contents
         .lines()
@@ -235,13 +241,19 @@ fn parse_model(contents: &str) -> Result<Option<LearnedValueModel>, String> {
     }))
 }
 
-fn parse_resource_model(contents: &str) -> Result<LearnedValueModel, String> {
+fn parse_resource_model(
+    contents: &str,
+    causal_public_reveals: bool,
+) -> Result<LearnedValueModel, String> {
     let mut dims = None;
     let mut bias = None;
     let mut weights = None;
     for raw in contents.lines() {
         let line = raw.split('#').next().unwrap_or("").trim();
-        if line.is_empty() || line == "metagross_resource_shadow_v1" {
+        if line.is_empty()
+            || line == "metagross_resource_shadow_v1"
+            || line == "metagross_resource_shadow_v2"
+        {
             continue;
         }
         let mut parts = line.split_whitespace();
@@ -277,7 +289,7 @@ fn parse_resource_model(contents: &str) -> Result<LearnedValueModel, String> {
             RESOURCE_FEATURE_COUNT
         ));
     }
-    let weights = weights.ok_or("missing resource weights")?;
+    let mut weights = weights.ok_or("missing resource weights")?;
     if weights.len() != RESOURCE_FEATURE_COUNT {
         return Err(format!(
             "expected {} resource weights, found {}",
@@ -297,6 +309,12 @@ fn parse_resource_model(contents: &str) -> Result<LearnedValueModel, String> {
     let bias = bias.ok_or("missing resource bias")?;
     if !bias.is_finite() {
         return Err("resource bias is non-finite".to_string());
+    }
+    // V1 was calibrated while information inputs were hard-coded to zero, so
+    // its stored values at these positions are optimizer initialization—not
+    // learned prices. Preserve its original semantics after masks became live.
+    if !causal_public_reveals {
+        weights[16..20].fill(0.0);
     }
     Ok(LearnedValueModel::ResourceLinear { bias, weights })
 }
@@ -765,9 +783,9 @@ fn resource_pp(side: &Side) -> (f32, f32) {
 
 /// Deployable resource-shadow features.
 ///
-/// Indices 16-19 are reserved for public information but remain zero until a
-/// determinized search state carries the causal public reveal mask. Reading
-/// completed opponent reserves here would leak the sampled hidden world.
+/// Indices 16-19 come exclusively from the causal public reveal mask carried
+/// through determinization and simulated transitions. Reading completed
+/// opponent reserves here would leak the sampled hidden world.
 fn extract_resource_features(state: &State) -> [f32; RESOURCE_FEATURE_COUNT] {
     let own = &state.side_one;
     let opponent = &state.side_two;
@@ -836,10 +854,10 @@ fn extract_resource_features(state: &State) -> [f32; RESOURCE_FEATURE_COUNT] {
             + 1.0)
             / 2.0)
             .clamp(0.0, 1.0),
-        0.0,
-        0.0,
-        0.0,
-        0.0,
+        state.s1_public_reveals.species_fraction(),
+        state.s1_public_reveals.moves_fraction(),
+        state.s1_public_reveals.items_fraction(),
+        state.s1_public_reveals.abilities_fraction(),
         own_items as f32 / 6.0,
         0.0,
         state.trick_room.active as u8 as f32,
@@ -969,7 +987,7 @@ mod resource_shadow_tests {
     #[test]
     fn resource_model_requires_non_negative_conserved_prices() {
         assert!(matches!(
-            parse_resource_model(&resource_model(0.25)),
+            parse_resource_model(&resource_model(0.25), false),
             Ok(LearnedValueModel::ResourceLinear { .. })
         ));
         let mut weights = vec!["0"; RESOURCE_FEATURE_COUNT];
@@ -978,13 +996,65 @@ mod resource_shadow_tests {
             "metagross_resource_shadow_v1\ndims 23\nbias 0\nweights {}\n",
             weights.join(" ")
         );
-        assert!(parse_resource_model(&invalid).is_err());
+        assert!(parse_resource_model(&invalid, false).is_err());
+    }
+
+    #[test]
+    fn legacy_resource_model_cannot_activate_uncalibrated_reveal_prices() {
+        let LearnedValueModel::ResourceLinear { weights, .. } =
+            parse_resource_model(&resource_model(0.25), false).unwrap()
+        else {
+            panic!("wrong resource model variant");
+        };
+        assert_eq!(&weights[16..20], &[0.0, 0.0, 0.0, 0.0]);
+        let v2 = resource_model(0.25).replace(
+            "metagross_resource_shadow_v1",
+            "metagross_resource_shadow_v2",
+        );
+        let LearnedValueModel::ResourceLinear { weights, .. } =
+            parse_resource_model(&v2, true).unwrap()
+        else {
+            panic!("wrong resource model variant");
+        };
+        assert_eq!(&weights[16..20], &[0.25, 0.25, 0.25, 0.25]);
     }
 
     #[test]
     fn deployable_information_features_are_inactive_and_bounded() {
         let features = extract_resource_features(&State::default());
-        assert!(features.iter().all(|value| value.is_finite() && *value >= 0.0 && *value <= 1.0));
+        assert!(features
+            .iter()
+            .all(|value| value.is_finite() && *value >= 0.0 && *value <= 1.0));
         assert_eq!(&features[16..20], &[0.0, 0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn information_features_read_only_the_causal_mask() {
+        use crate::engine::abilities::Abilities;
+        use crate::public_reveal::RevealField;
+        use crate::state::{PokemonIndex, PokemonMoveIndex};
+
+        let mut first = State::default();
+        first
+            .s1_public_reveals
+            .reveal(PokemonIndex::P0, RevealField::Species);
+        first
+            .s1_public_reveals
+            .reveal(PokemonIndex::P0, RevealField::Move(PokemonMoveIndex::M0));
+        let mut second = first.clone();
+        // A different sampled completion may change hidden truth, but cannot
+        // change information features without a public reveal instruction.
+        second.side_two.pokemon[PokemonIndex::P4].item = Items::LEFTOVERS;
+        second.side_two.pokemon[PokemonIndex::P4].ability = Abilities::LEVITATE;
+        second.side_two.pokemon[PokemonIndex::P4]
+            .replace_move(PokemonMoveIndex::M0, Choices::TACKLE);
+
+        let first_features = extract_resource_features(&first);
+        let second_features = extract_resource_features(&second);
+        assert_eq!(&first_features[16..20], &second_features[16..20]);
+        assert_eq!(first_features[16], 1.0 / 6.0);
+        assert_eq!(first_features[17], 1.0 / 24.0);
+        assert_eq!(first_features[18], 0.0);
+        assert_eq!(first_features[19], 0.0);
     }
 }

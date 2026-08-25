@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+from dataclasses import asdict
 import hashlib
 import hmac
 import json
@@ -48,6 +49,53 @@ def fresh_observation_space(template):
     observation_space = copy.deepcopy(template)
     observation_space.reset()
     return observation_space
+
+
+def observation_history(observation_space) -> dict[str, object]:
+    """Snapshot the mutable public-history fields used by R1 observations."""
+    current = observation_space
+    while hasattr(current, "base_obs_space"):
+        current = current.base_obs_space
+    required = ("any_opponent_asleep", "any_opponent_frozen", "revealed_opponents")
+    if any(not hasattr(current, field) for field in required):
+        raise RuntimeError("R1 observation space does not expose public history")
+    return {
+        "any_opponent_asleep": bool(current.any_opponent_asleep),
+        "any_opponent_frozen": bool(current.any_opponent_frozen),
+        "revealed_opponents": sorted(str(value) for value in current.revealed_opponents),
+    }
+
+
+def player_information_state(battle, state) -> dict[str, object]:
+    """Serialize only own-private and currently public opponent information."""
+    from metamon.interface import UniversalMove, UniversalPokemon
+
+    def team_rows(team, active_pokemon) -> list[dict[str, object]]:
+        active_species = norm(active_pokemon.species) if active_pokemon is not None else None
+        rows = []
+        for slot, pokemon in team.items():
+            rows.append(
+                {
+                    "slot": str(slot),
+                    "active": active_species is not None
+                    and norm(pokemon.species) == active_species,
+                    "pokemon": asdict(UniversalPokemon.from_Pokemon(pokemon)),
+                    "previous_move": asdict(UniversalMove.from_Move(pokemon.previous_move)),
+                }
+            )
+        if active_species is not None and sum(bool(row["active"]) for row in rows) != 1:
+            raise RuntimeError("player-information team has ambiguous active species")
+        return rows
+
+    return {
+        "schema_version": 1,
+        "universal_state": state.to_dict(),
+        "player_team": team_rows(battle.team, battle.active_pokemon),
+        "opponent_public_team": team_rows(
+            battle.opponent_team, battle.opponent_active_pokemon
+        ),
+        "private_request": copy.deepcopy(getattr(battle, "_last_request", None)),
+    }
 
 
 def aligned_trajectory_arrays(
@@ -514,11 +562,14 @@ class BattleSession:
         self.cached_rqid: int | None = None
         self.cached_request_sha256: str | None = None
         self.cached_response: dict | None = None
+        self.protocol_lines: list[str] = []
         # /lines and /priors arrive on different HTTP threads. Keep each battle
         # state consistent while allowing unrelated battles to proceed.
         self.lock = threading.RLock()
 
     def feed_line(self, line: str) -> None:
+        if self.server.dual_r1_capture:
+            self.protocol_lines.append(line)
         if not line.startswith("|"):
             return
         parts = line.split("|")
@@ -692,7 +743,6 @@ class BattleSession:
                     "automatic_action": forced_action,
                 },
             }
-            self.decision_idx += 1
             self.pending_request = False
             self.cached_rqid = rqid
             self.cached_request_sha256 = expected_request_sha256
@@ -781,11 +831,37 @@ class BattleSession:
                 legacy_stateless_trajectory_arrays(current_obs)
             )
         else:
+            # History truncation ablation (redundancy hypothesis): cap the
+            # causal window to the last K request-steps. Absent env =
+            # byte-identical serving; set-but-malformed = fail closed; active
+            # = one-time observable log line. Truncated windows reuse the same
+            # (start, time_offset) mechanics as the max_seq_len overflow path,
+            # so positional timing stays in-distribution.
+            effective_seq_len = max_seq_len
+            truncate_raw = os.environ.get("METAGROSS_HISTORY_TRUNCATE_STEPS")
+            if truncate_raw:
+                try:
+                    truncate_steps = int(truncate_raw)
+                except ValueError as exc:
+                    raise RuntimeError(
+                        f"METAGROSS_HISTORY_TRUNCATE_STEPS is set but invalid: {exc}"
+                    )
+                if truncate_steps < 2:
+                    raise RuntimeError(
+                        "METAGROSS_HISTORY_TRUNCATE_STEPS must be >= 2"
+                    )
+                effective_seq_len = min(max_seq_len, truncate_steps)
+                if not getattr(self.server, "_truncate_logged", False):
+                    print(
+                        f"HISTORY_TRUNCATION ACTIVE last_{effective_seq_len}_steps",
+                        flush=True,
+                    )
+                    self.server._truncate_logged = True
             trajectory_obs, trajectory_rl2, trajectory_time = aligned_trajectory_arrays(
                 self.obs_hist,
                 self.action_hist,
                 self.reward_hist,
-                max_seq_len,
+                effective_seq_len,
                 self.trajectory_time_offset,
             )
         T = len(trajectory_time)
@@ -845,13 +921,14 @@ class BattleSession:
         decision_idx = self.decision_idx
         battle_turn = getattr(self.battle, "turn", None)
         opponent_priors = self.compute_opponent_priors()
-        if self.server.dump_path:
+        dump_row = None
+        if self.server.dump_path or self.server.dual_r1_capture:
             # Fail closed: if the dump write fails, the whole /priors request
             # fails (500), and METAGROSS_REQUIRE_PRIORS=1 discards the game.
             # A decision must never be played whose observation was not
             # durably recorded.
             dump_row = {
-                "schema": 5,
+                "schema": 6 if self.server.dual_r1_capture else 5,
                 "tag": self.tag,
                 "namespace": self.namespace,
                 "decision_idx": decision_idx,
@@ -887,7 +964,30 @@ class BattleSession:
                     "time_indices": trajectory_time[:, 0].tolist(),
                 },
             }
+            if self.server.dual_r1_capture:
+                dump_row.update(
+                    {
+                        "player_role": getattr(self.battle, "player_role", None),
+                        "opponent_username": getattr(
+                            self.battle, "opponent_username", None
+                        ),
+                        "protocol_prefix": list(self.protocol_lines),
+                        "player_information_state": player_information_state(
+                            self.battle, state
+                        ),
+                        "player_observation_history": observation_history(
+                            self.obs_space
+                        ),
+                        "continuation_observation_history": observation_history(
+                            self.obs_space
+                        ),
+                    }
+                )
+                dump_row["trajectory"]["observation_rows"] = {
+                    key: value.tolist() for key, value in trajectory_obs.items()
+                }
             line = json.dumps(dump_row, separators=(",", ":")) + "\n"
+        if self.server.dump_path and dump_row is not None:
             with self.server.dump_lock:
                 with open(self.server.dump_path, "a", encoding="utf-8") as handle:
                     handle.write(line)
@@ -916,6 +1016,8 @@ class BattleSession:
                 "private_identity_corrections": self.private_identity_corrections,
             },
         }
+        if dump_row is not None and self.server.dual_r1_capture:
+            response["r1_policy_snapshot"] = dump_row
         self.cached_rqid = rqid
         self.cached_request_sha256 = expected_request_sha256
         self.cached_response = response
@@ -1175,6 +1277,7 @@ class PriorServer:
         self.reward_fn = model.reward_function
         self.username = args.username
         self.trajectory_mode = args.trajectory_mode
+        self.dual_r1_capture = os.environ.get("METAGROSS_DUAL_R1_CAPTURE") == "1"
         self.sessions: dict[str, BattleSession] = {}
         self.lock = threading.Lock()
         # Schema-v3 observation dump (one JSONL row per /priors decision)

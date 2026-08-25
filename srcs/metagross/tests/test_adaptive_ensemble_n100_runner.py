@@ -38,7 +38,9 @@ class AdaptiveEnsembleN100RunnerTests(unittest.TestCase):
             patch.object(runner, "_sha256", side_effect=bound_sha256),
             patch.object(runner.os, "kill"),
             patch.object(runner.socket, "create_connection", return_value=Connection()),
-            patch.object(runner.os, "execve", side_effect=RuntimeError("exec reached")),
+            patch.object(
+                runner.os, "execve", side_effect=RuntimeError("exec reached")
+            ) as execve,
         ):
             with self.assertRaisesRegex(RuntimeError, "exec reached"):
                 runner.main(
@@ -49,6 +51,8 @@ class AdaptiveEnsembleN100RunnerTests(unittest.TestCase):
                     ]
                 )
         live_preflight.assert_called_once()
+        invoked = execve.call_args.args[0]
+        self.assertEqual(invoked, str(root / ".venv-metamon/bin/python"))
 
 
 if __name__ == "__main__":

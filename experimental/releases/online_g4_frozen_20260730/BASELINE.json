@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "record_type": "frozen_policy_baseline",
+  "created_at": "2026-07-30T21:49:41Z",
+  "status": "frozen",
+  "policy": {
+    "id": "online_g4_freshfix",
+    "run_name": "randbats_online_g4_autonomous_freshfix_20260729",
+    "checkpoint": 1,
+    "sha256": "cd21dbb22bfc7a92836c7c75c6287ffc1b79c58e0a2dca3d402b76b001ff7505",
+    "source_path": "srcs/models/randbats_online_g4_autonomous_freshfix_20260729/ckpts/policy_weights/policy_epoch_1.pt"
+  },
+  "rollback_copy": {
+    "path": "srcs/models/releases/online_g4_frozen_20260730/policy_epoch_1.pt",
+    "sha256": "cd21dbb22bfc7a92836c7c75c6287ffc1b79c58e0a2dca3d402b76b001ff7505",
+    "size_bytes": 571539531,
+    "read_only": true
+  },
+  "direct_policy_evidence": {
+    "games": 400,
+    "wins": 223,
+    "losses": 177,
+    "winrate": 0.5575,
+    "wilson95": [
+      0.5085079945949651,
+      0.6053980915565909
+    ],
+    "decision_path": "experimental/runs/online_rl_autonomous_3gen_20260729/generation_004/PROMOTION_DECISION.json",
+    "decision_sha256": "f8699b6db64b6e36081aff1ddebf2898918a56a936701734b829f932e45ccae4"
+  },
+  "production_search_evidence": {
+    "design": "matched_model_slot_counterbalanced",
+    "matched_team_seed_pairs": 25,
+    "total_games": 100,
+    "wins": 61,
+    "losses": 39,
+    "winrate": 0.61,
+    "wilson95": [
+      0.5120301704584074,
+      0.6998312599360558
+    ],
+    "g4_as_agent_a": {
+      "wins": 33,
+      "losses": 17
+    },
+    "g4_as_agent_b": {
+      "wins": 28,
+      "losses": 22
+    },
+    "summary_path": "experimental/runs/g4_counterbalanced_pilot_20260730/SUMMARY.json",
+    "summary_sha256": "4c080da1f2a5bed9dabad63ba234754fed0bf9119f513e18dc4462ed2231afa1",
+    "g4_as_agent_a_result_sha256": "af5e2b75c82b9dc31fc9cb9efbe9f1e928249a21c8c39c46c6e2fae008580449",
+    "g4_as_agent_b_result_sha256": "ba020135e029c4b80471c6e3756c7a29f381acf6117f7bfb38a04b04914730f9"
+  },
+  "lineage_state": {
+    "path": "experimental/runs/online_rl_autonomous_3gen_20260729/STATE.json",
+    "sha256": "d060eb9af123d5b8afa7baac09d1e02b0e8383f9c76372b4f7826ff0c7798fa8"
+  },
+  "evaluation_code": {
+    "runner_path": "experimental/src/scripts/run_g4_counterbalanced_pilot.sh",
+    "runner_sha256": "1b9d4f1dda49557c28418dcdafb953bbac8a1e7384e27c189da1c62c7dc657ee",
+    "summarizer_path": "experimental/src/scripts/summarize_counterbalanced_ab.py",
+    "summarizer_sha256": "262ac5f99ae82a2d719ec3c003b5d7ae2a38123ed74a9027bc8521f5267c7849"
+  },
+  "constraints": {
+    "do_not_overwrite": true,
+    "future_rl_must_use_new_run_names": true,
+    "rollback_target": true
+  }
+}

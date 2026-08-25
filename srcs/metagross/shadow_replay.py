@@ -25,6 +25,7 @@ from srcs.metagross.mcts_contract import (
     validate_holdout_result_payload,
     validate_result_payload,
 )
+from srcs.metagross.public_history import PublicEventLedger
 from srcs.metagross.world_provenance import (
     RNG_SCHEME,
     canonical_json,
@@ -254,6 +255,7 @@ def reconstruct_battles(
     from fp.battle_modifier import process_battle_updates, request, update_battle
 
     battles: dict[str, object] = {}
+    public_ledgers: dict[str, PublicEventLedger] = {}
     next_index: dict[str, int] = {}
     reconstructed: dict[tuple[str, int], object] = {}
 
@@ -291,6 +293,13 @@ def reconstruct_battles(
                 else:
                     battle.opponent.name = role
                     battle.opponent.account_name = account
+        if battle.user.name in {"p1", "p2"}:
+            ledger = public_ledgers.setdefault(
+                tag, PublicEventLedger(battle.user.name)
+            )
+            if ledger.observer_role != battle.user.name:
+                raise ValueError(f"player role changed during battle {tag}")
+            ledger.extend(lines)
 
         # Production checks the whole websocket message for a terminal outcome
         # before applying any bundled request. Mirror that ordering so a final
@@ -343,6 +352,7 @@ def reconstruct_battles(
                 for name, candidate_sets in RandomBattleTeamDatasets.pkmn_sets.items()
             }
         )
+        battle_copy._metagross_public_events = public_ledgers[tag].events
         reconstructed[key] = battle_copy
 
         selected = search_by_key[key].get("choice")

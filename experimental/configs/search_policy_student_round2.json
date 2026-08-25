@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "record_type": "search_policy_student_round2_preregistration",
+  "run_date": "2026-08-13",
+  "objective": "Give deployment-aligned search-policy distillation one bounded, converged attempt before deciding whether new RL/self-play data are required.",
+  "frozen_data": {
+    "sha256": "85ba0de63725ef46bc19546f00faedaa4a95c9c428d733abe02ffc1404666e5b",
+    "records": 175319,
+    "battles": 4767,
+    "split_seed": 20260812,
+    "selection_split": "validation",
+    "test_split_use": "report-only after validation checkpoint selection"
+  },
+  "initialization": {
+    "run": "randbats_exit_r1",
+    "checkpoint": 5,
+    "sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93"
+  },
+  "arms": {
+    "action": "one-hot search-selected action",
+    "visits": "full normalized search visit distribution",
+    "hybrid": "0.25 selected-action target + 0.75 visit-distribution target"
+  },
+  "training": {
+    "maximum_steps": 10000,
+    "batch_size": 64,
+    "learning_rate": 0.000001,
+    "optimizer": "AdamW",
+    "weight_decay": 0.0,
+    "gradient_clip": 1.0,
+    "validation_interval_steps": 500,
+    "early_stop_patience_evaluations": 4,
+    "early_stop_min_delta_kl_nats": 0.0001,
+    "early_stop_min_steps": 3000,
+    "checkpoint_selection": "minimum own-target validation KL",
+    "hardware": "one H100 per arm"
+  },
+  "decision": {
+    "offline_metrics_are_not_promotion_evidence": true,
+    "candidate_selection": "Compare selected checkpoints on the common validation matrix. Prefer a Pareto-dominant checkpoint; if none dominates, use the fixed priority of hybrid, action, visits provided it is not materially worse (>0.01 KL or >1 percentage point action agreement) on either teacher target.",
+    "next_game_gate": "At most one selected checkpoint receives a fresh 100-game counterbalanced screen against R1.",
+    "screen_continue_threshold": "Continue only if candidate wins at least 55 of 100 games.",
+    "screen_stop_threshold": "Stop this distillation round below 55 of 100 games.",
+    "full_gate": "If the screen continues, add 400 fresh games and require both game-level and counterbalanced-unit 95% lower confidence bounds above 0.50.",
+    "ladder": "No public ladder deployment before the full gate passes."
+  }
+}

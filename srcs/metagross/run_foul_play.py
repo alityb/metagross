@@ -15,6 +15,7 @@ import os
 import queue
 import random
 import statistics
+import subprocess
 import sys
 import threading
 import time
@@ -53,6 +54,18 @@ from srcs.metagross.world_provenance import (
     seeded_global_random,
     state_sha256,
 )
+from srcs.metagross.terminal_mcts_one_deviation import OneDeviationController
+from srcs.metagross.causal_reveal_ledger import (
+    CausalRevealLedgerError,
+    attached_ledger,
+    clear_public_protocol_lines,
+    convert_battle_with_causal_ledger,
+    freeze_and_attach_battle_ledger,
+    protocol_lines_for_battle,
+    record_public_protocol_lines,
+    verify_sampled_ledgers,
+    verify_sampled_move_states,
+)
 
 _PRIOR_STATE = {
     "priors": None,
@@ -67,7 +80,11 @@ _CAPPED_SETUP_STREAKS: dict[tuple[str, str, str], int] = {}
 _CHOICE_HISTORY: dict[str, list[tuple[object, str]]] = {}
 _REQUEST_CHOICE_CACHE: dict[tuple[str, int], tuple[str, str]] = {}
 _POKE_ENGINE_PROVENANCE: dict[str, object] | None = None
+_TERMINAL_MCTS_ONE_DEVIATION_CONTROLLER: OneDeviationController | None = None
 _HOLDOUT_DECISION_SEQUENCE = 0
+_CAUSAL_RECEIPT_CONTEXT: dict[str, object] | None = None
+_CAUSAL_RECEIPT_CONTEXT_LOCK = threading.Lock()
+_CYCLE25_EXECUTION_BOUNDARIES: dict[str, dict[str, object]] = {}
 REMOTE_MCTS_SCHEMA = REQUEST_SCHEMA
 REMOTE_ENGINE_CONTRACT = ENGINE_CONTRACT
 MAX_REMOTE_RESPONSE_BYTES = 16_000_000
@@ -3007,6 +3024,10 @@ def _remote_holdout_batch(
 
 
 def _prepare_search_battles(battle, search_main, sampling_channel: str | None = None):
+    # The decision-boundary ledger must already be frozen before any belief
+    # completion. Deepcopy/sampling may populate raw hidden fields, but those
+    # fields are never allowed to create reveal authorization.
+    freeze_and_attach_battle_ledger(battle)
     sampled_battle = search_main.deepcopy(battle)
     if sampled_battle.team_preview:
         sampled_battle.user.active = sampled_battle.user.reserve.pop(0)
@@ -3048,7 +3069,32 @@ def _prepare_search_battles(battle, search_main, sampling_channel: str | None = 
         else:
             with seeded_global_random(sampling_seed):
                 battles, num_battles, search_time_ms = sample()
+    verify_sampled_ledgers(sampled_battle, battles)
+    verify_sampled_move_states(sampled_battle, battles)
     return battles, num_battles, search_time_ms
+
+
+def prepare_production_random_battles_with_causal_move_receipts(
+    sampler, battle, num_battles: int, rng=None
+):
+    """Attach the frozen causal move contract to vendor production worlds.
+
+    The vendor production path samples internally in ``find_best_move`` rather
+    than through ``_prepare_search_battles``. This wrapper is deliberately
+    post-sampling and pre-conversion: it may verify and attach audit sidecars,
+    but it cannot change the sampler's worlds, order, weights, or mechanics.
+    """
+    worlds = sampler(battle, num_battles, rng=rng)
+    original_ids = [id(world) for world, _weight in worlds]
+    original_weights = [weight for _world, weight in worlds]
+    verify_sampled_ledgers(battle, worlds)
+    verify_sampled_move_states(battle, worlds)
+    if (
+        [id(world) for world, _weight in worlds] != original_ids
+        or [weight for _world, weight in worlds] != original_weights
+    ):
+        raise RuntimeError("causal production sampler wrapper changed worlds or weights")
+    return worlds
 
 
 def root_search_mode() -> str:
@@ -3241,20 +3287,72 @@ def inspect_poke_engine() -> dict:
     expected_source = root / "srcs" / "vendor" / "poke-engine"
     import poke_engine
 
+    native_module = importlib.import_module("poke_engine.poke_engine")
+    native_path = Path(native_module.__file__).resolve()
+    native_sha256 = hashlib.sha256(native_path.read_bytes()).hexdigest()
+    pinned_root_raw = os.environ.get("METAGROSS_PINNED_ENGINE_IMPORT_ROOT")
+    pinned_sha256 = os.environ.get("METAGROSS_PINNED_ENGINE_SHA256")
+    if bool(pinned_root_raw) != bool(pinned_sha256):
+        raise RuntimeError("pinned engine provenance contract is incomplete")
+    if pinned_root_raw and pinned_sha256:
+        pinned_root = Path(pinned_root_raw).expanduser().resolve()
+        module_path = Path(poke_engine.__file__).resolve()
+        if not module_path.is_relative_to(pinned_root) or not native_path.is_relative_to(
+            pinned_root
+        ):
+            raise RuntimeError("pinned engine escaped isolated import root")
+        if native_sha256 != pinned_sha256.lower():
+            raise RuntimeError("pinned engine native SHA-256 mismatch")
+        state = poke_engine.State()
+        if not hasattr(state, "s1_public_reveals") or not hasattr(
+            state, "s2_public_reveals"
+        ):
+            raise RuntimeError("pinned engine lacks native reveal masks")
+        root_parameters = list(
+            inspect.signature(
+                poke_engine.monte_carlo_tree_search_with_s1_request
+            ).parameters
+        )
+        if root_parameters != [
+            "state",
+            "request_actions",
+            "duration_ms",
+            "iterations",
+            "threads",
+            "s1_priors",
+            "s2_priors",
+            "c_puct",
+            "seed",
+        ]:
+            raise RuntimeError("pinned engine request-authoritative ABI mismatch")
+        return {
+            "distribution_version": importlib.metadata.version("poke_engine"),
+            "editable": False,
+            "module_path": str(module_path),
+            "native_path": str(native_path),
+            "native_sha256": native_sha256,
+            "source_path": None,
+            "isolated_import_root": str(pinned_root),
+            "mcts_parameters": list(
+                inspect.signature(poke_engine.monte_carlo_tree_search).parameters
+            ),
+            "request_root_parameters": root_parameters,
+            "native_reveal_masks": True,
+            "mode": "exact_pinned_experimental_runtime",
+        }
+
     distribution = importlib.metadata.distribution("poke_engine")
     direct_url = json.loads(distribution.read_text("direct_url.json") or "{}")
     source_url = direct_url.get("url")
     if not source_url or urlparse(source_url).scheme != "file":
         raise RuntimeError("poke-engine install has no local source provenance")
     source_path = Path(unquote(urlparse(source_url).path)).resolve()
-    native_module = importlib.import_module("poke_engine.poke_engine")
-    native_path = Path(native_module.__file__).resolve()
     provenance = {
         "distribution_version": distribution.version,
         "editable": bool((direct_url.get("dir_info") or {}).get("editable")),
         "module_path": str(Path(poke_engine.__file__).resolve()),
         "native_path": str(native_path),
-        "native_sha256": hashlib.sha256(native_path.read_bytes()).hexdigest(),
+        "native_sha256": native_sha256,
         "source_path": str(source_path),
         "mcts_parameters": list(
             inspect.signature(poke_engine.monte_carlo_tree_search).parameters
@@ -3976,6 +4074,37 @@ def patch_foul_play_protocol() -> None:
             return await original_pokemon_battle(
                 ps_websocket_client, pokemon_battle_type, team_dict
             )
+        except RuntimeError as exc:
+            # Two per-battle failures should abandon just this battle (forfeit +
+            # leave, count a loss, keep laddering) instead of crashing the whole
+            # block — matching how the deployed causal stack was operated
+            # (auto-resume). (1) A relayed (Tailscale/DERP) websocket drops
+            # mid-battle and the reconnect integrity guard refuses the replay.
+            # (2) A causal-ledger edge case (e.g. ability-changing Transform)
+            # the ledger cannot represent. Both guards are CORRECT to refuse the
+            # unverifiable/unsupported battle; the causal-history guarantee is
+            # preserved (we never play on history we could not build/verify).
+            # ABANDON_REASON is logged so the forfeit rate is measurable, and
+            # per-arm so the causal-only ledger forfeits are not conflated with
+            # the relay forfeits both arms share.
+            is_reconnect = "reconnect replay" in str(exc)
+            is_ledger = isinstance(exc, CausalRevealLedgerError)
+            if not (is_reconnect or is_ledger):
+                raise
+            reason = "reconnect" if is_reconnect else "ledger"
+            logger.warning(
+                "ABANDON_BATTLE reason=%s (%s); forfeiting and continuing the ladder",
+                reason, exc,
+            )
+            rooms = set(getattr(
+                ps_websocket_client, "metagross_active_battle_rooms", set()))
+            for room in rooms:
+                for command in ("/forfeit", "/leave"):
+                    try:
+                        await ps_websocket_client.send_message(room, [command])
+                    except Exception:
+                        pass
+            return None
         finally:
             ps_websocket_client.metagross_active_battle_rooms = set()
             ps_websocket_client.metagross_reconnect_count = 0
@@ -4020,6 +4149,18 @@ def _mcts_with_root_priors(state_str, search_time_ms, index, threads=1):
         kwargs["c_puct"] = _PRIOR_STATE["cpuct"]
     if _PRIOR_STATE["opp_priors"]:
         kwargs["s2_priors"] = _PRIOR_STATE["opp_priors"]
+    # Deterministic cross-platform depth: when set, convert the wall-clock
+    # budget to an exact iteration budget (scaled by the scheduler's own
+    # 250/500 ms tier ratio). Absent env = unchanged production behavior.
+    iterations_per_500 = os.environ.get("METAGROSS_SEARCH_ITERATIONS_PER_500MS")
+    if iterations_per_500:
+        return poke_engine.monte_carlo_tree_search(
+            state,
+            0,
+            iterations=max(1, int(int(iterations_per_500) * search_time_ms / 500)),
+            threads=FoulPlayConfig.search_threads,
+            **kwargs,
+        )
     return poke_engine.monte_carlo_tree_search(
         state,
         search_time_ms,
@@ -4090,6 +4231,7 @@ def build_decision_harness() -> DecisionHarness:
                 "request_sha256": payload.get("request_sha256"),
                 "own_legality": payload.get("own_legality"),
                 "opponent_support": payload.get("opponent_support"),
+                "r1_policy_snapshot": payload.get("r1_policy_snapshot"),
             },
         )
 
@@ -4132,6 +4274,370 @@ def build_decision_harness() -> DecisionHarness:
     )
 
 
+def _terminal_mcts_teacher_enabled() -> bool:
+    slot = os.environ.get("METAGROSS_TERMINAL_MCTS_TEACHER_SLOT")
+    namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE")
+    return bool(slot and slot == namespace)
+
+
+def _terminal_mcts_one_deviation_enabled() -> bool:
+    slot = os.environ.get("METAGROSS_TERMINAL_MCTS_ONE_DEVIATION_SLOT")
+    namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE")
+    return bool(slot and slot == namespace)
+
+
+def _terminal_mcts_one_deviation_controller() -> OneDeviationController:
+    global _TERMINAL_MCTS_ONE_DEVIATION_CONTROLLER
+    if _TERMINAL_MCTS_ONE_DEVIATION_CONTROLLER is None:
+        seed = os.environ.get("METAGROSS_TERMINAL_MCTS_ONE_DEVIATION_SEED")
+        prefix = os.environ.get("METAGROSS_TERMINAL_MCTS_ONE_DEVIATION_PREFIX")
+        if not seed or not prefix:
+            raise RuntimeError("one-deviation randomization configuration is incomplete")
+        _TERMINAL_MCTS_ONE_DEVIATION_CONTROLLER = OneDeviationController(
+            seed=seed,
+            username_prefix=prefix,
+            teacher_contract=os.environ.get(
+                "METAGROSS_TERMINAL_MCTS_ONE_DEVIATION_CONTRACT",
+                "legacy_terminal_mcts",
+            ),
+        )
+    return _TERMINAL_MCTS_ONE_DEVIATION_CONTROLLER
+
+
+def _terminal_mcts_one_deviation_identity() -> tuple[str, str, int]:
+    context = _PRIOR_STATE.get("context") or {}
+    tag = str(context.get("tag") or "")
+    decision_index = int(context.get("decision_idx") or 0)
+    snapshot = context.get("r1_policy_snapshot")
+    username = str(snapshot.get("username") or "") if isinstance(snapshot, dict) else ""
+    if not username:
+        from config import FoulPlayConfig
+
+        username = str(getattr(FoulPlayConfig, "username", "") or "")
+    if not tag or not username:
+        raise RuntimeError("one-deviation identity is incomplete")
+    return tag, username, decision_index
+
+
+def _terminal_mcts_teacher_decision(
+    harness: DecisionHarness,
+    search_main,
+    battle,
+    production_choice: str,
+) -> dict[str, object]:
+    """Call the isolated Python-3.11 exact engine without exporting worlds."""
+    python = os.environ.get("METAGROSS_TERMINAL_MCTS_PYTHON")
+    script = os.environ.get("METAGROSS_TERMINAL_MCTS_SCRIPT")
+    pythonpath = os.environ.get("METAGROSS_TERMINAL_MCTS_PYTHONPATH")
+    if not python or not script or not pythonpath:
+        raise RuntimeError("terminal-MCTS teacher command is incomplete")
+    global _CAUSAL_RECEIPT_CONTEXT
+    context = _PRIOR_STATE.get("context") or {}
+    tag = str(context.get("tag") or getattr(battle, "battle_tag", ""))
+    decision_index = int(context.get("decision_idx") or 0)
+    rqid = getattr(battle, "rqid", None)
+    root_id = hashlib.sha256(
+        f"terminal-mcts-live\0{tag}\0{decision_index}".encode("utf-8")
+    ).hexdigest()
+    schedules = []
+    for schedule_id in (0, 1):
+        sampled, _count, _duration = harness.belief.expand(
+            battle, search_main, f"terminal-mcts-schedule-{schedule_id}"
+        )
+        if len(sampled) < 8:
+            raise RuntimeError("terminal-MCTS teacher belief has fewer than eight worlds")
+        selected = sampled[:8]
+        masses = [float(weight) for _world, weight in selected]
+        total = math.fsum(masses)
+        if total <= 0 or any(not math.isfinite(weight) or weight < 0 for weight in masses):
+            raise RuntimeError("terminal-MCTS teacher belief weights are invalid")
+        worlds = []
+        for world_index, ((world, _raw_weight), weight) in enumerate(
+            zip(selected, masses, strict=True)
+        ):
+            previous_context = _CAUSAL_RECEIPT_CONTEXT
+            _CAUSAL_RECEIPT_CONTEXT = {
+                "phase": "equal8192_candidate",
+                "cohort": "fixed_two_by_eight",
+                "battle_tag": tag,
+                "rqid": rqid,
+                "decision_index": decision_index,
+                "root_id": root_id,
+                "declared_world_count": 16,
+                "conversion_index": schedule_id * 8 + world_index,
+                "schedule_index": schedule_id,
+                "world_index": world_index,
+            }
+            try:
+                state = search_main.battle_to_poke_engine_state(world).to_string()
+            finally:
+                _CAUSAL_RECEIPT_CONTEXT = previous_context
+            worlds.append({"state": state, "weight": weight / total})
+        schedules.append({"worlds": worlds})
+    payload = {
+        "root_id": root_id,
+        "battle_id": tag,
+        "production_choice": production_choice,
+        "request_actions": sorted(request_player_actions(battle)),
+        "seed": _derived_seed("terminal-mcts-outcome", 0, required=True),
+        "schedules": schedules,
+    }
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = pythonpath
+    timeout = positive_environment_seconds("METAGROSS_TERMINAL_MCTS_TIMEOUT_SECONDS", 60.0)
+    completed = subprocess.run(
+        [python, script, "--workers", os.environ.get("METAGROSS_TERMINAL_MCTS_WORKERS", "4")],
+        input=json.dumps(payload, sort_keys=True, separators=(",", ":")),
+        text=True,
+        capture_output=True,
+        timeout=timeout,
+        env=environment,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("terminal-MCTS teacher subprocess failed")
+    lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if len(lines) != 1:
+        raise RuntimeError("terminal-MCTS teacher returned invalid output framing")
+    try:
+        result = json.loads(lines[0])
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("terminal-MCTS teacher returned invalid JSON") from exc
+    if (
+        not isinstance(result, dict)
+        or result.get("schema") != "metagross-terminal-mcts-live-decision/v1"
+        or result.get("selected_action") not in request_player_actions(battle)
+        or result.get("decision") not in {"override", "abstain"}
+    ):
+        raise RuntimeError("terminal-MCTS teacher returned an invalid decision")
+    return result
+
+
+def automatic_request_action(own_legality: object) -> str | None:
+    """Identify Showdown-only forced commands that are not policy decisions."""
+    if not isinstance(own_legality, dict):
+        return None
+    actions = own_legality.get("actions")
+    if not isinstance(actions, (list, tuple)) or len(actions) != 1:
+        return None
+    action = actions[0]
+    return action if action in {"recharge", "struggle"} else None
+
+
+def cycle30_dynamic_boundary_evidence(
+    battle: object,
+    own_legality: object,
+    decision_index: object,
+    *,
+    max_decision_index: int,
+    max_battle_turn: int,
+) -> dict[str, object]:
+    """Classify the smoke-only Cycle30 causal boundary without policy values.
+
+    This function is deliberately read-only.  The exact private request decides
+    whether a root is ordinary, while the attached causal ledger decides whether
+    an intrinsic opponent move has become public.  Search output, sampled worlds
+    and hidden completion fields are not consulted.
+    """
+    if (
+        isinstance(decision_index, bool)
+        or not isinstance(decision_index, int)
+        or decision_index < 0
+    ):
+        raise RuntimeError("Cycle30 boundary has invalid decision index")
+    request = getattr(battle, "request_json", None)
+    if not isinstance(request, dict):
+        raise RuntimeError("Cycle30 boundary has no exact private request")
+    wait = request.get("wait", False)
+    if not isinstance(wait, bool):
+        raise RuntimeError("Cycle30 boundary has invalid wait metadata")
+    force_switch_rows = request.get("forceSwitch", [False])
+    if not isinstance(force_switch_rows, list) or not force_switch_rows:
+        raise RuntimeError("Cycle30 boundary has invalid forceSwitch metadata")
+    if any(not isinstance(value, bool) for value in force_switch_rows):
+        raise RuntimeError("Cycle30 boundary has invalid forceSwitch metadata")
+    force_switch = any(force_switch_rows)
+    automatic = automatic_request_action(own_legality)
+    battle_turn = getattr(battle, "turn", None)
+    if isinstance(battle_turn, bool) or not isinstance(battle_turn, int):
+        raise RuntimeError("Cycle30 boundary has invalid public battle turn")
+    ledger = attached_ledger(battle)
+    intrinsic_events = [
+        event
+        for fact in ledger.facts
+        for event in fact.move_events
+        if event.authority == "intrinsic_public_execution"
+    ]
+    ordinary = not wait and not force_switch and automatic is None
+    within_bounds = (
+        decision_index <= max_decision_index and battle_turn <= max_battle_turn
+    )
+    return {
+        "eligible": ordinary and bool(intrinsic_events) and within_bounds,
+        "ordinary": ordinary,
+        "wait": wait,
+        "force_switch": force_switch,
+        "automatic_action": automatic,
+        "intrinsic_opponent_move_events": len(intrinsic_events),
+        "decision_index": decision_index,
+        "battle_turn": battle_turn,
+        "max_decision_index": max_decision_index,
+        "max_battle_turn": max_battle_turn,
+        "within_bounds": within_bounds,
+        "protocol_sha256": ledger.protocol_sha256,
+    }
+
+
+def cycle31_candidate_boundary_receipt(
+    battle: object,
+    own_legality: object,
+    decision_index: object,
+    teacher: object,
+    selected_action: str,
+    *,
+    max_decision_index: int,
+    max_battle_turn: int,
+) -> dict[str, object]:
+    """Bind Cycle30 eligibility to a completed agent-A equal8192 result."""
+    if (
+        os.environ.get("METAGROSS_PRIOR_NAMESPACE") != "agent_a"
+        or os.environ.get("METAGROSS_TERMINAL_MCTS_TEACHER_SLOT") != "agent_a"
+    ):
+        raise RuntimeError("Cycle31 boundary is not in the agent-A candidate stream")
+    if not isinstance(teacher, dict) or (
+        teacher.get("controller_schema")
+        != "metagross-cycle19-equal8192-production-selector/v1"
+    ):
+        raise RuntimeError("Cycle31 boundary lacks the frozen equal8192 controller")
+    if (
+        teacher.get("iterations_per_world") != 8192
+        or teacher.get("schedule_count") != 2
+        or teacher.get("world_count") != 16
+        or str(teacher.get("reason", "")).startswith("fail_closed")
+    ):
+        raise RuntimeError("Cycle31 equal8192 candidate result is incomplete")
+    receipts = teacher.get("receipts")
+    if not isinstance(receipts, list) or len(receipts) != 16:
+        raise RuntimeError("Cycle31 equal8192 receipt count changed")
+    cells = set()
+    for row in receipts:
+        if not isinstance(row, dict) or row.get("total_visits") != 8192:
+            raise RuntimeError("Cycle31 candidate world lacks exactly 8192 visits")
+        schedule = row.get("schedule_index")
+        world = row.get("world_index")
+        if (
+            isinstance(schedule, bool)
+            or not isinstance(schedule, int)
+            or isinstance(world, bool)
+            or not isinstance(world, int)
+        ):
+            raise RuntimeError("Cycle31 candidate receipt cell is invalid")
+        cells.add((schedule, world))
+    if cells != {(schedule, world) for schedule in range(2) for world in range(8)}:
+        raise RuntimeError("Cycle31 candidate receipt cells are incomplete")
+    evidence = cycle30_dynamic_boundary_evidence(
+        battle,
+        own_legality,
+        decision_index,
+        max_decision_index=max_decision_index,
+        max_battle_turn=max_battle_turn,
+    )
+    context = _PRIOR_STATE.get("context") or {}
+    tag = str(context.get("tag") or getattr(battle, "battle_tag", ""))
+    rqid = getattr(battle, "rqid", None)
+    root_id = hashlib.sha256(
+        f"terminal-mcts-live\0{tag}\0{decision_index}".encode("utf-8")
+    ).hexdigest()
+    ledger = attached_ledger(battle)
+    username = str(getattr(getattr(battle, "user", None), "name", "") or "")
+    if (
+        not tag
+        or isinstance(rqid, bool)
+        or not isinstance(rqid, int)
+        or not username
+        or ledger.battle_tag not in {tag, tag.removeprefix("battle-")}
+        or ledger.protocol_sha256 != evidence["protocol_sha256"]
+    ):
+        raise RuntimeError("Cycle31 candidate identity is incomplete")
+    return {
+        "battle_tag": tag,
+        "rqid": rqid,
+        "decision_index": decision_index,
+        "root_id": root_id,
+        "selected_action": selected_action,
+        "active_name": getattr(
+            getattr(getattr(battle, "user", None), "active", None), "name", ""
+        ),
+        "decision_complete_time_ns": time.time_ns(),
+        "cycle30_dynamic_boundary": evidence,
+        "cycle31_candidate_attribution": {
+            "namespace": "agent_a",
+            "username": username,
+            "observer_role": ledger.observer_role,
+            "battle_tag": tag,
+            "rqid": rqid,
+            "decision_index": decision_index,
+            "root_id": root_id,
+            "protocol_sha256": ledger.protocol_sha256,
+            "controller_schema": teacher["controller_schema"],
+            "candidate_cells": [list(cell) for cell in sorted(cells)],
+            "iterations_per_world": 8192,
+        },
+    }
+
+
+def cycle32_authenticated_candidate_boundary_receipt(
+    battle: object,
+    own_legality: object,
+    decision_index: object,
+    teacher: object,
+    selected_action: str,
+    *,
+    max_decision_index: int,
+    max_battle_turn: int,
+) -> dict[str, object]:
+    """Keep Cycle31 mechanics while separating role from public username."""
+    receipt = cycle31_candidate_boundary_receipt(
+        battle,
+        own_legality,
+        decision_index,
+        teacher,
+        selected_action,
+        max_decision_index=max_decision_index,
+        max_battle_turn=max_battle_turn,
+    )
+    attribution = receipt["cycle31_candidate_attribution"]
+    ledger = attached_ledger(battle)
+    internal_role = str(
+        getattr(getattr(battle, "user", None), "name", "") or ""
+    )
+    if internal_role not in {"p1", "p2"} or internal_role != ledger.observer_role:
+        raise RuntimeError("Cycle32 internal battle role disagrees with causal ledger")
+    from config import FoulPlayConfig
+
+    configured_username = str(getattr(FoulPlayConfig, "username", "") or "")
+    if not configured_username:
+        raise RuntimeError("Cycle32 spawned runtime has no configured username")
+    public_names = set()
+    for line in protocol_lines_for_battle(ledger.battle_tag):
+        parts = line.split("|")
+        if len(parts) >= 4 and parts[1] == "player" and parts[2] == internal_role:
+            public_names.add(parts[3])
+    if (
+        len(public_names) != 1
+        or _normalize_identifier(next(iter(public_names)))
+        != _normalize_identifier(configured_username)
+    ):
+        raise RuntimeError("Cycle32 public player mapping is missing or mismatched")
+    attribution["internal_battle_role"] = internal_role
+    attribution["external_authenticated_username"] = configured_username
+    attribution["external_username_authority"] = (
+        "spawned_runtime_plus_causal_public_player_line"
+    )
+    attribution.pop("username", None)
+    return receipt
+
+
 def patch_root_priors(harness: DecisionHarness | None = None) -> None:
     """Connect Foul Play's search roots to the local r1 policy server."""
     server_url = os.environ.get("METAGROSS_PRIOR_SERVER")
@@ -4156,6 +4662,7 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         if message.startswith(">battle-"):
             lines = message.split("\n")
             tag = lines[0].lstrip(">").strip()
+            record_public_protocol_lines(tag, lines[1:])
             try:
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(
@@ -4170,9 +4677,104 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
                         f"required protocol tee failed: {exc!r}"
                     ) from exc
                 logger.warning("prior protocol tee failed: %r", exc)
+            boundary_path = (
+                os.environ.get("METAGROSS_CYCLE32_BOUNDARY_RECEIPT")
+                or os.environ.get("METAGROSS_CYCLE31_BOUNDARY_RECEIPT")
+                or os.environ.get("METAGROSS_CYCLE30_BOUNDARY_RECEIPT")
+                or os.environ.get("METAGROSS_CYCLE27_BOUNDARY_RECEIPT")
+                or os.environ.get("METAGROSS_CYCLE25_BOUNDARY_RECEIPT")
+            )
+            boundary = _CYCLE25_EXECUTION_BOUNDARIES.get(tag)
+            if boundary_path and boundary and not Path(boundary_path).exists():
+                selected = str(boundary["selected_action"])
+                target = _normalize_identifier(
+                    selected.removeprefix("switch ").removesuffix("-tera")
+                )
+                active = _normalize_identifier(boundary.get("active_name"))
+                matched_line = None
+                for line in lines[1:]:
+                    parts = line.split("|")
+                    if selected.startswith("switch "):
+                        if (
+                            len(parts) >= 4
+                            and parts[1] in {"switch", "drag", "replace"}
+                            and _normalize_identifier(parts[3].split(",", 1)[0]) == target
+                        ):
+                            matched_line = line
+                            break
+                    elif (
+                        len(parts) >= 4
+                        and parts[1] == "move"
+                        and _normalize_identifier(parts[2].split(":", 1)[-1]) == active
+                        and _normalize_identifier(parts[3]) == target
+                    ):
+                        matched_line = line
+                        break
+                if matched_line is not None:
+                    receipt = {
+                        "schema": "metagross-cycle25-public-execution-boundary/v1",
+                        **boundary,
+                        "public_line": matched_line,
+                        "public_execution_time_ns": time.time_ns(),
+                    }
+                    destination = Path(boundary_path).resolve()
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    with destination.open("x", encoding="utf-8") as handle:
+                        json.dump(receipt, handle, sort_keys=True)
+                        handle.write("\n")
+                    # Smoke-only latch: the external monitor terminates this
+                    # process before the newly received next request is parsed.
+                    while (
+                        os.environ.get("METAGROSS_CYCLE32_BOUNDARY_RECEIPT")
+                        or os.environ.get("METAGROSS_CYCLE31_BOUNDARY_RECEIPT")
+                        or os.environ.get("METAGROSS_CYCLE30_BOUNDARY_RECEIPT")
+                        or os.environ.get("METAGROSS_CYCLE27_BOUNDARY_RECEIPT")
+                        or os.environ.get("METAGROSS_CYCLE25_BOUNDARY_RECEIPT")
+                    ):
+                        time.sleep(0.05)
+            if terminal_showdown_message(message):
+                clear_public_protocol_lines(tag)
         return message
 
     PSWebsocketClient.receive_message = receive_with_tee
+    original_battle_to_engine = search_main.battle_to_poke_engine_state
+    original_prepare_random_battles = search_main.prepare_random_battles
+    engine_module = importlib.import_module("poke_engine")
+
+    def prepare_random_battles_with_causal_move_receipts(
+        battle, num_battles, rng=None
+    ):
+        return prepare_production_random_battles_with_causal_move_receipts(
+            original_prepare_random_battles, battle, num_battles, rng=rng
+        )
+
+    search_main.prepare_random_battles = (
+        prepare_random_battles_with_causal_move_receipts
+    )
+
+    def battle_to_engine_with_causal_ledger(battle, swap=False):
+        with _CAUSAL_RECEIPT_CONTEXT_LOCK:
+            receipt_context = (
+                dict(_CAUSAL_RECEIPT_CONTEXT)
+                if _CAUSAL_RECEIPT_CONTEXT is not None
+                else None
+            )
+            if receipt_context is not None and receipt_context["phase"] == "production_control":
+                receipt_context["conversion_index"] = int(
+                    _CAUSAL_RECEIPT_CONTEXT["conversion_index"]
+                )
+                _CAUSAL_RECEIPT_CONTEXT["conversion_index"] = int(
+                    _CAUSAL_RECEIPT_CONTEXT["conversion_index"]
+                ) + 1
+        return convert_battle_with_causal_ledger(
+            battle,
+            original_battle_to_engine,
+            engine_module,
+            swap=bool(swap),
+            receipt_context=receipt_context,
+        )
+
+    search_main.battle_to_poke_engine_state = battle_to_engine_with_causal_ledger
     search_main.get_result_from_mcts = _mcts_with_root_priors
     original_find_best_move = search_main.find_best_move
 
@@ -4298,6 +4900,137 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
             _PRIOR_STATE["priors"],
             independent_evidence=holdout_by_action or None,
         )
+        terminal_teacher_enabled = _terminal_mcts_teacher_enabled()
+        one_deviation_enabled = _terminal_mcts_one_deviation_enabled()
+        if terminal_teacher_enabled and one_deviation_enabled:
+            raise RuntimeError(
+                "legacy terminal teacher and one-deviation experiment cannot both be enabled"
+            )
+        if terminal_teacher_enabled:
+            try:
+                terminal_teacher = _terminal_mcts_teacher_decision(
+                    harness,
+                    search_main,
+                    _PRIOR_STATE["battle"],
+                    choice,
+                )
+            except Exception as exc:
+                logger.error(
+                    "terminal-MCTS teacher failed closed: %s", type(exc).__name__
+                )
+                terminal_teacher = {
+                    "schema": "metagross-terminal-mcts-live-decision/v1",
+                    "decision": "abstain",
+                    "selected_action": choice,
+                    "reason": f"fail_closed:{type(exc).__name__}",
+                }
+            previous_choice = choice
+            if terminal_teacher["decision"] == "override":
+                choice = str(terminal_teacher["selected_action"])
+                if os.environ.get("METAGROSS_TERMINAL_MCTS_MODE") in {
+                    "cycle18_equal8192",
+                    "cycle19_equal8192",
+                }:
+                    cycle = os.environ.get("METAGROSS_TERMINAL_MCTS_MODE").split("_")[0]
+                    choice_override["reason"] = f"{cycle}_equal8192_override"
+                    choice_override["selection_class"] = "prospective_fixed_search_candidate"
+                else:
+                    choice_override["reason"] = "certified_terminal_mcts_override"
+                    choice_override["selection_class"] = "certified_terminal_teacher"
+            choice_override["terminal_mcts_teacher"] = terminal_teacher
+            choice_override["terminal_mcts_production_choice"] = previous_choice
+            choice_override["final_choice"] = choice
+            choice_override["overridden"] = choice != choice_override["raw_choice"]
+        elif one_deviation_enabled:
+            one_deviation = _terminal_mcts_one_deviation_controller()
+            tag, username, decision_index = _terminal_mcts_one_deviation_identity()
+            if one_deviation.should_query(tag, username):
+                previous_choice = choice
+                try:
+                    terminal_teacher = _terminal_mcts_teacher_decision(
+                        harness,
+                        search_main,
+                        _PRIOR_STATE["battle"],
+                        choice,
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "one-deviation terminal-MCTS teacher failed closed: %s",
+                        type(exc).__name__,
+                    )
+                    terminal_teacher = {
+                        "schema": "metagross-terminal-mcts-live-decision/v1",
+                        "decision": "abstain",
+                        "selected_action": choice,
+                        "reason": f"fail_closed:{type(exc).__name__}",
+                    }
+                choice, one_deviation_row = one_deviation.observe(
+                    battle_tag=tag,
+                    username=username,
+                    decision_index=decision_index,
+                    production_choice=previous_choice,
+                    teacher=terminal_teacher,
+                )
+                if one_deviation_row["eligible"] and one_deviation_row[
+                    "intervention_applied"
+                ]:
+                    choice_override["reason"] = "randomized_one_deviation_teacher"
+                    choice_override["selection_class"] = (
+                        "randomized_terminal_teacher_intervention"
+                    )
+                choice_override["terminal_mcts_teacher"] = terminal_teacher
+                choice_override["terminal_mcts_one_deviation"] = one_deviation_row
+                choice_override["terminal_mcts_production_choice"] = previous_choice
+                choice_override["final_choice"] = choice
+                choice_override["overridden"] = choice != choice_override["raw_choice"]
+        if (
+            os.environ.get("METAGROSS_CYCLE32_BOUNDARY_RECEIPT")
+            or os.environ.get("METAGROSS_CYCLE31_BOUNDARY_RECEIPT")
+        ):
+            if terminal_teacher_enabled:
+                cycle32 = bool(os.environ.get("METAGROSS_CYCLE32_BOUNDARY_RECEIPT"))
+                boundary_builder = (
+                    cycle32_authenticated_candidate_boundary_receipt
+                    if cycle32
+                    else cycle31_candidate_boundary_receipt
+                )
+                cycle31_boundary = boundary_builder(
+                    _PRIOR_STATE["battle"],
+                    (_PRIOR_STATE.get("context") or {}).get("own_legality"),
+                    (_PRIOR_STATE.get("context") or {}).get("decision_idx"),
+                    choice_override.get("terminal_mcts_teacher"),
+                    choice,
+                    max_decision_index=int(
+                        os.environ.get(
+                            "METAGROSS_CYCLE32_MAX_DECISION_INDEX"
+                            if cycle32
+                            else "METAGROSS_CYCLE31_MAX_DECISION_INDEX",
+                            "5",
+                        )
+                    ),
+                    max_battle_turn=int(
+                        os.environ.get(
+                            "METAGROSS_CYCLE32_MAX_BATTLE_TURN"
+                            if cycle32
+                            else "METAGROSS_CYCLE31_MAX_BATTLE_TURN",
+                            "6",
+                        )
+                    ),
+                )
+                if (
+                    cycle31_boundary["cycle30_dynamic_boundary"]["within_bounds"]
+                    is not True
+                ):
+                    raise RuntimeError(
+                        "candidate smoke reached its decision/turn bound without an eligible root"
+                    )
+                if (
+                    cycle31_boundary["cycle30_dynamic_boundary"]["eligible"]
+                    is True
+                ):
+                    _CYCLE25_EXECUTION_BOUNDARIES[
+                        str(cycle31_boundary["battle_tag"])
+                    ] = cycle31_boundary
         selected_holdout = holdout_by_action.get(choice)
         if selected_holdout is None and candidate_panel:
             selected_holdout = holdout_by_action.get(candidate_panel[0]["action"])
@@ -4378,7 +5111,56 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
 
     search_main.select_move_from_mcts_results = select_move_with_dump
 
+    def capture_dual_r1_root(battle, snapshot: PolicySnapshot) -> None:
+        if os.environ.get("METAGROSS_DUAL_R1_CAPTURE") != "1":
+            return
+        # Recharge/Struggle requests are automatic Showdown commands outside
+        # R1's learned 13-action policy. The prior server intentionally does
+        # not advance or snapshot the policy trajectory for them.
+        if automatic_request_action(snapshot.context.get("own_legality")) is not None:
+            return
+        decision_log = os.environ.get("METAGROSS_DECISION_LOG")
+        policy_snapshot = snapshot.context.get("r1_policy_snapshot")
+        if not decision_log or not isinstance(policy_snapshot, dict):
+            raise RuntimeError("dual-R1 capture requires a decision log and schema-6 snapshot")
+        if policy_snapshot.get("schema") != 6:
+            raise RuntimeError("dual-R1 capture requires a schema-6 policy snapshot")
+        state = search_main.battle_to_poke_engine_state(battle).to_string()
+        row = {
+            "schema": "metagross-causal-dual-r1-root/v1",
+            "identity": {
+                "namespace": os.environ.get("METAGROSS_PRIOR_NAMESPACE", ""),
+                "battle_tag": snapshot.context.get("tag"),
+                "username": str(policy_snapshot.get("username") or ""),
+                "decision_idx": snapshot.context.get("decision_idx"),
+                "battle_turn": snapshot.context.get("battle_turn"),
+            },
+            "state": state,
+            "state_sha256": hashlib.sha256(state.encode("utf-8")).hexdigest(),
+            "r1_policy_snapshot": policy_snapshot,
+        }
+        row["capture_sha256"] = hashlib.sha256(
+            json.dumps(row, sort_keys=True, separators=(",", ":")).encode("ascii")
+        ).hexdigest()
+        path = Path(f"{decision_log}.dual-r1-roots.jsonl")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+        try:
+            os.fchmod(descriptor, 0o600)
+            payload = (json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n").encode(
+                "ascii"
+            )
+            while payload:
+                written = os.write(descriptor, payload)
+                if written <= 0:
+                    raise OSError("dual-R1 root capture made no progress")
+                payload = payload[written:]
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
     def find_best_move_with_priors(battle):
+        global _CAUSAL_RECEIPT_CONTEXT
         request_key, request_fingerprint = battle_request_identity(battle)
         cached = _REQUEST_CHOICE_CACHE.get(request_key)
         if cached is not None:
@@ -4387,6 +5169,7 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
                 raise RuntimeError("Showdown replay changed an existing rqid payload")
             logger.warning("replaying cached choice for duplicate rqid %s", request_key)
             return cached_choice
+        freeze_and_attach_battle_ledger(battle)
         _PRIOR_STATE["priors"] = None
         _PRIOR_STATE["opp_priors"] = None
         _PRIOR_STATE["context"] = None
@@ -4395,13 +5178,16 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         snapshot = None
         try:
             snapshot = harness.policy.propose(battle)
-            _PRIOR_STATE["priors"] = list(snapshot.priors)
+            from srcs.metagross.prior_temperature import flatten_priors
+            _PRIOR_STATE["priors"] = flatten_priors(
+                list(snapshot.priors), getattr(battle, "turn", None))
             _PRIOR_STATE["opp_priors"] = (
                 list(snapshot.opponent_priors)
                 if snapshot.opponent_priors is not None
                 else None
             )
             _PRIOR_STATE["context"] = dict(snapshot.context)
+            capture_dual_r1_root(battle, snapshot)
             logger.info(
                 f"loaded {len(snapshot.priors)} player and "
                 f"{len(_PRIOR_STATE['opp_priors'] or ())} effective opponent priors"
@@ -4416,7 +5202,73 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
         ):
             choice = _remote_find_best_move(battle, search_main, harness)
         else:
-            choice = original_find_best_move(battle)
+            context = _PRIOR_STATE.get("context") or {}
+            tag = str(context.get("tag") or request_key[0])
+            decision_index = int(context.get("decision_idx") or 0)
+            root_id = hashlib.sha256(
+                f"terminal-mcts-live\0{tag}\0{decision_index}".encode("utf-8")
+            ).hexdigest()
+            cycle30_boundary = None
+            if os.environ.get("METAGROSS_CYCLE30_BOUNDARY_RECEIPT"):
+                cycle30_boundary = cycle30_dynamic_boundary_evidence(
+                    battle,
+                    context.get("own_legality"),
+                    decision_index,
+                    max_decision_index=int(
+                        os.environ.get("METAGROSS_CYCLE30_MAX_DECISION_INDEX", "5")
+                    ),
+                    max_battle_turn=int(
+                        os.environ.get("METAGROSS_CYCLE30_MAX_BATTLE_TURN", "6")
+                    ),
+                )
+                if cycle30_boundary["within_bounds"] is not True:
+                    raise RuntimeError(
+                        "Cycle30 reached its decision/turn bound without an eligible root"
+                    )
+            declared_world_count, _search_time = (
+                search_main.search_time_num_battles_randombattles(battle)
+            )
+            _CAUSAL_RECEIPT_CONTEXT = {
+                "phase": "production_control",
+                "cohort": "adaptive_root_search",
+                "battle_tag": tag,
+                "rqid": request_key[1],
+                "decision_index": decision_index,
+                "root_id": root_id,
+                "declared_world_count": declared_world_count,
+                "conversion_index": 0,
+                "schedule_index": None,
+                "world_index": None,
+            }
+            try:
+                choice = original_find_best_move(battle)
+            finally:
+                _CAUSAL_RECEIPT_CONTEXT = None
+            boundary_target = int(
+                os.environ.get("METAGROSS_SMOKE_BOUNDARY_DECISION_INDEX", "0")
+            )
+            legacy_boundary = (
+                os.environ.get("METAGROSS_CYCLE27_BOUNDARY_RECEIPT")
+                or os.environ.get("METAGROSS_CYCLE25_BOUNDARY_RECEIPT")
+            ) and decision_index >= boundary_target
+            if (
+                cycle30_boundary is not None
+                and cycle30_boundary["eligible"] is True
+            ) or legacy_boundary:
+                _CYCLE25_EXECUTION_BOUNDARIES[tag] = {
+                    "battle_tag": tag,
+                    "rqid": request_key[1],
+                    "decision_index": decision_index,
+                    "root_id": root_id,
+                    "selected_action": choice,
+                    "active_name": getattr(
+                        getattr(getattr(battle, "user", None), "active", None),
+                        "name",
+                        "",
+                    ),
+                    "decision_complete_time_ns": time.time_ns(),
+                    "cycle30_dynamic_boundary": cycle30_boundary,
+                }
         if snapshot is not None:
             # This is the causal action boundary: persist the exact final
             # choice before the caller is allowed to send it to Showdown.
@@ -4433,8 +5285,45 @@ def patch_root_priors(harness: DecisionHarness | None = None) -> None:
     )
 
 
+def _install_websocket_socks_egress() -> None:
+    """Route the Showdown websocket through a SOCKS5 proxy when
+    METAGROSS_WEBSOCKET_SOCKS is set (e.g. a Tailscale userspace proxy whose
+    exit node is a residential connection). Fail-closed: if the env is set but
+    the proxy machinery is unusable, raise rather than fall back to a direct
+    (datacenter) connection that Showdown would proxy-lock. No-op when unset,
+    so local/loopback runs are byte-identical."""
+    proxy_url = os.environ.get("METAGROSS_WEBSOCKET_SOCKS")
+    if not proxy_url:
+        return
+    import ssl as _ssl
+    import websockets
+    from python_socks.async_.asyncio import Proxy
+
+    original_connect = websockets.connect
+
+    async def _connect_via_socks(uri, *args, **kwargs):
+        parsed = urlparse(uri)
+        host = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme == "wss" else 80)
+        proxy = Proxy.from_url(proxy_url)
+        sock = await proxy.connect(dest_host=host, dest_port=port)
+        if parsed.scheme == "wss":
+            kwargs.setdefault("ssl", _ssl.create_default_context())
+            kwargs.setdefault("server_hostname", host)
+        kwargs["sock"] = sock
+        return await original_connect(uri, *args, **kwargs)
+
+    websockets.connect = _connect_via_socks
+    print(
+        f"WEBSOCKET_SOCKS_EGRESS active via {urlparse(proxy_url).scheme}://"
+        f"{urlparse(proxy_url).hostname}:{urlparse(proxy_url).port}",
+        flush=True,
+    )
+
+
 def main() -> None:
     global _POKE_ENGINE_PROVENANCE
+    _install_websocket_socks_egress()
     root = Path(__file__).resolve().parents[2]
     provenance = inspect_poke_engine()
     _POKE_ENGINE_PROVENANCE = {
@@ -4445,6 +5334,29 @@ def main() -> None:
     print(
         f"POKE_ENGINE_PROVENANCE {json.dumps(provenance, sort_keys=True)}", flush=True
     )
+    receipt_dir = os.environ.get("METAGROSS_PINNED_ENGINE_RECEIPT_DIR")
+    if receipt_dir:
+        namespace = os.environ.get("METAGROSS_PRIOR_NAMESPACE")
+        if namespace not in {"agent_a", "agent_b"}:
+            raise RuntimeError("pinned engine receipt requires an isolated agent namespace")
+        receipt_path = Path(receipt_dir).expanduser().resolve() / (
+            f"{namespace}-engine-provenance.json"
+        )
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(
+            json.dumps(
+                {
+                    "schema": "metagross-spawned-engine-provenance/v1",
+                    "namespace": namespace,
+                    "python_executable": str(Path(sys.executable).resolve()),
+                    "provenance": provenance,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     foul_play_dir = (
         Path(os.environ.get("FOUL_PLAY_DIR", root / "srcs" / "vendor" / "foul-play"))
         .expanduser()

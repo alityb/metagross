@@ -50,3 +50,7 @@ class RandbatsDeterminizer:
             if all(any(self._matches(pokemon, set_) for set_ in team) for pokemon in revealed)
         ]
         return self.rng.choice(matching) if matching else None
+
+    def reseed(self, seed: int) -> None:
+        """Reset only the sampling tape while retaining the immutable pool index."""
+        self.rng.seed(seed)

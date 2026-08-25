@@ -119,15 +119,20 @@ def make_run_dir(output_root: Path) -> Path:
     return path
 
 
-def acquire_supervisor_lock():
+def acquire_supervisor_lock(suffix: str = ""):
+    # Lock is scoped by `suffix` (the prior-server port) so a deliberate
+    # multi-account pair can run one supervisor per account concurrently,
+    # while still refusing a duplicate supervisor on the SAME port.
     lock_dir = ROOT / "srcs" / "runtime" / "locks"
     lock_dir.mkdir(parents=True, exist_ok=True)
-    handle = (lock_dir / "public-ladder-supervisor.lock").open("a+")
+    handle = (lock_dir / f"public-ladder-supervisor{suffix}.lock").open("a+")
     try:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError as exc:
         handle.close()
-        raise RuntimeError("a public-ladder supervisor is already running") from exc
+        raise RuntimeError(
+            f"a public-ladder supervisor is already running (lock{suffix})"
+        ) from exc
     handle.seek(0)
     handle.truncate()
     handle.write(f"{os.getpid()}\n")
@@ -200,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     if not os.environ.get("METAGROSS_SHOWDOWN_PASSWORD"):
         raise RuntimeError("set METAGROSS_SHOWDOWN_PASSWORD before launching")
 
-    lock = acquire_supervisor_lock()
+    lock = acquire_supervisor_lock(f"-p{args.port}")
     run_dir = make_run_dir(args.output_root)
     block_root = run_dir / "blocks"
     block_root.mkdir()

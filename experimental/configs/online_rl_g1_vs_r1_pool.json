@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "format": "gen9randombattle",
+  "profiles": {
+    "online_g1_smoke": {
+      "kind": "local",
+      "run_dir": "srcs/models",
+      "run_name": "randbats_online_g1_smoke_20260729",
+      "checkpoint": 1,
+      "checkpoint_sha256": "5bf55431478ea6ee10841dd44ef2eb654db1dde6015dece6f2774470699963b8",
+      "base_model": "Kakuna",
+      "temperature": 1.0,
+      "alias_to": ""
+    },
+    "frozen_r1": {
+      "kind": "local",
+      "run_dir": "srcs/models",
+      "run_name": "randbats_exit_r1",
+      "checkpoint": 5,
+      "checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+      "base_model": "Kakuna",
+      "temperature": 1.0,
+      "alias_to": ""
+    }
+  },
+  "pfsp": {
+    "learner": "online_g1_smoke",
+    "pool": [
+      {"id": "frozen_r1", "base_weight": 1.0}
+    ],
+    "target_winrate": [0.4, 0.6],
+    "min_pool_weight": 0.05
+  }
+}

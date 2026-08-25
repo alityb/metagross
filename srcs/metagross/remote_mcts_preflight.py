@@ -120,9 +120,21 @@ def build_requests(state: str) -> list[dict[str, object]]:
         },
         {
             "schema": REQUEST_SCHEMA,
-            "operation": "paired_holdout",
+            "operation": "search",
             "request_id": uuid.uuid4().hex,
             "index": 1,
+            "state": state,
+            "duration_ms": 500,
+            "threads": 1,
+            "s1_priors": [["watergun", 0.75], ["tackle", 0.25]],
+            "s2_priors": [["ember", 0.75], ["tackle", 0.25]],
+            "c_puct": 2.0,
+        },
+        {
+            "schema": REQUEST_SCHEMA,
+            "operation": "paired_holdout",
+            "request_id": uuid.uuid4().hex,
+            "index": 2,
             "state": state,
             "baseline_action": "watergun",
             "candidate_action": "tackle",
@@ -136,7 +148,7 @@ def build_requests(state: str) -> list[dict[str, object]]:
             "schema": REQUEST_SCHEMA,
             "operation": "shared_root",
             "request_id": uuid.uuid4().hex,
-            "index": 2,
+            "index": 3,
             "states": [state, state],
             "particle_weights": [0.5, 0.5],
             "iterations": 100,
@@ -300,7 +312,12 @@ def run_preflight(
         "arguments": list(sys.argv[1:]),
         "environment": dict(sorted(os.environ.items())),
         "engine": engine,
-        "operations": [request["operation"] for request in requests],
+        "operations": list(dict.fromkeys(request["operation"] for request in requests)),
+        "search_durations_ms": [
+            request["duration_ms"]
+            for request in requests
+            if request["operation"] == "search"
+        ],
     }
 
 

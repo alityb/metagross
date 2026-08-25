@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "record_type": "search_policy_student_preregistration",
+  "run_date": "2026-08-13",
+  "format": "gen9randombattle",
+  "causal_question": "Do full search visit distributions transfer more useful policy information than the same teacher's selected action?",
+  "architecture": {
+    "base": "Kakuna/randbats_exit_r1 epoch 5",
+    "base_checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+    "state_dict_keys": 642,
+    "parameters": 142832563,
+    "trainable_policy_path_parameters": 109124709,
+    "architecture_shape_change": "none",
+    "trained_modules": ["tstep_encoder", "traj_encoder", "actor"],
+    "frozen_modules": ["critics", "target_actor", "target_critics", "popart"],
+    "deployment_output": "actor.probs[:, -1, -1, :]"
+  },
+  "data": {
+    "path": "data/mcts_v3_final/mcts_v3_targets.jsonl",
+    "sha256": "85ba0de63725ef46bc19546f00faedaa4a95c9c428d733abe02ffc1404666e5b",
+    "records": 175319,
+    "battles": 4767,
+    "split_unit": "battle_tag",
+    "split_seed": 20260812,
+    "split_records": {"train": 139720, "validation": 17847, "test": 17752},
+    "split_battles": {"train": 3809, "validation": 482, "test": 476}
+  },
+  "arms": {
+    "parent": "embedded frozen r1 policy probabilities",
+    "action": "one-hot action selected by the search teacher",
+    "visits": "full normalized search visit distribution"
+  },
+  "training": {
+    "initialization": "identical accepted r1 checkpoint for every arm",
+    "seed": 20260812,
+    "steps": 1000,
+    "batch_size": 64,
+    "optimizer": "AdamW",
+    "learning_rate": 0.000001,
+    "weight_decay": 0.0,
+    "forward_mode": "eval (deployment-aligned; gradients enabled)",
+    "gradient_clip": 1.0,
+    "loss": "policy cross-entropy on deployment head only",
+    "hardware": "one H100; arms run sequentially"
+  },
+  "decision_gates": [
+    "Every checkpoint must reload through LocalFinetunedModel with the exact r1 schema and legal normalized probabilities.",
+    "Offline loss and agreement are diagnostics only; they cannot promote a policy.",
+    "Primary teachability comparison is visits minus action on an independently evaluated frozen opponent panel.",
+    "A surviving student is evaluated directly first, then inside the otherwise frozen r1 search stack.",
+    "Search budget, c_puct, determinization sampler, opponent priors, and final visit selector remain identical between candidate and r1.",
+    "No ladder run occurs before the paired local H2H gate passes."
+  ]
+}

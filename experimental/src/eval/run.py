@@ -825,6 +825,8 @@ async def start_external_agent(
     log_path = log_dir / f"{username}.log"
     log_file = log_path.open("w", encoding="utf-8")
     results_dir = log_dir / f"{username}-results"
+    direct_environment = os.environ.copy()
+    direct_environment["PYTHONUNBUFFERED"] = "1"
     proc = await asyncio.create_subprocess_exec(
         *direct_r1_command(
             args, server_configuration, username, opponent_username, role, results_dir
@@ -832,9 +834,33 @@ async def start_external_agent(
         stdout=log_file,
         stderr=asyncio.subprocess.STDOUT,
         cwd=ROOT_DIR.parent,
-        env=os.environ.copy(),
+        env=direct_environment,
     )
     return proc, log_path, log_file
+
+
+async def wait_for_direct_r1_acceptor_ready(
+    proc: asyncio.subprocess.Process,
+    log_path: Path,
+    timeout_seconds: float,
+) -> None:
+    """Wait for the cold-loaded direct policy to begin accepting challenges."""
+    deadline = asyncio.get_running_loop().time() + timeout_seconds
+    marker = "Made Challenge Env (acceptor):"
+    while asyncio.get_running_loop().time() < deadline:
+        output = log_path.read_text(encoding="utf-8", errors="replace") if log_path.exists() else ""
+        if marker in output:
+            return
+        if proc.returncode is not None:
+            raise FoulPlayError(
+                f"Direct R1 exited with code {proc.returncode} before readiness; "
+                f"log={log_path}\n{output[-4000:]}"
+            )
+        await asyncio.sleep(0.25)
+    raise FoulPlayError(
+        f"Direct R1 did not become challenge-ready within {timeout_seconds:g}s; "
+        f"log={log_path}"
+    )
 
 
 async def wait_for_foul_play(
@@ -1172,7 +1198,14 @@ async def play_external_vs_external(
         log_dir,
         acceptor_slot,
     )
-    await asyncio.sleep(args.foul_play_startup_delay_seconds)
+    if acceptor_agent == "direct_r1":
+        await wait_for_direct_r1_acceptor_ready(
+            acceptor_proc,
+            acceptor_log_path,
+            min(float(args.game_timeout_seconds), 600.0),
+        )
+    else:
+        await asyncio.sleep(args.foul_play_startup_delay_seconds)
     challenger_proc, challenger_log_path, challenger_log_file = await start_external_agent(
         args,
         challenger_agent,
@@ -1787,10 +1820,11 @@ async def await_operational_gate(
         or any(tags != expected_tags for tags in prior_tags)
         or any(row.get("schema") != 4 for rows in prior_rows for row in rows)
         or any(
-            "error" in str(row.get("message", "")).lower()
+            line.startswith("|error|")
             for rows in protocol_rows
             for row in rows
             if row.get("direction") == "received"
+            for line in str(row.get("message", "")).splitlines()
         )
         or any(health.get("ok") is not True for health in prior_health)
     ):
@@ -2455,6 +2489,28 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             raise ValueError("--production-remote-mcts requires a production controller agent")
         if not re.fullmatch(r"[0-9a-f]{64}", args.production_remote_engine_sha256):
             raise ValueError("--production-remote-engine-sha256 must be 64 lowercase hex")
+        production_agents = {
+            "production_r1_search_first",
+            "production_r1_independent_ensemble",
+            "production_r1_shared_rm_plus",
+            "production_r1_certified",
+        }
+        effective_budgets = {
+            "agent_a": args.agent_a_search_time_ms or args.foul_play_search_time_ms,
+            "agent_b": args.agent_b_search_time_ms or args.foul_play_search_time_ms,
+            "agent": args.foul_play_search_time_ms,
+        }
+        configured_agents = {
+            "agent_a": args.agent_a,
+            "agent_b": args.agent_b,
+            "agent": args.agent,
+        }
+        if any(
+            effective_budgets[slot] != 500
+            for slot, agent in configured_agents.items()
+            if agent in production_agents
+        ):
+            raise ValueError("production remote MCTS requires an effective 500 ms search budget")
     if not 1 <= args.shared_root_iterations <= 1_000_000:
         raise ValueError("--shared-root-iterations must be in [1, 1000000]")
     if not 1 <= args.shared_root_continuation_iterations <= 1_000_000:
