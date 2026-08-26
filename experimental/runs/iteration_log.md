@@ -6587,3 +6587,143 @@ image (ack-resilient /end reset + support-constrained Gumbel):
 gateD-l1b fc-01M0V6PRE5, gateC-l1b fc-01M0V6PRG4, gateDC-l1b fc-01M0V6PRJ5,
 plus already-running gateDCB-l1b, gateBmarg-l1b. All five now on IDENTICAL
 code (better cross-lane comparability). Seeds 2026082211/13/16/17/18.
+
+## 2026-08-23 — Budget trim to 2 lanes; MID-CAMPAIGN MECHANISM FINDINGS banked
+
+Owner budget ~$30 total; cancelled gateC-l1b/gateDC-l1b/gateDCB-l1b, kept
+gateD-l1b (preregistered prediction-2) + gateBmarg-l1b (B marginal).
+Remaining burn ~$10. Partial telemetry from the CRASHED gen-1 lanes
+(persisted to volume) already yields preregistered mechanism results:
+1. ENTROPY COLLAPSE REPLICATES: plain-causal prior entropy by turn bucket
+   0.98/0.73/0.72/0.58 (30+) on ~550 cloud decisions — near-identical to the
+   original offline 0.96->0.57. Robust phenomenon, not artifact.
+2. GATE D MOVES THE MECHANISM (and OVERSHOOTS): flattened arm 30+ prior
+   entropy 1.40 vs plain 0.58 — but the entropy-matching TARGET was ~0.96
+   (stateless flat), so the frozen schedule over-flattens on this population.
+   Effect propagates to search: visit entropy 0.95 vs 0.59 at 30+. If D's
+   W-L lands below parity, over-flattening (underconfident prior) is the
+   leading suspect; milder schedule is the follow-up.
+3. GATE B: 37% flip rate uniform across buckets; flipped-to actions carry
+   mean +0.025 pooled-Q advantage. Noise-chasing risk noted (global Q scale
+   vs per-action-visit completed-Q); gateBmarg-l1b is the outcome test.
+Analysis script pattern: entropy-by-turn-bucket from
+/assets/dc-gates/<run>/search-telemetry-<port>.jsonl.
+
+## 2026-08-23 — GATE B RESULT: strongly negative, gate CLOSED
+
+gateBmarg-l1b (D+C+B vs D+C, 50 mirrored games, exit 0, activation verified
+both arms, B gated to arm A only — 567/1551 flips vs 0/1463):
+  ARM A (with B): 10-40 (20.0%), CI95 [11.2%, 33.0%]; 0 pair sweeps for,
+  15 against, 10 splits; symmetric across acceptor/challenger (5/25 each).
+VERDICT: the completed-Q root decision rule AS IMPLEMENTED (pooled
+cross-world Q, global (c_visit+max_N)*c_scale scaling, no per-action
+visit-discounted completed-Q) chases Q noise — the visit rule's implicit
+variance discipline carries real value. The +0.025 mean "Q advantage" on
+flipped actions was illusory. Scope caveat: refutes B-lite, not Gumbel
+MuZero proper (faithful completed-Q needs engine-level per-action visit
+handling). Gate B CLOSED at the screen level; no promotion, no second lane.
+gateD-l1b (prediction-2 proper) still running — last outcome lane.
+
+## 2026-08-25 — gateD-l1b STUCK-BURN incident; killed; D outcome test moves local
+
+gateD-l1b wedged in-container (hung game/service) and burned cpu-16 hours
+since Aug-23 while reporting RUNNING — my lane watcher had no runtime-ceiling
+alarm (stuck-RUNNING is indistinguishable from progressing without one).
+Killed today; zero containers remain on ali-moh-islam-1. No results persisted
+(telemetry lands only at function end). Likely overran the owner's ~$30
+budget — owner to confirm actual spend on the dashboard. LESSON (added to
+practice): every remote watcher must alarm at runtime > 2x expected.
+Prediction-2's OUTCOME test (D vs stateless) is still unmeasured; it needs
+no cloud — will run on the M4 with the local harness after the RD-25 grind
+completes (causal at RD 25.5, close imminent; stateless top-up follows
+automatically). Gate B negative + mechanism findings already banked.
+
+## 2026-08-25 — CAUSAL ARM CLOSED AT RD-25 (final headline number)
+
+roguefan31 (causal-history, deterministic 472k budget, direct residential):
+  GXE 89.4 · Elo 2226 · Glicko 1902.1 ± 25.0 · 149-81 (~230 games)
+Closed at the exact RD-25 standard of the historical benchmarks. Comparison:
+frozen-r1 roguefan23 was 86.6 / 1851 ± 25 — this run lands ~+2.8 GXE /
+~+51 Glicko above it (run-to-run + meta variance; reproduction confirmed,
+slightly favorable). Historical stateless 92.4 remains ~3 GXE above.
+Stateless (tophfan32, at 91.1 / 1939 ± 31.6) top-up to RD<=25 starts next
+via the chain; final matched table after it closes.
+
+## 2026-08-25 — PAIR CAMPAIGN COMPLETE: both arms converged, final table
+
+  CAUSAL  roguefan31: 149-81 · GXE 89.4 · Elo 2226 · Glicko 1902.1 ± 25.0
+  STATELESS tophfan32: 163-79 · GXE 91.3 · Elo 2336 · Glicko 1942.2 ± 26.0
+  (stateless best-row RD 26.0: wrapper stop check truncated 25.x; optional
+   ~25-game polish run would yield a literal <=25.0)
+Conclusions: (1) historical 92.4 SUBSTANTIALLY REPRODUCES (91.3); (2) causal
+reproduces r1 86.6 and lands +2.8 above; (3) stateless > causal by ~1.9 GXE /
+~40 Glicko at matched convergence — 1-sigma-overlapping, consistent-but-not-
+decisive population edge, historical direction at ~1/3 magnitude — against
+head-to-head PARITY (48% mirror). All ladder processes stopped; accounts idle.
+Campaign artifacts: this log, dc_gates_modal_20260822 (B closed, mechanism
+findings), ladder_local_pair_20260822 (both arms' full run dirs).
+
+## 2026-08-25 — STATELESS POLISHED TO LITERAL RD-25; matched table FINAL
+
+tophfan32 (stateless): 174-83 · GXE 91.7 · Elo 2399 · Glicko 1951.9 ± 25.04
+(kept winning through the polish: 91.1 -> 91.7). FINAL MATCHED TABLE, both
+arms at the RD-25 floor, identical standard to all historical benchmarks:
+  causal roguefan31:   149-81 · GXE 89.4 · Glicko 1902.1 ± 25.0
+  stateless tophfan32: 174-83 · GXE 91.7 · Glicko 1951.9 ± 25.04
+Stateless is now 0.7 GXE from the historical 92.4 — the legacy number
+effectively FULLY reproduces. Stateless-over-causal: 2.3 GXE / ~50 Glicko,
+1-sigma intervals just touching; modest real population edge vs head-to-head
+parity (48% mirror). Chain proceeds automatically to the prediction-2
+outcome screen (pred2_screen_20260825) after this ladder cycle completes.
+
+## 2026-08-25 — pred2 screen INVALIDATED (dual-arm contamination); v2 launched
+
+Owner asked to stop the screen (44% trend) and explain the why. Validity
+audit first (comparison-plan discipline) found the result graded NOTHING:
+0/984 client logs contain the mandatory ACTIVE line, and the production
+client's install site (srcs/metagross/run_foul_play.py:5182) passes NO mode
+to flatten_priors -> with the global env BOTH arms flattened. The screen
+measured flattened-causal vs flattened-STATELESS. 46-58 / LLR -1.73 recorded
+as invalid. Root cause: the local recipe's agent (production_r1_search_first)
+drives the srcs client, not the instrumented harness client — the 2026-08-19
+observable-activation lesson was enforced on one path and bypassed by the
+other. Fix (srcs/metagross/prior_temperature.py): per-arm port gate
+(METAGROSS_PRIOR_TEMP_PORTS), one-time ACTIVE line (stderr+stdout),
+fail-closed malformed env; unit-verified (baseline port untouched, candidate
+flattened, malformed raises). v2 launched: pred2_screen_v2_20260825, seed
+2026082502, prefix tfv3, TEMP_PORTS=9023 (candidate only); watcher checks
+activation-in-candidate-logs as a live validity signal. Incidental note: the
+invalid run's flattened-vs-flattened 44% is NOT interpretable for D.
+
+## 2026-08-26 — PREDICTION-2 MEASURED (5th attempt, VALID): SUPPORTED
+
+pred2_screen_v2: flattened-causal 111-89 (55.5%) vs stateless, CI [48.6,
+62.2], LLR +1.20 at the 200-game cap, activation verified both directions.
+Overconfidence account SUPPORTED (parity-or-better; not decisively >50).
+Combined with the replicated entropy collapse and the ~46-48% plain-causal
+baseline (mirror/pair), flattening recovers ~7 points of the causal deficit
+vs stateless. The last open experimental question of the campaign is closed.
+
+## 2026-08-26 — PREDICTION-2 MEASURED (5th attempt, VALID): 55.5% [48.6, 62.2]
+
+pred2_screen_v2 complete: flattened-causal 111-89 (55.5%) vs stateless over
+the full 200 mirrored games, CI [48.6%, 62.2%], LLR +1.20 (no SPRT boundary).
+Activation verified per-arm. Graded: original parity-or-better criterion MET
+(overconfidence account SUPPORTED); stricter clearly-above-50 criterion NOT
+met. vs plain-causal's 48.0% in the identically-designed prediction-3 mirror:
++7.5-point cross-screen swing under flattening. ALL CAMPAIGN EXPERIMENTS NOW
+CLOSED: pair (RD-25 table), Gate B (falsified), mechanism (replicated),
+prediction-2 (parity-or-better, improvement indicated). Remaining ideas
+(milder schedule, C outcome, interval-sharpening extension) require new
+preregs.
+
+## 2026-08-26 — FLATTENED LADDER RUN: negative, gate D promotion BLOCKED
+
+roguefan55 stopped at 93-46 / GXE 81.7 / 1782.5 ± 30 (~139 games, activation
+verified). Promotion mathematically excluded (needed ~40-5 to reach 91);
+no-harm bar ~5-10% reachable — owner-authorized early close. Verdict:
+temperature flattening HURTS on the real ladder (~-8 GXE vs the 89.4
+plain-causal reference) despite winning the H2H vs stateless 55.5%. The
+sign-flip between population and head-to-head measurement is now the
+campaign's central twice-replicated phenomenon. Deployed default stays PLAIN
+causal-history. Guardian cron removed; all processes stopped.

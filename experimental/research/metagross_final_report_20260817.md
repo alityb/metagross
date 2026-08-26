@@ -23,9 +23,19 @@ directly. One day of offline evaluation produced one real belief-layer win
 (reveal-filter v2), three cleanly measured nulls, and a decisive
 reorientation of the remaining strength hypotheses toward cross-world
 aggregation and search-budget allocation. The strongest deployed agent
-remains **corrected causal-history R1 + production 500 ms search
-(~92.4–92.7 GXE)** — unbeaten by anything this program built, which is
-itself the central finding.
+remains **corrected causal-history R1 + production 500 ms search** —
+unbeaten by anything this program built.
+
+**Addendum (2026-08-26, Part V):** the subsequent measurement campaign
+re-measured both serving modes to matched RD-25 convergence (causal 89.4 /
+stateless 91.7 GXE; the historical 92.4 substantially reproduces), confirmed
+and replicated the late-game prior-overconfidence mechanism, closed two
+serving-time gates (Gumbel-style decision rule: harmful; temperature
+flattening: wins head-to-head yet loses ~8 GXE at population level), and
+established the campaign's central methodological finding — population and
+head-to-head evaluations can flip signs, so only population measurement
+licenses deployment. Part VI proposes the evaluation architecture that
+follows.
 
 ---
 
@@ -215,3 +225,104 @@ with a measured decision — its first.
 is recorded chronologically in `experimental/runs/iteration_log.md`; frozen
 run directories under `experimental/runs/` carry protocols, manifests,
 selections, raw measurements, and reports.*
+
+## Part V — Addendum (2026-08-26): the measurement campaign
+
+Everything above froze on 2026-08-17. The nine days after it produced the
+project's strongest results, all preregistered, all in
+`experimental/runs/iteration_log.md`.
+
+### The matched pair: both serving modes, one standard
+
+Two fresh accounts, same machine, same deterministic 472k-iteration search
+budget, single variable = trajectory mode, both converged to the Glicko RD-25
+floor — the exact standard of every historical number:
+
+| Serving mode | Record | GXE | Glicko ± RD |
+|---|---|---|---|
+| causal-history | 149-81 | 89.4 | 1902 ± 25.0 |
+| legacy-stateless | 174-83 | 91.7 | 1952 ± 25.0 |
+| (reference) frozen-r1 causal | 141-85 | 86.6 | 1851 ± 25 |
+| (reference) historical stateless era | — | 92.4–92.7 | RD 25 |
+
+Findings: the historical 92.4 substantially reproduces (91.7, fresh account,
+months later); the corrected causal path reproduces r1 and lands slightly
+above it; the modes are ~2 GXE apart at population level while a direct
+200-game mirror measured 48% — parity. The six-point historical gap
+decomposes into mostly era difference, a small real population edge, and no
+head-to-head edge at all.
+
+### The mechanism: late-game prior overconfidence
+
+The causal prior's entropy collapses from ~0.96 to ~0.58 nats by turn 30+ —
+measured offline in August, then replicated independently in cloud games
+(0.98/0.73/0.72/0.58 by turn bucket, ~550 decisions). The stateless prior
+stays flat. This is the one confirmed mechanistic difference between the
+serving modes.
+
+### Serving-time gates: three interventions, three verdicts
+
+**Gate B (Gumbel-style completed-Q root decision): decisively harmful.**
+Replacing the visit-share decision rule with `log pi(a) + scaled Q(a)` flipped
+37% of decisions and lost 10-40 against the unmodified rule. The visit rule's
+implicit variance discipline — only trusting actions the search actually
+vetted — carries real value that pooled Q estimates cannot replace.
+
+**Gate C (history truncation): implemented, untested** (budget); remains a
+serving-time flag.
+
+**Gate D (entropy-matched temperature flattening): the campaign's deepest
+result.** Three valid measurements that appear to conflict and do not:
+
+1. Mechanism: the schedule verifiably restores late-game search breadth
+   (activation-proven telemetry; it overshoots the entropy target).
+2. Head-to-head vs stateless: **111-89 (55.5%, CI [48.6, 62.2])** over 200
+   mirrored games — a ~7-point recovery over the plain-causal baseline in
+   the same matchup.
+3. Ladder population: **~81.7 GXE vs the 89.4 plain-causal reference** —
+   roughly eight points of harm, persistent across ~139 games,
+   promotion-excluded by direct calculation before the run finished.
+
+### The central finding: population and head-to-head measurements flip signs
+
+Twice in one campaign, the two measurement families disagreed in *direction*:
+causal-vs-stateless is parity head-to-head but a gap on the ladder;
+flattening wins head-to-head and loses badly on the ladder. The consistent
+account: interventions that trade decisiveness for robustness pay against
+strong systematic opponents and bleed against the weak, erratic majority of
+a real population. Neither measurement is "the truth"; they answer different
+questions, and only the population answer licenses deployment. This rule is
+now binding on all future promotion decisions.
+
+It took five attempts to measure prediction-2 validly (a silently inert hook,
+a wedged cloud container, a resume bug, and a dual-arm contamination that a
+zero-activation-lines audit caught). The observable-activation rule — no
+intervention result is valid without proof in the logs that it was on, and
+off for the control — is the campaign's most transferable methodology lesson.
+
+## Part VI — What better evaluation looks like (proposal)
+
+The campaign's failures indict single-opponent H2H as a promotion gate. The
+replacement, cheapest first:
+
+1. **Offline paired-decision pre-gate** (exists): the 699-decision paired
+   corpus plus the fail-closed n100 eval; extend with per-decision
+   counterfactual scoring against the reference policy using the search's
+   own Q estimates. Minutes, $0, thousands of effective samples.
+2. **A frozen league instead of one opponent**: round-robin against a fixed
+   pool spanning strength and style — plain causal, stateless, r1-no-priors,
+   heuristic foul-play, and weaker archived checkpoints (`gate1`, `r2`
+   candidates). Mirrored pairs per opponent; report the per-opponent vector,
+   not one number. This reproduces population diversity locally and would
+   have caught the flattening sign-flip in an afternoon.
+3. **Luck-corrected, anytime-valid scoring**: mirrored pairs already halve
+   variance; AIVAT-style baselines (cf. AV-AIVAT, arXiv 2608.06362) cut the
+   games needed by an order of magnitude and give certified stopping — the
+   fix for SPRT runs that hit the cap undecided.
+4. **Strength-stratified ladder analysis**: when a ladder run is warranted,
+   report win rate by opponent-rating bucket rather than only converged GXE;
+   the flattening result predicts exactly this kind of strength-dependent
+   effect structure.
+5. **The tiered gauntlet as one command**: offline pre-gate → league →
+   (only on a pass) fresh-account ladder block, with observable activation
+   enforced at every tier. Codified, not remembered.
