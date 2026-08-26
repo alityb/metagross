@@ -14,7 +14,7 @@ program · All claims below are backed by hash-frozen artifacts indexed in
 Metagross set out to reproduce the *transferable sequence* behind MegaGem's
 auction result: prove a slow expert controller live against frozen
 production, distill it once, and re-prove the student at the production
-budget. After ~48 numbered cycles the sequence is **exhausted by
+budget. After ≈48 numbered cycles the sequence is **exhausted by
 measurement, not by fatigue**: every admitted expert family failed its
 prospective live gate, and the final architecture candidate (a causal
 interior search prior) failed its preregistered mechanics gate. The project
@@ -31,7 +31,7 @@ re-measured both serving modes to matched RD-25 convergence (causal 89.4 /
 stateless 91.7 GXE; the historical 92.4 substantially reproduces), confirmed
 and replicated the late-game prior-overconfidence mechanism, closed two
 serving-time gates (Gumbel-style decision rule: harmful; temperature
-flattening: wins head-to-head yet loses ~8 GXE at population level), and
+flattening: wins head-to-head yet loses ≈8 GXE at population level), and
 established the campaign's central methodological finding — population and
 head-to-head evaluations can flip signs, so only population measurement
 licenses deployment. Part VI proposes the evaluation architecture that
@@ -104,7 +104,7 @@ agenda.
 
 1. **Disagreement with deep search is a belief-ambiguity phenomenon.**
    Where the 8 posterior worlds' searches agree unanimously, humans and R1
-   match deep search ~55–60%; where ≥3/8 worlds disagree, both collapse to
+   match deep search ≈55–60%; where ≥3/8 worlds disagree, both collapse to
    30–39%. Search depth is not the binding constraint.
 2. **Humans do not follow the majority world.** In ambiguous states the
    human action matched the majority-world recommendation only 36%
@@ -130,7 +130,7 @@ boundary.
 
 | Belief candidate | Result |
 |---|---|
-| Generator-pool prior | mass 0.366 / top-1 0.432 (avg ~3.5 candidate sets/species) |
+| Generator-pool prior | mass 0.366 / top-1 0.432 (avg ≈3.5 candidate sets/species) |
 | + moves-reveal filter (production equivalent) | mass 0.541 / top-1 0.589 |
 | **Filter v2: + item/ability/tera reveals** | **+4.7 mass / +5.0 top-1 on the complete key space, at every reveal depth — PASS** |
 | First-revealed-move evidence tables (107k instances) | null (top-1 −0.8); leaky-smoke lift was memorization |
@@ -247,16 +247,16 @@ floor — the exact standard of every historical number:
 
 Findings: the historical 92.4 substantially reproduces (91.7, fresh account,
 months later); the corrected causal path reproduces r1 and lands slightly
-above it; the modes are ~2 GXE apart at population level while a direct
+above it; the modes are ≈2 GXE apart at population level while a direct
 200-game mirror measured 48% — parity. The six-point historical gap
 decomposes into mostly era difference, a small real population edge, and no
 head-to-head edge at all.
 
 ### The mechanism: late-game prior overconfidence
 
-The causal prior's entropy collapses from ~0.96 to ~0.58 nats by turn 30+ —
+The causal prior's entropy collapses from ≈0.96 to ≈0.58 nats by turn 30+ —
 measured offline in August, then replicated independently in cloud games
-(0.98/0.73/0.72/0.58 by turn bucket, ~550 decisions). The stateless prior
+(0.98/0.73/0.72/0.58 by turn bucket, ≈550 decisions). The stateless prior
 stays flat. This is the one confirmed mechanistic difference between the
 serving modes.
 
@@ -277,10 +277,10 @@ result.** Three valid measurements that appear to conflict and do not:
 1. Mechanism: the schedule verifiably restores late-game search breadth
    (activation-proven telemetry; it overshoots the entropy target).
 2. Head-to-head vs stateless: **111-89 (55.5%, CI [48.6, 62.2])** over 200
-   mirrored games — a ~7-point recovery over the plain-causal baseline in
+   mirrored games — a ≈7-point recovery over the plain-causal baseline in
    the same matchup.
-3. Ladder population: **~81.7 GXE vs the 89.4 plain-causal reference** —
-   roughly eight points of harm, persistent across ~139 games,
+3. Ladder population: **≈81.7 GXE vs the 89.4 plain-causal reference** —
+   roughly eight points of harm, persistent across ≈139 games,
    promotion-excluded by direct calculation before the run finished.
 
 ### The central finding: population and head-to-head measurements flip signs
