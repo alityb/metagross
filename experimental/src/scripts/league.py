@@ -58,7 +58,7 @@ def wilson(w: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def port_free(port: int) -> bool:
-    return subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
+    return subprocess.run(["/usr/sbin/lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
                           capture_output=True).returncode != 0
 
 
@@ -74,7 +74,7 @@ def wait_ports(ports: list[int], timeout: int = 480) -> bool:
 def kill_infra() -> None:
     subprocess.run(["pkill", "-f", "prior_server.py"], capture_output=True)
     for p in (CAND_PORT, OPP_PORT):
-        out = subprocess.run(["lsof", "-ti", f"tcp:{p}"], capture_output=True,
+        out = subprocess.run(["/usr/sbin/lsof", "-ti", f"tcp:{p}"], capture_output=True,
                              text=True).stdout.split()
         for pid in out:
             subprocess.run(["kill", "-9", pid], capture_output=True)
@@ -231,6 +231,7 @@ def main() -> None:
         return
 
     intervention = bool(candidate.get("client_env") or candidate.get("prior_env"))
+    start_showdown(args.out)
     rows = []
     for i, opp in enumerate(pool):
         games = int(opp.get("n_games", 40))
