@@ -34,3 +34,7 @@ target/
 /experimental/src/nets/checkpoints/**
 /experimental/engine/**/linux_wheels/
 /experimental/engine/**/docs/make.bat
+
+# model checkpoints never belong in git (GitHub 100MB limit)
+experimental/releases/**/*.pt
+*.pt

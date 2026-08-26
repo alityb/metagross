@@ -6727,3 +6727,18 @@ plain-causal reference) despite winning the H2H vs stateless 55.5%. The
 sign-flip between population and head-to-head measurement is now the
 campaign's central twice-replicated phenomenon. Deployed default stays PLAIN
 causal-history. Guardian cron removed; all processes stopped.
+
+## 2026-08-26 — LEAGUE HARNESS BUILT + baseline reference run launched
+
+experimental/src/scripts/league.py: candidate-vs-frozen-pool round-robin
+with per-opponent Wilson vectors, mirrored pairs, per-matchup infra
+lifecycle, port-gated candidate interventions (TEMP/GUMBEL gates forced to
+the candidate port), per-matchup observable-activation validity grading,
+idempotent resume (skips completed matchups, --resume within), retry loops.
+Frozen pool v1 (league_20260826/PREREGISTRATION.md): stateless(40g),
+plain-causal self-mirror(20g), vanilla foul-play(24g), max_damage(12g) —
+the strength/style axis the flattening sign-flip exposed. Promotion rule
+frozen: weak dominance over the plain-causal reference vector, exploitation
+cells guarded. Baseline run (candidate = plain-causal itself) launched under
+a cron guardian (self-removing on completion); expected cells: stateless
+~48%, self-mirror ~50%, foulplay/max_damage high. ~96 games, ~8-10h, $0.
