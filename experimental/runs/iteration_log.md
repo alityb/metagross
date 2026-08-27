@@ -6742,3 +6742,14 @@ frozen: weak dominance over the plain-causal reference vector, exploitation
 cells guarded. Baseline run (candidate = plain-causal itself) launched under
 a cron guardian (self-removing on completion); expected cells: stateless
 ~48%, self-mirror ~50%, foulplay/max_damage high. ~96 games, ~8-10h, $0.
+
+## 2026-08-27 — League m00 STALLED overnight (hung game); watchdog added
+
+The baseline league wedged ~30 min in: a hung game left eval.run alive with
+eval.log frozen for 18h — invisible to both the retry loop (process never
+exits) and the liveness-only guardian. Same failure class as the Modal
+stuck-burn. Fix: guardian now includes a stall watchdog (no eval.log mtime
+change in 40 min while league.py alive -> kill the stack; resume machinery
+continues from banked games). 32/40 m00 games banked (candidate 12-20 vs
+stateless — low, watch after resume). Lesson generalized: every long-running
+watcher needs BOTH a liveness check and a progress-freshness check.
