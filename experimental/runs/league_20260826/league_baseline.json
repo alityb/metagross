@@ -1,0 +1,20 @@
+{
+  "base_seed": 2026082600,
+  "candidate": {
+    "name": "plain-causal-r1",
+    "agent": "production_r1_search_first",
+    "trajectory_mode": "causal-history"
+  },
+  "pool": [
+    {"name": "stateless", "agent": "production_r1_search_first",
+     "needs_prior_server": true, "trajectory_mode": "legacy-stateless",
+     "n_games": 40},
+    {"name": "plain-causal-mirror", "agent": "production_r1_search_first",
+     "needs_prior_server": true, "trajectory_mode": "causal-history",
+     "n_games": 20},
+    {"name": "vanilla-foulplay", "agent": "foul_play",
+     "needs_prior_server": false, "n_games": 24},
+    {"name": "max-damage", "agent": "max_damage",
+     "needs_prior_server": false, "n_games": 12}
+  ]
+}
