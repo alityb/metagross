@@ -6767,3 +6767,23 @@ exit, or a client process that finishes the game but never exits).
 League amended (prereg): base_seed 2026082610, m00 restarted fresh, no other
 matchup had run. Discarded partial: candidate 12-20 vs stateless (not used).
 Guardian watchdog remains armed (liveness + 40-min progress freshness).
+
+## 2026-08-28 — PREREGISTERED the two hardening runs (writeup chain)
+
+1. selfcond_ablation_20260828: disentangle the entropy collapse's driver —
+   own-action history (self-conditioning) vs context length. Part 1a offline
+   probe on the frozen 699-decision corpus across {full causal, truncate
+   K=5/10/20/40, own-action-masked (new env-gated variant, to be
+   implemented + unit-verified), stateless}; frozen thresholds (masked C
+   <=33% of full = H-self, >=66% = H-length), sanity reproduction mandatory,
+   OOD caveat frozen. Part 1b = gate C outcome H2H (truncate-20 vs plain
+   causal, 100 games, seed 2026082810) with frozen redundancy readings.
+2. league RETRODICTION_PREREG: flattened-causal through the identical
+   frozen pool, same base_seed 2026082610 as baseline (paired cells).
+   Success = stateless cell >= reference AND >=1 weak-opponent cell clearly
+   below (non-overlapping CIs or >=10pp) — the sign-flip reproduced locally,
+   validating the league as the promotion gate. Failure/partial readings
+   frozen too.
+Sequencing frozen: nothing launches until the eval-harness root-cause
+session releases the machine; then 1a -> baseline league -> 1b ->
+retrodiction.
