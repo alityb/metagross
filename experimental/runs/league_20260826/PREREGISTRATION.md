@@ -30,3 +30,15 @@ graded INVALID. Idempotent: re-running skips completed matchups.
 The first run is candidate = plain-causal-r1 itself (its stateless cell
 should reproduce ~48% from the August mirror; the self-mirror cell ~50%).
 This vector is the standing baseline for all future candidates.
+
+## AMENDMENT (2026-08-27): seed bump after reproducible harness hang
+
+base_seed 2026082600 produced a DETERMINISTIC harness hang at m00 pair 17
+(game 33): the game completes in both clients (winner logged) but eval.run
+never registers it and waits forever — reproduced across the original run
+and a resume. The stalled matchup dir is preserved as
+m00_stateless.poisoned-seed2026082600 for root-causing (same hang class
+suspected in the Modal gateD-l1b wedge and the flattened-run stall).
+base_seed amended to 2026082610 BEFORE any other matchup ran; m00 restarts
+fresh (32 discarded games were candidate 12-20 — recorded here for
+completeness, not used). No other design change.

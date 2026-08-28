@@ -6753,3 +6753,17 @@ change in 40 min while league.py alive -> kill the stack; resume machinery
 continues from banked games). 32/40 m00 games banked (candidate 12-20 vs
 stateless — low, watch after resume). Lesson generalized: every long-running
 watcher needs BOTH a liveness check and a progress-freshness check.
+
+## 2026-08-27 — DETERMINISTIC harness hang isolated; league seed-bumped
+
+The league's m00 stall is REPRODUCIBLE: pair 17 of seed 2026082600 completes
+in both clients (winner logged in client logs) but eval.run never registers
+the result — hung post-game collection, reproduced across the original run
+and a kill-resume. This is the best specimen yet of the recurring hang class
+(suspects: Modal gateD-l1b 40h wedge, flattened-run stall). Stalled dir
+preserved at baseline/m00_stateless.poisoned-seed2026082600 for a dedicated
+root-cause session (likely: harness game-completion detection racing client
+exit, or a client process that finishes the game but never exits).
+League amended (prereg): base_seed 2026082610, m00 restarted fresh, no other
+matchup had run. Discarded partial: candidate 12-20 vs stateless (not used).
+Guardian watchdog remains armed (liveness + 40-min progress freshness).
