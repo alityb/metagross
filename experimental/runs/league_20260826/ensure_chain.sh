@@ -6,6 +6,7 @@
 # (3) self-remove when the retrodiction report exists.
 set -u
 ROOT="/Users/alityb/projects/metagross"
+export PATH="/Users/alityb/.nvm/versions/node/v22.19.0/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"  # cron PATH lacks node (nvm)
 RUN="$ROOT/experimental/runs/league_20260826"
 HOOK="$(cat "$HOME/.metagross_discord_webhook" 2>/dev/null)"
 ping() { [ -n "$HOOK" ] && curl -s -X POST -H "Content-Type: application/json" -d "{\"content\":\"$1\"}" "$HOOK" >/dev/null 2>&1; }
