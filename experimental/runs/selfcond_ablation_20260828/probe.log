@@ -1,0 +1,45 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+
+
+ 		 AMAGO v3.4.0
+            	 -------------------------
+            	 Agent: MultiTaskAgent
+            		 Max Sequence Length: 128
+            		 TstepEncoder Type: MetamonPerceiverTstepEncoder
+            		 TrajEncoder Type: TformerTrajEncoder
+            		 Total Parameters: 142,688,528
+            		 Offline Loss Weight: 1.0
+            		 Online Loss Weight: 0.25
+            		 Mixed Precision: NO
+            		 Checkpoint Path: srcs/models/randbats_exit_r1/randbats_exit_r1/ckpts
+            	 Environment:
+            		 DummyAsyncVectorEnv(Gym Env x 1)
+            		 Exploration Type: None
+            	 Dataset: DoNothingDataset
+            	 Accelerate Processes: 1 
+
+
+Checkpoint validated: 642 keys, 142,832,563 params (model) == 142,832,563 params (ckpt)
+progress 50 decisions (sanity max diff 0.00e+00)
+progress 100 decisions (sanity max diff 0.00e+00)
+progress 150 decisions (sanity max diff 0.00e+00)
+progress 200 decisions (sanity max diff 0.00e+00)
+progress 250 decisions (sanity max diff 0.00e+00)
+progress 300 decisions (sanity max diff 0.00e+00)
+progress 350 decisions (sanity max diff 0.00e+00)
+progress 400 decisions (sanity max diff 0.00e+00)
+progress 450 decisions (sanity max diff 0.00e+00)
+progress 500 decisions (sanity max diff 0.00e+00)
+progress 550 decisions (sanity max diff 0.00e+00)
+progress 600 decisions (sanity max diff 0.00e+00)
+progress 650 decisions (sanity max diff 0.00e+00)
+progress 700 decisions (sanity max diff 0.00e+00)
+{
+ "sanity_max_abs_prob_diff": 0.0,
+ "sanity_pass": true,
+ "masked_collapse_ratio": 0.904766153215237,
+ "verdict": "H-length"
+}

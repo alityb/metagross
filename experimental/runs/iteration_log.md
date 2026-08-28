@@ -6826,3 +6826,14 @@ and roguefan55 (1975, flattened) below today's #500 cutoff (2111). The
 "elite human level" claim is now a checkable leaderboard fact, not an
 inference from GXE. Standing rule: every future converged ladder run ends
 with a ladder+user snapshot fetch, hashed, before the account idles.
+
+## 2026-08-28 — ABLATION VERDICT: H-length. Self-conditioning REFUTED.
+
+selfcond_ablation part 1a complete (result_1a.json): masking own actions
+leaves 90% of the entropy collapse intact (C 0.351 vs full 0.388); the
+collapse scales with context length (trunc-5 0.223 ... trunc-40 0.310)
+and never reaches the stateless profile (0.093) at any depth. The
+"network doubles down on its own choices" framing is dead — report and
+blog rewritten to the measured claim: observed-history volume itself
+sharpens the policy beyond its stateless calibration on identical states.
+The prereg's frozen thresholds decided this before anyone saw a number.

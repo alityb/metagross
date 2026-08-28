@@ -1,0 +1,123 @@
+{
+  "prereg": "selfcond_ablation_20260828 part 1a",
+  "causal_dump_sha256": "5c1d334ef8441fa8b854a3395fdf6c8a8d93485cfec734f9f2ff509309543f50",
+  "checkpoint_sha256": "c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93",
+  "decisions_evaluated": 4,
+  "sanity_max_abs_prob_diff": 0.0,
+  "sanity_pass": true,
+  "degenerate_counts": {
+    "full": 0,
+    "trunc-5": 0,
+    "trunc-10": 0,
+    "trunc-20": 0,
+    "trunc-40": 0,
+    "masked": 0
+  },
+  "conditions": {
+    "full": {
+      "mean_entropy_by_bucket": {
+        "0-9": 0.9927506819367409,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    },
+    "trunc-5": {
+      "mean_entropy_by_bucket": {
+        "0-9": 0.9927506819367409,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    },
+    "trunc-10": {
+      "mean_entropy_by_bucket": {
+        "0-9": 0.9927506819367409,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    },
+    "trunc-20": {
+      "mean_entropy_by_bucket": {
+        "0-9": 0.9927506819367409,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    },
+    "trunc-40": {
+      "mean_entropy_by_bucket": {
+        "0-9": 0.9927506819367409,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    },
+    "masked": {
+      "mean_entropy_by_bucket": {
+        "0-9": 1.0890028476715088,
+        "10-19": null,
+        "20-29": null,
+        "30-inf": null
+      },
+      "n_by_bucket": {
+        "0-9": 4,
+        "10-19": 0,
+        "20-29": 0,
+        "30-inf": 0
+      },
+      "collapse": null
+    }
+  },
+  "stateless_reference": {
+    "mean_entropy_by_bucket": {
+      "0-9": 0.981024891332258,
+      "10-19": 0.850860114142298,
+      "20-29": 0.8081120505164503,
+      "30-inf": 0.8876544947380588
+    },
+    "n_by_bucket": {
+      "0-9": 223,
+      "10-19": 240,
+      "20-29": 166,
+      "30-inf": 110
+    },
+    "collapse": 0.09337039659419921
+  }
+}

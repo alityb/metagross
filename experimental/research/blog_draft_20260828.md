@@ -42,7 +42,7 @@ Stateless slightly ahead. But head-to-head over 200 games, the two are
 dead even: 48%. Hold that discrepancy — population says one thing,
 head-to-head says another. It looked like noise. It wasn't.
 
-## The network doubles down on itself
+## History makes the network overconfident — but not the way we guessed
 
 Why would reading history *hurt*? We instrumented the priors and found
 something clean: the causal view's entropy collapses as the game goes on —
@@ -50,20 +50,31 @@ from ≈0.96 nats early to ≈0.58 by turn 30+, replicated in two independent
 datasets. The stateless view of the *same network* on the *same states*
 stays flat.
 
-Late in a battle, most of what the causal view is reading is its own past
-decisions. The network sees a trajectory full of its own confident choices
-and becomes more confident. If that sounds like the LLM failure mode where
-a model doubles down on its own prior outputs — that's exactly the analogy,
-except Pokémon gives us the counterfactual language models can't: serving
-the identical network with and without its own history on identical states.
+Our favorite hypothesis wrote itself: late in a battle, most of the
+context is the agent's own past decisions — the network sees a trajectory
+full of its own confident choices and doubles down, the game-playing
+analog of an LLM committing to its own prior outputs. Pokémon even gives
+you the counterfactual language models can't: the identical network,
+with and without its own history, on identical states. So we preregistered
+the ablation, froze the thresholds, and ran it.
 
-[PENDING — ablation verdict: we replayed the frozen 699-decision corpus
-with the trajectory truncated to K ∈ {5,10,20,40} steps and with the
-agent's own past actions masked out (opponent-visible history intact).
-Result: masked-collapse ratio = ____, verdict = self-conditioning /
-context-length / mixed. If H-self: "It's the actions. Mask the agent's own
-past choices and the collapse [largely disappears], at full context
-length." Adjust the section title if it lands H-length.]
+**It refuted us.** Masking the agent's own past actions (opponent-visible
+history intact, full context length) removes only ~10% of the collapse:
+
+| Condition | Entropy collapse (nats) |
+|---|---|
+| full history | 0.388 |
+| truncated to 5 / 10 / 20 / 40 steps | 0.223 / 0.227 / 0.238 / 0.310 |
+| own actions masked, full length | **0.351** |
+| stateless | 0.093 |
+
+The driver is the *volume of observed history itself*: the collapse grows
+monotonically with window size, and even five steps of context produces
+2.4× the stateless collapse. Not self-conditioning — history-induced
+sharpening. The replay was exact (0.0 max probability difference against
+the online logs, all 735 decisions), so this isn't probe noise; the sexy
+story is just wrong, and I'm telling you because the prereg made not
+telling you impossible.
 
 ## Two principled fixes, two instructive failures
 
@@ -160,9 +171,10 @@ difference between measuring your idea and measuring your assumptions.
 
 ## What I'd tell you to steal
 
-1. If your policy reads its own trajectory, measure its calibration
-   against a stateless serve of the same weights. The collapse was huge,
-   replicated, and invisible until we looked.
+1. If your policy conditions on history, measure its calibration against
+   a stateless serve of the same weights. Our collapse was huge,
+   replicated, invisible until we looked — and its cause (context volume,
+   not the agent's own actions) was the opposite of the intuitive story.
 2. Visit counts are a robustness mechanism under determinization. Don't
    swap them for value-greedy rules that assume one world.
 3. Evaluate against a population, stratify by opponent strength, and treat

@@ -62,3 +62,19 @@ Nothing launches while the eval-harness root-cause session owns the machine.
 Order after release: 1a (cheap, offline) -> baseline league completes ->
 1b. Implementation of the mask variant + probe script may proceed anytime
 (code only, unit tests only).
+
+## RESULT (2026-08-28, part 1a) — H-LENGTH: self-conditioning REFUTED
+
+Probe valid: sanity max abs prob diff 0.0 (exact online reproduction),
+735/735 decisions, zero degenerate rows (OOD caveat not triggered).
+Collapse C (bucket 0-9 minus 30+ mean entropy, nats):
+full 0.388 · trunc-5 0.223 · trunc-10 0.227 · trunc-20 0.238 ·
+trunc-40 0.310 · MASKED 0.351 · stateless reference 0.093.
+Masked-collapse ratio 0.905 >= 0.66 -> per the frozen thresholds the
+driver is CONTEXT LENGTH / observation content, not the agent's own
+actions. Additional structure: collapse grows monotonically with window
+size, yet even K=5 carries 2.4x the stateless collapse — no truncation
+depth reaches the stateless profile. Practical corollary: gate C can only
+partially remove the pathology; the flat-entropy serving mode is stateless
+itself. The preregistered ablation killed the self-conditioning story
+before publication — its job.
