@@ -2,6 +2,9 @@
 # Cron guardian for the baseline league run. Idempotent (league.py skips
 # completed matchups); self-removes when the report exists.
 set -u
+# TEMPORARILY DISABLED during hang root-cause session (Claude, 2026-08-27).
+# Remove the next line to re-arm the guardian.
+exit 0
 ROOT="/Users/alityb/projects/metagross"
 RUN="$ROOT/experimental/runs/league_20260826"
 if [ -f "$RUN/baseline/league_report.json" ]; then
@@ -15,7 +18,10 @@ if pgrep -f "scripts/league.py" >/dev/null; then
   # Stall watchdog: a hung game leaves the process alive but the newest
   # eval.log frozen. If no eval.log under baseline/ changed in 40 min,
   # kill the stack; the resume machinery continues from banked games.
-  newest=$(find "$RUN/baseline" -name eval.log -newermt "-40 minutes" 2>/dev/null | head -1)
+  # Any activity log counts as freshness: prior servers write during the
+  # multi-minute boot phase, so a fresh matchup with no eval.log yet is NOT
+  # a stall (previous check kill-looped every boot).
+  newest=$(find "$RUN/baseline" "$RUN/league.log" -name "*.log" -newermt "-40 minutes" 2>/dev/null | head -1)
   if [ -n "$newest" ]; then exit 0; fi
   echo "$(date -u +%FT%TZ) STALL detected — killing for resume" >>"$RUN/guardian.log"
   pkill -f "scripts/league.py"; sleep 2
