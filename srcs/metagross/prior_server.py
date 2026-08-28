@@ -864,6 +864,19 @@ class BattleSession:
                 effective_seq_len,
                 self.trajectory_time_offset,
             )
+            mask_raw = os.environ.get("METAGROSS_MASK_OWN_ACTIONS")
+            if mask_raw:
+                if mask_raw != "1":
+                    raise RuntimeError(
+                        f"METAGROSS_MASK_OWN_ACTIONS is set but invalid: {mask_raw!r}"
+                    )
+                # Self-conditioning ablation: null the agent's own past action
+                # one-hots (rl2 dims 1..13); rewards (dim 0) stay — they encode
+                # battle events, not choices. Step 0 is already the null action.
+                trajectory_rl2[:, 1:] = 0.0
+                if not getattr(self.server, "_mask_own_logged", False):
+                    print("OWN_ACTION_MASK ACTIVE", flush=True)
+                    self.server._mask_own_logged = True
         T = len(trajectory_time)
         trajectory_reset_reason = self.trajectory_reset_reason
         self.trajectory_reset_reason = None
