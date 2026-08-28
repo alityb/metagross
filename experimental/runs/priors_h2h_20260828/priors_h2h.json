@@ -1,0 +1,16 @@
+{
+  "base_seed": 2026082830,
+  "candidate": {
+    "name": "plain-causal-r1",
+    "agent": "production_r1_search_first",
+    "trajectory_mode": "causal-history"
+  },
+  "pool": [
+    {
+      "name": "vanilla-foulplay",
+      "agent": "foul_play",
+      "needs_prior_server": false,
+      "n_games": 200
+    }
+  ]
+}

@@ -6837,3 +6837,12 @@ and never reaches the stateless profile (0.093) at any depth. The
 blog rewritten to the measured claim: observed-history volume itself
 sharpens the policy beyond its stateless calibration on identical states.
 The prereg's frozen thresholds decided this before anyone saw a number.
+
+## 2026-08-28 — QUEUED: powered priors-vs-vanilla H2H (chain stage D)
+
+m02 audit found the 41.7% cell VALID (priors loaded every decision,
+require-priors on, pinned engine, 24/24 clean) — so the owner queued the
+powered replication: priors_h2h_20260828 prereg frozen (200 games, seed
+2026082830, plain-causal vs foul_play, frozen readings incl. sign-flip
+third instance if the interval contains 50%). Auto-launches after the
+retrodiction via ensure_chain.sh stage D.

@@ -10,10 +10,25 @@ RUN="$ROOT/experimental/runs/league_20260826"
 HOOK="$(cat "$HOME/.metagross_discord_webhook" 2>/dev/null)"
 ping() { [ -n "$HOOK" ] && curl -s -X POST -H "Content-Type: application/json" -d "{\"content\":\"$1\"}" "$HOOK" >/dev/null 2>&1; }
 
-# Stage C done -> teardown
-if [ -f "$RUN/flattened/league_report.json" ]; then
+PH="$ROOT/experimental/runs/priors_h2h_20260828"
+# Stage D done -> teardown
+if [ -f "$PH/run/league_report.json" ]; then
   crontab -l 2>/dev/null | grep -v "ensure_chain.sh" | crontab -
-  ping "🏁 **Retrodiction league COMPLETE** — chain finished; both vectors on disk."
+  ping "🏁 **Priors-vs-vanilla H2H COMPLETE** — chain finished; all three results on disk."
+  exit 0
+fi
+# Stage D: retrodiction done -> drive the powered priors H2H
+if [ -f "$RUN/flattened/league_report.json" ]; then
+  if pgrep -f "scripts/league.py" >/dev/null; then
+    newest=$(find "$PH/run" "$PH/league_ph.log" -name "*.log" -newermt "-40 minutes" 2>/dev/null | head -1)
+    [ -n "$newest" ] && exit 0
+    echo "$(date -u +%FT%TZ) priors-h2h STALL — killing for resume" >>"$RUN/guardian.log"
+    pkill -f "scripts/league.py"; sleep 2; pkill -f "eval.run"; pkill -f "prior_server.py"; sleep 3
+    pkill -9 -f "scripts/league.py|eval.run|prior_server.py" 2>/dev/null
+  fi
+  if [ ! -d "$PH/run" ]; then ping "🏟️ retrodiction done — **powered priors-vs-vanilla H2H starting** (200 games, prereg'd)"; fi
+  echo "$(date -u +%FT%TZ) priors-h2h (re)launch" >>"$RUN/guardian.log"
+  nohup caffeinate -i "$ROOT/.venv-metamon/bin/python"     "$ROOT/experimental/src/scripts/league.py"     --config "$PH/priors_h2h.json"     --out "$PH/run" >>"$PH/league_ph.log" 2>&1 &
   exit 0
 fi
 
