@@ -2,9 +2,6 @@
 # Cron guardian for the baseline league run. Idempotent (league.py skips
 # completed matchups); self-removes when the report exists.
 set -u
-# TEMPORARILY DISABLED during hang root-cause session (Claude, 2026-08-27).
-# Remove the next line to re-arm the guardian.
-exit 0
 ROOT="/Users/alityb/projects/metagross"
 RUN="$ROOT/experimental/runs/league_20260826"
 if [ -f "$RUN/baseline/league_report.json" ]; then
