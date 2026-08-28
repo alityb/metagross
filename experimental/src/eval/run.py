@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import contextvars
 import csv
+import faulthandler
 import hashlib
 import json
 import logging
@@ -10,9 +13,11 @@ import math
 import os
 import re
 import secrets
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
@@ -243,6 +248,9 @@ def is_foul_play(agent: str) -> bool:
         "foul_play_root_priors",
         "foul_play_root_priors_opp",
     }
+
+
+POKE_ENV_AGENTS = {"random", "max_damage"}
 
 
 def is_external_agent(agent: str) -> bool:
@@ -794,6 +802,7 @@ async def start_foul_play(
         cwd=ROOT_DIR.parent if production_controller else ROOT_DIR,
         env=env,
     )
+    _register_child_with_sentinel(proc)
     return proc, log_path, log_file
 
 
@@ -836,6 +845,7 @@ async def start_external_agent(
         cwd=ROOT_DIR.parent,
         env=direct_environment,
     )
+    _register_child_with_sentinel(proc)
     return proc, log_path, log_file
 
 
@@ -863,6 +873,129 @@ async def wait_for_direct_r1_acceptor_ready(
     )
 
 
+class GameHardDeadline:
+    """Thread-based hard deadline for one scheduled game.
+
+    The 2026-08-26 league wedge (pair 17 / seed 2026082600) froze eval.run for
+    18 hours with --game-timeout-seconds 900 never firing: asyncio timers are
+    useless once the event loop is starved or its child-watcher wakeup is
+    lost. This sentinel runs on a plain daemon thread, so it fires even when
+    the loop is dead. Escalation on breach:
+      1. dump all-thread tracebacks to stderr (lands in eval.log) and SIGKILL
+         the game's client processes — if the loop is alive but stuck waiting
+         on them, this unblocks it and the game fails normally;
+      2. if the game still hasn't been disarmed after a grace period, the loop
+         itself is wedged: hard-exit the process so the caller's retry/resume
+         machinery turns an invisible multi-hour stall into a bounded failed
+         game.
+    """
+
+    EXIT_CODE = 70  # EX_SOFTWARE
+
+    def __init__(self, game_index: int, timeout_seconds: float, grace_seconds: float = 120.0):
+        self._game_index = game_index
+        self._timeout_seconds = timeout_seconds
+        self._grace_seconds = grace_seconds
+        self._disarmed = threading.Event()
+        self._procs: list[asyncio.subprocess.Process] = []
+        self._thread = threading.Thread(
+            target=self._run, daemon=True, name=f"game-{game_index}-hard-deadline"
+        )
+
+    def register(self, proc: asyncio.subprocess.Process) -> None:
+        self._procs.append(proc)
+
+    def _kill_registered(self) -> None:
+        for proc in self._procs:
+            if proc.returncode is None:
+                with contextlib.suppress(OSError):
+                    os.kill(proc.pid, signal.SIGKILL)
+
+    def _run(self) -> None:
+        if self._disarmed.wait(self._timeout_seconds):
+            return
+        print(
+            f"GAME_SENTINEL game={self._game_index}: hard deadline "
+            f"({self._timeout_seconds:g}s) breached with the asyncio timeout dead or "
+            f"stuck; dumping stacks and killing client processes "
+            f"pids={[proc.pid for proc in self._procs]}",
+            flush=True,
+        )
+        with contextlib.suppress(Exception):
+            faulthandler.dump_traceback(all_threads=True)
+        self._kill_registered()
+        if self._disarmed.wait(self._grace_seconds):
+            return
+        print(
+            f"GAME_SENTINEL game={self._game_index}: event loop made no progress "
+            f"{self._grace_seconds:g}s after the clients were killed — the run is "
+            f"wedged beyond recovery; exiting {self.EXIT_CODE} so resume can bank "
+            f"this game as failed instead of stalling forever",
+            flush=True,
+        )
+        with contextlib.suppress(Exception):
+            faulthandler.dump_traceback(all_threads=True)
+        with contextlib.suppress(Exception):
+            sys.stdout.flush()
+            sys.stderr.flush()
+        os._exit(self.EXIT_CODE)
+
+    def __enter__(self) -> "GameHardDeadline":
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        self._disarmed.set()
+        self._thread.join(timeout=5)
+
+
+_GAME_SENTINEL: contextvars.ContextVar[Optional[GameHardDeadline]] = contextvars.ContextVar(
+    "metagross_game_sentinel", default=None
+)
+
+
+def _register_child_with_sentinel(proc: asyncio.subprocess.Process) -> None:
+    sentinel = _GAME_SENTINEL.get()
+    if sentinel is not None:
+        sentinel.register(proc)
+
+
+REAP_TERM_GRACE_SECONDS = 10.0
+REAP_KILL_GRACE_SECONDS = 15.0
+GAME_HARD_TIMEOUT_SLACK_SECONDS = 90.0
+GAME_SENTINEL_EXTRA_SECONDS = 60.0
+
+
+async def _reap_with_deadline(proc: asyncio.subprocess.Process, context: str) -> None:
+    """Terminate → kill → bounded reap. Never blocks forever.
+
+    `await proc.wait()` after kill() is NOT guaranteed to return: if the
+    child-watcher wakeup is lost, the future is never resolved even though the
+    child is dead (the exact wait-that-never-returns behind the 2026-08-26
+    league wedge). Abandon an unreapable child with a warning instead of
+    wedging the run on it.
+    """
+    if proc.returncode is not None:
+        return
+    with contextlib.suppress(ProcessLookupError):
+        proc.terminate()
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=REAP_TERM_GRACE_SECONDS)
+        return
+    except asyncio.TimeoutError:
+        pass
+    with contextlib.suppress(ProcessLookupError):
+        proc.kill()
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=REAP_KILL_GRACE_SECONDS)
+    except asyncio.TimeoutError:
+        print(
+            f"WARNING: abandoning unreapable child pid={proc.pid} ({context}); "
+            "SIGKILL was sent but proc.wait() never resolved",
+            flush=True,
+        )
+
+
 async def wait_for_foul_play(
     proc: asyncio.subprocess.Process,
     log_path: Path,
@@ -872,12 +1005,7 @@ async def wait_for_foul_play(
     try:
         await asyncio.wait_for(proc.wait(), timeout=timeout_seconds)
     except asyncio.TimeoutError as exc:
-        proc.terminate()
-        try:
-            await asyncio.wait_for(proc.wait(), timeout=10)
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
+        await _reap_with_deadline(proc, f"game timeout; log={log_path}")
         raise FoulPlayError(f"Foul Play timed out; log={log_path}") from exc
     finally:
         log_file.close()
@@ -891,14 +1019,7 @@ async def wait_for_foul_play(
 
 
 async def terminate_process(proc: asyncio.subprocess.Process) -> None:
-    if proc.returncode is not None:
-        return
-    proc.terminate()
-    try:
-        await asyncio.wait_for(proc.wait(), timeout=10)
-    except asyncio.TimeoutError:
-        proc.kill()
-        await proc.wait()
+    await _reap_with_deadline(proc, "terminate_process")
 
 
 async def ensure_foul_play_still_running(
@@ -925,6 +1046,7 @@ async def wait_for_external_battle(
     if not done:
         client_task.cancel()
         proc_task.cancel()
+        await asyncio.gather(client_task, proc_task, return_exceptions=True)
         raise FoulPlayError("Timed out waiting for external battle to make progress")
 
     if proc_task in done:
@@ -934,6 +1056,7 @@ async def wait_for_external_battle(
                 await asyncio.wait_for(client_task, timeout=client_finish_grace_seconds)
             except asyncio.TimeoutError:
                 client_task.cancel()
+                await asyncio.gather(client_task, return_exceptions=True)
         else:
             await client_task
         return output
@@ -1020,11 +1143,19 @@ async def play_foul_play_accepts_poke_env_challenge(
     challenger_slot: str,
     acceptor_slot: str,
     log_dir: Path,
+    pair_plan: PairPlan | None = None,
+    pair_leg: int | None = None,
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index, args.username_prefix)
     challenger_username = make_username("c", game_index, args.username_prefix)
+    if pair_plan is not None:
+        if pair_leg not in {1, 2}:
+            raise ValueError("mirrored pair leg must be 1 or 2")
+        write_pair_registrations(
+            args, pair_plan, pair_leg, challenger_username, fp_username
+        )
     proc, log_path, log_file = await start_foul_play(
         args,
         acceptor_agent,
@@ -1036,8 +1167,12 @@ async def play_foul_play_accepts_poke_env_challenge(
         model_override=model_for_slot(args, acceptor_slot),
         slot=acceptor_slot,
     )
-    await asyncio.sleep(args.foul_play_startup_delay_seconds)
-    await ensure_foul_play_still_running(proc, log_path, log_file)
+    try:
+        await asyncio.sleep(args.foul_play_startup_delay_seconds)
+        await ensure_foul_play_still_running(proc, log_path, log_file)
+    except BaseException:
+        await terminate_process(proc)
+        raise
 
     challenger = make_poke_env_player(
         challenger_agent, challenger_username, server_configuration, args.format
@@ -1054,6 +1189,8 @@ async def play_foul_play_accepts_poke_env_challenge(
             args.game_timeout_seconds,
             args.client_finish_grace_seconds,
         )
+        if pair_plan is not None:
+            raise_if_registrations_unconsumed(args, (challenger_username, fp_username))
         fp_winner = parse_foul_play_winner(output)
         battle_tag = parse_foul_play_battle_tag(output)
 
@@ -1067,7 +1204,7 @@ async def play_foul_play_accepts_poke_env_challenge(
             winner = None
             winner_username = fp_winner
 
-        return GameResult(
+        result = GameResult(
             game_index,
             args.agent_a,
             args.agent_b,
@@ -1077,7 +1214,10 @@ async def play_foul_play_accepts_poke_env_challenge(
             winner_username,
             battle_tag,
         )
-    except Exception:
+        if pair_plan is not None:
+            apply_pair_metadata(result, pair_plan, pair_leg, challenger_slot)
+        return result
+    except BaseException:
         if proc_task is not None and not proc_task.done():
             proc_task.cancel()
         await terminate_process(proc)
@@ -1095,11 +1235,19 @@ async def play_foul_play_challenges_poke_env(
     challenger_slot: str,
     acceptor_slot: str,
     log_dir: Path,
+    pair_plan: PairPlan | None = None,
+    pair_leg: int | None = None,
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index, args.username_prefix)
     acceptor_username = make_username("a", game_index, args.username_prefix)
+    if pair_plan is not None:
+        if pair_leg not in {1, 2}:
+            raise ValueError("mirrored pair leg must be 1 or 2")
+        write_pair_registrations(
+            args, pair_plan, pair_leg, fp_username, acceptor_username
+        )
     acceptor = make_poke_env_player(
         acceptor_agent, acceptor_username, server_configuration, args.format
     )
@@ -1128,6 +1276,8 @@ async def play_foul_play_challenges_poke_env(
             args.game_timeout_seconds,
             args.client_finish_grace_seconds,
         )
+        if pair_plan is not None:
+            raise_if_registrations_unconsumed(args, (fp_username, acceptor_username))
         fp_winner = parse_foul_play_winner(output)
         battle_tag = parse_foul_play_battle_tag(output)
 
@@ -1141,7 +1291,7 @@ async def play_foul_play_challenges_poke_env(
             winner = None
             winner_username = fp_winner
 
-        return GameResult(
+        result = GameResult(
             game_index,
             args.agent_a,
             args.agent_b,
@@ -1151,7 +1301,10 @@ async def play_foul_play_challenges_poke_env(
             winner_username,
             battle_tag,
         )
-    except Exception:
+        if pair_plan is not None:
+            apply_pair_metadata(result, pair_plan, pair_leg, challenger_slot)
+        return result
+    except BaseException:
         if proc_task is not None and not proc_task.done():
             proc_task.cancel()
         await terminate_process(proc)
@@ -1161,6 +1314,7 @@ async def play_foul_play_challenges_poke_env(
     finally:
         if not accept_task.done():
             accept_task.cancel()
+        await asyncio.gather(accept_task, return_exceptions=True)
         await close_poke_env_player(acceptor)
 
 
@@ -1198,24 +1352,28 @@ async def play_external_vs_external(
         log_dir,
         acceptor_slot,
     )
-    if acceptor_agent == "direct_r1":
-        await wait_for_direct_r1_acceptor_ready(
-            acceptor_proc,
-            acceptor_log_path,
-            min(float(args.game_timeout_seconds), 600.0),
+    try:
+        if acceptor_agent == "direct_r1":
+            await wait_for_direct_r1_acceptor_ready(
+                acceptor_proc,
+                acceptor_log_path,
+                min(float(args.game_timeout_seconds), 600.0),
+            )
+        else:
+            await asyncio.sleep(args.foul_play_startup_delay_seconds)
+        challenger_proc, challenger_log_path, challenger_log_file = await start_external_agent(
+            args,
+            challenger_agent,
+            server_configuration,
+            challenger_username,
+            acceptor_username,
+            "challenger",
+            log_dir,
+            challenger_slot,
         )
-    else:
-        await asyncio.sleep(args.foul_play_startup_delay_seconds)
-    challenger_proc, challenger_log_path, challenger_log_file = await start_external_agent(
-        args,
-        challenger_agent,
-        server_configuration,
-        challenger_username,
-        acceptor_username,
-        "challenger",
-        log_dir,
-        challenger_slot,
-    )
+    except BaseException:
+        await terminate_process(acceptor_proc)
+        raise
 
     acceptor_task = asyncio.create_task(
         wait_for_foul_play(
@@ -1237,7 +1395,7 @@ async def play_external_vs_external(
         acceptor_output, challenger_output = await asyncio.gather(
             acceptor_task, challenger_task
         )
-    except Exception:
+    except BaseException:
         for task in (acceptor_task, challenger_task):
             if not task.done():
                 task.cancel()
@@ -1247,6 +1405,8 @@ async def play_external_vs_external(
             terminate_process(challenger_proc),
         )
         raise
+    if pair_plan is not None:
+        raise_if_registrations_unconsumed(args, (challenger_username, acceptor_username))
     fp_winner = parse_foul_play_winner(acceptor_output) or parse_foul_play_winner(
         challenger_output
     )
@@ -1300,15 +1460,29 @@ async def play_one_game(
             pair_plan,
             pair_leg,
         )
-    if pair_plan is not None:
-        raise ValueError("mirrored pairs require registration-aware external agents")
+    if pair_plan is not None and not (challenger_is_fp or acceptor_is_fp):
+        raise ValueError("mirrored pairs require at least one Foul Play agent")
     if challenger_is_fp:
         return await play_foul_play_challenges_poke_env(
-            args, server_configuration, game_index, challenger_slot, acceptor_slot, log_dir
+            args,
+            server_configuration,
+            game_index,
+            challenger_slot,
+            acceptor_slot,
+            log_dir,
+            pair_plan,
+            pair_leg,
         )
     if acceptor_is_fp:
         return await play_foul_play_accepts_poke_env_challenge(
-            args, server_configuration, game_index, challenger_slot, acceptor_slot, log_dir
+            args,
+            server_configuration,
+            game_index,
+            challenger_slot,
+            acceptor_slot,
+            log_dir,
+            pair_plan,
+            pair_leg,
         )
     return await play_poke_env_vs_poke_env(
         args, server_configuration, game_index, challenger_slot, acceptor_slot
@@ -1451,6 +1625,35 @@ def write_pair_registrations(
                 "assigned_team_sha256": assigned_hash,
                 "packed_team": packed_team,
             },
+        )
+
+
+def unconsumed_pair_registrations(
+    args: argparse.Namespace, usernames: tuple[str, ...]
+) -> list[Path]:
+    """Registration files Showdown should have deleted when it forced the
+    mirrored teams/seed at battle creation. A leftover file means the battle
+    was played WITHOUT the frozen teams (e.g. Showdown was launched without
+    METAGROSS_EVAL_PAIR_DIR): the recorded pair metadata would be fiction, so
+    callers must fail the game instead of banking it."""
+    directory = Path(args.pair_registration_dir).resolve()
+    return [
+        path
+        for username in usernames
+        if (path := directory / f"{normalize_user_id(username)}.json").exists()
+    ]
+
+
+def raise_if_registrations_unconsumed(
+    args: argparse.Namespace, usernames: tuple[str, ...]
+) -> None:
+    leftover = unconsumed_pair_registrations(args, usernames)
+    if leftover:
+        raise FoulPlayError(
+            "mirrored-pair registrations were not consumed by Showdown "
+            f"({[path.name for path in leftover]}); the battle ran with random "
+            "teams/seed instead of the frozen pair — launch Showdown with "
+            "METAGROSS_EVAL_PAIR_DIR set to --pair-registration-dir"
         )
 
 
@@ -1614,6 +1817,16 @@ def short_error(exc: Exception) -> str:
     return f"{type(exc).__name__}: {message[:500]}"
 
 
+def game_hard_timeout_seconds(args: argparse.Namespace) -> float:
+    """Outer per-game bound: the in-game timeout plus slack for registration,
+    client startup delays, and post-game collection. direct_r1 acceptors get
+    extra room for their cold-start readiness wait."""
+    slack = GAME_HARD_TIMEOUT_SLACK_SECONDS
+    if "direct_r1" in {args.agent_a, args.agent_b}:
+        slack += min(float(args.game_timeout_seconds), 600.0)
+    return float(args.game_timeout_seconds) + slack
+
+
 async def run_scheduled_game(
     args: argparse.Namespace,
     server_configuration: ServerConfiguration,
@@ -1634,17 +1847,30 @@ async def run_scheduled_game(
         ),
         flush=True,
     )
+    hard_timeout = game_hard_timeout_seconds(args)
+    sentinel = GameHardDeadline(index, hard_timeout + GAME_SENTINEL_EXTRA_SECONDS)
+    sentinel_token = _GAME_SENTINEL.set(sentinel)
     try:
-        result = await play_one_game(
-            args,
-            server_configuration,
-            index,
-            challenger,
-            acceptor,
-            log_dir,
-            pair_plan,
-            pair_leg,
-        )
+        with sentinel:
+            try:
+                result = await asyncio.wait_for(
+                    play_one_game(
+                        args,
+                        server_configuration,
+                        index,
+                        challenger,
+                        acceptor,
+                        log_dir,
+                        pair_plan,
+                        pair_leg,
+                    ),
+                    timeout=hard_timeout,
+                )
+            except asyncio.TimeoutError as exc:
+                raise FoulPlayError(
+                    f"game {index} exceeded the {hard_timeout:g}s hard deadline; "
+                    "clients were terminated and the game failed"
+                ) from exc
     except Exception as exc:
         if args.fail_fast:
             raise
@@ -1667,6 +1893,8 @@ async def run_scheduled_game(
             flush=True,
         )
         return result
+    finally:
+        _GAME_SENTINEL.reset(sentinel_token)
 
     print(
         f"game={index} challenger={challenger} acceptor={acceptor} winner={result.winner}",
@@ -2565,9 +2793,22 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             raise ValueError("--mirrored-pairs requires --json-out, --log-dir, and --pair-registration-dir")
         if args.concurrent_games != 1:
             raise ValueError("--mirrored-pairs currently requires --concurrent-games 1")
-        if not is_external_agent(args.agent_a) or not is_external_agent(args.agent_b):
+        # Team/seed enforcement is server-side (the patched Showdown loads a
+        # registration per userid), so a poke-env opponent is fine as long as
+        # one side is a Foul Play client, whose logs carry the battle tag.
+        for agent in (args.agent_a, args.agent_b):
+            if not is_external_agent(agent) and agent not in POKE_ENV_AGENTS:
+                raise ValueError(
+                    "--mirrored-pairs requires registration-aware Foul Play/"
+                    "direct-r1 agents or a poke-env opponent (random/max_damage)"
+                )
+        if not is_foul_play(args.agent_a) and not is_foul_play(args.agent_b):
+            raise ValueError("--mirrored-pairs requires at least one Foul Play agent")
+        if "direct_r1" in (args.agent_a, args.agent_b) and (
+            args.agent_a in POKE_ENV_AGENTS or args.agent_b in POKE_ENV_AGENTS
+        ):
             raise ValueError(
-                "--mirrored-pairs requires registration-aware Foul Play/direct-r1 agents"
+                "--mirrored-pairs does not support direct_r1 against a poke-env agent"
             )
         if not args.fail_fast:
             raise ValueError("--mirrored-pairs requires --fail-fast")

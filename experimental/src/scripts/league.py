@@ -73,6 +73,10 @@ def wait_ports(ports: list[int], timeout: int = 480) -> bool:
 
 def kill_infra() -> None:
     subprocess.run(["pkill", "-f", "prior_server.py"], capture_output=True)
+    # Orphaned clients from a killed eval.run keep playing (and holding
+    # Showdown usernames) forever — reap them too.
+    subprocess.run(["pkill", "-9", "-f", "srcs.metagross.run_foul_play"],
+                   capture_output=True)
     for p in (CAND_PORT, OPP_PORT):
         out = subprocess.run(["/usr/sbin/lsof", "-ti", f"tcp:{p}"], capture_output=True,
                              text=True).stdout.split()
@@ -81,13 +85,32 @@ def kill_infra() -> None:
     time.sleep(2)
 
 
+def registration_dir(out_root: Path) -> Path:
+    """One league-wide registration dir, shared by every matchup and by the
+    Showdown process (via METAGROSS_EVAL_PAIR_DIR)."""
+    return out_root / "registrations"
+
+
 def start_showdown(out_dir: Path) -> None:
     if not port_free(SHOWDOWN_PORT):
         return
     os.makedirs(SHOWDOWN / "logs/repl", exist_ok=True)
+    env = dict(os.environ)
+    # Without METAGROSS_EVAL_PAIR_DIR, Showdown silently ignores the mirrored
+    # pair registrations and every "mirrored" battle runs with random teams
+    # and a random seed (the 2026-08-26 baseline played 33 such games while
+    # recording manifest hashes). eval.run now fails a game whose
+    # registrations were not consumed, so a misconfigured Showdown dies on
+    # game 1 instead of banking fiction.
+    env["METAGROSS_EVAL_PAIR_DIR"] = str(registration_dir(out_dir))
+    # Under cron, PATH lacks node (Homebrew/nvm); every guardian relaunch of
+    # Showdown died with `env: node: No such file or directory`.
+    node_dirs = [str(p) for p in Path.home().glob(".nvm/versions/node/*/bin")]
+    env["PATH"] = ":".join(["/opt/homebrew/bin", *sorted(node_dirs, reverse=True),
+                            env.get("PATH", "/usr/bin:/bin")])
     subprocess.Popen(
         ["./pokemon-showdown", "start", "--no-security", str(SHOWDOWN_PORT)],
-        cwd=SHOWDOWN, stdout=open(out_dir / "showdown.log", "a"),
+        cwd=SHOWDOWN, env=env, stdout=open(out_dir / "showdown.log", "a"),
         stderr=subprocess.STDOUT)
 
 
@@ -118,6 +141,13 @@ def run_matchup(candidate: dict, opp: dict, index: int, base_seed: int,
         return json.loads(result_path.read_text())
 
     kill_infra()
+    # Shared with the Showdown process (METAGROSS_EVAL_PAIR_DIR). Clear stale
+    # registrations from earlier matchups/attempts so eval.run's fresh-dir
+    # check and the per-game consumption check stay meaningful.
+    reg_dir = registration_dir(out_root)
+    reg_dir.mkdir(parents=True, exist_ok=True)
+    for stale in reg_dir.glob("*.json"):
+        stale.unlink()
     servers = [start_prior_server(
         CAND_PORT, "candidate", candidate.get("trajectory_mode", "causal-history"),
         candidate.get("prior_env") or {}, mdir)]
@@ -155,11 +185,11 @@ def run_matchup(candidate: dict, opp: dict, index: int, base_seed: int,
            "--mirror-seed", str(base_seed + index), "--fail-fast",
            "--mirrored-team-generator",
            str(ROOT / "experimental/src/scripts/generate_mirrored_randbats_pair.cjs"),
-           "--pair-registration-dir", str(mdir / "registrations"),
+           "--pair-registration-dir", str(reg_dir),
            "--agent-a", candidate.get("agent", "production_r1_search_first"),
            "--agent-b", opp["agent"],
            "--agent-a-prior-server-url", f"http://127.0.0.1:{CAND_PORT}",
-           "--agent-a-require-priors", "--strict-isolated-priors",
+           "--agent-a-require-priors",
            "--foul-play-python", FOUL_PLAY_PY,
            "--foul-play-search-time-ms", "500",
            "--foul-play-search-parallelism", "8",
@@ -170,8 +200,11 @@ def run_matchup(candidate: dict, opp: dict, index: int, base_seed: int,
            "--run-id", f"league-{out_root.name}-{opp['name']}",
            "--json-out", str(result_path), "--log-dir", str(mdir / "logs")]
     if opp.get("needs_prior_server", False):
+        # Strict isolation needs BOTH per-slot prior flags; passing it for a
+        # priorless opponent (vanilla foul-play, max_damage) fails parse_args
+        # and made matchups m02/m03 unrunnable.
         cmd += ["--agent-b-prior-server-url", f"http://127.0.0.1:{OPP_PORT}",
-                "--agent-b-require-priors"]
+                "--agent-b-require-priors", "--strict-isolated-priors"]
 
     for attempt in range(1, 9):
         run_cmd = list(cmd) + (["--resume"] if (mdir / "result.json.progress.json").exists() else [])
