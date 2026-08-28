@@ -4092,7 +4092,11 @@ def patch_foul_play_protocol() -> None:
             if not (is_reconnect or is_ledger):
                 raise
             reason = "reconnect" if is_reconnect else "ledger"
-            logger.warning(
+            # NOTE: must be websocket_client.logger — a bare `logger` does not
+            # exist in this closure, and the resulting NameError crashed every
+            # client that reached the abandon path (league m00 game 36,
+            # 2026-08-27) instead of forfeiting and continuing.
+            websocket_client.logger.warning(
                 "ABANDON_BATTLE reason=%s (%s); forfeiting and continuing the ladder",
                 reason, exc,
             )
