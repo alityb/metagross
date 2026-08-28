@@ -1,0 +1,131 @@
+{
+  "flattened": {
+    "run": "experimental/runs/ladder_flattened_20260826",
+    "me": "roguefan55",
+    "battles_used": 139,
+    "buckets": {
+      "0-1199": {
+        "wins": 7,
+        "games": 7,
+        "winrate": 1.0,
+        "ci95": [
+          0.646,
+          1.0
+        ]
+      },
+      "1200-1399": {
+        "wins": 17,
+        "games": 23,
+        "winrate": 0.739,
+        "ci95": [
+          0.535,
+          0.875
+        ]
+      },
+      "1400-1599": {
+        "wins": 17,
+        "games": 27,
+        "winrate": 0.63,
+        "ci95": [
+          0.442,
+          0.785
+        ]
+      },
+      "1600-+": {
+        "wins": 52,
+        "games": 82,
+        "winrate": 0.634,
+        "ci95": [
+          0.526,
+          0.73
+        ]
+      }
+    }
+  },
+  "plain-causal": {
+    "run": "experimental/runs/ladder_local_pair_20260822/causal_seq",
+    "me": "roguefan31",
+    "battles_used": 227,
+    "buckets": {
+      "0-1199": {
+        "wins": 6,
+        "games": 6,
+        "winrate": 1.0,
+        "ci95": [
+          0.61,
+          1.0
+        ]
+      },
+      "1200-1399": {
+        "wins": 10,
+        "games": 11,
+        "winrate": 0.909,
+        "ci95": [
+          0.623,
+          0.984
+        ]
+      },
+      "1400-1599": {
+        "wins": 13,
+        "games": 15,
+        "winrate": 0.867,
+        "ci95": [
+          0.621,
+          0.963
+        ]
+      },
+      "1600-+": {
+        "wins": 121,
+        "games": 195,
+        "winrate": 0.621,
+        "ci95": [
+          0.551,
+          0.686
+        ]
+      }
+    }
+  },
+  "stateless": {
+    "run": "experimental/runs/ladder_local_pair_20260822/stateless_seq",
+    "me": "tophfan32",
+    "battles_used": 267,
+    "buckets": {
+      "0-1199": {
+        "wins": 6,
+        "games": 7,
+        "winrate": 0.857,
+        "ci95": [
+          0.487,
+          0.974
+        ]
+      },
+      "1200-1399": {
+        "wins": 11,
+        "games": 16,
+        "winrate": 0.688,
+        "ci95": [
+          0.444,
+          0.858
+        ]
+      },
+      "1400-1599": {
+        "wins": 14,
+        "games": 18,
+        "winrate": 0.778,
+        "ci95": [
+          0.548,
+          0.91
+        ]
+      },
+      "1600-+": {
+        "wins": 145,
+        "games": 226,
+        "winrate": 0.642,
+        "ci95": [
+          0.577,
+          0.701
+        ]
+      }
+    }
+  }
+}

@@ -6787,3 +6787,31 @@ Guardian watchdog remains armed (liveness + 40-min progress freshness).
 Sequencing frozen: nothing launches until the eval-harness root-cause
 session releases the machine; then 1a -> baseline league -> 1b ->
 retrodiction.
+
+## 2026-08-28 — STRATIFICATION CONFIRMS MECHANISM; MIRROR ENFORCEMENT WAS OFF; hang FIXED
+
+1. Opponent-Elo stratification of all ladder games (protocol |player|
+   lines; ladder_strength_stratify.py -> strength_stratified.json): vs
+   1600+ the three configs are indistinguishable (flattened 63.4 / causal
+   62.1 / stateless 64.2%); flattened's whole deficit is sub-1600
+   (68.0% vs causal 90.6%). The sign-flip mechanism (decisiveness traded
+   away vs weak opponents) is now measured, not inferred. $0, on-disk data.
+2. Root-cause session merged the harness hang fix (bounded per-game waits,
+   sentinel, exit-70 banking; ABANDON NameError fix) AND found that
+   mirrored-team enforcement needs METAGROSS_EVAL_PAIR_DIR in SHOWDOWN's
+   env — never set by local launchers. Verified here for pred2 v2: 0/6
+   sampled pairs actually mirrored, 456 registrations unconsumed. All
+   affected local screens were unpaired random-team games: results STAND
+   (unpaired analysis was used; side-alternation client-side), "mirrored"
+   labels corrected, designed power silently absent (explains SPRT caps).
+   Harness now fails unconsumed-registration games. League runs are the
+   first verified-mirrored local measurements.
+3. Baseline league relaunched from zero at 03:56Z with enforcement on
+   (old unmirrored partials wiped); m02/m03 priorless-opponent bugs fixed
+   by the root-cause session. Overnight chain installed (ensure_chain.sh):
+   baseline -> retrodiction league (league_retro.json, base_seed
+   2026082610) with stall watchdogs + Discord pings.
+4. Report updated (stratification table in link 4; integrity note on the
+   mirrored label; "enforce consumption, not registration"). Blog draft
+   written: experimental/research/blog_draft_20260828.md with [PENDING]
+   slots for ablation verdict + baseline vector + retrodiction.

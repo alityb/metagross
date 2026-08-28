@@ -187,6 +187,22 @@ erratic majority of a real population. Neither measurement is "the truth";
 they answer different questions — and only the population answer licenses
 deployment. This rule is now binding on all promotion decisions.
 
+**Direct confirmation (2026-08-28, from on-disk ladder protocol logs):**
+stratifying every ladder game by opponent Elo at match start shows the
+predicted structure exactly. Against strong opponents (1600+) the three
+configurations are statistically indistinguishable; flattening's entire
+deficit concentrates below 1600:
+
+| Opponent Elo | flattened | plain-causal | stateless |
+|---|---|---|---|
+| below 1600 | 34-16 (68.0%) | 29-3 (90.6%) | 31-10 (75.6%) |
+| 1600+ | 52-30 (63.4%) | 121-74 (62.1%) | 145-81 (64.2%) |
+
+Flattening plays weak opponents like strong ones — the decisiveness it
+trades away is what converts winnable games against the sub-1600 majority.
+The mechanism behind the sign flip is measured, not inferred
+(`strength_stratified.json`).
+
 The instrument is a frozen-league population gate
 (`experimental/src/scripts/league.py` + `league_20260826/PREREGISTRATION.md`):
 any candidate serving configuration plays mirrored pairs against a fixed
@@ -229,6 +245,26 @@ recent effects sit exactly there: MAPLE-style shared-tree aggregation
 (2605.24139) and dynamic determinization budget allocation (2607.13007).
 
 ---
+
+### Integrity note (2026-08-28): the "mirrored" label on local screens
+
+A root-cause investigation of a deterministic harness hang surfaced a
+second, larger finding: mirrored-team enforcement required an environment
+variable on the *Showdown server's* side that local screen launchers never
+set. Artifact-level verification (actual battle teams vs registered
+manifests; e.g. 0/6 sampled pairs mirrored in the prediction-2 v2 screen,
+all registration files unconsumed) confirms the affected local screens
+played ordinary independent random-team games. Consequences, stated
+precisely: the results **stand** — they were analyzed as unpaired Bernoulli
+games, which is what they were, and side-alternation (client-side) was
+unaffected — but the "mirrored" descriptor on those runs is wrong, and the
+designed variance reduction silently never happened, which is why several
+SPRT screens ran to their caps undecided. The harness now fails any game
+whose team registration was not consumed, and the league runs are the first
+locally verified mirrored measurements. This is lesson 4 (observable
+activation) recurring one layer down: *enforce consumption, not
+registration* — every mechanism needs proof it fired, in the artifact it
+was supposed to affect.
 
 ## Methodology the project paid for
 
