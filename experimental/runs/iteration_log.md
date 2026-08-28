@@ -6815,3 +6815,14 @@ retrodiction.
    mirrored label; "enforce consumption, not registration"). Blog draft
    written: experimental/research/blog_draft_20260828.md with [PENDING]
    slots for ablation verdict + baseline vector + retrodiction.
+
+## 2026-08-28 — LADDER RANK SNAPSHOT closes the SOTA evidence gap
+
+Fetched and hash-manifested today's public gen9randombattle top-500 plus
+our accounts' live ratings (ladder_rank_snapshot_20260828/): tophfan32
+(stateless) is ON the leaderboard at rank #105 (Elo 2249, GXE 91.2);
+roguefan31 (causal) at rank #246 (2182, 89.3). metaexitr1 (2018, decayed)
+and roguefan55 (1975, flattened) below today's #500 cutoff (2111). The
+"elite human level" claim is now a checkable leaderboard fact, not an
+inference from GXE. Standing rule: every future converged ladder run ends
+with a ladder+user snapshot fetch, hashed, before the account idles.
