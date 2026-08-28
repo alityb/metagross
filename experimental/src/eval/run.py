@@ -250,6 +250,9 @@ def is_foul_play(agent: str) -> bool:
     }
 
 
+POKE_ENV_AGENTS = {"random", "max_damage"}
+
+
 def is_external_agent(agent: str) -> bool:
     return is_foul_play(agent) or agent == "direct_r1"
 
@@ -1140,11 +1143,19 @@ async def play_foul_play_accepts_poke_env_challenge(
     challenger_slot: str,
     acceptor_slot: str,
     log_dir: Path,
+    pair_plan: PairPlan | None = None,
+    pair_leg: int | None = None,
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index, args.username_prefix)
     challenger_username = make_username("c", game_index, args.username_prefix)
+    if pair_plan is not None:
+        if pair_leg not in {1, 2}:
+            raise ValueError("mirrored pair leg must be 1 or 2")
+        write_pair_registrations(
+            args, pair_plan, pair_leg, challenger_username, fp_username
+        )
     proc, log_path, log_file = await start_foul_play(
         args,
         acceptor_agent,
@@ -1178,6 +1189,8 @@ async def play_foul_play_accepts_poke_env_challenge(
             args.game_timeout_seconds,
             args.client_finish_grace_seconds,
         )
+        if pair_plan is not None:
+            raise_if_registrations_unconsumed(args, (challenger_username, fp_username))
         fp_winner = parse_foul_play_winner(output)
         battle_tag = parse_foul_play_battle_tag(output)
 
@@ -1191,7 +1204,7 @@ async def play_foul_play_accepts_poke_env_challenge(
             winner = None
             winner_username = fp_winner
 
-        return GameResult(
+        result = GameResult(
             game_index,
             args.agent_a,
             args.agent_b,
@@ -1201,6 +1214,9 @@ async def play_foul_play_accepts_poke_env_challenge(
             winner_username,
             battle_tag,
         )
+        if pair_plan is not None:
+            apply_pair_metadata(result, pair_plan, pair_leg, challenger_slot)
+        return result
     except BaseException:
         if proc_task is not None and not proc_task.done():
             proc_task.cancel()
@@ -1219,11 +1235,19 @@ async def play_foul_play_challenges_poke_env(
     challenger_slot: str,
     acceptor_slot: str,
     log_dir: Path,
+    pair_plan: PairPlan | None = None,
+    pair_leg: int | None = None,
 ) -> GameResult:
     challenger_agent = agent_for_slot(args, challenger_slot)
     acceptor_agent = agent_for_slot(args, acceptor_slot)
     fp_username = make_username("f", game_index, args.username_prefix)
     acceptor_username = make_username("a", game_index, args.username_prefix)
+    if pair_plan is not None:
+        if pair_leg not in {1, 2}:
+            raise ValueError("mirrored pair leg must be 1 or 2")
+        write_pair_registrations(
+            args, pair_plan, pair_leg, fp_username, acceptor_username
+        )
     acceptor = make_poke_env_player(
         acceptor_agent, acceptor_username, server_configuration, args.format
     )
@@ -1252,6 +1276,8 @@ async def play_foul_play_challenges_poke_env(
             args.game_timeout_seconds,
             args.client_finish_grace_seconds,
         )
+        if pair_plan is not None:
+            raise_if_registrations_unconsumed(args, (fp_username, acceptor_username))
         fp_winner = parse_foul_play_winner(output)
         battle_tag = parse_foul_play_battle_tag(output)
 
@@ -1265,7 +1291,7 @@ async def play_foul_play_challenges_poke_env(
             winner = None
             winner_username = fp_winner
 
-        return GameResult(
+        result = GameResult(
             game_index,
             args.agent_a,
             args.agent_b,
@@ -1275,6 +1301,9 @@ async def play_foul_play_challenges_poke_env(
             winner_username,
             battle_tag,
         )
+        if pair_plan is not None:
+            apply_pair_metadata(result, pair_plan, pair_leg, challenger_slot)
+        return result
     except BaseException:
         if proc_task is not None and not proc_task.done():
             proc_task.cancel()
@@ -1377,16 +1406,7 @@ async def play_external_vs_external(
         )
         raise
     if pair_plan is not None:
-        leftover = unconsumed_pair_registrations(
-            args, (challenger_username, acceptor_username)
-        )
-        if leftover:
-            raise FoulPlayError(
-                "mirrored-pair registrations were not consumed by Showdown "
-                f"({[path.name for path in leftover]}); the battle ran with random "
-                "teams/seed instead of the frozen pair — launch Showdown with "
-                "METAGROSS_EVAL_PAIR_DIR set to --pair-registration-dir"
-            )
+        raise_if_registrations_unconsumed(args, (challenger_username, acceptor_username))
     fp_winner = parse_foul_play_winner(acceptor_output) or parse_foul_play_winner(
         challenger_output
     )
@@ -1440,15 +1460,29 @@ async def play_one_game(
             pair_plan,
             pair_leg,
         )
-    if pair_plan is not None:
-        raise ValueError("mirrored pairs require registration-aware external agents")
+    if pair_plan is not None and not (challenger_is_fp or acceptor_is_fp):
+        raise ValueError("mirrored pairs require at least one Foul Play agent")
     if challenger_is_fp:
         return await play_foul_play_challenges_poke_env(
-            args, server_configuration, game_index, challenger_slot, acceptor_slot, log_dir
+            args,
+            server_configuration,
+            game_index,
+            challenger_slot,
+            acceptor_slot,
+            log_dir,
+            pair_plan,
+            pair_leg,
         )
     if acceptor_is_fp:
         return await play_foul_play_accepts_poke_env_challenge(
-            args, server_configuration, game_index, challenger_slot, acceptor_slot, log_dir
+            args,
+            server_configuration,
+            game_index,
+            challenger_slot,
+            acceptor_slot,
+            log_dir,
+            pair_plan,
+            pair_leg,
         )
     return await play_poke_env_vs_poke_env(
         args, server_configuration, game_index, challenger_slot, acceptor_slot
@@ -1608,6 +1642,19 @@ def unconsumed_pair_registrations(
         for username in usernames
         if (path := directory / f"{normalize_user_id(username)}.json").exists()
     ]
+
+
+def raise_if_registrations_unconsumed(
+    args: argparse.Namespace, usernames: tuple[str, ...]
+) -> None:
+    leftover = unconsumed_pair_registrations(args, usernames)
+    if leftover:
+        raise FoulPlayError(
+            "mirrored-pair registrations were not consumed by Showdown "
+            f"({[path.name for path in leftover]}); the battle ran with random "
+            "teams/seed instead of the frozen pair — launch Showdown with "
+            "METAGROSS_EVAL_PAIR_DIR set to --pair-registration-dir"
+        )
 
 
 def apply_pair_metadata(
@@ -2746,9 +2793,22 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             raise ValueError("--mirrored-pairs requires --json-out, --log-dir, and --pair-registration-dir")
         if args.concurrent_games != 1:
             raise ValueError("--mirrored-pairs currently requires --concurrent-games 1")
-        if not is_external_agent(args.agent_a) or not is_external_agent(args.agent_b):
+        # Team/seed enforcement is server-side (the patched Showdown loads a
+        # registration per userid), so a poke-env opponent is fine as long as
+        # one side is a Foul Play client, whose logs carry the battle tag.
+        for agent in (args.agent_a, args.agent_b):
+            if not is_external_agent(agent) and agent not in POKE_ENV_AGENTS:
+                raise ValueError(
+                    "--mirrored-pairs requires registration-aware Foul Play/"
+                    "direct-r1 agents or a poke-env opponent (random/max_damage)"
+                )
+        if not is_foul_play(args.agent_a) and not is_foul_play(args.agent_b):
+            raise ValueError("--mirrored-pairs requires at least one Foul Play agent")
+        if "direct_r1" in (args.agent_a, args.agent_b) and (
+            args.agent_a in POKE_ENV_AGENTS or args.agent_b in POKE_ENV_AGENTS
+        ):
             raise ValueError(
-                "--mirrored-pairs requires registration-aware Foul Play/direct-r1 agents"
+                "--mirrored-pairs does not support direct_r1 against a poke-env agent"
             )
         if not args.fail_fast:
             raise ValueError("--mirrored-pairs requires --fail-fast")

@@ -172,6 +172,33 @@ class HardDeadlineTest(unittest.TestCase):
             eval_run.play_one_game = old_play
 
 
+class MirroredPairAgentMatrixTest(unittest.TestCase):
+    def _parse(self, tmp: str, agent_a: str, agent_b: str) -> argparse.Namespace:
+        return eval_run.parse_args([
+            "--mode", "h2h", "--server", "local",
+            "--mirrored-pairs", "--fail-fast", "--n-games", "2",
+            "--agent-a", agent_a, "--agent-b", agent_b,
+            "--json-out", f"{tmp}/result.json",
+            "--log-dir", f"{tmp}/logs",
+            "--pair-registration-dir", f"{tmp}/registrations",
+        ])
+
+    def test_poke_env_opponent_is_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args = self._parse(tmp, "foul_play", "max_damage")
+            self.assertTrue(args.mirrored_pairs)
+
+    def test_two_poke_env_agents_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                self._parse(tmp, "random", "max_damage")
+
+    def test_direct_r1_against_poke_env_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                self._parse(tmp, "direct_r1", "max_damage")
+
+
 class RegistrationConsumptionTest(unittest.TestCase):
     def test_leftover_registrations_are_reported(self):
         with tempfile.TemporaryDirectory() as tmp:

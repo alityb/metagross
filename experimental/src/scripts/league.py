@@ -189,7 +189,7 @@ def run_matchup(candidate: dict, opp: dict, index: int, base_seed: int,
            "--agent-a", candidate.get("agent", "production_r1_search_first"),
            "--agent-b", opp["agent"],
            "--agent-a-prior-server-url", f"http://127.0.0.1:{CAND_PORT}",
-           "--agent-a-require-priors", "--strict-isolated-priors",
+           "--agent-a-require-priors",
            "--foul-play-python", FOUL_PLAY_PY,
            "--foul-play-search-time-ms", "500",
            "--foul-play-search-parallelism", "8",
@@ -200,8 +200,11 @@ def run_matchup(candidate: dict, opp: dict, index: int, base_seed: int,
            "--run-id", f"league-{out_root.name}-{opp['name']}",
            "--json-out", str(result_path), "--log-dir", str(mdir / "logs")]
     if opp.get("needs_prior_server", False):
+        # Strict isolation needs BOTH per-slot prior flags; passing it for a
+        # priorless opponent (vanilla foul-play, max_damage) fails parse_args
+        # and made matchups m02/m03 unrunnable.
         cmd += ["--agent-b-prior-server-url", f"http://127.0.0.1:{OPP_PORT}",
-                "--agent-b-require-priors"]
+                "--agent-b-require-priors", "--strict-isolated-priors"]
 
     for attempt in range(1, 9):
         run_cmd = list(cmd) + (["--resume"] if (mdir / "result.json.progress.json").exists() else [])
