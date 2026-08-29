@@ -34,3 +34,23 @@ PARTIAL (catches the harm, misses the H2H win; 40-game cell power noted).
 This is instrument validation, not a promotion attempt; the promotion rule
 in PREREGISTRATION.md is unchanged. Launches only after the baseline league
 report exists and the root-cause session has released the machine.
+
+## RESULT (2026-08-28) — PARTIAL: the harm is caught, the H2H win is not reproduced
+
+Flattened vector (identical seeds as baseline, all activation-valid):
+stateless 19-21 (47.5%, CI [32.9,62.5]) · vs plain-causal 9-11 (45.0%) ·
+vanilla-foulplay 8-16 (33.3%) · max-damage 11-1 (91.7%).
+Reference: 62.5 / 45.0(self) / 41.7 / 91.7.
+Frozen criterion (i) FAILS (stateless cell 47.5 < 62.5, not >=);
+criterion (ii) not met at the frozen bar (vanilla deficit 8.4pp < 10pp,
+CIs overlap). Per the frozen readings: PARTIAL — the league detects
+flattening as weakly dominated (below or equal on every cell, promotion
+correctly BLOCKED under the weak-dominance rule) but does not reproduce
+the 55.5% H2H win at 40-game power (CI contains both 47.5 and 55.5).
+The deployment-relevant half of the retrodiction lands: the gate that
+licensed flattening (single-opponent H2H) said ship; the league says
+don't; the ladder said don't. Bonus measurement: m01 is the never-run
+direct flattened-vs-plain-causal H2H — 45.0%.
+Note accumulating across both leagues: causal-prior candidates are a
+combined 18-30 (37.5%) vs vanilla foul-play head-to-head — the powered
+stage-D run (priors_h2h_20260828) will settle that cell.

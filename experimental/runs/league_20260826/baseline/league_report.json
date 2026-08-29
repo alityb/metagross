@@ -1,0 +1,76 @@
+{
+  "candidate": "plain-causal-r1",
+  "candidate_config": {
+    "name": "plain-causal-r1",
+    "agent": "production_r1_search_first",
+    "trajectory_mode": "causal-history"
+  },
+  "base_seed": 2026082610,
+  "vector": [
+    {
+      "opponent": "stateless",
+      "agent": "production_r1_search_first",
+      "wins": 25,
+      "games": 40,
+      "winrate": 0.625,
+      "ci95": [
+        0.4703,
+        0.7578
+      ],
+      "activation": {
+        "candidate_active": false,
+        "opponent_active": false,
+        "valid": true
+      }
+    },
+    {
+      "opponent": "plain-causal-mirror",
+      "agent": "production_r1_search_first",
+      "wins": 9,
+      "games": 20,
+      "winrate": 0.45,
+      "ci95": [
+        0.2582,
+        0.6579
+      ],
+      "activation": {
+        "candidate_active": false,
+        "opponent_active": false,
+        "valid": true
+      }
+    },
+    {
+      "opponent": "vanilla-foulplay",
+      "agent": "foul_play",
+      "wins": 10,
+      "games": 24,
+      "winrate": 0.4167,
+      "ci95": [
+        0.2447,
+        0.6117
+      ],
+      "activation": {
+        "candidate_active": false,
+        "opponent_active": false,
+        "valid": true
+      }
+    },
+    {
+      "opponent": "max-damage",
+      "agent": "max_damage",
+      "wins": 11,
+      "games": 12,
+      "winrate": 0.9167,
+      "ci95": [
+        0.6461,
+        0.9851
+      ],
+      "activation": {
+        "candidate_active": false,
+        "opponent_active": false,
+        "valid": true
+      }
+    }
+  ],
+  "all_valid": true
+}

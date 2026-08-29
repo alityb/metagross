@@ -6846,3 +6846,14 @@ powered replication: priors_h2h_20260828 prereg frozen (200 games, seed
 2026082830, plain-causal vs foul_play, frozen readings incl. sign-flip
 third instance if the interval contains 50%). Auto-launches after the
 retrodiction via ensure_chain.sh stage D.
+
+## 2026-08-28 — RETRODICTION COMPLETE: PARTIAL — promotion correctly blocked
+
+flattened vector 47.5/45.0/33.3/91.7 vs reference 62.5/45.0(self)/41.7/
+91.7 (same seeds, all valid). Frozen criteria: (i) failed, (ii) under the
+10pp bar -> PARTIAL per prereg. Deployment-relevant half lands: under the
+league's weak-dominance rule flattening is REJECTED — the league agrees
+with the ladder where the H2H screen disagreed. H2H-win half did not
+reproduce at 40-game power (CI contains both). Direct flattened-vs-plain
+H2H measured for the first time: 45.0%. Stage D (powered priors-vs-vanilla,
+200 games) auto-launches next via ensure_chain.

@@ -1,9 +1,9 @@
 # [DRAFT] The same network, twice: what a Pokémon agent taught us about self-conditioning, evaluation, and the fixes that lie
 
-*Owner's editing notes are in [brackets]. Numbers marked [PENDING] land
-today: the self-conditioning ablation verdict, the baseline league vector,
-and the retrodiction verdict — slot them in before publishing. Everything
-else is final and traceable to `experimental/runs/iteration_log.md`.*
+*Owner's editing notes are in [brackets]. All numbers are final and
+traceable to `experimental/runs/iteration_log.md`; the one still-running
+experiment (powered priors-vs-vanilla, 200 games) is flagged as queued in
+the text and can be updated post-publication.*
 
 ---
 
@@ -138,15 +138,35 @@ and is graded on the *per-opponent vector*, never one number. Promotion
 requires weak dominance over the reference vector, with the weak-opponent
 cells as the exploitation guard.
 
-[PENDING — baseline vector table: reference run in flight. Expected
-calibration checks: stateless cell ≈48%, self-mirror ≈50%.]
+Here's the calibration run (our champion as its own candidate) next to
+the retrodiction — flattened-causal through the identical pool, on
+identical team seeds, the first locally *verified*-mirrored games in the
+project's history:
 
-[PENDING — retrodiction: flattened-causal through the identical pool on
-identical seeds. Preregistered success = stateless cell at-or-above
-reference AND a weak-opponent cell clearly below. If it lands: "the league
-reproduces, in one overnight of free local compute, the failure that took
-139 ladder games to expose — the instrument catches what head-to-head
-missed." If it doesn't land: report that too, per prereg.]
+| Opponent | plain-causal (reference) | flattened |
+|---|---|---|
+| stateless peer | 62.5% (25-15) | 47.5% (19-21) |
+| plain-causal | 45.0% (self-mirror) | 45.0% (direct H2H) |
+| vanilla foul-play | 41.7% (10-14) | 33.3% (8-16) |
+| max-damage | 91.7% (11-1) | 91.7% (11-1) |
+
+Under the preregistered promotion rule — weak dominance over the
+reference vector — flattening is **rejected**: below or equal on every
+cell, badly below on the strong peer. The league agrees with the ladder,
+where the head-to-head screen had said *ship*. That's the
+deployment-relevant half of the retrodiction landing in one overnight of
+free local compute. The other half — reproducing the 55.5% head-to-head
+win — didn't appear at 40-game power (47.5%, CI [33, 62], which contains
+both numbers); preregistration obliges me to tell you that too.
+
+And one cell deserves its own double-take: the *reference* — our champion,
+priors and all — went 10-14 against vanilla foul-play, the identical
+search stack minus the neural priors, despite a 7–10 GXE population gap
+between them (both facts leaderboard-verified). Across both league runs
+the priors are a combined 18-30 (37.5%) in that cell. If a powered
+200-game run confirms it, that's the sign flip's third and cleanest
+instance: the priors' entire value lives in the population, not the
+head-to-head. That run is queued; if it lands the other way I'll say so.
 
 ## The meta-lesson: silent mechanisms
 
