@@ -238,12 +238,20 @@ the exploitation guard. Per-matchup activation checking, port-gated
 candidate interventions, idempotent resume, and stall watchdogs are built
 in — each from a recorded failure.
 
-Status: the baseline calibration run (reference vector) is in flight; a
-retrodiction is preregistered (`RETRODICTION_PREREG.md`) putting flattened
-causal through the identical pool on the identical seeds, with success
-defined in advance as reproducing the sign-flip pattern locally — the
-instrument catching, in one overnight, the failure that took 139 ladder
-games to expose.
+Status: both league runs are complete (the first locally
+verified-mirrored games of the project). Reference vector (plain-causal):
+62.5% vs stateless / 45.0% self-mirror / 41.7% vs vanilla foul-play /
+91.7% vs max-damage. Retrodiction (flattened, identical seeds): 47.5 /
+45.0 / 33.3 / 91.7 — weakly dominated, so under the frozen promotion rule
+the league **rejects flattening, agreeing with the ladder where the H2H
+screen said ship**. Graded PARTIAL per prereg: the deployment-relevant
+half lands; the 55.5% H2H win did not reproduce at 40-game power (CI
+contains both values). Two bonus measurements: the first direct
+flattened-vs-plain-causal H2H (45.0%), and a striking reference cell —
+the champion's priors went 10-14 against the identical no-prior search
+stack (18-30 combined across both runs), a potential third sign-flip
+instance now under a preregistered 200-game test
+(`priors_h2h_20260828`).
 
 Cheaper complements, in order: the offline paired-decision pre-gate
 (exists), AIVAT-style luck-corrected anytime-valid scoring (cf. AV-AIVAT,
