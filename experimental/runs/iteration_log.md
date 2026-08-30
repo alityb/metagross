@@ -6908,3 +6908,13 @@ beat SigurdZZ (today's #5). Observational peak push launched on tophfan32
 (stateless serving, 472k iteration budget, 4.5h hard cap, inner-loop
 resilience, no RD stop) to record best-achievable Elo; peak watcher pings
 Discord. Ladder+user snapshot to be re-fetched and hashed at close.
+
+## 2026-08-30 — Rank-drift correction: all rank claims now snapshot-dated
+
+Owner spotted SigurdZZ at #32 live vs our "#5" — ladder-wide drift, not an
+error in the cross-ref: over two days milkreo #2->#13, SigurdZZ #5->#32,
+idle tophfan32 #105->#192, roguefan31 #246->#373. Fresh top-500 fetched
+and hashed (ladder_top500_20260830.json); best_opponents.json dual-dates
+every rank. RULE: rank claims are only meaningful with a snapshot date;
+idle accounts bleed ~40 ranks/day at this altitude (context for the peak
+push and for any future "rank #N" statement in the writeup).

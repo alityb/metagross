@@ -6,27 +6,32 @@
       {
         "opp": "milkreo",
         "elo": 2489,
-        "top500_rank_today": 2
+        "rank_20260828": 2,
+        "rank_20260830": 13
       },
       {
         "opp": "Elessar00",
         "elo": 2349,
-        "top500_rank_today": 388
+        "rank_20260828": 388,
+        "rank_20260830": null
       },
       {
         "opp": "eldin",
         "elo": 2343,
-        "top500_rank_today": 43
+        "rank_20260828": 43,
+        "rank_20260830": 102
       },
       {
         "opp": "Spitfire arcanine",
         "elo": 2339,
-        "top500_rank_today": 124
+        "rank_20260828": 124,
+        "rank_20260830": 387
       },
       {
         "opp": "jaxcalibur",
         "elo": 2334,
-        "top500_rank_today": 4
+        "rank_20260828": 4,
+        "rank_20260830": 11
       }
     ],
     "vs_current_top500": {
@@ -78,27 +83,32 @@
       {
         "opp": "bobfamilyrules",
         "elo": 2286,
-        "top500_rank_today": 156
+        "rank_20260828": 156,
+        "rank_20260830": 21
       },
       {
         "opp": "Dugtrio Is Broken",
         "elo": 2284,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       },
       {
         "opp": "marper8",
         "elo": 2284,
-        "top500_rank_today": 65
+        "rank_20260828": 65,
+        "rank_20260830": 91
       },
       {
         "opp": "Tesla SpaceX",
         "elo": 2279,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": 258
       },
       {
         "opp": "marper8",
         "elo": 2276,
-        "top500_rank_today": 65
+        "rank_20260828": 65,
+        "rank_20260830": 91
       }
     ],
     "vs_current_top500": {
@@ -150,27 +160,32 @@
       {
         "opp": "toutcquejveux",
         "elo": 2074,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       },
       {
         "opp": "restrating",
         "elo": 2055,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       },
       {
         "opp": "UBHCA",
         "elo": 2037,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       },
       {
         "opp": "Aldr",
         "elo": 2033,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       },
       {
         "opp": "Tobias reaper",
         "elo": 2009,
-        "top500_rank_today": null
+        "rank_20260828": null,
+        "rank_20260830": null
       }
     ],
     "vs_current_top500": {
