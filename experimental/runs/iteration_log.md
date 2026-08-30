@@ -6867,3 +6867,16 @@ any meaningful positive edge. Strong form (clearly below 45) not claimed.
 Combined descriptive with league cells: 106-142 (42.7%, n=248). The
 campaign's central finding now stands on three independent instances, the
 third being the priors themselves. Chain complete; all processes down.
+
+## 2026-08-30 — Cron cleanup verified: guardian entries gone, host quiescent
+
+Post-campaign housekeeping check on the guardian crontab (this host hangs
+on crontab writes, so the completed chain scripts had been neutered with
+early exit-0 guards instead of self-removing — commit 95b1270f). Verified
+today: the user crontab is now empty (both ensure_league.sh and
+ensure_chain.sh entries removed), no league/prior-server/chain processes
+running, nothing respawning. The neutered scripts remain on disk as the
+belt to the crontab's suspenders; safe to delete or re-arm for a future
+campaign. LESSON kept alongside the watchdog one: cron self-removal is
+not reliable on this host — automation that must stop itself needs an
+in-script kill switch, not a crontab write.
