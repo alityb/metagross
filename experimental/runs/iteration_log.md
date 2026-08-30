@@ -6880,3 +6880,20 @@ belt to the crontab's suspenders; safe to delete or re-arm for a future
 campaign. LESSON kept alongside the watchdog one: cron self-removal is
 not reliable on this host — automation that must stop itself needs an
 in-script kill switch, not a crontab write.
+
+## 2026-08-30 — CODEBASE CLEANUP (post-campaign)
+
+Git: de-indexed ~100MB of committed Rust build caches
+(.cargo-gen9-learned-priors rlibs) and ~370MB of raw per-game logs the
+campaign force-adds had swept in; HEAD's largest file is now the 4MB
+vendored Linux wheel. Curated evidence (preregs, RESULT sections, reports,
+result.json/configs/scripts, ratings, rank-snapshot manifest) stays
+committed. gitignore now covers build caches, machine-local dirs, and raw
+log patterns. NOTE: git HISTORY still contains the old blobs — clone size
+only shrinks with a history rewrite (owner decision; would force-push
+main). Disk: 6,753 raw log files across the six campaign run dirs
+compressed to per-run raw_logs.tar.gz (~1.7GB -> ~457MB archives; nothing
+deleted uncompressed). Worktrees: serene-volhard removed (clean, merged);
+zealous-faraday kept (4 uncommitted files). Guardians neutered (crontab
+writes hang headlessly on this host); two dead cron entries await an
+interactive `crontab -e`.

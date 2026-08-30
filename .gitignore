@@ -53,3 +53,4 @@ experimental/runs/**/*.log
 experimental/runs/**/*protocol.jsonl
 experimental/runs/**/*search.jsonl
 experimental/runs/**/*holdout.jsonl
+experimental/runs/**/raw_logs.tar.gz
