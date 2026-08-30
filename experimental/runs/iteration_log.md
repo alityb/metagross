@@ -6897,3 +6897,14 @@ deleted uncompressed). Worktrees: serene-volhard removed (clean, merged);
 zealous-faraday kept (4 uncommitted files). Guardians neutered (crontab
 writes hang headlessly on this host); two dead cron entries await an
 interactive `crontab -e`.
+
+## 2026-08-30 — Best-opponent analysis + bounded peak-Elo push
+
+Analysis (from archived protocol logs x hashed top-500 snapshot,
+best_opponents.json): stateless arm 74-50 vs players currently on the
+top-500 — including beating milkreo (today's #2; Elo 2489 at match time,
+1-1 across two meetings) and eldin (#43); causal arm 38-31 vs top-500,
+beat SigurdZZ (today's #5). Observational peak push launched on tophfan32
+(stateless serving, 472k iteration budget, 4.5h hard cap, inner-loop
+resilience, no RD stop) to record best-achievable Elo; peak watcher pings
+Discord. Ladder+user snapshot to be re-fetched and hashed at close.

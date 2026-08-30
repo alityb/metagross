@@ -1,0 +1,206 @@
+{
+  "stateless/tophfan32": {
+    "games": 270,
+    "record": "179-91",
+    "best_wins": [
+      {
+        "opp": "milkreo",
+        "elo": 2489,
+        "top500_rank_today": 2
+      },
+      {
+        "opp": "Elessar00",
+        "elo": 2349,
+        "top500_rank_today": 388
+      },
+      {
+        "opp": "eldin",
+        "elo": 2343,
+        "top500_rank_today": 43
+      },
+      {
+        "opp": "Spitfire arcanine",
+        "elo": 2339,
+        "top500_rank_today": 124
+      },
+      {
+        "opp": "jaxcalibur",
+        "elo": 2334,
+        "top500_rank_today": 4
+      }
+    ],
+    "vs_current_top500": {
+      "record": "74-50",
+      "best": [
+        {
+          "opp": "milkreo",
+          "rank": 2,
+          "elo": 2488,
+          "won": false
+        },
+        {
+          "opp": "milkreo",
+          "rank": 2,
+          "elo": 2489,
+          "won": true
+        },
+        {
+          "opp": "jaxcalibur",
+          "rank": 4,
+          "elo": 2308,
+          "won": false
+        },
+        {
+          "opp": "jaxcalibur",
+          "rank": 4,
+          "elo": 2334,
+          "won": true
+        },
+        {
+          "opp": "jaxcalibur",
+          "rank": 4,
+          "elo": 2336,
+          "won": false
+        },
+        {
+          "opp": "jaxcalibur",
+          "rank": 4,
+          "elo": 2390,
+          "won": false
+        }
+      ]
+    }
+  },
+  "causal/roguefan31": {
+    "games": 229,
+    "record": "150-79",
+    "best_wins": [
+      {
+        "opp": "bobfamilyrules",
+        "elo": 2286,
+        "top500_rank_today": 156
+      },
+      {
+        "opp": "Dugtrio Is Broken",
+        "elo": 2284,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "marper8",
+        "elo": 2284,
+        "top500_rank_today": 65
+      },
+      {
+        "opp": "Tesla SpaceX",
+        "elo": 2279,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "marper8",
+        "elo": 2276,
+        "top500_rank_today": 65
+      }
+    ],
+    "vs_current_top500": {
+      "record": "38-31",
+      "best": [
+        {
+          "opp": "SigurdZZ",
+          "rank": 5,
+          "elo": 2214,
+          "won": true
+        },
+        {
+          "opp": "SigurdZZ",
+          "rank": 5,
+          "elo": 2178,
+          "won": false
+        },
+        {
+          "opp": "lt_alt1",
+          "rank": 15,
+          "elo": 2224,
+          "won": false
+        },
+        {
+          "opp": "smokyaim",
+          "rank": 20,
+          "elo": 2245,
+          "won": false
+        },
+        {
+          "opp": "smokyaim",
+          "rank": 20,
+          "elo": 2261,
+          "won": true
+        },
+        {
+          "opp": "smokyaim",
+          "rank": 20,
+          "elo": 2259,
+          "won": true
+        }
+      ]
+    }
+  },
+  "flattened/roguefan55": {
+    "games": 139,
+    "record": "93-46",
+    "best_wins": [
+      {
+        "opp": "toutcquejveux",
+        "elo": 2074,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "restrating",
+        "elo": 2055,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "UBHCA",
+        "elo": 2037,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "Aldr",
+        "elo": 2033,
+        "top500_rank_today": null
+      },
+      {
+        "opp": "Tobias reaper",
+        "elo": 2009,
+        "top500_rank_today": null
+      }
+    ],
+    "vs_current_top500": {
+      "record": "1-3",
+      "best": [
+        {
+          "opp": "Kindyy",
+          "rank": 332,
+          "elo": 2148,
+          "won": false
+        },
+        {
+          "opp": "Lana86",
+          "rank": 440,
+          "elo": 2036,
+          "won": false
+        },
+        {
+          "opp": "wrongwayright",
+          "rank": 481,
+          "elo": 1997,
+          "won": false
+        },
+        {
+          "opp": "Micael Lopes",
+          "rank": 497,
+          "elo": 1981,
+          "won": true
+        }
+      ]
+    }
+  }
+}
