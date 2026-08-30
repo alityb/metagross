@@ -28,6 +28,12 @@ if [ -f "$RUN/flattened/league_report.json" ]; then
     pkill -9 -f "scripts/league.py|eval.run|prior_server.py" 2>/dev/null
   fi
   if [ ! -d "$PH/run" ]; then ping "🏟️ retrodiction done — **powered priors-vs-vanilla H2H starting** (200 games, prereg'd)"; fi
+  # Showdown binds METAGROSS_EVAL_PAIR_DIR at process start; a server
+  # surviving from the previous stage enforces the WRONG registration dir
+  # and every game dies mute (48-cycle loop, 2026-08-30). Recycle it so
+  # league.py reboots it pointing at this stage's dir.
+  /usr/sbin/lsof -ti tcp:8022 2>/dev/null | xargs kill -9 2>/dev/null
+  sleep 2
   echo "$(date -u +%FT%TZ) priors-h2h (re)launch" >>"$RUN/guardian.log"
   nohup caffeinate -i "$ROOT/.venv-metamon/bin/python"     "$ROOT/experimental/src/scripts/league.py"     --config "$PH/priors_h2h.json"     --out "$PH/run" >>"$PH/league_ph.log" 2>&1 &
   exit 0
