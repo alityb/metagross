@@ -30,3 +30,19 @@ Wilson 95% interval on decisive games:
 ## Sequencing
 Launches automatically after the retrodiction league report exists
 (ensure_chain.sh stage D). Developmental, owner-visible.
+
+## RESULT (2026-08-30) — 88-112 (44.0%, CI [37.3, 50.9]): sign-flip third instance SUPPORTED
+
+Frozen reading 2 applies: the interval contains 50 (upper bound 50.9), so
+there is NO detectable head-to-head edge at 200-game power — against a
+leaderboard-verified 7-10 GXE population gap. The interval also excludes
+any meaningful positive edge: at best the priors are worth parity against
+the identical search stack they guide past the entire ladder. Point
+estimate (44.0%) sits below 45 but the interval does not clearly exclude
+45, so the "actively harmful" strong form is NOT claimed. Supplementary:
+combined with the two 24-game league cells the matchup totals 106-142
+(42.7%, n=248, CI ≈ [36.7, 49.0]) — descriptively below parity.
+Priors-vs-no-priors joins causal-vs-stateless and flattening as the third
+measured instance of the population/head-to-head sign flip — the cleanest,
+because the intervention (policy guidance itself) is the agent's entire
+reason to exist.

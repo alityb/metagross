@@ -1,0 +1,28 @@
+{
+  "candidate": "plain-causal-r1",
+  "candidate_config": {
+    "name": "plain-causal-r1",
+    "agent": "production_r1_search_first",
+    "trajectory_mode": "causal-history"
+  },
+  "base_seed": 2026082830,
+  "vector": [
+    {
+      "opponent": "vanilla-foulplay",
+      "agent": "foul_play",
+      "wins": 88,
+      "games": 200,
+      "winrate": 0.44,
+      "ci95": [
+        0.373,
+        0.5093
+      ],
+      "activation": {
+        "candidate_active": false,
+        "opponent_active": false,
+        "valid": true
+      }
+    }
+  ],
+  "all_valid": true
+}

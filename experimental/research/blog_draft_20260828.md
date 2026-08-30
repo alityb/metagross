@@ -159,14 +159,17 @@ free local compute. The other half — reproducing the 55.5% head-to-head
 win — didn't appear at 40-game power (47.5%, CI [33, 62], which contains
 both numbers); preregistration obliges me to tell you that too.
 
-And one cell deserves its own double-take: the *reference* — our champion,
-priors and all — went 10-14 against vanilla foul-play, the identical
-search stack minus the neural priors, despite a 7–10 GXE population gap
-between them (both facts leaderboard-verified). Across both league runs
-the priors are a combined 18-30 (37.5%) in that cell. If a powered
-200-game run confirms it, that's the sign flip's third and cleanest
-instance: the priors' entire value lives in the population, not the
-head-to-head. That run is queued; if it lands the other way I'll say so.
+And one cell deserved its own double-take: the *reference* — our
+champion, priors and all — went 10-14 against vanilla foul-play, the
+identical search stack minus the neural priors. So we preregistered a
+powered 200-game test. Verdict: **88-112 (44.0%, CI [37.3, 50.9])** — no
+detectable head-to-head edge, upper bound at parity, from the same priors
+that carry the agent to **rank #105** on a ladder where the unguided
+stack lives 7–10 GXE lower. That's the sign flip's third and cleanest
+instance, because this time the "intervention" is the policy guidance
+itself — the agent's entire reason to exist. Its value is real, enormous,
+and *entirely about exploiting the population*. Head-to-head against its
+own skeleton, it measures as nothing.
 
 ## The meta-lesson: silent mechanisms
 

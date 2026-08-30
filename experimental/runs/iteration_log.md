@@ -6857,3 +6857,13 @@ with the ladder where the H2H screen disagreed. H2H-win half did not
 reproduce at 40-game power (CI contains both). Direct flattened-vs-plain
 H2H measured for the first time: 45.0%. Stage D (powered priors-vs-vanilla,
 200 games) auto-launches next via ensure_chain.
+
+## 2026-08-30 — PRIORS-VS-VANILLA VERDICT: 44.0% [37.3, 50.9] — third sign-flip instance SUPPORTED
+
+200 games, mirrored (enforcement verified), all clean after the
+stale-Showdown fix. Frozen reading 2: no detectable H2H edge at power vs
+a 7-10 GXE leaderboard-verified population gap; upper bound 50.9 excludes
+any meaningful positive edge. Strong form (clearly below 45) not claimed.
+Combined descriptive with league cells: 106-142 (42.7%, n=248). The
+campaign's central finding now stands on three independent instances, the
+third being the priors themselves. Chain complete; all processes down.
