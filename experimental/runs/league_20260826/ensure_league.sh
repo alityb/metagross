@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CHAIN COMPLETE (2026-08-30): campaign done; crontab writes hang on this
+# host so the entries could not self-remove — neutered here instead.
+exit 0
 # Cron guardian for the baseline league run. Idempotent (league.py skips
 # completed matchups); self-removes when the report exists.
 set -u

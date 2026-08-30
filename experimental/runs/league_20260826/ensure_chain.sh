@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CHAIN COMPLETE (2026-08-30): campaign done; crontab writes hang on this
+# host so the entries could not self-remove — neutered here instead.
+exit 0
 # Overnight chain guardian: (1) re-arm the baseline league when the
 # root-cause session releases the machine (or at the fallback deadline if
 # the machine is quiet), (2) after the baseline report, run the
