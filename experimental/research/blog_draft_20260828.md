@@ -25,6 +25,21 @@ plausible hidden opponent teams, search each world for 500 ms with the
 policy as root prior, aggregate. Standard imperfect-information stack,
 unusually measured.
 
+Some context for where this sits: the
+[PokeAgent Challenge](https://pokeagentchallenge.com) (NeurIPS 2025's
+competition track, now an open benchmark —
+[paper](https://arxiv.org/abs/2603.15563)) ran the largest AI Pokémon
+tournament to date and found the same shape this post does: RL and search
+specialists decisively beat LLM generalists at battling. Their live
+leaderboard runs team-building OU formats rather than random battles, so
+metagross can't enter as-is — its policy and belief machinery are keyed to
+the randbats team generator. But one finding below travels in their
+direction: arena-style benchmarks rank agents largely by agent-vs-agent
+play, and we measured — three separate times — that head-to-head rankings
+can be anti-correlated with performance against a real population. If you
+build or consume arena benchmarks, that failure mode is worth designing
+against.
+
 ## One network, two views
 
 The policy can be served two ways: *causal* — it reads the whole battle
