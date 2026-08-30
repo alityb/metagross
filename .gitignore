@@ -38,3 +38,18 @@ target/
 # model checkpoints never belong in git (GitHub 100MB limit)
 experimental/releases/**/*.pt
 *.pt
+
+# build caches and machine-local dirs
+/experimental/.cargo-gen9-learned-priors/
+/output/
+/tmp/
+/external/
+/experimental/cache/
+
+# raw run logs stay on disk (and in archives), out of git
+experimental/runs/**/logs/
+experimental/runs/**/registrations/
+experimental/runs/**/*.log
+experimental/runs/**/*protocol.jsonl
+experimental/runs/**/*search.jsonl
+experimental/runs/**/*holdout.jsonl
