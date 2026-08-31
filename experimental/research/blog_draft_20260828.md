@@ -1,9 +1,7 @@
 # [DRAFT] The same network, twice: what a Pokémon agent taught us about self-conditioning, evaluation, and the fixes that lie
 
 *Owner's editing notes are in [brackets]. All numbers are final and
-traceable to `experimental/runs/iteration_log.md`; the one still-running
-experiment (powered priors-vs-vanilla, 200 games) is flagged as queued in
-the text and can be updated post-publication.*
+traceable to `experimental/runs/iteration_log.md`. Nothing is pending.*
 
 ---
 
