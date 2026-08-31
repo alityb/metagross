@@ -6918,3 +6918,12 @@ and hashed (ladder_top500_20260830.json); best_opponents.json dual-dates
 every rank. RULE: rank claims are only meaningful with a snapshot date;
 idle accounts bleed ~40 ranks/day at this altitude (context for the peak
 push and for any future "rank #N" statement in the writeup).
+
+## 2026-08-31 — Peak push result folded into writeup
+
+All-time account peak Elo 2320 (tophfan32, observed live 2026-08-31;
+session ledger session_opponents.json: 57-43 over 100 logged games, mean
+opponent Elo 2204, 50-41 vs live top-500 members, beat helicopyer at live
+#6 / Elo 2457). Report + blog updated with snapshot-dated rank discipline
+(idle drift ~40 ranks/day; Elo decay above ~2100). Window left to finish
+on its timer; final close-out snapshot on push end.

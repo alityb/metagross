@@ -68,9 +68,17 @@ account under a formal protocol. **Rank snapshot (2026-08-28, hashed in
 public gen9randombattle top-500 leaderboard at the time of writing — the
 stateless arm at **rank #105** (Elo 2249, GXE 91.2) and the causal arm at
 **rank #246** (Elo 2182, GXE 89.3) — placing the agent's accounts inside
-the top ≈0.1% of an active ladder whose #1 sits at 95.5 GXE. No verified
-bot leaderboard exists, so the claim is "strongest *reported*," not "best
-in format." It remains unbeaten by anything this program built —
+the top ≈0.1% of an active ladder whose #1 sits at 95.5 GXE. A
+subsequent bounded peak push (2026-08-30/31, `peak_push_20260830/`) set an
+all-time account peak of **Elo 2320** — ≈rank #40 on the 2026-08-30
+snapshot — with session scalps including **helicopyer (then live #6, Elo
+2457 at match time)**; the earlier pair campaign's ledger shows the
+stateless arm 74-50 against players on the 2026-08-28 top-500, including
+a win over **milkreo (then #2, Elo 2489)**. Rank labels are always
+snapshot-dated: idle accounts drift ≈40 ranks/day at this altitude and
+Elo above ≈2100 decays daily without games. No verified bot leaderboard
+exists, so the claim is "strongest *reported*," not "best in format." It
+remains unbeaten by anything this program built —
 including three systematic improvement programs whose disciplined negative
 results are the evidence behind links 1–5.
 

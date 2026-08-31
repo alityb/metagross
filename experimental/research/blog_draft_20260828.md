@@ -11,10 +11,12 @@ I have a Pokémon agent that plays `gen9randombattle` at elite human level —
 settled 92.4–92.7 GXE on the Showdown ladder at the RD-25 convergence
 floor, peak 93.6, and (the part I'm proudest of) it *reproduces*: months
 later, fresh account, formal protocol, 91.7. To my knowledge it's the
-strongest reported agent for the format — as I write this, its two
-measurement accounts sit at **rank #105 and #246** on the public top-500
-leaderboard (snapshot hashed in the repo). This post is not about how good
-it is. It's about a month of trying to make it better, failing in
+strongest reported agent for the format — its two measurement accounts
+sat at **rank #105 and #246** on the public top-500 leaderboard (hashed
+snapshot, 2026-08-28), a later bounded push set an all-time peak of
+**Elo 2320** (≈rank #40 territory), and its victims include the players
+ranked **#2** and **#6** at their respective snapshots. This post is not
+about how good it is. It's about a month of trying to make it better, failing in
 increasingly interesting ways, and what the failures turned out to be
 worth.
 

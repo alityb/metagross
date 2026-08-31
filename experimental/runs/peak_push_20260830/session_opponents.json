@@ -1,0 +1,602 @@
+[
+  {
+    "opp": "helicopyer",
+    "elo": 2457,
+    "won": true,
+    "rank": 6
+  },
+  {
+    "opp": "pokeblade\u2606101",
+    "elo": 2420,
+    "won": true,
+    "rank": 84
+  },
+  {
+    "opp": "fable foul play",
+    "elo": 2379,
+    "won": true,
+    "rank": 16
+  },
+  {
+    "opp": "bobfamilyrules",
+    "elo": 2376,
+    "won": true,
+    "rank": 214
+  },
+  {
+    "opp": "fable foul play",
+    "elo": 2368,
+    "won": false,
+    "rank": 16
+  },
+  {
+    "opp": "botice meh senpi",
+    "elo": 2347,
+    "won": false,
+    "rank": 14
+  },
+  {
+    "opp": "pokeblade\u2606101",
+    "elo": 2344,
+    "won": false,
+    "rank": 84
+  },
+  {
+    "opp": "LizarDune",
+    "elo": 2344,
+    "won": false,
+    "rank": 15
+  },
+  {
+    "opp": "SigurdZZ",
+    "elo": 2329,
+    "won": true,
+    "rank": 227
+  },
+  {
+    "opp": "Dastan14",
+    "elo": 2329,
+    "won": false,
+    "rank": 40
+  },
+  {
+    "opp": "Norman2!",
+    "elo": 2315,
+    "won": true,
+    "rank": 41
+  },
+  {
+    "opp": "SigurdZZ",
+    "elo": 2309,
+    "won": true,
+    "rank": 227
+  },
+  {
+    "opp": "hong hoornstaart",
+    "elo": 2305,
+    "won": true,
+    "rank": 39
+  },
+  {
+    "opp": "poder67",
+    "elo": 2300,
+    "won": true,
+    "rank": 92
+  },
+  {
+    "opp": "SigurdZZ",
+    "elo": 2297,
+    "won": false,
+    "rank": 227
+  },
+  {
+    "opp": "SasGoPeiraias",
+    "elo": 2285,
+    "won": true,
+    "rank": 176
+  },
+  {
+    "opp": "aShartOfEspresso",
+    "elo": 2284,
+    "won": false,
+    "rank": 45
+  },
+  {
+    "opp": "smokyaim",
+    "elo": 2283,
+    "won": true,
+    "rank": 46
+  },
+  {
+    "opp": "boomblake",
+    "elo": 2272,
+    "won": true,
+    "rank": 202
+  },
+  {
+    "opp": "Sowla",
+    "elo": 2268,
+    "won": false,
+    "rank": 67
+  },
+  {
+    "opp": "cindachill",
+    "elo": 2267,
+    "won": true,
+    "rank": 65
+  },
+  {
+    "opp": "Derpager",
+    "elo": 2267,
+    "won": true,
+    "rank": 171
+  },
+  {
+    "opp": "fate1q",
+    "elo": 2266,
+    "won": false,
+    "rank": 458
+  },
+  {
+    "opp": "poder67",
+    "elo": 2265,
+    "won": false,
+    "rank": 92
+  },
+  {
+    "opp": "Alpha Tw",
+    "elo": 2260,
+    "won": false,
+    "rank": 53
+  },
+  {
+    "opp": "aShartOfEspresso",
+    "elo": 2258,
+    "won": true,
+    "rank": 45
+  },
+  {
+    "opp": "mayqueen nyannyan",
+    "elo": 2245,
+    "won": false,
+    "rank": 313
+  },
+  {
+    "opp": "Sleepzhuoshuai",
+    "elo": 2241,
+    "won": false,
+    "rank": 85
+  },
+  {
+    "opp": "Boomblake",
+    "elo": 2240,
+    "won": true,
+    "rank": 202
+  },
+  {
+    "opp": "marper8",
+    "elo": 2240,
+    "won": true,
+    "rank": 115
+  },
+  {
+    "opp": "smokyaim",
+    "elo": 2236,
+    "won": false,
+    "rank": 46
+  },
+  {
+    "opp": "marper8",
+    "elo": 2236,
+    "won": false,
+    "rank": 115
+  },
+  {
+    "opp": "rifkyaristyo",
+    "elo": 2234,
+    "won": true,
+    "rank": 218
+  },
+  {
+    "opp": "I Love Alolan Eggy",
+    "elo": 2232,
+    "won": false,
+    "rank": 108
+  },
+  {
+    "opp": "AsianGeaker",
+    "elo": 2229,
+    "won": true,
+    "rank": 137
+  },
+  {
+    "opp": "smokyaim",
+    "elo": 2228,
+    "won": false,
+    "rank": 46
+  },
+  {
+    "opp": "Magikarpitalism",
+    "elo": 2218,
+    "won": false,
+    "rank": 114
+  },
+  {
+    "opp": "zicafeliped",
+    "elo": 2215,
+    "won": false,
+    "rank": 86
+  },
+  {
+    "opp": "fakedq2",
+    "elo": 2213,
+    "won": false,
+    "rank": 211
+  },
+  {
+    "opp": "moenke",
+    "elo": 2212,
+    "won": false,
+    "rank": 159
+  },
+  {
+    "opp": "zicafeliped",
+    "elo": 2211,
+    "won": false,
+    "rank": 86
+  },
+  {
+    "opp": "SigurdZZ",
+    "elo": 2211,
+    "won": true,
+    "rank": 227
+  },
+  {
+    "opp": "enstrom",
+    "elo": 2210,
+    "won": false,
+    "rank": 109
+  },
+  {
+    "opp": "smokyaim",
+    "elo": 2209,
+    "won": false,
+    "rank": 46
+  },
+  {
+    "opp": "CaptMicrowave",
+    "elo": 2208,
+    "won": true,
+    "rank": 96
+  },
+  {
+    "opp": "FrankRayquaza",
+    "elo": 2208,
+    "won": true,
+    "rank": 187
+  },
+  {
+    "opp": "sasfar",
+    "elo": 2207,
+    "won": false,
+    "rank": 130
+  },
+  {
+    "opp": "SOMEBODYSMAEL2",
+    "elo": 2207,
+    "won": false,
+    "rank": 396
+  },
+  {
+    "opp": "Lambovino",
+    "elo": 2205,
+    "won": true,
+    "rank": 208
+  },
+  {
+    "opp": "SOMEBODYSMAEL2",
+    "elo": 2193,
+    "won": true,
+    "rank": 396
+  },
+  {
+    "opp": "smokyaim",
+    "elo": 2190,
+    "won": true,
+    "rank": 46
+  },
+  {
+    "opp": "sekkari",
+    "elo": 2189,
+    "won": true,
+    "rank": 222
+  },
+  {
+    "opp": "LuCk1saSkill",
+    "elo": 2187,
+    "won": false,
+    "rank": 49
+  },
+  {
+    "opp": "Strafos",
+    "elo": 2185,
+    "won": false,
+    "rank": 174
+  },
+  {
+    "opp": "chunkymcfunky",
+    "elo": 2182,
+    "won": true,
+    "rank": 360
+  },
+  {
+    "opp": "fortnightfan",
+    "elo": 2180,
+    "won": true,
+    "rank": 377
+  },
+  {
+    "opp": "ArshiaS",
+    "elo": 2178,
+    "won": false,
+    "rank": 43
+  },
+  {
+    "opp": "mayqueen nyannyan",
+    "elo": 2176,
+    "won": false,
+    "rank": 313
+  },
+  {
+    "opp": "FidioArdena",
+    "elo": 2175,
+    "won": false,
+    "rank": 185
+  },
+  {
+    "opp": "fate1q",
+    "elo": 2175,
+    "won": true,
+    "rank": 458
+  },
+  {
+    "opp": "TheBotanist73",
+    "elo": 2172,
+    "won": true,
+    "rank": 330
+  },
+  {
+    "opp": "Strafos",
+    "elo": 2171,
+    "won": true,
+    "rank": 174
+  },
+  {
+    "opp": "soccrbeast888",
+    "elo": 2169,
+    "won": true,
+    "rank": 231
+  },
+  {
+    "opp": "kukpoo",
+    "elo": 2165,
+    "won": false,
+    "rank": null
+  },
+  {
+    "opp": "DDJoe",
+    "elo": 2163,
+    "won": true,
+    "rank": 393
+  },
+  {
+    "opp": "Strafos",
+    "elo": 2161,
+    "won": true,
+    "rank": 174
+  },
+  {
+    "opp": "Boomblake",
+    "elo": 2160,
+    "won": false,
+    "rank": 202
+  },
+  {
+    "opp": "thewalkingbad",
+    "elo": 2160,
+    "won": false,
+    "rank": 237
+  },
+  {
+    "opp": "tscep",
+    "elo": 2159,
+    "won": true,
+    "rank": 141
+  },
+  {
+    "opp": "PokeGPTorg",
+    "elo": 2159,
+    "won": false,
+    "rank": 374
+  },
+  {
+    "opp": "helpimbadatthislol",
+    "elo": 2156,
+    "won": false,
+    "rank": 418
+  },
+  {
+    "opp": "PokeGPTorg",
+    "elo": 2155,
+    "won": true,
+    "rank": 374
+  },
+  {
+    "opp": "llmmllmm",
+    "elo": 2152,
+    "won": true,
+    "rank": 380
+  },
+  {
+    "opp": "guluff",
+    "elo": 2152,
+    "won": true,
+    "rank": 349
+  },
+  {
+    "opp": "turbofistor",
+    "elo": 2148,
+    "won": true,
+    "rank": 465
+  },
+  {
+    "opp": "SSlimeyy",
+    "elo": 2144,
+    "won": false,
+    "rank": 378
+  },
+  {
+    "opp": "SSlimeyy",
+    "elo": 2142,
+    "won": true,
+    "rank": 378
+  },
+  {
+    "opp": "DDJoe",
+    "elo": 2141,
+    "won": true,
+    "rank": 393
+  },
+  {
+    "opp": "SlowStart69",
+    "elo": 2137,
+    "won": true,
+    "rank": 420
+  },
+  {
+    "opp": "oliverorchard",
+    "elo": 2136,
+    "won": true,
+    "rank": 307
+  },
+  {
+    "opp": "dubdubbydubdub",
+    "elo": 2133,
+    "won": true,
+    "rank": 471
+  },
+  {
+    "opp": "PokeGPTorg",
+    "elo": 2132,
+    "won": true,
+    "rank": 374
+  },
+  {
+    "opp": "Gilbertx",
+    "elo": 2129,
+    "won": true,
+    "rank": 412
+  },
+  {
+    "opp": "bigbossjnack",
+    "elo": 2127,
+    "won": false,
+    "rank": 204
+  },
+  {
+    "opp": "mulmento",
+    "elo": 2120,
+    "won": false,
+    "rank": 341
+  },
+  {
+    "opp": "Addddlleyy",
+    "elo": 2115,
+    "won": false,
+    "rank": 200
+  },
+  {
+    "opp": "JoJo321",
+    "elo": 2115,
+    "won": false,
+    "rank": 148
+  },
+  {
+    "opp": "aceguy123",
+    "elo": 2109,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "seraphz",
+    "elo": 2104,
+    "won": false,
+    "rank": 353
+  },
+  {
+    "opp": "seraphz",
+    "elo": 2103,
+    "won": true,
+    "rank": 353
+  },
+  {
+    "opp": "warnerbrotha",
+    "elo": 2098,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "perichor",
+    "elo": 2097,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "eaglecarson214",
+    "elo": 2096,
+    "won": true,
+    "rank": 410
+  },
+  {
+    "opp": "zicafeliped",
+    "elo": 2095,
+    "won": true,
+    "rank": 86
+  },
+  {
+    "opp": "2004 Lexus GX470",
+    "elo": 2092,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "Rahgu2",
+    "elo": 2077,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "Physiphant",
+    "elo": 2071,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "xhsirt",
+    "elo": 2068,
+    "won": false,
+    "rank": null
+  },
+  {
+    "opp": "Celtic360",
+    "elo": 2068,
+    "won": true,
+    "rank": null
+  },
+  {
+    "opp": "bakingguy",
+    "elo": 2056,
+    "won": true,
+    "rank": 499
+  }
+]
