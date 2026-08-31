@@ -1,0 +1,17 @@
+{
+  "closed_utc": "2026-08-31",
+  "all_time_peak_elo": 2320,
+  "final": {
+    "elo": 2220,
+    "gxe": 90.3,
+    "glicko": 1921,
+    "rd": 25.0,
+    "w": 252,
+    "l": 153,
+    "live_rank": 145
+  },
+  "files": {
+    "final_user_tophfan32.json": "3a2d34815080bfd2961911e0bc993b35891cdde3eeca39f68e45a634c6b77a38",
+    "final_ladder_top500.json": "04e8376aebbe8314904d2d1ee732a0dbb3b77ce4c57390c5e071a88bfc6a9035"
+  }
+}

@@ -6927,3 +6927,9 @@ opponent Elo 2204, 50-41 vs live top-500 members, beat helicopyer at live
 #6 / Elo 2457). Report + blog updated with snapshot-dated rank discipline
 (idle drift ~40 ranks/day; Elo decay above ~2100). Window left to finish
 on its timer; final close-out snapshot on push end.
+
+## 2026-08-31 — Peak push CLOSED: all-time peak Elo 2320 stands
+
+Both windows complete; close-out snapshot hashed (CLOSEOUT.json: final
+user + top-500 fetches). Peak 2320 never beaten in window 2. Account left
+to rest; all processes down. Writeup already carries the peak.
