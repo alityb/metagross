@@ -6965,3 +6965,12 @@ also unenforced-mirroring (Modal farm never set METAGROSS_EVAL_PAIR_DIR);
 10-40 stands as unpaired, exact p 1.2e-5. (3) The 7-10 GXE priors
 population gap was never measured by us -> vanilla foul-play ladder run
 launched (prereg with the embarrassing-outcome reading written first).
+
+## 2026-09-03 — VANILLA LADDER VERDICT: 87.5-87.9 GXE — priors gap is ≈4 GXE, not 7-10
+
+The audit's last unmeasured pillar closed per prereg reading 2: the
+unguided stack converged at ≈87.8 GXE / RD 25 over ~200 own games
+(peak session Elo 2381 — above our account peak; Elo streak-sensitive).
+Sign-flip instance 3 revised to measured form: ≈4 GXE population edge,
+no H2H edge (44.0% [37.3,50.9]). Folklore 7-10 corrected everywhere
+(blog, report, audit). Close-out hashed. All processes down.

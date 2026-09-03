@@ -1,0 +1,13 @@
+{
+  "closed": "2026-09-03",
+  "own_games": "120-88",
+  "final": {
+    "gxe": 87.5,
+    "elo": 2183,
+    "glicko": 1867,
+    "rd": 25.0,
+    "w": 213,
+    "l": 135
+  },
+  "sha256_final_user": "ebc63643a229f614807d1707abdad710a54e6eb5ee07d6f3bfc19fe3e4fadb57"
+}

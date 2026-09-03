@@ -58,9 +58,13 @@ world sampling, heuristic guidance instead of learned priors. It's a
 strong open-source agent on its own. So what do 142M parameters of
 learned guidance buy?
 
-At **population level: everything.** The prior-guided agent plays 7–10
-GXE above the unguided stack on the real ladder — the difference between
-a good account and a top-100 one.
+At **population level: a lot** — and we measured it rather than trusting
+folklore. Laddering the unguided stack itself (identical engine, identical
+budget, zero priors) converged at **87.5–87.9 GXE** over ≈200 games, so
+the priors are worth **≈4 GXE** on the real ladder (91.7 vs ≈87.8) — half
+the community's assumed 7–10, but the difference between a strong account
+and a top-100 one. (Also humbling: the unguided stack alone brushed Elo
+2381 mid-run — search does most of the work.)
 
 **Head-to-head: nothing.** In a preregistered 200-game match (mirrored
 teams, alternating sides), priors-vs-no-priors went **88-112 — 44.0%,
@@ -192,8 +196,8 @@ without a population.
 
 Look back at the measurements:
 
-- Learned priors: massive population edge, **no head-to-head edge**
-  (44.0%).
+- Learned priors: measured ≈4 GXE population edge, **no head-to-head
+  edge** (44.0%).
 - History conditioning: population deficit, **head-to-head parity**
   (48%).
 - Temperature flattening: **head-to-head win** (55.5%), population
