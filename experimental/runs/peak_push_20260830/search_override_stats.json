@@ -1,0 +1,23 @@
+{
+  "overrides": 1905,
+  "total": 3962,
+  "by_bucket": {
+    "0-9": {
+      "overrides": 633,
+      "n": 1297
+    },
+    "10-19": {
+      "overrides": 655,
+      "n": 1331
+    },
+    "20-29": {
+      "overrides": 405,
+      "n": 844
+    },
+    "30+": {
+      "overrides": 212,
+      "n": 490
+    }
+  },
+  "decisions_per_game": 30.476923076923075
+}

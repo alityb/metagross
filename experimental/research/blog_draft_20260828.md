@@ -43,8 +43,12 @@ Three components:
    most-visited action is played.
 
 Policy tells search where to look; search plays out consequences across
-possible hidden worlds; visit aggregation picks the move. Every choice in
-that stack has alternatives. Here is what happened when I measured them.
+possible hidden worlds; visit aggregation picks the move. And the search
+genuinely earns its keep: across 3,962 telemetered decisions, the final
+move differs from the policy's top pick **48.1% of the time** (48.8% early
+game, 43.3% by turn 30+). The policy proposes; the search disposes — half
+the time differently. Every choice in that stack has alternatives. Here is
+what happened when I measured them.
 
 ## Choice 1: do the learned priors even matter?
 
@@ -204,6 +208,30 @@ LLM generalists at battling), and arena-style, agent-vs-agent ranking is
 becoming the default evaluation everywhere. The three sign flips above
 are a documented failure mode of exactly that measurement family.
 
+## Watch it play
+
+Opponents upload replays, so some of the peak-run games are public. Two
+worth two minutes each:
+
+- [vs "fable foul play" (Elo 2379, then ranked ~#16)](https://replay.pokemonshowdown.com/gen9randombattle-2673127492)
+  — judging by the name, another AI (an LLM-flavored fork of the same
+  open-source search stack). Very possibly a bot-vs-bot match in the
+  ladder's top 20; my agent won this one and lost the rematch.
+- [vs pokeblade☆101 (Elo 2420, ranked #84)](https://replay.pokemonshowdown.com/gen9randombattle-2673131838)
+  — a clean win against a top-100 human at 2400+.
+
+## By the numbers
+
+| | |
+|---|---|
+| Measured games this campaign | **≈1,830** (≈760 public-ladder, ≈1,070 controlled local) |
+| Decisions made | ≈56,000 (30.5 per game) |
+| Engine iterations per decision | ≈7–15 million (8–32 worlds × 236–472k each) |
+| Campaign total engine iterations | order 10¹¹ |
+| Search-override rate | 48.1% of decisions |
+| Cloud spend | <$30 (everything else ran on one Mac) |
+| Invalidated runs, documented | 5 (all in the repo) |
+
 ## What didn't matter (measured, so you don't have to)
 
 Two whole programs of obvious improvements died before this post's story
@@ -255,6 +283,8 @@ measuring your idea and measuring your assumptions.
 4. Observable activation, everywhere, always.
 
 *Everything — preregistrations, invalidated runs included, raw logs,
-hashed leaderboard snapshots, the league harness — is in the
+hashed leaderboard snapshots, the league harness, and figure-ready data
+(rating trajectories per arm, per-decision entropy curves, override
+stats, under `experimental/research/blog_figures/`) — is in the
 [repo](https://github.com/alityb/metagross). The full research record is
 in the final report; the iteration log has every hash.*

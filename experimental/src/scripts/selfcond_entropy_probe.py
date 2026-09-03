@@ -117,6 +117,7 @@ def main() -> None:
     ap.add_argument("--checkpoint-sha256", required=True)
     ap.add_argument("--output", type=Path, required=True)
     ap.add_argument("--limit-rows", type=int, default=0)
+    ap.add_argument("--per-decision-out", type=Path, default=None)
     args = ap.parse_args()
 
     ckpt = (args.checkpoint_root / args.run_name / "ckpts" / "policy_weights"
@@ -161,6 +162,10 @@ def main() -> None:
                         degenerate[condition] += 1
                         continue
                     ent[condition][bucket_of(int(turn))].append(h)
+                    if args.per_decision_out:
+                        with open(args.per_decision_out, "a") as pd:
+                            pd.write(json.dumps({"turn": int(turn),
+                                "condition": condition, "entropy": h}) + "\n")
                     if condition == "full":
                         expected = np.asarray(row["probs"], dtype=np.float64)
                         sanity_max_diff = max(

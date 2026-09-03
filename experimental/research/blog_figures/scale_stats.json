@@ -1,0 +1,16 @@
+{
+  "ladder_games": 759,
+  "local_measured_games": 1070,
+  "total_measured_games": 1829,
+  "decisions_per_game_mean": 30.5,
+  "total_decisions_approx": 55784,
+  "engine_iterations_per_decision_approx_millions": "\u22487\u201315",
+  "campaign_engine_iterations_order": "\u224810^11 (hundreds of billions)",
+  "search_override_rate": 0.481,
+  "search_override_by_bucket": {
+    "0-9": 0.488,
+    "10-19": 0.492,
+    "20-29": 0.48,
+    "30+": 0.433
+  }
+}
