@@ -6951,3 +6951,17 @@ History reading CHANGES beliefs (~35% different top actions, matching the
 (gate D) restored entropy but not performance. Corrected: trunc-5 excess
 is 1.7x same-state stateless (was 2.4x vs cross-arm). Blog + report
 updated.
+
+## 2026-09-01 — CLAIMS AUDIT: adversarial checks extended to every headline claim
+
+CLAIMS_AUDIT.md added (claim -> evidence -> checks -> residual risk).
+New findings this pass: (1) endogenous matchmaking undermines stratified
+winrate comparisons (flattened faced 41% sub-1600 vs ~15% for other arms;
+mix-standardized winrates near-equal because everyone wins ~2/3 vs their
+own matchmade pool) -> stratification demoted to supporting evidence
+(Fisher p=0.032 key cell), converged ratings promoted to primary
+population evidence; blog+report softened. (2) Gate B cloud lanes were
+also unenforced-mirroring (Modal farm never set METAGROSS_EVAL_PAIR_DIR);
+10-40 stands as unpaired, exact p 1.2e-5. (3) The 7-10 GXE priors
+population gap was never measured by us -> vanilla foul-play ladder run
+launched (prereg with the embarrassing-outcome reading written first).

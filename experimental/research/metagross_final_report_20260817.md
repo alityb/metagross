@@ -253,9 +253,13 @@ deficit concentrates below 1600:
 | 1600+ | 52-30 (63.4%) | 121-74 (62.1%) | 145-81 (64.2%) |
 
 Flattening plays weak opponents like strong ones — the decisiveness it
-trades away is what converts winnable games against the sub-1600 majority.
-The mechanism behind the sign flip is measured, not inferred
-(`strength_stratified.json`).
+trades away is what converts winnable games against the weaker pool.
+Attribution caveat (2026-09-01): matchmaking is endogenous (a lower-rated
+account draws weaker pools — flattened faced 41% sub-1600 opponents vs
+≈15% for the other arms), so within-bucket comparisons are supporting
+evidence (Fisher p = 0.032 on the key cell) rather than proof; the
+matchmaking-invariant population evidence is the converged ratings
+themselves (`strength_stratified.json`, iteration log 2026-09-01).
 
 The instrument is a frozen-league population gate
 (`experimental/src/scripts/league.py` + `league_20260826/PREREGISTRATION.md`):

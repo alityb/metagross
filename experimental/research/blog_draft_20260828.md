@@ -170,16 +170,20 @@ Ship it?
 I shipped it to the real ladder. It lost **eight GXE** (81.7 vs the 89.4
 baseline over ≈139 games).
 
-Bucketing every ladder game by opponent Elo at match start explains it:
+Bucketing every ladder game by opponent Elo at match start points at
+why (with a caveat: matchmaking is endogenous — a lower-rated account
+draws weaker pools — so within-bucket comparisons are suggestive, Fisher
+p = 0.03 on the key cell, while the converged *ratings* above are the
+matchmaking-invariant evidence):
 
 | Opponent Elo | flattened | unflattened |
 |---|---|---|
 | below 1600 | 34-16 (68%) | 29-3 (91%) |
 | 1600+ | 52-30 (63%) | 121-74 (62%) |
 
-Against strong opponents, flattening costs *nothing*. The entire deficit
-lives against weak opponents, where the extra exploration burns games a
-decisive line would have won. **Search breadth is not a calibration
+Against strong opponents, flattening costs *nothing*. The measurable
+deficit concentrates against weak opponents, where the extra exploration
+burns games a decisive line would have won. **Search breadth is not a calibration
 parameter with a correct value — it's a strategic variable whose optimum
 depends on who created the position.** "Well-calibrated" is undefined
 without a population.
