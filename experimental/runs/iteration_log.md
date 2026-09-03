@@ -6933,3 +6933,21 @@ on its timer; final close-out snapshot on push end.
 Both windows complete; close-out snapshot hashed (CLOSEOUT.json: final
 user + top-500 fetches). Peak 2320 never beaten in window 2. Account left
 to rest; all processes down. Writeup already carries the peak.
+
+## 2026-09-01 — CONFOUND CHECKS: collapse survives all controls; it's beliefs, not temperature
+
+Owner asked "how do we prove it's XYZ not temperature" — the check caught
+a real imprecision: the stateless flat profile had been measured on the
+stateless arm's own states. Fixed with stateless_samestate_probe.py (the
+legacy 2-step input recomputed on the causal dump's exact 735 states).
+Results (confound_checks.json): raw collapse survives (causal 0.960->
+0.599 vs same-state stateless 0.990->0.856); legality-normalized, the
+stateless view gets MORE uncertain late (0.443->0.492) while causal
+sharpens (0.432->0.341) — mask narrowing killed; top-1 agreement between
+views 65-70% flat (pure temperature would be ~100%) with ~0.13 nats
+residual KL after optimal per-decision temperature — temperature killed.
+History reading CHANGES beliefs (~35% different top actions, matching the
+32% serving-repair flip rate), explaining mechanistically why flattening
+(gate D) restored entropy but not performance. Corrected: trunc-5 excess
+is 1.7x same-state stateless (was 2.4x vs cross-arm). Blog + report
+updated.

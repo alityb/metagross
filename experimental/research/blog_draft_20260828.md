@@ -115,9 +115,23 @@ history intact, full context length) removes only ~10% of the collapse:
 
 The driver is the *volume of observed history itself*: collapse grows
 monotonically with window size, and even five steps of context produces
-2.4× the stateless collapse. Not self-conditioning — history-induced
-sharpening. The sexy story is simply wrong, and the preregistration made
-not telling you impossible.
+1.7× the same-state stateless collapse. Not self-conditioning —
+history-induced sharpening. The sexy story is simply wrong, and the
+preregistration made not telling you impossible.
+
+Three confounds could fake this result, so we killed each one on 735
+true same-state pairs (both views of the same network, byte-identical
+inputs). *Fewer legal moves late-game?* Normalizing entropy by available
+actions makes the gap cleaner — the stateless view gets **more**
+uncertain late (0.443 → 0.492) while the history view sharpens
+(0.432 → 0.341). *State selection?* Identical states by construction.
+*Just a temperature scalar?* Temperature preserves the action ranking —
+but the two views pick **different top moves on ~35% of identical
+states**, flat across the game, and ~0.13 nats of divergence survive the
+optimal per-decision temperature fit. History doesn't just sharpen the
+network's beliefs; it *changes* them. Which retroactively explains the
+flattening failure in Choice 4: temperature can restore the entropy, but
+not the beliefs underneath it.
 
 **Verdict on the choice:** history conditioning buys nothing at
 deployment that the belief-plus-search machinery doesn't already provide,

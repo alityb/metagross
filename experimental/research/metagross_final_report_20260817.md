@@ -173,6 +173,21 @@ weights, same states, history dosage varied) is what made the refutation
 cheap. Practical corollary: truncation (gate C) can only partially remove
 the pathology — the flat-entropy serving mode is stateless itself.
 
+**Confound checks (2026-09-01, 735 true same-state pairs,
+`confound_checks.json`):** recomputing the stateless view on the causal
+dump's exact states closes the attribution. Legality-normalized entropy
+diverges even more cleanly (stateless 0.443 → 0.492 late — *more*
+uncertain; causal 0.432 → 0.341), killing the mask-narrowing confound.
+And the difference is not a temperature scalar: top-1 agreement between
+the two views is 65–70% flat across the game (pure temperature would be
+≈100%), with ≈0.10–0.15 nats median residual KL after an optimal
+per-decision temperature fit. History reading *changes beliefs*, not just
+confidence — which mechanistically explains gate D's failure (temperature
+restores entropy, not beliefs) and independently matches the 32%
+action-flip rate measured during the serving-path repair. Corrected
+figure: trunc-5's collapse is 1.7× the same-state stateless collapse
+(0.223 vs 0.134), not 2.4× vs the cross-arm reference.
+
 ## Link 3 — Two principled fixes, two informative failures
 
 The mechanism suggested two training-free corrections. Both were
