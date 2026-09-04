@@ -23,3 +23,13 @@ revised to "H2H at-worst-parity vs population harm"); clearly below 45%
 -> original contradicted; sign flip loses its H2H-win leg (reported).
 
 Sequencing: R1 then R2, single wrapper loop, no cron. ~40h total.
+
+## AMENDMENT (2026-09-03, before any valid R1 game): client correction
+Initial R1 launch was INERT: production_r1_search_first runs the
+production client, which lacks the Gumbel hook (the original Modal lanes
+used the experimental harness client, where activation and ack-409s were
+verified). Caught by activation audit at 30 games (measured plain
+self-mirror 11-19; discarded). R1 re-specified with agent
+foul_play_root_priors on BOTH arms (harness client, hook present) —
+faithful to the original lanes' stack. Chain now enforces activation
+fail-closed: no ACTIVE line within 25 min kills the stage.
