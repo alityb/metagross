@@ -44,9 +44,9 @@ Three components:
 
 Policy tells search where to look; search plays out consequences across
 possible hidden worlds; visit aggregation picks the move. And the search
-genuinely earns its keep: across 3,962 telemetered decisions, the final
-move differs from the policy's top pick **48.1% of the time** (48.8% early
-game, 43.3% by turn 30+). The policy proposes; the search disposes — half
+genuinely earns its keep: across ≈18,800 telemetered decisions in three
+independent datasets (both serving modes), the final move differs from the
+policy's top pick **41–48% of the time**. The policy proposes; the search disposes — half
 the time differently. Every choice in that stack has alternatives. Here is
 what happened when I measured them.
 

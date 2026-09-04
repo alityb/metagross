@@ -6974,3 +6974,13 @@ unguided stack converged at ≈87.8 GXE / RD 25 over ~200 own games
 Sign-flip instance 3 revised to measured form: ≈4 GXE population edge,
 no H2H edge (44.0% [37.3,50.9]). Folklore 7-10 corrected everywhere
 (blog, report, audit). Close-out hashed. All processes down.
+
+## 2026-09-03 — Residual-risk execution: override stat replicated; both screens re-running mirrored
+
+(1) Search-override cross-check on pred2 v2 archives: 40.9% in BOTH arms
+(n≈14.8k) vs 48.1% peak-push — mode-invariant, claim now stated 41-48%
+over ≈18.8k decisions. (2) replications_20260903 launched (prereg with
+contradicting outcomes frozen): R1 gumbel-causal vs plain causal 200
+mirrored games (seed 2026090301), then R2 flattened vs stateless 200
+mirrored games (seed 2026090302); single wrapper, showdown recycled per
+stage, ~40h, Discord on each completion.
