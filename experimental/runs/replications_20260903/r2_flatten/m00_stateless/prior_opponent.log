@@ -1,0 +1,34 @@
+PRIOR_CHECKPOINT path=/Users/alityb/projects/metagross/srcs/models/randbats_exit_r1/ckpts/policy_weights/policy_epoch_5.pt sha256=c6a4c0f571b8066e7471727dc82598e3a825256ec5391fab4ea55a6f16781d93
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+PRIOR_SERVER loading local:randbats_exit_r1@ckpt5
+
+
+ 		 AMAGO v3.4.0
+            	 -------------------------
+            	 Agent: MultiTaskAgent
+            		 Max Sequence Length: 128
+            		 TstepEncoder Type: MetamonPerceiverTstepEncoder
+            		 TrajEncoder Type: TformerTrajEncoder
+            		 Total Parameters: 142,688,528
+            		 Offline Loss Weight: 1.0
+            		 Online Loss Weight: 0.25
+            		 Mixed Precision: NO
+            		 Checkpoint Path: /Users/alityb/projects/metagross/srcs/models/randbats_exit_r1/randbats_exit_r1/ckpts
+            	 Environment:
+            		 DummyAsyncVectorEnv(Gym Env x 1)
+            		 Exploration Type: None
+            	 Dataset: DoNothingDataset
+            	 Accelerate Processes: 1 
+
+
+Checkpoint validated: 642 keys, 142,832,563 params (model) == 142,832,563 params (ckpt)
+PRIOR_SERVER ready
+PRIOR_SERVER listening on 127.0.0.1:9024
+WARN request parse battle-gen9randombattle-6298: RuntimeError('battle request contains no legal actions')
+WARN request parse battle-gen9randombattle-6315: RuntimeError('battle request contains no legal actions')
+WARN request parse battle-gen9randombattle-6317: RuntimeError('battle request contains no legal actions')
+WARN request parse battle-gen9randombattle-6321: RuntimeError('battle request contains no legal actions')
+WARN request parse battle-gen9randombattle-6326: RuntimeError('battle request contains no legal actions')

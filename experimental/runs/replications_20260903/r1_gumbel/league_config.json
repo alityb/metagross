@@ -1,0 +1,20 @@
+{
+  "base_seed": 2026090301,
+  "candidate": {
+    "name": "gumbel-causal",
+    "agent": "foul_play_root_priors",
+    "trajectory_mode": "causal-history",
+    "client_env": {
+      "METAGROSS_GUMBEL_ROOT_PORTS": "9023"
+    }
+  },
+  "pool": [
+    {
+      "name": "plain-causal",
+      "agent": "foul_play_root_priors",
+      "needs_prior_server": true,
+      "trajectory_mode": "causal-history",
+      "n_games": 200
+    }
+  ]
+}

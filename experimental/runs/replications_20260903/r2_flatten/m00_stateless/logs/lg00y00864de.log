@@ -1,0 +1,285 @@
+POKE_ENGINE_PROVENANCE {"distribution_version": "0.0.47", "editable": false, "isolated_import_root": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages", "mcts_parameters": ["state", "duration_ms", "iterations", "threads", "s1_priors", "s2_priors", "c_puct", "seed"], "mode": "exact_pinned_experimental_runtime", "module_path": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages/poke_engine/__init__.py", "native_path": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages/poke_engine/poke_engine.cpython-311-darwin.so", "native_reveal_masks": true, "native_sha256": "79bea0e467b32e2958bd5d39595fd728a3068be2950085f7b18fa69943f30d71", "request_root_parameters": ["state", "request_actions", "duration_ms", "iterations", "threads", "s1_priors", "s2_priors", "c_puct", "seed"], "source_path": null}
+INFO     Logging in...
+INFO     Waiting for a gen9randombattle challenge
+INFO     Initialized battle-gen9randombattle-6302 against: lg00x008302f
+INFO     Loaded from cache: /Users/alityb/projects/metagross/srcs/vendor/foul-play/data/pkmn_sets_cache/gen9randombattle.json
+INFO     Opponent has switched - clearing the last used move
+INFO     persianalola switched in, adding intimidate to impossible abilities
+INFO     persianalola switched in, adding pressure to impossible abilities
+INFO     persianalola switched in, adding neutralizinggas to impossible abilities
+INFO     persianalola switched in, adding sandstream to impossible abilities
+INFO     persianalola switched in, adding drought to impossible abilities
+INFO     persianalola switched in, adding drizzle to impossible abilities
+INFO     persianalola switched in, adding snowwarning to impossible abilities
+INFO     persianalola switched in, adding boosterenergy to impossible items
+INFO     persianalola switched in, adding airballoon to impossible items
+INFO     ditto transformed into persianalola
+INFO     Copied ditto's boosts: {}
+INFO     
+INFO     Turn: 1
+prior temperature schedule ACTIVE (tau=1.02 at turn 1)
+prior temperature schedule ACTIVE (tau=1.02 at turn 1)
+INFO     loaded 13 player and 0 effective opponent priors
+INFO     Sampling battle 0
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	          entei   innerfocus   choiceband [extremespeed, flareblitz, sacredfire, stompingtantrum] ttype=fire
+INFO     	      rampardos   sheerforce  choicescarf [earthquake, firepunch, headsmash, rockslide] ttype=rock
+INFO     	     pincurchin electricsurge    leftovers [curse, liquidation, recover, zingzap] ttype=grass
+INFO     	       rayquaza      airlock   loadeddice [dragonascent, earthquake, scaleshot, swordsdance] ttype=steel
+INFO     	      palossand watercompaction    leftovers [earthpower, shadowball, shoreup, sludgebomb] ttype=water
+INFO     Sampling battle 1
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	         luxray   intimidate  assaultvest [icefang, throatchop, voltswitch, wildcharge] ttype=electric
+INFO     	        dewgong     thickfat heavydutyboots [encore, flipturn, hydropump, icebeam] ttype=grass
+INFO     	       medicham    purepower  choicescarf [closecombat, icepunch, trick, zenheadbutt] ttype=fighting
+INFO     	       delibird       hustle heavydutyboots [bravebird, drillrun, iceshard, icespinner] ttype=ice
+INFO     	     archaludon      stamina    leftovers [bodypress, dracometeor, flashcannon, thunderwave] ttype=fighting
+INFO     Sampling battle 2
+INFO     	   persianalola      furcoat heavydutyboots [foulplay, partingshot, taunt, thunderwave] ttype=ghost
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        pikachu lightningrod    lightball [playrough, surf, voltswitch, volttackle] ttype=water
+INFO     	         golurk      noguard      lifeorb [dynamicpunch, earthquake, poltergeist, stealthrock] ttype=fighting
+INFO     	       landorus   sheerforce      lifeorb [earthpower, rockslide, sludgewave, stealthrock] ttype=poison
+INFO     	      spiritomb  infiltrator    leftovers [foulplay, painsplit, poltergeist, willowisp] ttype=steel
+INFO     	     rotomfrost     levitate heavydutyboots [blizzard, nastyplot, thunderbolt, willowisp] ttype=electric
+INFO     Sampling battle 3
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        dedenne   cheekpouch  sitrusberry [dazzlinggleam, nuzzle, superfang, thunderbolt] ttype=flying
+INFO     	       rotommow     levitate    leftovers [leafstorm, nastyplot, thunderbolt, willowisp] ttype=electric
+INFO     	      excadrill  moldbreaker  assaultvest [earthquake, ironhead, rapidspin, rockslide] ttype=water
+INFO     	         emboar     reckless    leftovers [bulkup, drainpunch, flareblitz, trailblaze] ttype=fighting
+INFO     	       drifblim    aftermath heavydutyboots [airslash, defog, shadowball, strengthsap] ttype=dark
+INFO     Sampling battle 4
+INFO     	   persianalola      furcoat      lifeorb [burningjealousy, darkpulse, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       mudsdale      stamina    leftovers [earthquake, heavyslam, roar, stoneedge] ttype=steel
+INFO     	        flamigo      scrappy      lifeorb [bravebird, closecombat, swordsdance, throatchop] ttype=steel
+INFO     	        haxorus  moldbreaker   loadeddice [earthquake, ironhead, scaleshot, swordsdance] ttype=steel
+INFO     	        weezing     levitate    leftovers [fireblast, gunkshot, painsplit, willowisp] ttype=steel
+INFO     	       oranguru   innerfocus      lifeorb [hypervoice, nastyplot, psyshock, thunderbolt] ttype=psychic
+INFO     Sampling battle 5
+INFO     	   persianalola      furcoat heavydutyboots [foulplay, partingshot, taunt, thunderwave] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      ninetales      drought heavydutyboots [fireblast, nastyplot, scorchingsands, solarbeam] ttype=grass
+INFO     	        seviper     shedskin    leftovers [earthquake, gunkshot, swordsdance, trailblaze] ttype=grass
+INFO     	       cinccino   technician   loadeddice [bulletseed, tailslap, tidyup, tripleaxel] ttype=ice
+INFO     	necrozmadawnwings   prismarmor    leftovers [calmmind, moongeistbeam, moonlight, photongeyser] ttype=fairy
+INFO     	         rhydon lightningrod     eviolite [earthquake, megahorn, stoneedge, swordsdance] ttype=fairy
+INFO     Sampling battle 6
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	            mew  synchronize    leftovers [encore, psychicnoise, toxicspikes, uturn] ttype=steel
+INFO     	     bombirdier rockypayload  choicescarf [bravebird, knockoff, stoneedge, uturn] ttype=rock
+INFO     	   crabominable     ironfist   choiceband [drainpunch, earthquake, icehammer, knockoff] ttype=ground
+INFO     	      azumarill    hugepower   choiceband [aquajet, liquidation, playrough, superpower] ttype=water
+INFO     	         furret        frisk   choiceband [doubleedge, knockoff, trick, uturn] ttype=normal
+INFO     Sampling battle 7
+INFO     	   persianalola      furcoat      lifeorb [burningjealousy, darkpulse, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	thundurustherian   voltabsorb heavydutyboots [focusblast, nastyplot, terablast, thunderbolt] ttype=flying
+INFO     	       meowstic    prankster    lightclay [lightscreen, psychicnoise, reflect, yawn] ttype=fairy
+INFO     	        moltres    flamebody heavydutyboots [bravebird, fireblast, roost, willowisp] ttype=steel
+INFO     	      pecharunt poisonpuppeteer    leftovers [malignantchain, partingshot, recover, shadowball] ttype=dark
+INFO     	   lycanrocdusk   toughclaws   choiceband [accelerock, closecombat, psychicfangs, stoneedge] ttype=fighting
+INFO     Sampling battle 8
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      bellibolt electromorphosis    leftovers [muddywater, slackoff, thunderbolt, voltswitch] ttype=electric
+INFO     	     irontreads   quarkdrive    leftovers [earthquake, ironhead, rapidspin, stealthrock] ttype=ghost
+INFO     	lycanrocmidnight      noguard   choiceband [closecombat, playrough, stoneedge, suckerpunch] ttype=fighting
+INFO     	       delibird     insomnia heavydutyboots [bravebird, freezedry, rapidspin, spikes] ttype=ghost
+INFO     	     kricketune   technician heavydutyboots [knockoff, pounce, stickyweb, taunt] ttype=ghost
+INFO     Sampling battle 9
+INFO     	   persianalola      furcoat heavydutyboots [foulplay, partingshot, taunt, thunderwave] ttype=ghost
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        slaking       truant   choiceband [doubleedge, earthquake, gigaimpact, knockoff] ttype=ground
+INFO     	         gogoat    sapsipper    leftovers [bulkup, hornleech, milkdrink, rockslide] ttype=water
+INFO     	thundurustherian   voltabsorb heavydutyboots [focusblast, nastyplot, sludgewave, thunderbolt] ttype=electric
+INFO     	      gastrodon   stormdrain    leftovers [earthquake, icebeam, recover, stealthrock] ttype=steel
+INFO     	    arceusgrass    multitype  meadowplate [calmmind, earthpower, icebeam, judgment] ttype=ground
+INFO     Sampling battle 10
+INFO     	   persianalola      furcoat      lifeorb [burningjealousy, darkpulse, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      kingambit supremeoverlord    leftovers [ironhead, kowtowcleave, suckerpunch, swordsdance] ttype=flying
+INFO     	     ragingbolt protosynthesis  assaultvest [discharge, dracometeor, thunderclap, voltswitch] ttype=electric
+INFO     	       virizion    justified      lifeorb [closecombat, leafblade, stoneedge, swordsdance] ttype=rock
+INFO     	       smeargle     owntempo    focussash [ceaselessedge, spore, stickyweb, whirlwind] ttype=ghost
+INFO     	        yanmega   speedboost heavydutyboots [airslash, bugbuzz, protect, terablast] ttype=ground
+INFO     Sampling battle 11
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     bombirdier rockypayload heavydutyboots [bravebird, knockoff, roost, stoneedge] ttype=rock
+INFO     	         tauros   sheerforce      lifeorb [bodyslam, closecombat, throatchop, zenheadbutt] ttype=psychic
+INFO     	       ursaring    quickfeet     toxicorb [closecombat, crunch, facade, swordsdance] ttype=normal
+INFO     	      passimian      defiant    leftovers [bulkup, drainpunch, gunkshot, knockoff] ttype=steel
+INFO     	 electrodehisui   soundproof    leftovers [gigadrain, leechseed, substitute, thunderbolt] ttype=poison
+INFO     Sampling battle 12
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        calyrex      unnerve    leftovers [calmmind, encore, gigadrain, psychic] ttype=steel
+INFO     	 arceuselectric    multitype     zapplate [calmmind, icebeam, judgment, recover] ttype=ice
+INFO     	        dipplin   stickyhold     eviolite [dragonpulse, gigadrain, recover, suckerpunch] ttype=steel
+INFO     	      bastiodon   soundproof  chestoberry [bodypress, foulplay, irondefense, rest] ttype=fighting
+INFO     	      gardevoir        trace  choicescarf [healingwish, moonblast, mysticalfire, psychic] ttype=fire
+INFO     Sampling battle 13
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        gurdurr         guts     eviolite [bulkup, drainpunch, knockoff, machpunch] ttype=steel
+INFO     	      toxicroak      dryskin      lifeorb [closecombat, gunkshot, knockoff, swordsdance] ttype=dark
+INFO     	       chimecho     levitate    leftovers [encore, psychicnoise, recover, thunderwave] ttype=poison
+INFO     	       clefable      unaware    leftovers [fireblast, moonblast, moonlight, thunderwave] ttype=steel
+INFO     	       ludicolo    swiftswim      lifeorb [gigadrain, hydropump, icebeam, raindance] ttype=grass
+INFO     Sampling battle 14
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	         kyogre      drizzle  choicescarf [icebeam, originpulse, thunder, waterspout] ttype=water
+INFO     	       tsareena queenlymajesty      lifeorb [highjumpkick, powerwhip, synthesis, tripleaxel] ttype=steel
+INFO     	     victreebel  chlorophyll      lifeorb [poisonjab, powerwhip, suckerpunch, swordsdance] ttype=dark
+INFO     	    oricoriopau       dancer heavydutyboots [hurricane, quiverdance, revelationdance, roost] ttype=ground
+INFO     	   arceuspoison    multitype   toxicplate [earthquake, extremespeed, gunkshot, swordsdance] ttype=ground
+INFO     Sampling battle 15
+INFO     	   persianalola      furcoat heavydutyboots [foulplay, partingshot, taunt, thunderwave] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	    kilowattrel   voltabsorb heavydutyboots [discharge, hurricane, roost, uturn] ttype=water
+INFO     	        yanmega   tintedlens  choicespecs [airslash, bugbuzz, gigadrain, uturn] ttype=bug
+INFO     	       ludicolo    swiftswim      lifeorb [gigadrain, hydropump, icebeam, raindance] ttype=grass
+INFO     	       reshiram   turboblaze heavydutyboots [blueflare, dracometeor, earthpower, willowisp] ttype=ground
+INFO     	  slowkinggalar  regenerator    leftovers [fireblast, psyshock, slackoff, sludgebomb] ttype=fairy
+INFO     Sampling battle 16
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       zangoose   toxicboost     toxicorb [facade, knockoff, quickattack, swordsdance] ttype=normal
+INFO     	         furret        frisk      lifeorb [brickbreak, doubleedge, knockoff, tidyup] ttype=normal
+INFO     	     victreebel  chlorophyll      lifeorb [poisonjab, powerwhip, suckerpunch, swordsdance] ttype=grass
+INFO     	        toxapex  regenerator  rockyhelmet [haze, liquidation, recover, toxicspikes] ttype=fairy
+INFO     	 arceusfighting    multitype    fistplate [bodypress, cosmicpower, recover, storedpower] ttype=steel
+INFO     Sampling battle 17
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	         espeon  magicbounce      lifeorb [alluringvoice, calmmind, psyshock, shadowball] ttype=psychic
+INFO     	        spidops     stakeout heavydutyboots [knockoff, spikes, stickyweb, uturn] ttype=ghost
+INFO     	        yanmega   speedboost heavydutyboots [airslash, bugbuzz, protect, terablast] ttype=ground
+INFO     	      sudowoodo     rockhead   choiceband [earthquake, headsmash, suckerpunch, woodhammer] ttype=grass
+INFO     	     archaludon      stamina  assaultvest [bodypress, dracometeor, flashcannon, thunderbolt] ttype=fighting
+INFO     Sampling battle 18
+INFO     	   persianalola      furcoat heavydutyboots [foulplay, partingshot, taunt, thunderwave] ttype=ghost
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       granbull   intimidate    leftovers [earthquake, playrough, roar, thunderwave] ttype=ground
+INFO     	       torterra     overgrow   loadeddice [bulletseed, headlongrush, rockblast, shellsmash] ttype=rock
+INFO     	     golemalola    galvanize      lifeorb [doubleedge, earthquake, rockpolish, stoneedge] ttype=grass
+INFO     	   brambleghast    windrider heavydutyboots [poltergeist, powerwhip, rapidspin, spikes] ttype=water
+INFO     	   lycanrocdusk   toughclaws      lifeorb [accelerock, closecombat, stoneedge, swordsdance] ttype=fighting
+INFO     Sampling battle 19
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      spectrier    grimneigh    leftovers [drainingkiss, nastyplot, shadowball, substitute] ttype=fairy
+INFO     	        darkrai    baddreams      lifeorb [darkpulse, hypnosis, nastyplot, sludgebomb] ttype=poison
+INFO     	      rotomwash     levitate    leftovers [discharge, hydropump, painsplit, willowisp] ttype=steel
+INFO     	      terapagos    terashift  chestoberry [calmmind, darkpulse, rest, terastarstorm] ttype=stellar
+INFO     	         emboar     reckless    leftovers [bulkup, drainpunch, flareblitz, trailblaze] ttype=fighting
+INFO     Sampling battle 20
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=ghost
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     annihilape      defiant    leftovers [bulkup, drainpunch, ragefist, taunt] ttype=fairy
+INFO     	       basculin adaptability   choiceband [aquajet, doubleedge, flipturn, wavecrash] ttype=water
+INFO     	        yanmega   tintedlens  choicespecs [airslash, bugbuzz, gigadrain, uturn] ttype=bug
+INFO     	 arceuselectric    multitype     zapplate [calmmind, icebeam, judgment, recover] ttype=ice
+INFO     	      honchkrow        moxie heavydutyboots [bravebird, heatwave, lashout, suckerpunch] ttype=dark
+INFO     Sampling battle 21
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	typhlosionhisui        blaze heavydutyboots [calmmind, fireblast, shadowball, willowisp] ttype=fire
+INFO     	       alcremie    aromaveil    leftovers [alluringvoice, calmmind, recover, terablast] ttype=ground
+INFO     	      thundurus    prankster heavydutyboots [grassknot, taunt, thunderbolt, uturn] ttype=grass
+INFO     	        sylveon     pixilate    leftovers [calmmind, hypervoice, protect, wish] ttype=steel
+INFO     	         espeon  magicbounce      lifeorb [alluringvoice, calmmind, psyshock, shadowball] ttype=fairy
+INFO     Sampling battle 22
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	typhlosionhisui        blaze heavydutyboots [calmmind, fireblast, focusblast, shadowball] ttype=fire
+INFO     	        weavile   pickpocket heavydutyboots [knockoff, lowkick, swordsdance, tripleaxel] ttype=ice
+INFO     	       clodsire      unaware    leftovers [earthquake, poisonjab, recover, stealthrock] ttype=flying
+INFO     	       garchomp    roughskin  rockyhelmet [earthquake, outrage, spikes, stealthrock] ttype=ground
+INFO     	       maushold   technician     widelens [bite, encore, populationbomb, tidyup] ttype=normal
+INFO     Sampling battle 23
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     gothitelle    shadowtag    leftovers [calmmind, darkpulse, focusblast, psychicnoise] ttype=fairy
+INFO     	  braviaryhisui   tintedlens heavydutyboots [calmmind, esperwing, hurricane, roost] ttype=steel
+INFO     	        slaking       truant   choiceband [doubleedge, earthquake, gigaimpact, knockoff] ttype=ground
+INFO     	      duraludon   lightmetal     eviolite [bodypress, dracometeor, dragontail, flashcannon] ttype=fighting
+INFO     	       jumpluff  infiltrator              [acrobatics, leechseed, strengthsap, substitute] ttype=steel
+INFO     Sampling battle 24
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     talonflame    flamebody heavydutyboots [bravebird, flareblitz, swordsdance, terablast] ttype=ground
+INFO     	   squawkabilly         guts     flameorb [bravebird, facade, protect, quickattack] ttype=normal
+INFO     	   weezinggalar     levitate    leftovers [defog, fireblast, gunkshot, strangesteam] ttype=steel
+INFO     	taurospaldeaaqua      cudchew  sitrusberry [bulkup, closecombat, liquidation, substitute] ttype=steel
+INFO     	      bastiodon   soundproof  chestoberry [bodypress, foulplay, irondefense, rest] ttype=fighting
+INFO     Sampling battle 25
+INFO     	   persianalola      furcoat      lifeorb [burningjealousy, darkpulse, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	        lanturn   voltabsorb    leftovers [icebeam, scald, thunderbolt, thunderwave] ttype=flying
+INFO     	    kyuremwhite   turboblaze  choicespecs [dracometeor, earthpower, freezedry, fusionflare] ttype=fire
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     	      serperior     contrary      lifeorb [glare, leafstorm, synthesis, terablast] ttype=rock
+INFO     Sampling battle 26
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       torterra     overgrow   loadeddice [bulletseed, headlongrush, rockblast, shellsmash] ttype=ground
+INFO     	         zekrom     teravolt    leftovers [boltstrike, dragondance, outrage, substitute] ttype=steel
+INFO     	   basculegionf adaptability  assaultvest [flipturn, hydropump, shadowball, wavecrash] ttype=water
+INFO     	        cetitan     thickfat  sitrusberry [bellydrum, earthquake, iceshard, icespinner] ttype=ice
+INFO     	      probopass   magnetpull    leftovers [bodypress, flashcannon, irondefense, thunderwave] ttype=fighting
+INFO     Sampling battle 27
+INFO     	   persianalola      furcoat heavydutyboots [knockoff, partingshot, taunt, thunderwave] ttype=ghost
+INFO     Sampling 5 unrevealed pokemon
+INFO     	   lycanrocdusk   toughclaws      lifeorb [accelerock, closecombat, stoneedge, swordsdance] ttype=fighting
+INFO     	       braviary      defiant heavydutyboots [bravebird, bulkup, closecombat, roost] ttype=steel
+INFO     	   hoopaunbound     magician  assaultvest [focusblast, gunkshot, hyperspacefury, psychic] ttype=poison
+INFO     	        kleavor    sharpness heavydutyboots [closecombat, stoneaxe, swordsdance, xscissor] ttype=fighting
+INFO     	        ambipom   technician    silkscarf [doubleedge, fakeout, knockoff, uturn] ttype=normal
+INFO     Sampling battle 28
+INFO     	   persianalola      furcoat      lifeorb [burningjealousy, darkpulse, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        beartic    slushrush heavydutyboots [aquajet, earthquake, iciclecrash, swordsdance] ttype=ground
+INFO     	        altaria  naturalcure heavydutyboots [bravebird, defog, roost, willowisp] ttype=steel
+INFO     	      greattusk protosynthesis    leftovers [closecombat, headlongrush, rapidspin, stealthrock] ttype=ground
+INFO     	       cloyster    skilllink    whiteherb [hydropump, iciclespear, rockblast, shellsmash] ttype=rock
+INFO     	       oranguru   innerfocus    leftovers [focusblast, nastyplot, psychic, thunderbolt] ttype=electric
+INFO     Sampling battle 29
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=fairy
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      thundurus    prankster heavydutyboots [focusblast, sludgewave, taunt, thunderbolt] ttype=electric
+INFO     	    arceuswater    multitype  splashplate [icebeam, judgment, recover, willowisp] ttype=steel
+INFO     	         gogoat    sapsipper    leftovers [bulkup, earthquake, hornleech, milkdrink] ttype=water
+INFO     	        bisharp      defiant     eviolite [ironhead, suckerpunch, swordsdance, throatchop] ttype=flying
+INFO     	          azelf     levitate      lifeorb [dazzlinggleam, fireblast, nastyplot, psychic] ttype=psychic
+INFO     Sampling battle 30
+INFO     	   persianalola      furcoat    leftovers [darkpulse, hypnosis, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      mandibuzz     overcoat heavydutyboots [defog, foulplay, roost, toxic] ttype=steel
+INFO     	      excadrill  moldbreaker    leftovers [earthquake, ironhead, rapidspin, swordsdance] ttype=grass
+INFO     	        ariados        swarm heavydutyboots [megahorn, poisonjab, stickyweb, toxicspikes] ttype=ghost
+INFO     	       arcanine   intimidate heavydutyboots [closecombat, flareblitz, morningsun, willowisp] ttype=fighting
+INFO     	       garchomp    roughskin  rockyhelmet [earthquake, outrage, spikes, stealthrock] ttype=steel
+INFO     Sampling battle 31
+INFO     	   persianalola      furcoat      lifeorb [darkpulse, nastyplot, terablast, thunderbolt] ttype=poison
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      thundurus      defiant              [acrobatics, focusblast, thunderbolt, uturn] ttype=electric
+INFO     	     misdreavus     levitate     eviolite [calmmind, drainingkiss, shadowball, willowisp] ttype=fairy
+INFO     	        gurdurr         guts     eviolite [defog, drainpunch, knockoff, machpunch] ttype=steel
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     	     incineroar   intimidate  assaultvest [closecombat, knockoff, overheat, uturn] ttype=fighting
+INFO     Searching for a move using MCTS...
+INFO     Sampling 32 battles at 250ms each
+WARNING  poke-engine lacks request-level Tera permissions; final selector must filter roots
+INFO     Choice: switch carbink
+INFO     Winner: lg00y00864de
+INFO     Won with team: None
+INFO     W: 1	L: 0

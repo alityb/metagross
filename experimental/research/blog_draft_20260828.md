@@ -148,7 +148,10 @@ Given an overconfident prior, the textbook fix is to stop letting it
 dominate action selection. Gumbel-style **completed-Q** — a proven
 improvement in perfect-information MCTS — decides by
 `log π(a) + scaled Q̂(a)` instead of raw visit counts. Preregistered,
-50-game screen: it flipped 37% of decisions and went **10-40**.
+50-game screen: it flipped 37% of decisions and went **10-40** — and a
+200-game mirrored, activation-verified replication confirmed it at power:
+**69-131 (34.5%, CI [28.3, 41.3])**. Milder than the first screen's 20%,
+same verdict.
 
 The autopsy is the valuable part. Completed-Q assumes Q-estimates from
 one true world. Mine are pooled across sampled hidden worlds, and acting

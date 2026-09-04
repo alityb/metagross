@@ -1,0 +1,1914 @@
+DEBUG PRIOR_SERVER=http://127.0.0.1:9024
+DEBUG OPP_PRIORS_ONLY=not set
+INFO     Logging in (local server bypass)...
+INFO     Successfully logged in
+INFO     Waiting for a gen9randombattle challenge
+INFO     Initialized battle-gen9randombattle-6214 against: lg00x1559603
+INFO     Loaded from cache: /Users/alityb/projects/metagross/srcs/vendor/foul-play/data/pkmn_sets_cache/gen9randombattle.json
+INFO     Opponent has switched - clearing the last used move
+INFO     miniororange switched in, adding intimidate to impossible abilities
+INFO     miniororange switched in, adding pressure to impossible abilities
+INFO     miniororange switched in, adding neutralizinggas to impossible abilities
+INFO     miniororange switched in, adding sandstream to impossible abilities
+INFO     miniororange switched in, adding drought to impossible abilities
+INFO     miniororange switched in, adding drizzle to impossible abilities
+INFO     miniororange switched in, adding snowwarning to impossible abilities
+INFO     miniororange switched in, adding boosterenergy to impossible items
+INFO     miniororange switched in, adding airballoon to impossible items
+INFO     Form Change: miniororange -> Minior-Meteor
+INFO     
+INFO     Turn: 1
+INFO     root priors (13): {'wavecrash': 0.677, 'swordsdance': 0.275, 'psychicfangs': 0.025, 'crunch': 0.009}
+INFO     Sampling battle 0
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        avalugg       sturdy heavydutyboots [avalanche, bodypress, curse, recover] ttype=fighting
+INFO     	      tyranitar   sandstream  assaultvest [dragontail, earthquake, knockoff, stoneedge] ttype=rock
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	      regigigas    slowstart    leftovers [bodyslam, knockoff, rest, sleeptalk] ttype=ghost
+INFO     	     chesnaught  bulletproof    leftovers [bodypress, irondefense, synthesis, trailblaze] ttype=steel
+INFO     Sampling battle 1
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       ursaring    quickfeet     toxicorb [closecombat, crunch, facade, swordsdance] ttype=normal
+INFO     	        dipplin   stickyhold     eviolite [dragonpulse, gigadrain, recover, suckerpunch] ttype=steel
+INFO     	      magnezone     analytic  assaultvest [flashcannon, mirrorcoat, thunderbolt, voltswitch] ttype=flying
+INFO     	      azumarill    hugepower  sitrusberry [aquajet, bellydrum, liquidation, playrough] ttype=water
+INFO     	    kyuremblack     teravolt   loadeddice [dragondance, iciclespear, scaleshot, terablast] ttype=ground
+INFO     Sampling battle 2
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	   brambleghast    windrider    leftovers [leechseed, poltergeist, powerwhip, substitute] ttype=fairy
+INFO     	   dugtrioalola tanglinghair      lifeorb [earthquake, ironhead, suckerpunch, swordsdance] ttype=steel
+INFO     	 lilliganthisui       hustle      lifeorb [closecombat, leafblade, sleeppowder, victorydance] ttype=fighting
+INFO     	      duraludon   lightmetal     eviolite [bodypress, dracometeor, flashcannon, thunderwave] ttype=fighting
+INFO     	        diancie    clearbody    leftovers [calmmind, diamondstorm, drainingkiss, earthpower] ttype=water
+INFO     Sampling battle 3
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	  arcaninehisui     rockhead   choiceband [extremespeed, flareblitz, headsmash, wildcharge] ttype=fire
+INFO     	      greattusk protosynthesis    leftovers [bulkup, closecombat, earthquake, stoneedge] ttype=steel
+INFO     	      hatterene  magicbounce    leftovers [calmmind, drainingkiss, mysticalfire, psychic] ttype=steel
+INFO     	 ninetalesalola  snowwarning    lightclay [auroraveil, blizzard, freezedry, moonblast] ttype=water
+INFO     	         plusle lightningrod      lifeorb [alluringvoice, grassknot, nastyplot, thunderbolt] ttype=electric
+INFO     Sampling battle 4
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        calyrex      unnerve    leftovers [calmmind, gigadrain, leechseed, psyshock] ttype=steel
+INFO     	      abomasnow  snowwarning    lightclay [auroraveil, blizzard, iceshard, woodhammer] ttype=ghost
+INFO     	    kyuremwhite   turboblaze  choicespecs [dracometeor, earthpower, freezedry, fusionflare] ttype=dragon
+INFO     	        palafin   zerotohero    leftovers [bulkup, drainpunch, jetpunch, wavecrash] ttype=dragon
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, morningsun, sunsteelstrike] ttype=steel
+INFO     Sampling battle 5
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      magmortar    flamebody heavydutyboots [fireblast, knockoff, scorchingsands, thunderbolt] ttype=water
+INFO     	    barraskewda    swiftswim   choiceband [closecombat, flipturn, psychicfangs, waterfall] ttype=fighting
+INFO     	      mismagius     levitate  choicespecs [dazzlinggleam, mysticalfire, shadowball, trick] ttype=fire
+INFO     	       rotomfan     levitate heavydutyboots [airslash, nastyplot, thunderbolt, thunderwave] ttype=steel
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, morningsun, sunsteelstrike] ttype=water
+INFO     Sampling battle 6
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	    basculegion adaptability  assaultvest [aquajet, flipturn, shadowball, wavecrash] ttype=water
+INFO     	        calyrex      unnerve    leftovers [calmmind, gigadrain, leechseed, psyshock] ttype=steel
+INFO     	        slaking       truant  choicescarf [doubleedge, earthquake, gigaimpact, knockoff] ttype=normal
+INFO     	      sinistcha    heatproof    leftovers [calmmind, matchagotcha, shadowball, strengthsap] ttype=steel
+INFO     	       porygonz adaptability  choicescarf [shadowball, thunderbolt, triattack, trick] ttype=ghost
+INFO     Sampling battle 7
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 5 unrevealed pokemon
+INFO     	         emboar     reckless  assaultvest [closecombat, flareblitz, knockoff, suckerpunch] ttype=dark
+INFO     	          lokix   tintedlens      lifeorb [knockoff, leechlife, suckerpunch, swordsdance] ttype=dark
+INFO     	         plusle lightningrod      lifeorb [alluringvoice, encore, nastyplot, thunderbolt] ttype=fairy
+INFO     	        leafeon  chlorophyll      lifeorb [doubleedge, knockoff, leafblade, swordsdance] ttype=dark
+INFO     	         kyurem     pressure heavydutyboots [earthpower, freezedry, icebeam, outrage] ttype=ground
+INFO     Sampling battle 8
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       alcremie    aromaveil    leftovers [alluringvoice, calmmind, psyshock, recover] ttype=steel
+INFO     	         rhydon lightningrod     eviolite [earthquake, megahorn, stealthrock, stoneedge] ttype=flying
+INFO     	        okidogi   toxicchain    leftovers [bulkup, drainpunch, gunkshot, knockoff] ttype=dark
+INFO     	 electrodehisui   soundproof    leftovers [gigadrain, leechseed, substitute, thunderbolt] ttype=poison
+INFO     	       mukalola  poisontouch  assaultvest [drainpunch, knockoff, poisonjab, shadowsneak] ttype=fighting
+INFO     Sampling battle 9
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       inteleon      torrent  choicespecs [hydropump, icebeam, scald, uturn] ttype=water
+INFO     	         arceus    multitype      lifeorb [earthquake, extremespeed, recover, swordsdance] ttype=normal
+INFO     	  arcaninehisui     rockhead heavydutyboots [extremespeed, flareblitz, headsmash, morningsun] ttype=rock
+INFO     	 decidueyehisui      scrappy    leftovers [defog, leafblade, roost, triplearrows] ttype=water
+INFO     	        haxorus  moldbreaker     lumberry [closecombat, dragondance, ironhead, outrage] ttype=steel
+INFO     Sampling battle 10
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       delibird       hustle heavydutyboots [bravebird, drillrun, iceshard, icespinner] ttype=ice
+INFO     	      metagross    clearbody    leftovers [heavyslam, knockoff, psychicfangs, stealthrock] ttype=water
+INFO     	      cresselia     levitate    leftovers [calmmind, moonlight, psyshock, thunderbolt] ttype=poison
+INFO     	        lanturn   voltabsorb    leftovers [icebeam, scald, thunderbolt, thunderwave] ttype=flying
+INFO     	     arceusrock    multitype   stoneplate [calmmind, earthpower, judgment, recover] ttype=ground
+INFO     Sampling battle 11
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      bellibolt electromorphosis    leftovers [muddywater, slackoff, thunderbolt, voltswitch] ttype=water
+INFO     	        flamigo      scrappy      lifeorb [bravebird, closecombat, roost, swordsdance] ttype=steel
+INFO     	      trevenant  naturalcure      lifeorb [drainpunch, hornleech, poltergeist, willowisp] ttype=fighting
+INFO     	         glalie   innerfocus heavydutyboots [earthquake, freezedry, spikes, taunt] ttype=ground
+INFO     	      gardevoir        trace  choicescarf [healingwish, moonblast, mysticalfire, psychic] ttype=fire
+INFO     Sampling battle 12
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	 giratinaorigin     levitate griseouscore [defog, dracometeor, poltergeist, shadowsneak] ttype=ghost
+INFO     	           hooh  regenerator heavydutyboots [bravebird, earthquake, recover, sacredfire] ttype=steel
+INFO     	         lapras  waterabsorb heavydutyboots [freezedry, rest, sleeptalk, sparklingaria] ttype=ghost
+INFO     	       espathra   speedboost  choicespecs [dazzlinggleam, luminacrash, shadowball, uturn] ttype=psychic
+INFO     	        mimikyu     disguise      lifeorb [drainpunch, playrough, shadowsneak, swordsdance] ttype=fighting
+INFO     Sampling battle 13
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     tentacruel   liquidooze    leftovers [haze, rapidspin, sludgebomb, surf] ttype=grass
+INFO     	        delphox        blaze  choicescarf [fireblast, focusblast, grassknot, psyshock] ttype=grass
+INFO     	    kilowattrel   voltabsorb heavydutyboots [discharge, hurricane, roost, uturn] ttype=water
+INFO     	   weezinggalar     levitate    leftovers [defog, gunkshot, painsplit, strangesteam] ttype=steel
+INFO     	        groudon      drought    leftovers [heatcrash, precipiceblades, roar, spikes] ttype=fire
+INFO     Sampling battle 14
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       basculin adaptability   choiceband [aquajet, doubleedge, flipturn, wavecrash] ttype=water
+INFO     	       swampert      torrent    leftovers [earthquake, flipturn, roar, stealthrock] ttype=steel
+INFO     	      volcarona        swarm heavydutyboots [bugbuzz, fierydance, gigadrain, quiverdance] ttype=steel
+INFO     	      regigigas    slowstart    leftovers [bodyslam, knockoff, protect, substitute] ttype=ghost
+INFO     	      ironcrown   quarkdrive    leftovers [calmmind, focusblast, psyshock, tachyoncutter] ttype=steel
+INFO     Sampling battle 15
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        zoroark     illusion  choicespecs [darkpulse, flamethrower, focusblast, sludgebomb] ttype=poison
+INFO     	      hippowdon   sandstream    leftovers [curse, earthquake, slackoff, stoneedge] ttype=steel
+INFO     	     calyrexice asoneglastrier weaknesspolicy [agility, closecombat, glaciallance, highhorsepower] ttype=ground
+INFO     	     copperajah   sheerforce      lifeorb [ironhead, playrough, stealthrock, superpower] ttype=fairy
+INFO     	      ninetales      drought heavydutyboots [fireblast, nastyplot, scorchingsands, solarbeam] ttype=fire
+INFO     Sampling battle 16
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        noivern  infiltrator  choicespecs [boomburst, dracometeor, hurricane, uturn] ttype=normal
+INFO     	ogerponwellspring  waterabsorb wellspringmask [hornleech, ivycudgel, knockoff, swordsdance] ttype=water
+INFO     	      garganacl purifyingsalt    leftovers [earthquake, recover, saltcure, stealthrock] ttype=ghost
+INFO     	     forretress       sturdy    leftovers [ironhead, rapidspin, toxicspikes, voltswitch] ttype=water
+INFO     	         furret        frisk   choiceband [doubleedge, knockoff, trick, uturn] ttype=normal
+INFO     Sampling battle 17
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       politoed      drizzle  choicespecs [focusblast, hydropump, icebeam, weatherball] ttype=water
+INFO     	       greedent   cheekpouch  sitrusberry [doubleedge, earthquake, knockoff, swordsdance] ttype=ghost
+INFO     	 lilliganthisui       hustle     widelens [closecombat, leafblade, sleeppowder, victorydance] ttype=fighting
+INFO     	         raikou     pressure    leftovers [calmmind, scald, shadowball, thunderbolt] ttype=electric
+INFO     	    raichualola  surgesurfer      lifeorb [focusblast, nastyplot, psyshock, thunderbolt] ttype=fighting
+INFO     Sampling battle 18
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      dragapult  infiltrator heavydutyboots [dragondarts, hex, uturn, willowisp] ttype=fairy
+INFO     	       reshiram   turboblaze heavydutyboots [dragondance, flareblitz, outrage, stoneedge] ttype=dragon
+INFO     	     forretress       sturdy    leftovers [ironhead, rapidspin, spikes, thunderwave] ttype=water
+INFO     	       lumineon   stormdrain      lifeorb [alluringvoice, encore, hydropump, icebeam] ttype=fairy
+INFO     	       sneasler     unburden    whiteherb [acrobatics, closecombat, gunkshot, swordsdance] ttype=flying
+INFO     Sampling battle 19
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      arceusbug    multitype  insectplate [calmmind, earthpower, judgment, recover] ttype=ground
+INFO     	        wugtrio        gooey   choiceband [aquajet, liquidation, stompingtantrum, throatchop] ttype=ground
+INFO     	   lycanrocdusk   toughclaws      lifeorb [accelerock, closecombat, stoneedge, swordsdance] ttype=fighting
+INFO     	       greninja      protean      lifeorb [grassknot, gunkshot, hydropump, icebeam] ttype=poison
+INFO     	        gliscor   poisonheal     toxicorb [earthquake, protect, substitute, toxic] ttype=water
+INFO     Sampling battle 20
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        milotic  competitive    leftovers [haze, icebeam, recover, scald] ttype=steel
+INFO     	      cinderace       libero heavydutyboots [courtchange, highjumpkick, pyroball, uturn] ttype=fighting
+INFO     	    deoxysspeed     pressure      lifeorb [knockoff, psychoboost, superpower, taunt] ttype=dark
+INFO     	squawkabillywhite       hustle heavydutyboots [bravebird, doubleedge, partingshot, quickattack] ttype=flying
+INFO     	 decidueyehisui      scrappy    leftovers [knockoff, leafblade, roost, triplearrows] ttype=water
+INFO     Sampling battle 21
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        donphan       sturdy    leftovers [earthquake, icespinner, rapidspin, stealthrock] ttype=dragon
+INFO     	     screamtail protosynthesis    leftovers [dazzlinggleam, encore, protect, wish] ttype=steel
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	        palafin   zerotohero    leftovers [bulkup, drainpunch, icepunch, jetpunch] ttype=steel
+INFO     	       porygonz adaptability      lifeorb [agility, nastyplot, shadowball, terablast] ttype=fighting
+INFO     Sampling battle 22
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	      dunsparce  serenegrace     eviolite [bodyslam, coil, earthquake, roost] ttype=ghost
+INFO     	          chiyu  beadsofruin  choicespecs [darkpulse, flamethrower, overheat, psychic] ttype=dark
+INFO     	         kyurem     pressure   loadeddice [dragondance, iciclespear, scaleshot, terablast] ttype=ground
+INFO     	      electrode    aftermath    leftovers [explosion, taunt, thunderbolt, thunderwave] ttype=electric
+INFO     	     screamtail protosynthesis    leftovers [playrough, protect, thunderwave, wish] ttype=steel
+INFO     Sampling battle 23
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     gothitelle    shadowtag  choicescarf [darkpulse, focusblast, psychic, trick] ttype=ground
+INFO     	    polteageist   cursedbody    whiteherb [shadowball, shellsmash, storedpower, terablast] ttype=fighting
+INFO     	    kyuremwhite   turboblaze  choicescarf [dracometeor, earthpower, freezedry, fusionflare] ttype=dragon
+INFO     	      decidueye     overgrow heavydutyboots [leafstorm, roost, spiritshackle, uturn] ttype=grass
+INFO     	    walkingwake protosynthesis  choicespecs [dracometeor, flamethrower, flipturn, hydropump] ttype=fire
+INFO     Sampling battle 24
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        beartic    swiftswim heavydutyboots [closecombat, earthquake, iciclecrash, swordsdance] ttype=ground
+INFO     	          klawf   angershell   expertbelt [highhorsepower, knockoff, stoneedge, swordsdance] ttype=rock
+INFO     	      trevenant  naturalcure   choiceband [drainpunch, hornleech, poltergeist, woodhammer] ttype=fighting
+INFO     	       tornadus      defiant  choicespecs [bleakwindstorm, focusblast, heatwave, uturn] ttype=flying
+INFO     	      meowsticf  competitive      lifeorb [alluringvoice, darkpulse, nastyplot, psyshock] ttype=fairy
+INFO     Sampling battle 25
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	    deoxysspeed     pressure      lifeorb [darkpulse, focusblast, nastyplot, psychoboost] ttype=fighting
+INFO     	        spidops     stakeout heavydutyboots [knockoff, spikes, stickyweb, uturn] ttype=ghost
+INFO     	      excadrill  moldbreaker    leftovers [earthquake, ironhead, rapidspin, swordsdance] ttype=ground
+INFO     	         scizor   technician   choiceband [bulletpunch, closecombat, knockoff, uturn] ttype=steel
+INFO     	      primarina      torrent  choicespecs [flipturn, hydropump, moonblast, psychic] ttype=water
+INFO     Sampling battle 26
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	       tinkaton  moldbreaker    leftovers [gigatonhammer, playrough, stealthrock, thunderwave] ttype=water
+INFO     	    arceuswater    multitype  splashplate [calmmind, icebeam, judgment, recover] ttype=steel
+INFO     	       politoed      drizzle  chestoberry [haze, icebeam, rest, surf] ttype=steel
+INFO     	 decidueyehisui      scrappy    leftovers [leafblade, roost, suckerpunch, triplearrows] ttype=water
+INFO     	        dipplin   stickyhold     eviolite [dragonpulse, gigadrain, recover, suckerpunch] ttype=steel
+INFO     Sampling battle 27
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	  qwilfishhisui   intimidate     eviolite [crunch, gunkshot, taunt, toxicspikes] ttype=poison
+INFO     	       magcargo    weakarmor heavydutyboots [earthpower, fireblast, powergem, shellsmash] ttype=grass
+INFO     	      azumarill    hugepower   choiceband [aquajet, icespinner, liquidation, playrough] ttype=water
+INFO     	      vespiquen     pressure heavydutyboots [hurricane, roost, toxicspikes, uturn] ttype=steel
+INFO     	 arceusfighting    multitype    fistplate [bodypress, irondefense, recover, shadowball] ttype=steel
+INFO     Sampling battle 28
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	        persian       limber   choiceband [doubleedge, knockoff, switcheroo, uturn] ttype=normal
+INFO     	   palkiaorigin     pressure lustrousglobe [fireblast, hydropump, spacialrend, thunderwave] ttype=fire
+INFO     	        flamigo      scrappy  choicescarf [bravebird, closecombat, throatchop, uturn] ttype=fighting
+INFO     	          azelf     levitate      lifeorb [dazzlinggleam, fireblast, nastyplot, psyshock] ttype=fire
+INFO     	       appletun     thickfat    leftovers [appleacid, dragonpulse, leechseed, recover] ttype=steel
+INFO     Sampling battle 29
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 5 unrevealed pokemon
+INFO     	          klawf  regenerator      lifeorb [highhorsepower, knockoff, stealthrock, stoneedge] ttype=ground
+INFO     	      cinderace       libero heavydutyboots [courtchange, pyroball, uturn, willowisp] ttype=grass
+INFO     	    fluttermane protosynthesis  choicespecs [moonblast, mysticalfire, shadowball, thunderbolt] ttype=fairy
+INFO     	     tentacruel   liquidooze  assaultvest [knockoff, rapidspin, sludgebomb, surf] ttype=flying
+INFO     	      mismagius     levitate  choicespecs [dazzlinggleam, energyball, shadowball, thunderbolt] ttype=ghost
+INFO     Sampling battle 30
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 5 unrevealed pokemon
+INFO     	 decidueyehisui      scrappy    leftovers [leafblade, roost, triplearrows, uturn] ttype=steel
+INFO     	        gliscor   poisonheal     toxicorb [earthquake, knockoff, protect, toxic] ttype=water
+INFO     	        diancie    clearbody    leftovers [calmmind, diamondstorm, drainingkiss, earthpower] ttype=fairy
+INFO     	         plusle lightningrod      lifeorb [alluringvoice, encore, nastyplot, thunderbolt] ttype=fairy
+INFO     	  samurotthisui    sharpness      lifeorb [ceaselessedge, razorshell, suckerpunch, swordsdance] ttype=dark
+INFO     Sampling battle 31
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 5 unrevealed pokemon
+INFO     	     calyrexice asoneglastrier heavydutyboots [closecombat, glaciallance, highhorsepower, trickroom] ttype=fighting
+INFO     	     screamtail protosynthesis    leftovers [dazzlinggleam, protect, thunderwave, wish] ttype=steel
+INFO     	      cinderace       libero   choiceband [gunkshot, highjumpkick, pyroball, uturn] ttype=fighting
+INFO     	        luvdisc    swiftswim heavydutyboots [endeavor, flipturn, substitute, surf] ttype=ground
+INFO     	         emboar     reckless  choicescarf [closecombat, flareblitz, headsmash, knockoff] ttype=fire
+INFO     Searching for a move using MCTS...
+INFO     Sampling 32 battles at 250ms each
+WARNING  poke-engine lacks request-level Tera permissions; final selector must filter roots
+INFO     Policy 0: swordsdance visited 46.23% avg_score=0.606 sample_chance_multiplier=0.031
+INFO     Policy 1: psychicfangs visited 37.31% avg_score=0.533 sample_chance_multiplier=0.031
+INFO     Policy 2: wavecrash visited 35.45% avg_score=0.561 sample_chance_multiplier=0.031
+INFO     Policy 3: swordsdance visited 76.81% avg_score=0.541 sample_chance_multiplier=0.031
+INFO     Policy 4: swordsdance visited 93.05% avg_score=0.745 sample_chance_multiplier=0.031
+INFO     Policy 5: psychicfangs-tera visited 58.2% avg_score=0.606 sample_chance_multiplier=0.031
+INFO     Policy 6: switch glaceon visited 44.58% avg_score=0.431 sample_chance_multiplier=0.031
+INFO     Policy 7: wavecrash visited 49.0% avg_score=0.492 sample_chance_multiplier=0.031
+INFO     Policy 8: swordsdance visited 62.24% avg_score=0.631 sample_chance_multiplier=0.031
+INFO     Policy 9: swordsdance visited 90.46% avg_score=0.641 sample_chance_multiplier=0.031
+INFO     Policy 10: swordsdance visited 69.4% avg_score=0.711 sample_chance_multiplier=0.031
+INFO     Policy 11: psychicfangs-tera visited 57.61% avg_score=0.637 sample_chance_multiplier=0.031
+INFO     Policy 12: swordsdance visited 65.6% avg_score=0.676 sample_chance_multiplier=0.031
+INFO     Policy 13: swordsdance visited 53.9% avg_score=0.699 sample_chance_multiplier=0.031
+INFO     Policy 14: psychicfangs-tera visited 62.84% avg_score=0.598 sample_chance_multiplier=0.031
+INFO     Policy 15: wavecrash visited 65.61% avg_score=0.601 sample_chance_multiplier=0.031
+INFO     Policy 16: psychicfangs visited 46.14% avg_score=0.536 sample_chance_multiplier=0.031
+INFO     Policy 17: swordsdance visited 37.24% avg_score=0.624 sample_chance_multiplier=0.031
+INFO     Policy 18: swordsdance visited 81.17% avg_score=0.628 sample_chance_multiplier=0.031
+INFO     Policy 19: wavecrash visited 43.8% avg_score=0.512 sample_chance_multiplier=0.031
+INFO     Policy 20: wavecrash visited 67.86% avg_score=0.627 sample_chance_multiplier=0.031
+INFO     Policy 21: swordsdance visited 62.32% avg_score=0.612 sample_chance_multiplier=0.031
+INFO     Policy 22: swordsdance visited 67.02% avg_score=0.615 sample_chance_multiplier=0.031
+INFO     Policy 23: psychicfangs visited 39.8% avg_score=0.53 sample_chance_multiplier=0.031
+INFO     Policy 24: wavecrash visited 29.49% avg_score=0.582 sample_chance_multiplier=0.031
+INFO     Policy 25: swordsdance visited 72.73% avg_score=0.676 sample_chance_multiplier=0.031
+INFO     Policy 26: swordsdance visited 89.09% avg_score=0.575 sample_chance_multiplier=0.031
+INFO     Policy 27: wavecrash visited 59.94% avg_score=0.489 sample_chance_multiplier=0.031
+INFO     Policy 28: swordsdance visited 39.84% avg_score=0.586 sample_chance_multiplier=0.031
+INFO     Policy 29: wavecrash visited 39.6% avg_score=0.543 sample_chance_multiplier=0.031
+INFO     Policy 30: wavecrash visited 56.02% avg_score=0.485 sample_chance_multiplier=0.031
+INFO     Policy 31: wavecrash visited 66.66% avg_score=0.65 sample_chance_multiplier=0.031
+INFO     Considered Choices:
+INFO     	42.923%: swordsdance
+INFO     Choice: swordsdance
+INFO     Opponent has switched - clearing the last used move
+INFO     golem switched in, adding intimidate to impossible abilities
+INFO     golem switched in, adding pressure to impossible abilities
+INFO     golem switched in, adding neutralizinggas to impossible abilities
+INFO     golem switched in, adding sandstream to impossible abilities
+INFO     golem switched in, adding drought to impossible abilities
+INFO     golem switched in, adding drizzle to impossible abilities
+INFO     golem switched in, adding snowwarning to impossible abilities
+INFO     golem switched in, adding boosterenergy to impossible items
+INFO     golem switched in, adding airballoon to impossible items
+INFO     bruxish already has the move swordsdance. Decrementing the PP by 1
+INFO     bruxish using swordsdance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     bruxish used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting bruxish's last used move: swordsdance
+INFO     bruxish's attack was boosted by 2 to 2
+INFO     
+INFO     Turn: 2
+INFO     root priors (13): {'wavecrash': 0.91, 'psychicfangs': 0.043, 'crunch': 0.025, 'swordsdance': 0.01}
+INFO     Sampling battle 0
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	zamazentacrowned dauntlessshield rustedshield [bodypress, heavyslam, irondefense, stoneedge] ttype=fighting
+INFO     	       gumshoos     stakeout   choiceband [doubleedge, earthquake, knockoff, uturn] ttype=normal
+INFO     	    fluttermane protosynthesis  choicespecs [moonblast, mysticalfire, psyshock, shadowball] ttype=fairy
+INFO     	 giratinaorigin     levitate griseouscore [dracometeor, dragontail, poltergeist, willowisp] ttype=steel
+INFO     Sampling battle 1
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       cloyster    skilllink    whiteherb [hydropump, iciclespear, rockblast, shellsmash] ttype=rock
+INFO     	 sandslashalola    slushrush      lifeorb [earthquake, iceshard, swordsdance, tripleaxel] ttype=ground
+INFO     	        gallade    sharpness      lifeorb [agility, nightslash, psychocut, sacredsword] ttype=dark
+INFO     	     skeledirge      unaware heavydutyboots [hex, slackoff, torchsong, willowisp] ttype=fairy
+INFO     Sampling battle 2
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	 oricoriopompom       dancer heavydutyboots [hurricane, quiverdance, revelationdance, roost] ttype=ground
+INFO     	        suicune     pressure    leftovers [calmmind, icebeam, scald, substitute] ttype=dragon
+INFO     	       vaporeon  waterabsorb    leftovers [calmmind, protect, scald, wish] ttype=poison
+INFO     	          hypno     insomnia    leftovers [encore, knockoff, psychicnoise, thunderwave] ttype=fairy
+INFO     Sampling battle 3
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 4 unrevealed pokemon
+INFO     	urshifurapidstrike   unseenfist  choicescarf [closecombat, icespinner, surgingstrikes, uturn] ttype=water
+INFO     	       overqwil   intimidate   loadeddice [crunch, gunkshot, scaleshot, swordsdance] ttype=dragon
+INFO     	 sandslashalola    slushrush  assaultvest [earthquake, ironhead, rapidspin, tripleaxel] ttype=flying
+INFO     	    arceusghost    multitype  spookyplate [calmmind, focusblast, judgment, recover] ttype=fighting
+INFO     Sampling battle 4
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       meowstic    prankster    leftovers [alluringvoice, psychicnoise, thunderwave, yawn] ttype=fairy
+INFO     	    kyuremwhite   turboblaze  choicespecs [dracometeor, freezedry, fusionflare, icebeam] ttype=dragon
+INFO     	        milotic  competitive    leftovers [haze, icebeam, recover, scald] ttype=steel
+INFO     	       cyclizar  regenerator heavydutyboots [dracometeor, rapidspin, shedtail, taunt] ttype=fairy
+INFO     Sampling battle 5
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       vigoroth  vitalspirit     eviolite [bodyslam, bulkup, knockoff, slackoff] ttype=ghost
+INFO     	           uxie     levitate    leftovers [encore, knockoff, psychicnoise, thunderwave] ttype=electric
+INFO     	      regidrago   dragonsmaw  choicescarf [dracometeor, dragonenergy, earthquake, outrage] ttype=dragon
+INFO     	        gallade    sharpness   choiceband [leafblade, nightslash, psychocut, sacredsword] ttype=grass
+INFO     Sampling battle 6
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      hippowdon   sandstream    leftovers [curse, earthquake, slackoff, stoneedge] ttype=steel
+INFO     	       vikavolt     levitate heavydutyboots [bugbuzz, discharge, energyball, stickyweb] ttype=electric
+INFO     	        toxapex  regenerator    leftovers [haze, liquidation, recover, toxic] ttype=flying
+INFO     	     ironbundle   quarkdrive heavydutyboots [encore, flipturn, freezedry, hydropump] ttype=ice
+INFO     Sampling battle 7
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	 arceuselectric    multitype     zapplate [calmmind, icebeam, judgment, recover] ttype=electric
+INFO     	       venomoth   tintedlens heavydutyboots [bugbuzz, quiverdance, sleeppowder, sludgewave] ttype=steel
+INFO     	      greattusk protosynthesis    leftovers [bulkup, closecombat, earthquake, stoneedge] ttype=ground
+INFO     	     rotomfrost     levitate heavydutyboots [blizzard, nastyplot, thunderbolt, willowisp] ttype=electric
+INFO     Sampling battle 8
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        manaphy    hydration    leftovers [energyball, hydropump, icebeam, tailglow] ttype=grass
+INFO     	         veluza    sharpness  sitrusberry [aquacutter, filletaway, nightslash, psychocut] ttype=water
+INFO     	       venomoth   tintedlens heavydutyboots [bugbuzz, quiverdance, sleeppowder, sludgewave] ttype=steel
+INFO     	landorustherian   intimidate    leftovers [earthquake, stoneedge, taunt, uturn] ttype=ground
+INFO     Sampling battle 9
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 4 unrevealed pokemon
+INFO     	     electivire   motordrive   choiceband [earthquake, icepunch, knockoff, supercellslam] ttype=flying
+INFO     	       cobalion    justified      lifeorb [closecombat, ironhead, stoneedge, swordsdance] ttype=fighting
+INFO     	      rillaboom  grassysurge   choiceband [grassyglide, highhorsepower, uturn, woodhammer] ttype=grass
+INFO     	     ironbundle   quarkdrive heavydutyboots [encore, flipturn, freezedry, hydropump] ttype=water
+INFO     Sampling battle 10
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	    meowscarada      protean heavydutyboots [flowertrick, knockoff, toxicspikes, uturn] ttype=dark
+INFO     	       vikavolt     levitate heavydutyboots [bugbuzz, discharge, energyball, stickyweb] ttype=electric
+INFO     	       hariyama         guts     flameorb [closecombat, facade, headlongrush, knockoff] ttype=normal
+INFO     	      girafarig    sapsipper     eviolite [hypervoice, nastyplot, psyshock, thunderbolt] ttype=electric
+INFO     Sampling battle 11
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      armarouge    weakarmor  choicespecs [armorcannon, energyball, focusblast, psyshock] ttype=fire
+INFO     	      indeedeef psychicsurge  choicescarf [healingwish, hypervoice, psychic, shadowball] ttype=psychic
+INFO     	         furret        frisk      lifeorb [brickbreak, doubleedge, knockoff, tidyup] ttype=ghost
+INFO     	        wochien tabletsofruin    leftovers [knockoff, leechseed, protect, ruination] ttype=poison
+INFO     Sampling battle 12
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       basculin adaptability   choiceband [aquajet, doubleedge, flipturn, wavecrash] ttype=water
+INFO     	        avalugg       sturdy heavydutyboots [avalanche, bodypress, rapidspin, recover] ttype=fighting
+INFO     	    corviknight  mirrorarmor    leftovers [bravebird, defog, roost, uturn] ttype=dragon
+INFO     	      greattusk protosynthesis  assaultvest [closecombat, headlongrush, icespinner, rapidspin] ttype=steel
+INFO     Sampling battle 13
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        seviper  infiltrator      lifeorb [earthquake, gigadrain, gunkshot, knockoff] ttype=ground
+INFO     	ogerponhearthflame  moldbreaker hearthflamemask [ivycudgel, powerwhip, stompingtantrum, swordsdance] ttype=fire
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, earthpower, roost] ttype=poison
+INFO     	 sandslashalola    slushrush    leftovers [earthquake, rapidspin, swordsdance, tripleaxel] ttype=ground
+INFO     Sampling battle 14
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	         zarude    leafguard    leftovers [knockoff, powerwhip, swordsdance, synthesis] ttype=grass
+INFO     	      cinderace       libero   choiceband [gunkshot, highjumpkick, pyroball, uturn] ttype=fire
+INFO     	        okidogi   toxicchain  assaultvest [drainpunch, gunkshot, highhorsepower, knockoff] ttype=dark
+INFO     	   palkiaorigin     pressure lustrousglobe [fireblast, hydropump, spacialrend, thunderwave] ttype=fire
+INFO     Sampling battle 15
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       rotomfan     levitate heavydutyboots [airslash, nastyplot, thunderbolt, thunderwave] ttype=electric
+INFO     	        spidops     stakeout heavydutyboots [circlethrow, knockoff, spikes, stickyweb] ttype=ghost
+INFO     	       indeedee psychicsurge  choicespecs [dazzlinggleam, expandingforce, hypervoice, shadowball] ttype=psychic
+INFO     	       porygon2     download     eviolite [recover, shadowball, terablast, thunderwave] ttype=fighting
+INFO     Sampling battle 16
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       illumise    prankster heavydutyboots [bugbuzz, encore, roost, thunderwave] ttype=water
+INFO     	   slowbrogalar  regenerator      lifeorb [fireblast, psychic, shellsidearm, trickroom] ttype=psychic
+INFO     	  deoxysdefense     pressure    leftovers [cosmicpower, nightshade, recover, storedpower] ttype=steel
+INFO     	     archaludon      stamina     lumberry [earthquake, ironhead, outrage, swordsdance] ttype=ground
+INFO     Sampling battle 17
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	     talonflame    galewings heavydutyboots [bravebird, flareblitz, swordsdance, terablast] ttype=ground
+INFO     	      zebstrika    sapsipper      lifeorb [highhorsepower, overheat, supercellslam, voltswitch] ttype=ground
+INFO     	     hitmonchan     ironfist      lifeorb [drainpunch, icepunch, knockoff, swordsdance] ttype=dark
+INFO     	    deoxysspeed     pressure      lifeorb [knockoff, psychoboost, superpower, taunt] ttype=fighting
+INFO     Sampling battle 18
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	          ditto     imposter  choicescarf [transform] ttype=steel
+INFO     	        dondozo      unaware    leftovers [curse, rest, sleeptalk, wavecrash] ttype=dragon
+INFO     	       sneasler  poisontouch   choiceband [closecombat, direclaw, throatchop, uturn] ttype=dark
+INFO     	       slowking  regenerator heavydutyboots [chillyreception, psyshock, scald, slackoff] ttype=fairy
+INFO     Sampling battle 19
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 4 unrevealed pokemon
+INFO     	    oricoriopau       dancer heavydutyboots [hurricane, quiverdance, revelationdance, roost] ttype=ground
+INFO     	     eelektross     levitate  assaultvest [closecombat, discharge, dragontail, uturn] ttype=steel
+INFO     	        dedenne   cheekpouch  sitrusberry [dazzlinggleam, nuzzle, superfang, thunderbolt] ttype=flying
+INFO     	       maushold   technician     widelens [bite, encore, populationbomb, tidyup] ttype=normal
+INFO     Sampling battle 20
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      revavroom       filter      lifeorb [gunkshot, highhorsepower, ironhead, shiftgear] ttype=ground
+INFO     	    fluttermane protosynthesis  choicespecs [moonblast, mysticalfire, psyshock, shadowball] ttype=fairy
+INFO     	      serperior     contrary      lifeorb [dragonpulse, glare, leafstorm, synthesis] ttype=grass
+INFO     	     conkeldurr         guts     flameorb [closecombat, facade, knockoff, machpunch] ttype=normal
+INFO     Sampling battle 21
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	    polteageist   cursedbody    whiteherb [shadowball, shellsmash, storedpower, strengthsap] ttype=dark
+INFO     	        bruxish    strongjaw      lifeorb [crunch, psychicfangs, swordsdance, wavecrash] ttype=dark
+INFO     	   zoroarkhisui     illusion      lifeorb [focusblast, hypervoice, poltergeist, willowisp] ttype=fighting
+INFO     	         phione    hydration    leftovers [rest, scald, sleeptalk, takeheart] ttype=dragon
+INFO     Sampling battle 22
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	         rabsca  synchronize heavydutyboots [bugbuzz, psychic, recover, revivalblessing] ttype=steel
+INFO     	     bombirdier rockypayload heavydutyboots [bravebird, knockoff, roost, stoneedge] ttype=rock
+INFO     	     copperajah   sheerforce      lifeorb [earthquake, ironhead, playrough, stealthrock] ttype=fairy
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 23
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 4 unrevealed pokemon
+INFO     	   squawkabilly         guts     flameorb [bravebird, facade, protect, quickattack] ttype=normal
+INFO     	      girafarig    sapsipper     eviolite [dazzlinggleam, nastyplot, psychic, shadowball] ttype=psychic
+INFO     	     feraligatr   sheerforce      lifeorb [crunch, dragondance, icepunch, liquidation] ttype=dragon
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, morningsun, sunsteelstrike] ttype=steel
+INFO     Sampling battle 24
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      blastoise      torrent    whiteherb [earthquake, hydropump, icebeam, shellsmash] ttype=steel
+INFO     	   hoopaunbound     magician  choicescarf [gunkshot, hyperspacefury, psychic, trick] ttype=poison
+INFO     	     toxtricity     punkrock  choicespecs [boomburst, overdrive, sludgewave, voltswitch] ttype=normal
+INFO     	   moltresgalar      berserk  chestoberry [fierywrath, hurricane, nastyplot, rest] ttype=dark
+INFO     Sampling battle 25
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        umbreon  synchronize    leftovers [foulplay, protect, toxic, wish] ttype=poison
+INFO     	      hydreigon     levitate  choicespecs [darkpulse, dracometeor, fireblast, uturn] ttype=fire
+INFO     	 arceusfighting    multitype    fistplate [bodypress, irondefense, recover, shadowball] ttype=steel
+INFO     	      rotomheat     levitate heavydutyboots [discharge, overheat, painsplit, voltswitch] ttype=steel
+INFO     Sampling battle 26
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	          entei   innerfocus   choiceband [extremespeed, flareblitz, sacredfire, stompingtantrum] ttype=normal
+INFO     	       orthworm   eartheater  chestoberry [bodypress, coil, irontail, rest] ttype=fighting
+INFO     	         zacian intrepidsword      lifeorb [closecombat, playrough, swordsdance, wildcharge] ttype=fighting
+INFO     	        breloom   technician      lifeorb [bulletseed, machpunch, rocktomb, spore] ttype=fighting
+INFO     Sampling battle 27
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	         comfey       triage    leftovers [calmmind, drainingkiss, taunt, terablast] ttype=ground
+INFO     	     copperajah   heavymetal   choiceband [heavyslam, knockoff, supercellslam, superpower] ttype=flying
+INFO     	tornadustherian  regenerator  assaultvest [bleakwindstorm, heatwave, knockoff, uturn] ttype=dark
+INFO     	       espathra   speedboost  choicespecs [dazzlinggleam, luminacrash, shadowball, uturn] ttype=psychic
+INFO     Sampling battle 28
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	tornadustherian  regenerator  choicespecs [bleakwindstorm, grassknot, heatwave, uturn] ttype=fire
+INFO     	      alomomola  regenerator heavydutyboots [flipturn, protect, scald, wish] ttype=steel
+INFO     	       cinccino   technician   loadeddice [bulletseed, tailslap, tidyup, tripleaxel] ttype=grass
+INFO     	taurospaldeablaze      cudchew  sitrusberry [bulkup, closecombat, ragingbull, substitute] ttype=water
+INFO     Sampling battle 29
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      toucannon      keeneye heavydutyboots [beakblast, boomburst, roost, uturn] ttype=steel
+INFO     	    goodrahisui    sapsipper  assaultvest [dracometeor, dragontail, earthquake, heavyslam] ttype=ground
+INFO     	           uxie     levitate    leftovers [encore, psychicnoise, uturn, yawn] ttype=electric
+INFO     	        snorlax     thickfat  chestoberry [bodyslam, crunch, curse, rest] ttype=poison
+INFO     Sampling battle 30
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        mesprit     levitate  choicespecs [icebeam, psychic, shadowball, thunderbolt] ttype=electric
+INFO     	     kricketune   technician    focussash [knockoff, pounce, stickyweb, taunt] ttype=ghost
+INFO     	      cryogonal     levitate heavydutyboots [flashcannon, freezedry, rapidspin, recover] ttype=steel
+INFO     	         mewtwo      unnerve      lifeorb [darkpulse, fireblast, nastyplot, psystrike] ttype=psychic
+INFO     Sampling battle 31
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        kingdra    swiftswim      lifeorb [dracometeor, hurricane, raindance, wavecrash] ttype=water
+INFO     	      vileplume  effectspore    leftovers [gigadrain, leechseed, sludgebomb, strengthsap] ttype=water
+INFO     	           uxie     levitate    leftovers [psychicnoise, stealthrock, thunderwave, uturn] ttype=steel
+INFO     	       overqwil   intimidate      lifeorb [crunch, gunkshot, liquidation, swordsdance] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 32 battles at 250ms each
+INFO     Policy 0: psychicfangs visited 47.62% avg_score=0.353 sample_chance_multiplier=0.031
+INFO     Policy 1: crunch visited 60.17% avg_score=0.379 sample_chance_multiplier=0.031
+INFO     Policy 2: psychicfangs visited 37.09% avg_score=0.394 sample_chance_multiplier=0.031
+INFO     Policy 3: psychicfangs visited 52.13% avg_score=0.376 sample_chance_multiplier=0.031
+INFO     Policy 4: psychicfangs visited 49.61% avg_score=0.393 sample_chance_multiplier=0.031
+INFO     Policy 5: psychicfangs visited 41.66% avg_score=0.371 sample_chance_multiplier=0.031
+INFO     Policy 6: crunch visited 48.59% avg_score=0.384 sample_chance_multiplier=0.031
+INFO     Policy 7: psychicfangs visited 53.41% avg_score=0.381 sample_chance_multiplier=0.031
+INFO     Policy 8: crunch visited 39.42% avg_score=0.378 sample_chance_multiplier=0.031
+INFO     Policy 9: psychicfangs visited 69.06% avg_score=0.394 sample_chance_multiplier=0.031
+INFO     Policy 10: psychicfangs visited 34.95% avg_score=0.346 sample_chance_multiplier=0.031
+INFO     Policy 11: psychicfangs visited 33.58% avg_score=0.367 sample_chance_multiplier=0.031
+INFO     Policy 12: crunch visited 64.99% avg_score=0.395 sample_chance_multiplier=0.031
+INFO     Policy 13: psychicfangs visited 46.42% avg_score=0.369 sample_chance_multiplier=0.031
+INFO     Policy 14: crunch visited 44.08% avg_score=0.347 sample_chance_multiplier=0.031
+INFO     Policy 15: psychicfangs visited 40.25% avg_score=0.358 sample_chance_multiplier=0.031
+INFO     Policy 16: psychicfangs visited 46.5% avg_score=0.383 sample_chance_multiplier=0.031
+INFO     Policy 17: psychicfangs visited 69.32% avg_score=0.398 sample_chance_multiplier=0.031
+INFO     Policy 18: psychicfangs visited 69.64% avg_score=0.413 sample_chance_multiplier=0.031
+INFO     Policy 19: crunch visited 66.35% avg_score=0.394 sample_chance_multiplier=0.031
+INFO     Policy 20: crunch visited 50.98% avg_score=0.351 sample_chance_multiplier=0.031
+INFO     Policy 21: crunch visited 70.16% avg_score=0.406 sample_chance_multiplier=0.031
+INFO     Policy 22: crunch visited 57.04% avg_score=0.378 sample_chance_multiplier=0.031
+INFO     Policy 23: crunch visited 47.97% avg_score=0.353 sample_chance_multiplier=0.031
+INFO     Policy 24: crunch visited 53.87% avg_score=0.37 sample_chance_multiplier=0.031
+INFO     Policy 25: crunch visited 76.39% avg_score=0.398 sample_chance_multiplier=0.031
+INFO     Policy 26: psychicfangs visited 44.85% avg_score=0.37 sample_chance_multiplier=0.031
+INFO     Policy 27: crunch visited 59.19% avg_score=0.369 sample_chance_multiplier=0.031
+INFO     Policy 28: psychicfangs visited 61.91% avg_score=0.383 sample_chance_multiplier=0.031
+INFO     Policy 29: crunch visited 62.3% avg_score=0.395 sample_chance_multiplier=0.031
+INFO     Policy 30: psychicfangs visited 55.44% avg_score=0.374 sample_chance_multiplier=0.031
+INFO     Policy 31: psychicfangs visited 50.29% avg_score=0.384 sample_chance_multiplier=0.031
+INFO     Considered Choices:
+INFO     	31.148%: psychicfangs
+INFO     	30.373%: crunch
+INFO     Choice: crunch
+INFO     Updated golem's max speed to 205
+INFO     bruxish already has the move crunch. Decrementing the PP by 1
+INFO     bruxish used a dark move, removing darkgem from possible items
+INFO     Setting bruxish's last used move: crunch
+INFO     bruxish used a damaging move - not guessing lifeorb anymore
+INFO     bruxish did 64.0% damage to golem with crunch
+INFO     Setting bruxish's item to: lifeorb
+INFO     golem used a normal move, removing normalgem from possible items
+INFO     Setting golem's last used move: explosion
+INFO     golem used a damaging move - not guessing lifeorb anymore
+INFO     golem did 90.16% damage to bruxish with explosion
+INFO     golem has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     root priors (5): {'switch serperior': 0.273, 'switch virizion': 0.27, 'switch haxorus': 0.233, 'switch glaceon': 0.137}
+INFO     Sampling battle 0
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      indeedeef psychicsurge      lifeorb [calmmind, hypervoice, psychic, shadowball] ttype=psychic
+INFO     	     oinkologne     thickfat    leftovers [curse, doubleedge, highhorsepower, lashout] ttype=ground
+INFO     	        jolteon   voltabsorb      lifeorb [alluringvoice, calmmind, shadowball, thunderbolt] ttype=electric
+INFO     	        torkoal      drought heavydutyboots [lavaplume, rapidspin, solarbeam, yawn] ttype=dragon
+INFO     Sampling battle 1
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        dugtrio    arenatrap      lifeorb [earthquake, stoneedge, suckerpunch, swordsdance] ttype=ground
+INFO     	       porygonz adaptability      lifeorb [agility, nastyplot, shadowball, terablast] ttype=fighting
+INFO     	          minun   voltabsorb      lifeorb [encore, grassknot, nastyplot, thunderbolt] ttype=electric
+INFO     	        weavile   pickpocket   choiceband [iceshard, knockoff, lowkick, tripleaxel] ttype=ice
+INFO     Sampling battle 2
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      cramorant  gulpmissile heavydutyboots [bravebird, defog, roost, surf] ttype=ground
+INFO     	ogerponwellspring  waterabsorb wellspringmask [ivycudgel, synthesis, uturn, woodhammer] ttype=water
+INFO     	       vikavolt     levitate heavydutyboots [bugbuzz, stickyweb, thunderbolt, voltswitch] ttype=electric
+INFO     	       tinkaton  moldbreaker    leftovers [encore, gigatonhammer, playrough, thunderwave] ttype=water
+INFO     Sampling battle 3
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       ludicolo    swiftswim  choicespecs [gigadrain, hydropump, icebeam, leafstorm] ttype=grass
+INFO     	         lapras  waterabsorb heavydutyboots [freezedry, rest, sleeptalk, sparklingaria] ttype=dragon
+INFO     	 exeggutoralola      harvest  sitrusberry [calmmind, dragonpulse, flamethrower, gigadrain] ttype=fire
+INFO     	  arceuspsychic    multitype    mindplate [bodypress, cosmicpower, recover, storedpower] ttype=steel
+INFO     Sampling battle 4
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	       tsareena queenlymajesty heavydutyboots [highjumpkick, powerwhip, synthesis, uturn] ttype=fighting
+INFO     	      cresselia     levitate    leftovers [calmmind, moonblast, moonlight, psyshock] ttype=fairy
+INFO     	         phione    hydration    leftovers [rest, scald, sleeptalk, takeheart] ttype=dragon
+INFO     	       froslass   cursedbody     widelens [poltergeist, spikes, taunt, tripleaxel] ttype=ice
+INFO     Sampling battle 5
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      bellossom  chlorophyll    leftovers [gigadrain, quiverdance, sludgebomb, strengthsap] ttype=poison
+INFO     	       smeargle     owntempo    focussash [ceaselessedge, spore, stealthrock, stickyweb] ttype=ghost
+INFO     	        wugtrio        gooey   choiceband [aquajet, liquidation, stompingtantrum, throatchop] ttype=dark
+INFO     	     grimmsnarl    prankster    lightclay [lightscreen, partingshot, reflect, spiritbreak] ttype=steel
+INFO     Sampling battle 6
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	     gothitelle    shadowtag  choicescarf [darkpulse, focusblast, psychic, trick] ttype=ghost
+INFO     	     krookodile   intimidate    leftovers [bulkup, earthquake, gunkshot, knockoff] ttype=poison
+INFO     	     forretress       sturdy    leftovers [ironhead, rapidspin, stealthrock, thunderwave] ttype=water
+INFO     	       greedent   cheekpouch  sitrusberry [bodyslam, earthquake, knockoff, swordsdance] ttype=ghost
+INFO     Sampling battle 7
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        glaceon      icebody heavydutyboots [calmmind, freezedry, protect, wish] ttype=water
+INFO     	        pikachu lightningrod    lightball [fakeout, playrough, surf, volttackle] ttype=water
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	         furret        frisk   choiceband [doubleedge, knockoff, trick, uturn] ttype=ghost
+INFO     Sampling battle 8
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        florges   flowerveil    leftovers [calmmind, moonblast, synthesis, terablast] ttype=ground
+INFO     	         zekrom     teravolt    leftovers [boltstrike, dragondance, outrage, substitute] ttype=steel
+INFO     	   deoxysattack     pressure      lifeorb [icebeam, knockoff, psychoboost, superpower] ttype=fighting
+INFO     	        lucario    justified      lifeorb [closecombat, extremespeed, meteormash, swordsdance] ttype=normal
+INFO     Sampling battle 9
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      heracross         guts     flameorb [closecombat, facade, knockoff, trailblaze] ttype=normal
+INFO     	     conkeldurr         guts     flameorb [closecombat, facade, knockoff, machpunch] ttype=normal
+INFO     	         zapdos       static heavydutyboots [discharge, heatwave, hurricane, roost] ttype=electric
+INFO     	       lumineon   stormdrain heavydutyboots [encore, hydropump, icebeam, uturn] ttype=fire
+INFO     Sampling battle 10
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	      regigigas    slowstart    leftovers [bodyslam, knockoff, rest, sleeptalk] ttype=ghost
+INFO     	       cyclizar  regenerator heavydutyboots [dracometeor, rapidspin, shedtail, taunt] ttype=fairy
+INFO     	       espathra   speedboost  choicespecs [dazzlinggleam, luminacrash, shadowball, uturn] ttype=psychic
+INFO     	       dachsbun wellbakedbody    leftovers [playrough, protect, wish, yawn] ttype=steel
+INFO     Sampling battle 11
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        jolteon   voltabsorb    leftovers [calmmind, substitute, terablast, thunderbolt] ttype=ice
+INFO     	   basculegionf adaptability  assaultvest [flipturn, hydropump, shadowball, wavecrash] ttype=water
+INFO     	        wyrdeer   intimidate    leftovers [bodyslam, earthquake, psychicnoise, thunderwave] ttype=ground
+INFO     	     sandaconda     shedskin    leftovers [coil, earthquake, glare, stoneedge] ttype=dragon
+INFO     Sampling battle 12
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	  slowkinggalar  regenerator  assaultvest [fireblast, psychicnoise, sludgebomb, surf] ttype=water
+INFO     	      trevenant      harvest  sitrusberry [drainpunch, poltergeist, protect, toxic] ttype=steel
+INFO     	       reshiram   turboblaze heavydutyboots [blueflare, dracometeor, earthpower, willowisp] ttype=fire
+INFO     	      cresselia     levitate    leftovers [calmmind, moonblast, moonlight, psyshock] ttype=fairy
+INFO     Sampling battle 13
+INFO     	          golem       sturdy weaknesspolicy [earthquake, explosion, rockpolish, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 4 unrevealed pokemon
+INFO     	     tentacruel   liquidooze  assaultvest [flipturn, rapidspin, sludgebomb, surf] ttype=grass
+INFO     	        groudon      drought    leftovers [heatcrash, precipiceblades, stoneedge, swordsdance] ttype=fire
+INFO     	 sandslashalola    slushrush  assaultvest [earthquake, ironhead, rapidspin, tripleaxel] ttype=water
+INFO     	     screamtail protosynthesis    leftovers [encore, playrough, protect, wish] ttype=steel
+INFO     Sampling battle 14
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 4 unrevealed pokemon
+INFO     	        mesprit     levitate    leftovers [drainpunch, knockoff, psychicnoise, thunderwave] ttype=fighting
+INFO     	       ursaluna         guts     flameorb [facade, headlongrush, swordsdance, throatchop] ttype=normal
+INFO     	taurospaldeaaqua      cudchew  sitrusberry [bulkup, closecombat, liquidation, substitute] ttype=steel
+INFO     	       skarmory       sturdy    leftovers [bodypress, bravebird, roost, spikes] ttype=fighting
+INFO     Sampling battle 15
+INFO     	          golem       sturdy  custapberry [earthquake, explosion, stealthrock, stoneedge] ttype=grass
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 4 unrevealed pokemon
+INFO     	thundurustherian   voltabsorb heavydutyboots [focusblast, nastyplot, terablast, thunderbolt] ttype=flying
+INFO     	        lucario   innerfocus      lifeorb [flashcannon, focusblast, nastyplot, vacuumwave] ttype=fighting
+INFO     	     arceusfire    multitype   flameplate [dragondance, earthquake, flareblitz, recover] ttype=ground
+INFO     	      hitmonlee     reckless  choicescarf [highjumpkick, knockoff, poisonjab, stoneedge] ttype=fighting
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: switch haxorus visited 65.41% avg_score=0.452 sample_chance_multiplier=0.062
+INFO     Policy 1: switch haxorus visited 75.13% avg_score=0.502 sample_chance_multiplier=0.062
+INFO     Policy 2: switch virizion visited 88.86% avg_score=0.524 sample_chance_multiplier=0.062
+INFO     Policy 3: switch glaceon visited 56.15% avg_score=0.481 sample_chance_multiplier=0.062
+INFO     Policy 4: switch haxorus visited 78.07% avg_score=0.524 sample_chance_multiplier=0.062
+INFO     Policy 5: switch okidogi visited 56.57% avg_score=0.459 sample_chance_multiplier=0.062
+INFO     Policy 6: switch virizion visited 35.44% avg_score=0.439 sample_chance_multiplier=0.062
+INFO     Policy 7: switch haxorus visited 75.81% avg_score=0.53 sample_chance_multiplier=0.062
+INFO     Policy 8: switch okidogi visited 45.46% avg_score=0.527 sample_chance_multiplier=0.062
+INFO     Policy 9: switch okidogi visited 39.35% avg_score=0.394 sample_chance_multiplier=0.062
+INFO     Policy 10: switch glaceon visited 84.98% avg_score=0.525 sample_chance_multiplier=0.062
+INFO     Policy 11: switch glaceon visited 82.53% avg_score=0.487 sample_chance_multiplier=0.062
+INFO     Policy 12: switch haxorus visited 60.31% avg_score=0.458 sample_chance_multiplier=0.062
+INFO     Policy 13: switch serperior visited 39.13% avg_score=0.438 sample_chance_multiplier=0.062
+INFO     Policy 14: switch serperior visited 89.85% avg_score=0.505 sample_chance_multiplier=0.062
+INFO     Policy 15: switch haxorus visited 72.45% avg_score=0.468 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	32.357%: switch haxorus
+INFO     Choice: switch haxorus
+INFO     haxorus switched in, adding intimidate to impossible abilities
+INFO     haxorus switched in, adding pressure to impossible abilities
+INFO     haxorus switched in, adding neutralizinggas to impossible abilities
+INFO     haxorus switched in, adding sandstream to impossible abilities
+INFO     haxorus switched in, adding drought to impossible abilities
+INFO     haxorus switched in, adding drizzle to impossible abilities
+INFO     haxorus switched in, adding snowwarning to impossible abilities
+INFO     haxorus switched in, adding boosterenergy to impossible items
+INFO     haxorus switched in, adding airballoon to impossible items
+INFO     Opponent has switched - clearing the last used move
+INFO     dragonite switched in, adding intimidate to impossible abilities
+INFO     dragonite switched in, adding pressure to impossible abilities
+INFO     dragonite switched in, adding neutralizinggas to impossible abilities
+INFO     dragonite switched in, adding sandstream to impossible abilities
+INFO     dragonite switched in, adding drought to impossible abilities
+INFO     dragonite switched in, adding drizzle to impossible abilities
+INFO     dragonite switched in, adding snowwarning to impossible abilities
+INFO     dragonite switched in, adding boosterenergy to impossible items
+INFO     dragonite switched in, adding airballoon to impossible items
+INFO     Setting haxorus's ability to moldbreaker
+INFO     
+INFO     Turn: 3
+INFO     root priors (12): {'scaleshot': 0.675, 'swordsdance': 0.125, 'scaleshot-tera': 0.111, 'swordsdance-tera': 0.046}
+INFO     Sampling battle 0
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     eelektross     levitate    leftovers [coil, drainpunch, firepunch, supercellslam] ttype=fighting
+INFO     	    gougingfire protosynthesis heavydutyboots [dragondance, heatcrash, morningsun, outrage] ttype=fairy
+INFO     	         komala     comatose  assaultvest [bodyslam, earthquake, knockoff, rapidspin] ttype=ghost
+INFO     Sampling battle 1
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        zoroark     illusion      lifeorb [darkpulse, focusblast, nastyplot, sludgebomb] ttype=poison
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, stealthrock] ttype=flying
+INFO     	        weezing     levitate    leftovers [fireblast, gunkshot, painsplit, willowisp] ttype=steel
+INFO     Sampling battle 2
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       indeedee psychicsurge  choicespecs [dazzlinggleam, expandingforce, hypervoice, shadowball] ttype=psychic
+INFO     	   crabominable     ironfist   choiceband [drainpunch, earthquake, gunkshot, icehammer] ttype=ground
+INFO     	       magearna    soulheart    leftovers [aurasphere, flashcannon, fleurcannon, painsplit] ttype=water
+INFO     Sampling battle 3
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       porygon2     download     eviolite [discharge, icebeam, recover, triattack] ttype=poison
+INFO     	        florges   flowerveil    leftovers [calmmind, moonblast, synthesis, terablast] ttype=ground
+INFO     	       orthworm   eartheater  chestoberry [bodypress, coil, irontail, rest] ttype=electric
+INFO     Sampling battle 4
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      gholdengo   goodasgold    leftovers [makeitrain, recover, shadowball, thunderwave] ttype=dark
+INFO     	   basculegionf adaptability  choicespecs [flipturn, hydropump, icebeam, shadowball] ttype=water
+INFO     	      bellibolt electromorphosis    leftovers [muddywater, slackoff, thunderbolt, toxic] ttype=electric
+INFO     Sampling battle 5
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        gurdurr         guts     eviolite [defog, drainpunch, knockoff, machpunch] ttype=steel
+INFO     	       maushold   technician     widelens [bite, encore, populationbomb, tidyup] ttype=normal
+INFO     	necrozmadawnwings   prismarmor    leftovers [calmmind, moongeistbeam, moonlight, photongeyser] ttype=dark
+INFO     Sampling battle 6
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        seviper  infiltrator      lifeorb [earthquake, flamethrower, gunkshot, knockoff] ttype=fire
+INFO     	       mukalola  poisontouch  assaultvest [drainpunch, gunkshot, icepunch, knockoff] ttype=fighting
+INFO     	        wyrdeer   intimidate  assaultvest [bodyslam, earthquake, megahorn, psychicnoise] ttype=ground
+INFO     Sampling battle 7
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     oinkologne     thickfat    leftovers [curse, doubleedge, highhorsepower, lashout] ttype=ground
+INFO     	        dewgong     thickfat heavydutyboots [encore, flipturn, hydropump, icebeam] ttype=grass
+INFO     	    fluttermane protosynthesis      lifeorb [calmmind, moonblast, shadowball, thunderbolt] ttype=electric
+INFO     Sampling battle 8
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      poliwrath  waterabsorb  assaultvest [circlethrow, closecombat, knockoff, liquidation] ttype=dark
+INFO     	          ditto     imposter  choicescarf [transform] ttype=steel
+INFO     	         luxray         guts     flameorb [facade, supercellslam, throatchop, trailblaze] ttype=normal
+INFO     Sampling battle 9
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	    walkingwake protosynthesis  choicespecs [dracometeor, flamethrower, flipturn, hydropump] ttype=fire
+INFO     	       froslass   cursedbody     widelens [poltergeist, spikes, tripleaxel, willowisp] ttype=ghost
+INFO     	       slowking  regenerator heavydutyboots [chillyreception, psychicnoise, scald, slackoff] ttype=fairy
+INFO     Sampling battle 10
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     arceusdark    multitype   dreadplate [calmmind, judgment, recover, sludgebomb] ttype=poison
+INFO     	       blaziken   speedboost      lifeorb [closecombat, flareblitz, knockoff, swordsdance] ttype=dark
+INFO     	        spidops     stakeout heavydutyboots [circlethrow, knockoff, stickyweb, uturn] ttype=ghost
+INFO     Sampling battle 11
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       gumshoos adaptability   choiceband [doubleedge, earthquake, knockoff, uturn] ttype=ground
+INFO     	      mightyena   intimidate    leftovers [playrough, suckerpunch, taunt, throatchop] ttype=fairy
+INFO     	        flareon         guts     toxicorb [facade, flareblitz, trailblaze, willowisp] ttype=normal
+INFO     Sampling battle 12
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        scrafty     shedskin    leftovers [bulkup, drainpunch, knockoff, rest] ttype=poison
+INFO     	         zacian intrepidsword   choiceband [closecombat, crunch, playrough, psychicfangs] ttype=fighting
+INFO     	       illumise    prankster heavydutyboots [bugbuzz, encore, roost, thunderwave] ttype=water
+INFO     Sampling battle 13
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     scovillain  chlorophyll  choicescarf [energyball, flamethrower, leafstorm, overheat] ttype=grass
+INFO     	        bisharp      defiant     eviolite [ironhead, suckerpunch, swordsdance, throatchop] ttype=ghost
+INFO     	        sableye    prankster    leftovers [encore, knockoff, recover, thunderwave] ttype=steel
+INFO     Sampling battle 14
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        avalugg       sturdy heavydutyboots [avalanche, bodypress, rapidspin, recover] ttype=fighting
+INFO     	       ampharos       static  assaultvest [dazzlinggleam, focusblast, thunderbolt, voltswitch] ttype=fairy
+INFO     	         plusle lightningrod      lifeorb [encore, grassknot, nastyplot, thunderbolt] ttype=grass
+INFO     Sampling battle 15
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        golduck    cloudnine  choicespecs [flipturn, grassknot, hydropump, icebeam] ttype=water
+INFO     	       inteleon      torrent  choicespecs [hydropump, icebeam, scald, uturn] ttype=water
+INFO     	     pincurchin electricsurge    leftovers [curse, liquidation, recover, zingzap] ttype=water
+INFO     Sampling battle 16
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        morpeko hungerswitch    leftovers [aurawheel, knockoff, protect, rapidspin] ttype=electric
+INFO     	       grafaiai  poisontouch      lifeorb [gunkshot, knockoff, lowkick, swordsdance] ttype=dark
+INFO     	       ludicolo    swiftswim  choicespecs [gigadrain, hydropump, icebeam, leafstorm] ttype=grass
+INFO     Sampling battle 17
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       ursaring    quickfeet     toxicorb [closecombat, facade, swordsdance, throatchop] ttype=normal
+INFO     	       politoed      drizzle  choicespecs [focusblast, hydropump, icebeam, weatherball] ttype=water
+INFO     	       reshiram   turboblaze heavydutyboots [blueflare, dracometeor, dragontail, earthpower] ttype=fire
+INFO     Sampling battle 18
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, ironhead, outrage] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      primarina      torrent  choicespecs [flipturn, hydropump, moonblast, psychic] ttype=water
+INFO     	    ironvaliant   quarkdrive      lifeorb [closecombat, knockoff, spiritbreak, swordsdance] ttype=fighting
+INFO     	       reshiram   turboblaze heavydutyboots [dragondance, flareblitz, outrage, stoneedge] ttype=dragon
+INFO     Sampling battle 19
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	 arceuselectric    multitype     zapplate [calmmind, icebeam, judgment, recover] ttype=electric
+INFO     	          entei   innerfocus   choiceband [extremespeed, flareblitz, sacredfire, stoneedge] ttype=fire
+INFO     	      hitmontop   technician    leftovers [bulkup, closecombat, rapidspin, tripleaxel] ttype=ice
+INFO     Sampling battle 20
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       clefable      unaware    leftovers [calmmind, fireblast, moonblast, moonlight] ttype=fire
+INFO     	      clawitzer megalauncher  choicespecs [darkpulse, icebeam, uturn, waterpulse] ttype=dark
+INFO     	     toxtricity     punkrock  throatspray [boomburst, gunkshot, overdrive, shiftgear] ttype=normal
+INFO     Sampling battle 21
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       ribombee   shielddust heavydutyboots [bugbuzz, moonblast, stickyweb, uturn] ttype=ghost
+INFO     	      munkidori   toxicchain  assaultvest [fakeout, psychicnoise, sludgewave, uturn] ttype=dark
+INFO     	      zebstrika    sapsipper      lifeorb [highhorsepower, overheat, supercellslam, voltswitch] ttype=ground
+INFO     Sampling battle 22
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     electivire   motordrive      lifeorb [earthquake, flamethrower, knockoff, supercellslam] ttype=flying
+INFO     	          lokix   tintedlens      lifeorb [knockoff, leechlife, suckerpunch, swordsdance] ttype=dark
+INFO     	      clawitzer megalauncher  assaultvest [aurasphere, dragonpulse, uturn, waterpulse] ttype=dragon
+INFO     Sampling battle 23
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	taurospaldeacombat   intimidate   choiceband [closecombat, earthquake, ironhead, throatchop] ttype=steel
+INFO     	  zaciancrowned intrepidsword  rustedsword [behemothblade, closecombat, playrough, swordsdance] ttype=fighting
+INFO     	      volcanion  waterabsorb  choicespecs [earthpower, flamethrower, sludgebomb, steameruption] ttype=fire
+INFO     Sampling battle 24
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        morpeko hungerswitch    leftovers [aurawheel, knockoff, protect, rapidspin] ttype=electric
+INFO     	     conkeldurr         guts     flameorb [closecombat, facade, knockoff, machpunch] ttype=normal
+INFO     	       meloetta  serenegrace    leftovers [calmmind, focusblast, hypervoice, psyshock] ttype=psychic
+INFO     Sampling battle 25
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	   greninjabond   battlebond      lifeorb [darkpulse, gunkshot, hydropump, icebeam] ttype=poison
+INFO     	       bronzong     levitate    leftovers [earthquake, hypnosis, ironhead, stealthrock] ttype=electric
+INFO     	  arceuspsychic    multitype    mindplate [bodypress, cosmicpower, recover, storedpower] ttype=steel
+INFO     Sampling battle 26
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	          chiyu  beadsofruin heavydutyboots [darkpulse, fireblast, nastyplot, psychic] ttype=fire
+INFO     	      revavroom       filter      lifeorb [gunkshot, highhorsepower, ironhead, shiftgear] ttype=ground
+INFO     	    fluttermane protosynthesis      lifeorb [calmmind, moonblast, shadowball, thunderbolt] ttype=electric
+INFO     Sampling battle 27
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       arcanine   intimidate heavydutyboots [closecombat, flareblitz, morningsun, willowisp] ttype=fighting
+INFO     	         raichu lightningrod      lifeorb [nastyplot, surf, terablast, thunderbolt] ttype=ice
+INFO     	          hypno     insomnia    leftovers [focusblast, protect, psychicnoise, toxic] ttype=fighting
+INFO     Sampling battle 28
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        suicune     pressure    leftovers [calmmind, protect, scald, substitute] ttype=steel
+INFO     	     wigglytuff  competitive    leftovers [dazzlinggleam, fireblast, protect, wish] ttype=poison
+INFO     	      rotomwash     levitate    leftovers [hydropump, thunderbolt, voltswitch, willowisp] ttype=electric
+INFO     Sampling battle 29
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      cresselia     levitate    leftovers [calmmind, moonlight, psyshock, thunderbolt] ttype=poison
+INFO     	       reshiram   turboblaze heavydutyboots [dragondance, flareblitz, outrage, stoneedge] ttype=fire
+INFO     	        sylveon     pixilate    leftovers [calmmind, hypervoice, protect, wish] ttype=steel
+INFO     Sampling battle 30
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       dusknoir        frisk    leftovers [focuspunch, painsplit, poltergeist, substitute] ttype=fighting
+INFO     	      poliwrath  waterabsorb  assaultvest [circlethrow, closecombat, knockoff, liquidation] ttype=steel
+INFO     	     grimmsnarl    prankster    leftovers [spiritbreak, suckerpunch, taunt, thunderwave] ttype=steel
+INFO     Sampling battle 31
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, terablast] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	            muk  poisontouch    leftovers [drainpunch, haze, knockoff, poisonjab] ttype=dark
+INFO     	       vaporeon  waterabsorb    leftovers [protect, roar, scald, wish] ttype=poison
+INFO     	        golduck    cloudnine  choicespecs [flipturn, grassknot, hydropump, icebeam] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 32 battles at 250ms each
+INFO     Policy 0: scaleshot visited 82.97% avg_score=0.6 sample_chance_multiplier=0.031
+INFO     Policy 1: scaleshot visited 74.07% avg_score=0.533 sample_chance_multiplier=0.031
+INFO     Policy 2: scaleshot visited 65.9% avg_score=0.507 sample_chance_multiplier=0.031
+INFO     Policy 3: scaleshot visited 59.13% avg_score=0.482 sample_chance_multiplier=0.031
+INFO     Policy 4: scaleshot visited 79.33% avg_score=0.547 sample_chance_multiplier=0.031
+INFO     Policy 5: scaleshot visited 80.95% avg_score=0.538 sample_chance_multiplier=0.031
+INFO     Policy 6: scaleshot visited 64.53% avg_score=0.505 sample_chance_multiplier=0.031
+INFO     Policy 7: swordsdance-tera visited 77.92% avg_score=0.562 sample_chance_multiplier=0.031
+INFO     Policy 8: scaleshot visited 65.33% avg_score=0.477 sample_chance_multiplier=0.031
+INFO     Policy 9: scaleshot visited 89.39% avg_score=0.614 sample_chance_multiplier=0.031
+INFO     Policy 10: scaleshot visited 91.13% avg_score=0.54 sample_chance_multiplier=0.031
+INFO     Policy 11: scaleshot visited 70.56% avg_score=0.551 sample_chance_multiplier=0.031
+INFO     Policy 12: ironhead-tera visited 32.89% avg_score=0.43 sample_chance_multiplier=0.031
+INFO     Policy 13: scaleshot visited 89.71% avg_score=0.589 sample_chance_multiplier=0.031
+INFO     Policy 14: scaleshot visited 73.86% avg_score=0.502 sample_chance_multiplier=0.031
+INFO     Policy 15: scaleshot visited 94.34% avg_score=0.56 sample_chance_multiplier=0.031
+INFO     Policy 16: swordsdance-tera visited 72.89% avg_score=0.572 sample_chance_multiplier=0.031
+INFO     Policy 17: scaleshot visited 76.67% avg_score=0.507 sample_chance_multiplier=0.031
+INFO     Policy 18: scaleshot visited 35.41% avg_score=0.433 sample_chance_multiplier=0.031
+INFO     Policy 19: scaleshot visited 92.75% avg_score=0.543 sample_chance_multiplier=0.031
+INFO     Policy 20: swordsdance-tera visited 63.87% avg_score=0.524 sample_chance_multiplier=0.031
+INFO     Policy 21: scaleshot visited 69.14% avg_score=0.5 sample_chance_multiplier=0.031
+INFO     Policy 22: scaleshot visited 89.48% avg_score=0.549 sample_chance_multiplier=0.031
+INFO     Policy 23: ironhead visited 39.32% avg_score=0.403 sample_chance_multiplier=0.031
+INFO     Policy 24: scaleshot visited 84.27% avg_score=0.438 sample_chance_multiplier=0.031
+INFO     Policy 25: scaleshot visited 79.63% avg_score=0.492 sample_chance_multiplier=0.031
+INFO     Policy 26: scaleshot visited 65.29% avg_score=0.492 sample_chance_multiplier=0.031
+INFO     Policy 27: scaleshot visited 89.2% avg_score=0.532 sample_chance_multiplier=0.031
+INFO     Policy 28: swordsdance-tera visited 46.56% avg_score=0.511 sample_chance_multiplier=0.031
+INFO     Policy 29: swordsdance-tera visited 67.77% avg_score=0.565 sample_chance_multiplier=0.031
+INFO     Policy 30: scaleshot visited 89.86% avg_score=0.529 sample_chance_multiplier=0.031
+INFO     Policy 31: scaleshot visited 91.87% avg_score=0.545 sample_chance_multiplier=0.031
+INFO     Considered Choices:
+INFO     	66.627%: scaleshot
+INFO     Choice: scaleshot
+INFO     Updated dragonite's max speed to 194
+INFO     dragonite terastallized. Tera type: ground, Original types: ['dragon', 'flying']
+INFO     haxorus already has the move scaleshot. Decrementing the PP by 1
+INFO     haxorus used a dragon move, removing dragongem from possible items
+INFO     Setting haxorus's last used move: scaleshot
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 12.0% damage to dragonite with scaleshot
+INFO     haxorus's defense was unboosted by 1 to -1
+INFO     haxorus's speed was boosted by 1 to 1
+INFO     dragonite using dragondance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     dragonite used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting dragonite's last used move: dragondance
+INFO     dragonite's attack was boosted by 1 to 1
+INFO     dragonite's speed was boosted by 1 to 1
+INFO     dragonite has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 4
+INFO     root priors (12): {'scaleshot': 0.843, 'closecombat': 0.098, 'ironhead': 0.019, 'scaleshot-tera': 0.011}
+INFO     Sampling battle 0
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	   crabominable     ironfist  assaultvest [drainpunch, earthquake, icehammer, knockoff] ttype=fighting
+INFO     	      reuniclus   magicguard      lifeorb [calmmind, focusblast, psyshock, recover] ttype=steel
+INFO     	       oranguru   innerfocus  choicespecs [focusblast, hypervoice, psyshock, thunderbolt] ttype=fighting
+INFO     Sampling battle 1
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, energyball, stickyweb, thunder] ttype=electric
+INFO     	      zebstrika    sapsipper      lifeorb [highhorsepower, overheat, supercellslam, voltswitch] ttype=ground
+INFO     	       oranguru   innerfocus      lifeorb [focusblast, hypervoice, nastyplot, psyshock] ttype=fighting
+INFO     Sampling battle 2
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       chienpao  swordofruin heavydutyboots [iciclecrash, sacredsword, swordsdance, throatchop] ttype=fighting
+INFO     	       gumshoos     stakeout   choiceband [doubleedge, earthquake, knockoff, uturn] ttype=normal
+INFO     	   hoopaunbound     magician   choiceband [drainpunch, hyperspacefury, trick, zenheadbutt] ttype=dark
+INFO     Sampling battle 3
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	    kyuremblack     teravolt   loadeddice [dragondance, fusionbolt, iciclespear, scaleshot] ttype=electric
+INFO     	      revavroom       filter      lifeorb [gunkshot, highhorsepower, ironhead, shiftgear] ttype=ground
+INFO     	      hitmonlee     unburden    whiteherb [closecombat, knockoff, poisonjab, swordsdance] ttype=poison
+INFO     Sampling battle 4
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        heatran    flashfire   airballoon [earthpower, heavyslam, lavaplume, stealthrock] ttype=grass
+INFO     	      arceusice    multitype  icicleplate [calmmind, earthpower, judgment, recover] ttype=ground
+INFO     	         gengar   cursedbody      lifeorb [focusblast, nastyplot, shadowball, sludgewave] ttype=dark
+INFO     Sampling battle 5
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        florges   flowerveil    leftovers [calmmind, moonblast, protect, wish] ttype=steel
+INFO     	       vaporeon  waterabsorb    leftovers [protect, roar, scald, wish] ttype=ghost
+INFO     	    arceussteel    multitype    ironplate [earthquake, judgment, recover, willowisp] ttype=ghost
+INFO     Sampling battle 6
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 3 unrevealed pokemon
+INFO     	       qwilfish   intimidate    leftovers [gunkshot, taunt, toxicspikes, waterfall] ttype=dark
+INFO     	      meowsticf  competitive      lifeorb [alluringvoice, nastyplot, psyshock, thunderbolt] ttype=fairy
+INFO     	        flareon         guts     toxicorb [facade, flareblitz, quickattack, trailblaze] ttype=normal
+INFO     Sampling battle 7
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      arceusbug    multitype  insectplate [calmmind, fireblast, judgment, recover] ttype=fire
+INFO     	        gallade    sharpness  choicescarf [leafblade, nightslash, psychocut, sacredsword] ttype=fighting
+INFO     	     eelektross     levitate    leftovers [coil, drainpunch, firepunch, supercellslam] ttype=fighting
+INFO     Sampling battle 8
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     galvantula compoundeyes heavydutyboots [bugbuzz, stickyweb, thunder, voltswitch] ttype=electric
+INFO     	          hypno     insomnia    leftovers [focusblast, protect, psychicnoise, toxic] ttype=steel
+INFO     	       greedent   cheekpouch  sitrusberry [doubleedge, earthquake, knockoff, swordsdance] ttype=ghost
+INFO     Sampling battle 9
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      terapagos    terashift heavydutyboots [calmmind, earthpower, rapidspin, terastarstorm] ttype=stellar
+INFO     	     eelektross     levitate    leftovers [coil, drainpunch, firepunch, supercellslam] ttype=fighting
+INFO     	      zebstrika    sapsipper      lifeorb [highhorsepower, overheat, supercellslam, voltswitch] ttype=ground
+INFO     Sampling battle 10
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        dondozo      unaware    leftovers [curse, rest, sleeptalk, wavecrash] ttype=fairy
+INFO     	        zoroark     illusion  choicespecs [darkpulse, focusblast, sludgebomb, uturn] ttype=poison
+INFO     	  zaciancrowned intrepidsword  rustedsword [behemothblade, closecombat, playrough, swordsdance] ttype=fighting
+INFO     Sampling battle 11
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	   dugtrioalola tanglinghair      lifeorb [earthquake, ironhead, suckerpunch, swordsdance] ttype=steel
+INFO     	         swalot   liquidooze    leftovers [earthquake, gunkshot, knockoff, swordsdance] ttype=ground
+INFO     	      azumarill    hugepower  sitrusberry [aquajet, bellydrum, liquidation, playrough] ttype=water
+INFO     Sampling battle 12
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	     chandelure    flashfire heavydutyboots [calmmind, energyball, fireblast, shadowball] ttype=fire
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, heavyslam, stealthrock] ttype=steel
+INFO     	        mimikyu     disguise      lifeorb [playrough, shadowclaw, shadowsneak, swordsdance] ttype=fairy
+INFO     Sampling battle 13
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      volcarona    flamebody heavydutyboots [fireblast, gigadrain, quiverdance, terablast] ttype=ground
+INFO     	        mimikyu     disguise      lifeorb [playrough, shadowclaw, shadowsneak, swordsdance] ttype=ghost
+INFO     	        urshifu   unseenfist      lifeorb [closecombat, suckerpunch, swordsdance, wickedblow] ttype=fighting
+INFO     Sampling battle 14
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 3 unrevealed pokemon
+INFO     	      metagross    clearbody weaknesspolicy [agility, earthquake, heavyslam, knockoff] ttype=ground
+INFO     	       solgaleo fullmetalbody    leftovers [closecombat, earthquake, morningsun, sunsteelstrike] ttype=water
+INFO     	      azumarill    hugepower   choiceband [aquajet, icespinner, liquidation, playrough] ttype=water
+INFO     Sampling battle 15
+INFO     	      dragonite   multiscale heavydutyboots [dragondance, earthquake, outrage, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 3 unrevealed pokemon
+INFO     	        snorlax     thickfat    leftovers [bodyslam, crunch, curse, earthquake] ttype=ground
+INFO     	        ambipom   technician   choiceband [doubleedge, knockoff, lowkick, tripleaxel] ttype=ice
+INFO     	  calyrexshadow asonespectrier      lifeorb [astralbarrage, nastyplot, pollenpuff, psyshock] ttype=ghost
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: scaleshot visited 89.7% avg_score=0.533 sample_chance_multiplier=0.062
+INFO     Policy 1: scaleshot visited 81.9% avg_score=0.573 sample_chance_multiplier=0.062
+INFO     Policy 2: closecombat visited 68.28% avg_score=0.616 sample_chance_multiplier=0.062
+INFO     Policy 3: closecombat visited 76.71% avg_score=0.541 sample_chance_multiplier=0.062
+INFO     Policy 4: scaleshot visited 64.54% avg_score=0.664 sample_chance_multiplier=0.062
+INFO     Policy 5: scaleshot visited 69.05% avg_score=0.604 sample_chance_multiplier=0.062
+INFO     Policy 6: scaleshot visited 96.84% avg_score=0.572 sample_chance_multiplier=0.062
+INFO     Policy 7: scaleshot visited 77.42% avg_score=0.575 sample_chance_multiplier=0.062
+INFO     Policy 8: scaleshot visited 89.22% avg_score=0.594 sample_chance_multiplier=0.062
+INFO     Policy 9: scaleshot visited 96.52% avg_score=0.601 sample_chance_multiplier=0.062
+INFO     Policy 10: closecombat visited 81.96% avg_score=0.543 sample_chance_multiplier=0.062
+INFO     Policy 11: scaleshot visited 74.3% avg_score=0.519 sample_chance_multiplier=0.062
+INFO     Policy 12: scaleshot visited 74.4% avg_score=0.625 sample_chance_multiplier=0.062
+INFO     Policy 13: scaleshot visited 79.41% avg_score=0.622 sample_chance_multiplier=0.062
+INFO     Policy 14: closecombat visited 77.23% avg_score=0.519 sample_chance_multiplier=0.062
+INFO     Policy 15: scaleshot visited 81.23% avg_score=0.611 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	66.073%: scaleshot
+INFO     Choice: scaleshot
+INFO     haxorus already has the move scaleshot. Decrementing the PP by 1
+INFO     haxorus used a dragon move, removing dragongem from possible items
+INFO     Setting haxorus's last used move: scaleshot
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 13.0% damage to dragonite with scaleshot
+INFO     haxorus's defense was unboosted by 1 to -2
+INFO     haxorus's speed was boosted by 1 to 2
+INFO     dragonite has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     dudunsparce switched in, adding intimidate to impossible abilities
+INFO     dudunsparce switched in, adding pressure to impossible abilities
+INFO     dudunsparce switched in, adding neutralizinggas to impossible abilities
+INFO     dudunsparce switched in, adding sandstream to impossible abilities
+INFO     dudunsparce switched in, adding drought to impossible abilities
+INFO     dudunsparce switched in, adding drizzle to impossible abilities
+INFO     dudunsparce switched in, adding snowwarning to impossible abilities
+INFO     dudunsparce switched in, adding boosterenergy to impossible items
+INFO     dudunsparce switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 5
+INFO     root priors (12): {'switch okidogi': 0.254, 'swordsdance': 0.151, 'switch virizion': 0.14, 'switch serperior': 0.133}
+INFO     Sampling battle 0
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	     kricketune   technician heavydutyboots [knockoff, pounce, stickyweb, taunt] ttype=ghost
+INFO     	necrozmadawnwings   prismarmor      lifeorb [brickbreak, dragondance, moongeistbeam, photongeyser] ttype=fighting
+INFO     Sampling battle 1
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	necrozmaduskmane   prismarmor weaknesspolicy [dragondance, earthquake, photongeyser, sunsteelstrike] ttype=water
+INFO     	       overqwil   intimidate   choiceband [aquajet, crunch, gunkshot, liquidation] ttype=water
+INFO     Sampling battle 2
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         kyogre      drizzle  choicescarf [icebeam, originpulse, thunder, waterspout] ttype=water
+INFO     	         deoxys     pressure      lifeorb [icebeam, knockoff, psychoboost, superpower] ttype=fighting
+INFO     Sampling battle 3
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        jolteon   voltabsorb    leftovers [calmmind, substitute, terablast, thunderbolt] ttype=ice
+INFO     	         deoxys     pressure      lifeorb [extremespeed, knockoff, psychoboost, superpower] ttype=fighting
+INFO     Sampling battle 4
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         komala     comatose  assaultvest [bodyslam, earthquake, knockoff, rapidspin] ttype=ghost
+INFO     	         swalot   liquidooze    leftovers [earthquake, knockoff, painsplit, sludgebomb] ttype=dark
+INFO     Sampling battle 5
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	    polteageist   cursedbody    whiteherb [shadowball, shellsmash, storedpower, strengthsap] ttype=dark
+INFO     	      kingambit supremeoverlord    leftovers [ironhead, kowtowcleave, suckerpunch, swordsdance] ttype=dark
+INFO     Sampling battle 6
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 2 unrevealed pokemon
+INFO     	   greninjabond   battlebond      lifeorb [darkpulse, gunkshot, hydropump, icebeam] ttype=poison
+INFO     	       ribombee   shielddust heavydutyboots [bugbuzz, moonblast, quiverdance, terablast] ttype=ground
+INFO     Sampling battle 7
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       reshiram   turboblaze heavydutyboots [dragondance, flareblitz, outrage, stoneedge] ttype=fire
+INFO     	    ironvaliant   quarkdrive      lifeorb [closecombat, knockoff, spiritbreak, swordsdance] ttype=fighting
+INFO     Sampling battle 8
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        darkrai    baddreams    leftovers [darkpulse, nastyplot, sludgebomb, substitute] ttype=poison
+INFO     	        slowbro  regenerator    leftovers [bodypress, irondefense, scald, slackoff] ttype=fighting
+INFO     Sampling battle 9
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        ariados     insomnia heavydutyboots [knockoff, megahorn, poisonjab, stickyweb] ttype=ghost
+INFO     	       magearna    soulheart    leftovers [aurasphere, flashcannon, fleurcannon, spikes] ttype=fighting
+INFO     Sampling battle 10
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       mukalola  poisontouch  assaultvest [drainpunch, knockoff, poisonjab, shadowsneak] ttype=fighting
+INFO     	        sableye    prankster    leftovers [encore, knockoff, recover, thunderwave] ttype=poison
+INFO     Sampling battle 11
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       chimecho     levitate    leftovers [healbell, psychicnoise, recover, thunderwave] ttype=dark
+INFO     	      armarouge    weakarmor  choicespecs [armorcannon, energyball, focusblast, psyshock] ttype=fighting
+INFO     Sampling battle 12
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 2 unrevealed pokemon
+INFO     	            muk  poisontouch  assaultvest [drainpunch, icepunch, knockoff, poisonjab] ttype=dark
+INFO     	      passimian      defiant    leftovers [bulkup, drainpunch, gunkshot, knockoff] ttype=poison
+INFO     Sampling battle 13
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, earthpower, roost] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        milotic  competitive    leftovers [haze, icebeam, recover, scald] ttype=steel
+INFO     	  zaciancrowned intrepidsword  rustedsword [behemothblade, closecombat, playrough, swordsdance] ttype=fighting
+INFO     Sampling battle 14
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	    slitherwing protosynthesis      lifeorb [closecombat, firstimpression, flareblitz, wildcharge] ttype=electric
+INFO     	        pikachu lightningrod    lightball [knockoff, surf, voltswitch, volttackle] ttype=water
+INFO     Sampling battle 15
+INFO     	    dudunsparce  serenegrace    leftovers [earthquake, glare, headbutt, roost] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       hariyama         guts     flameorb [bulletpunch, closecombat, facade, knockoff] ttype=normal
+INFO     	         pawmot     ironfist      lifeorb [closecombat, doubleshock, icepunch, revivalblessing] ttype=electric
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: swordsdance visited 95.27% avg_score=0.399 sample_chance_multiplier=0.062
+INFO     Policy 1: swordsdance visited 66.87% avg_score=0.318 sample_chance_multiplier=0.062
+INFO     Policy 2: swordsdance visited 98.38% avg_score=0.665 sample_chance_multiplier=0.062
+INFO     Policy 3: swordsdance visited 93.97% avg_score=0.465 sample_chance_multiplier=0.062
+INFO     Policy 4: swordsdance visited 79.9% avg_score=0.408 sample_chance_multiplier=0.062
+INFO     Policy 5: swordsdance visited 65.06% avg_score=0.461 sample_chance_multiplier=0.062
+INFO     Policy 6: swordsdance visited 95.44% avg_score=0.473 sample_chance_multiplier=0.062
+INFO     Policy 7: swordsdance visited 97.89% avg_score=0.567 sample_chance_multiplier=0.062
+INFO     Policy 8: swordsdance visited 62.87% avg_score=0.389 sample_chance_multiplier=0.062
+INFO     Policy 9: swordsdance visited 96.18% avg_score=0.441 sample_chance_multiplier=0.062
+INFO     Policy 10: swordsdance visited 53.03% avg_score=0.392 sample_chance_multiplier=0.062
+INFO     Policy 11: swordsdance visited 91.32% avg_score=0.37 sample_chance_multiplier=0.062
+INFO     Policy 12: swordsdance visited 93.18% avg_score=0.424 sample_chance_multiplier=0.062
+INFO     Policy 13: swordsdance visited 96.81% avg_score=0.47 sample_chance_multiplier=0.062
+INFO     Policy 14: swordsdance visited 92.98% avg_score=0.432 sample_chance_multiplier=0.062
+INFO     Policy 15: switch okidogi visited 71.14% avg_score=0.304 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	80.707%: swordsdance
+INFO     Choice: swordsdance
+INFO     Updated dudunsparce's max speed to 388
+INFO     haxorus already has the move swordsdance. Decrementing the PP by 1
+INFO     haxorus using swordsdance makes it unlikely to have a choice item. Setting can_have_choice_item to False
+INFO     haxorus used a status-move. Adding `assaultvest` to impossible items
+INFO     Setting haxorus's last used move: swordsdance
+INFO     haxorus's attack was boosted by 2 to 2
+INFO     dudunsparce used a normal move, removing normalgem from possible items
+INFO     Setting dudunsparce's last used move: boomburst
+INFO     dudunsparce used a damaging move - not guessing lifeorb anymore
+INFO     dudunsparce did 72.95% damage to haxorus with boomburst
+INFO     
+INFO     Turn: 6
+INFO     root priors (12): {'closecombat-tera': 0.367, 'closecombat': 0.353, 'scaleshot': 0.216, 'scaleshot-tera': 0.054}
+INFO     Sampling battle 0
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         espeon  magicbounce  choicespecs [alluringvoice, psychic, shadowball, trick] ttype=fairy
+INFO     	       ironmoth   quarkdrive heavydutyboots [energyball, fierydance, sludgewave, toxicspikes] ttype=grass
+INFO     Sampling battle 1
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	     calyrexice asoneglastrier weaknesspolicy [agility, closecombat, glaciallance, highhorsepower] ttype=ground
+INFO     	     irontreads   quarkdrive  assaultvest [earthquake, ironhead, rapidspin, voltswitch] ttype=ghost
+INFO     Sampling battle 2
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, earthpower, roost] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	      hatterene  magicbounce  assaultvest [drainingkiss, mysticalfire, nuzzle, psychic] ttype=steel
+INFO     	       cloyster    skilllink    whiteherb [drillrun, iciclespear, rockblast, shellsmash] ttype=ground
+INFO     Sampling battle 3
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         glalie   innerfocus heavydutyboots [earthquake, freezedry, spikes, taunt] ttype=water
+INFO     	      farigiraf    sapsipper    leftovers [bodyslam, protect, psychicnoise, wish] ttype=ground
+INFO     Sampling battle 4
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	      farigiraf    sapsipper    leftovers [bodyslam, protect, psychicnoise, wish] ttype=water
+INFO     	    kyuremblack     teravolt   loadeddice [dragondance, fusionbolt, iciclespear, scaleshot] ttype=electric
+INFO     Sampling battle 5
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       lumineon   stormdrain heavydutyboots [encore, hydropump, icebeam, uturn] ttype=fire
+INFO     	        darkrai    baddreams    leftovers [darkpulse, nastyplot, sludgebomb, substitute] ttype=poison
+INFO     Sampling battle 6
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 2 unrevealed pokemon
+INFO     	     irontreads   quarkdrive  assaultvest [earthquake, ironhead, knockoff, voltswitch] ttype=dragon
+INFO     	       clefable   magicguard      lifeorb [knockoff, moonblast, moonlight, thunderwave] ttype=poison
+INFO     Sampling battle 7
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       greedent   cheekpouch  sitrusberry [doubleedge, earthquake, knockoff, swordsdance] ttype=ground
+INFO     	       dusknoir        frisk    leftovers [earthquake, painsplit, poltergeist, willowisp] ttype=fairy
+INFO     Sampling battle 8
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	      excadrill  moldbreaker    leftovers [earthquake, ironhead, rapidspin, swordsdance] ttype=grass
+INFO     	     kricketune   technician heavydutyboots [knockoff, pounce, stickyweb, taunt] ttype=ghost
+INFO     Sampling battle 9
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	        mimikyu     disguise      lifeorb [playrough, shadowclaw, shadowsneak, swordsdance] ttype=fairy
+INFO     	         phione    hydration    leftovers [rest, scald, sleeptalk, takeheart] ttype=dragon
+INFO     Sampling battle 10
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         lapras  waterabsorb  choicespecs [freezedry, hydropump, icebeam, sparklingaria] ttype=ice
+INFO     	        mimikyu     disguise      lifeorb [drainpunch, playrough, shadowsneak, swordsdance] ttype=fairy
+INFO     Sampling battle 11
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, earthpower, roost] ttype=poison
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       cinccino   technician   loadeddice [bulletseed, tailslap, tidyup, tripleaxel] ttype=normal
+INFO     	      electrode       static heavydutyboots [foulplay, thunderbolt, thunderwave, voltswitch] ttype=dark
+INFO     Sampling battle 12
+INFO     	    dudunsparce      rattled    leftovers [boomburst, calmmind, roost, shadowball] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	       empoleon  competitive    leftovers [icebeam, roar, roost, surf] ttype=grass
+INFO     	  qwilfishhisui   intimidate     eviolite [crunch, gunkshot, spikes, taunt] ttype=flying
+INFO     Sampling battle 13
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ghost
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 2 unrevealed pokemon
+INFO     	     grimmsnarl    prankster    lightclay [lightscreen, reflect, spiritbreak, thunderwave] ttype=steel
+INFO     	       sneasler     unburden    whiteherb [acrobatics, closecombat, direclaw, swordsdance] ttype=flying
+INFO     Sampling battle 14
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 2 unrevealed pokemon
+INFO     	         emboar     reckless   choiceband [closecombat, flareblitz, headsmash, wildcharge] ttype=fire
+INFO     	            mew  synchronize    leftovers [encore, knockoff, psychicnoise, willowisp] ttype=dark
+INFO     Sampling battle 15
+INFO     	    dudunsparce      rattled    leftovers [boomburst, earthquake, roost, toxic] ttype=ground
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 2 unrevealed pokemon
+INFO     	      regieleki   transistor       magnet [rapidspin, terablast, thunderbolt, voltswitch] ttype=ice
+INFO     	      munkidori   toxicchain      lifeorb [focusblast, nastyplot, psyshock, sludgewave] ttype=fighting
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: closecombat visited 95.95% avg_score=0.688 sample_chance_multiplier=0.062
+INFO     Policy 1: closecombat visited 96.89% avg_score=0.673 sample_chance_multiplier=0.062
+INFO     Policy 2: closecombat visited 97.82% avg_score=0.654 sample_chance_multiplier=0.062
+INFO     Policy 3: closecombat visited 86.92% avg_score=0.502 sample_chance_multiplier=0.062
+INFO     Policy 4: closecombat visited 87.92% avg_score=0.5 sample_chance_multiplier=0.062
+INFO     Policy 5: closecombat visited 89.27% avg_score=0.633 sample_chance_multiplier=0.062
+INFO     Policy 6: closecombat visited 97.9% avg_score=0.675 sample_chance_multiplier=0.062
+INFO     Policy 7: scaleshot visited 54.87% avg_score=0.416 sample_chance_multiplier=0.062
+INFO     Policy 8: closecombat visited 96.74% avg_score=0.675 sample_chance_multiplier=0.062
+INFO     Policy 9: closecombat visited 87.99% avg_score=0.349 sample_chance_multiplier=0.062
+INFO     Policy 10: closecombat visited 85.67% avg_score=0.337 sample_chance_multiplier=0.062
+INFO     Policy 11: closecombat visited 84.32% avg_score=0.62 sample_chance_multiplier=0.062
+INFO     Policy 12: scaleshot visited 55.5% avg_score=0.43 sample_chance_multiplier=0.062
+INFO     Policy 13: closecombat visited 58.56% avg_score=0.501 sample_chance_multiplier=0.062
+INFO     Policy 14: closecombat visited 93.36% avg_score=0.55 sample_chance_multiplier=0.062
+INFO     Policy 15: closecombat visited 96.0% avg_score=0.703 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	82.552%: closecombat
+INFO     Choice: closecombat
+INFO     haxorus already has the move closecombat. Decrementing the PP by 1
+INFO     haxorus used a fighting move, removing fightinggem from possible items
+INFO     Setting haxorus's last used move: closecombat
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 100.0% damage to dudunsparce with closecombat
+INFO     haxorus's defense was unboosted by 1 to -3
+INFO     haxorus's special-defense was unboosted by 1 to -1
+INFO     dudunsparce has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     floatzel switched in, adding intimidate to impossible abilities
+INFO     floatzel switched in, adding pressure to impossible abilities
+INFO     floatzel switched in, adding neutralizinggas to impossible abilities
+INFO     floatzel switched in, adding sandstream to impossible abilities
+INFO     floatzel switched in, adding drought to impossible abilities
+INFO     floatzel switched in, adding drizzle to impossible abilities
+INFO     floatzel switched in, adding snowwarning to impossible abilities
+INFO     floatzel switched in, adding boosterenergy to impossible items
+INFO     floatzel switched in, adding airballoon to impossible items
+INFO     
+INFO     Turn: 7
+INFO     root priors (12): {'scaleshot': 0.469, 'closecombat': 0.3, 'closecombat-tera': 0.09, 'scaleshot-tera': 0.036}
+INFO     Sampling battle 0
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 1 unrevealed pokemon
+INFO     	          ditto     imposter  choicescarf [transform] ttype=steel
+INFO     Sampling battle 1
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	         komala     comatose  assaultvest [bodyslam, earthquake, knockoff, rapidspin] ttype=ghost
+INFO     Sampling battle 2
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       ironmoth   quarkdrive heavydutyboots [energyball, fireblast, sludgewave, toxicspikes] ttype=grass
+INFO     Sampling battle 3
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	      crawdaunt adaptability      lifeorb [aquajet, crabhammer, dragondance, knockoff] ttype=water
+INFO     Sampling battle 4
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 1 unrevealed pokemon
+INFO     	    kyuremblack     teravolt   loadeddice [dragondance, fusionbolt, iciclespear, scaleshot] ttype=electric
+INFO     Sampling battle 5
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 1 unrevealed pokemon
+INFO     	     skeledirge      unaware heavydutyboots [hex, slackoff, torchsong, willowisp] ttype=water
+INFO     Sampling battle 6
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	  slowkinggalar  regenerator    leftovers [fireblast, psychicnoise, slackoff, sludgebomb] ttype=fairy
+INFO     Sampling battle 7
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        milotic  competitive    leftovers [dragontail, icebeam, recover, scald] ttype=steel
+INFO     Sampling battle 8
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        falinks      defiant      lifeorb [closecombat, ironhead, knockoff, noretreat] ttype=steel
+INFO     Sampling battle 9
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling 1 unrevealed pokemon
+INFO     	      ceruledge    weakarmor heavydutyboots [bitterblade, closecombat, poltergeist, swordsdance] ttype=fighting
+INFO     Sampling battle 10
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       chimecho     levitate    leftovers [healbell, knockoff, psychicnoise, recover] ttype=steel
+INFO     Sampling battle 11
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	        palafin   zerotohero    leftovers [bulkup, icepunch, jetpunch, wavecrash] ttype=dragon
+INFO     Sampling battle 12
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 1 unrevealed pokemon
+INFO     	     hitmonchan     ironfist    leftovers [bulkup, drainpunch, knockoff, poisonjab] ttype=steel
+INFO     Sampling battle 13
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       ludicolo    swiftswim      lifeorb [gigadrain, hydropump, icebeam, raindance] ttype=steel
+INFO     Sampling battle 14
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	       houndoom    flashfire heavydutyboots [darkpulse, fireblast, sludgebomb, suckerpunch] ttype=dark
+INFO     Sampling battle 15
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling 1 unrevealed pokemon
+INFO     	      araquanid  waterbubble heavydutyboots [hydropump, leechlife, liquidation, stickyweb] ttype=steel
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: scaleshot visited 98.63% avg_score=0.822 sample_chance_multiplier=0.062
+INFO     Policy 1: scaleshot visited 98.86% avg_score=0.766 sample_chance_multiplier=0.062
+INFO     Policy 2: scaleshot visited 98.87% avg_score=0.742 sample_chance_multiplier=0.062
+INFO     Policy 3: scaleshot visited 91.58% avg_score=0.575 sample_chance_multiplier=0.062
+INFO     Policy 4: scaleshot visited 98.84% avg_score=0.773 sample_chance_multiplier=0.062
+INFO     Policy 5: scaleshot visited 94.96% avg_score=0.554 sample_chance_multiplier=0.062
+INFO     Policy 6: scaleshot visited 96.03% avg_score=0.515 sample_chance_multiplier=0.062
+INFO     Policy 7: scaleshot visited 96.95% avg_score=0.577 sample_chance_multiplier=0.062
+INFO     Policy 8: scaleshot visited 97.54% avg_score=0.678 sample_chance_multiplier=0.062
+INFO     Policy 9: scaleshot visited 98.5% avg_score=0.727 sample_chance_multiplier=0.062
+INFO     Policy 10: scaleshot visited 96.29% avg_score=0.548 sample_chance_multiplier=0.062
+INFO     Policy 11: scaleshot visited 97.38% avg_score=0.582 sample_chance_multiplier=0.062
+INFO     Policy 12: scaleshot visited 98.87% avg_score=0.749 sample_chance_multiplier=0.062
+INFO     Policy 13: scaleshot visited 96.67% avg_score=0.622 sample_chance_multiplier=0.062
+INFO     Policy 14: scaleshot visited 95.06% avg_score=0.563 sample_chance_multiplier=0.062
+INFO     Policy 15: scaleshot visited 94.22% avg_score=0.565 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	96.828%: scaleshot
+INFO     Choice: scaleshot
+INFO     Opponent has switched - clearing the last used move
+INFO     dialgaorigin switched in, adding intimidate to impossible abilities
+INFO     dialgaorigin switched in, adding pressure to impossible abilities
+INFO     dialgaorigin switched in, adding neutralizinggas to impossible abilities
+INFO     dialgaorigin switched in, adding sandstream to impossible abilities
+INFO     dialgaorigin switched in, adding drought to impossible abilities
+INFO     dialgaorigin switched in, adding drizzle to impossible abilities
+INFO     dialgaorigin switched in, adding snowwarning to impossible abilities
+INFO     dialgaorigin switched in, adding boosterenergy to impossible items
+INFO     dialgaorigin switched in, adding airballoon to impossible items
+INFO     Setting dialgaorigin's ability to pressure
+INFO     haxorus already has the move scaleshot. Decrementing the PP by 2
+INFO     haxorus used a dragon move, removing dragongem from possible items
+INFO     Setting haxorus's last used move: scaleshot
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 19.0% damage to dialgaorigin with scaleshot
+INFO     haxorus's defense was unboosted by 1 to -4
+INFO     haxorus's speed was boosted by 1 to 3
+INFO     dialgaorigin has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 8
+INFO     root priors (12): {'scaleshot': 0.635, 'closecombat': 0.279, 'ironhead': 0.033, 'closecombat-tera': 0.017}
+INFO     Sampling battle 0
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, thunderwave] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 1
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=dragon
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 2
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, thunderwave] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 3
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, heavyslam, stealthrock] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 4
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 5
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=dragon
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     Sampling battle 6
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     Sampling battle 7
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, heavyslam, stealthrock, thunderwave] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     Sampling battle 8
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, heavyslam, stealthrock, thunderwave] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 9
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, thunderwave] ttype=dragon
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 10
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, flashcannon, stealthrock, thunderwave] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 11
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, heavyslam, stealthrock] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=steel
+INFO     Sampling battle 12
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=flying
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 13
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Sampling battle 14
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, flashcannon] ttype=steel
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     Sampling battle 15
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, stealthrock] ttype=dragon
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	       floatzel    waterveil    leftovers [bulkup, icespinner, taunt, wavecrash] ttype=water
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: closecombat visited 96.6% avg_score=0.716 sample_chance_multiplier=0.062
+INFO     Policy 1: scaleshot visited 97.08% avg_score=0.716 sample_chance_multiplier=0.062
+INFO     Policy 2: closecombat visited 95.59% avg_score=0.704 sample_chance_multiplier=0.062
+INFO     Policy 3: scaleshot visited 97.76% avg_score=0.718 sample_chance_multiplier=0.062
+INFO     Policy 4: scaleshot visited 97.42% avg_score=0.73 sample_chance_multiplier=0.062
+INFO     Policy 5: closecombat visited 96.9% avg_score=0.714 sample_chance_multiplier=0.062
+INFO     Policy 6: closecombat visited 96.75% avg_score=0.713 sample_chance_multiplier=0.062
+INFO     Policy 7: closecombat visited 94.12% avg_score=0.72 sample_chance_multiplier=0.062
+INFO     Policy 8: scaleshot visited 97.6% avg_score=0.734 sample_chance_multiplier=0.062
+INFO     Policy 9: scaleshot visited 97.81% avg_score=0.713 sample_chance_multiplier=0.062
+INFO     Policy 10: scaleshot visited 97.85% avg_score=0.722 sample_chance_multiplier=0.062
+INFO     Policy 11: closecombat visited 95.57% avg_score=0.715 sample_chance_multiplier=0.062
+INFO     Policy 12: closecombat visited 95.83% avg_score=0.715 sample_chance_multiplier=0.062
+INFO     Policy 13: ironhead visited 91.59% avg_score=0.737 sample_chance_multiplier=0.062
+INFO     Policy 14: closecombat visited 93.72% avg_score=0.699 sample_chance_multiplier=0.062
+INFO     Policy 15: closecombat visited 96.21% avg_score=0.717 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	54.876%: closecombat
+INFO     Choice: closecombat
+INFO     Opponent has switched - clearing the last used move
+INFO     haxorus already has the move closecombat. Decrementing the PP by 1
+INFO     haxorus used a fighting move, removing fightinggem from possible items
+INFO     Setting haxorus's last used move: closecombat
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 97.0% damage to floatzel with closecombat
+INFO     haxorus's defense was unboosted by 1 to -5
+INFO     haxorus's special-defense was unboosted by 1 to -2
+INFO     floatzel has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     
+INFO     Turn: 9
+INFO     root priors (12): {'scaleshot': 0.47, 'closecombat': 0.381, 'ironhead': 0.044, 'closecombat-tera': 0.027}
+INFO     Sampling battle 0
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=steel
+INFO     Sampling battle 1
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=dragon
+INFO     Sampling battle 2
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=steel
+INFO     Sampling battle 3
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, thunderwave] ttype=flying
+INFO     Sampling battle 4
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, flashcannon, stealthrock, thunderwave] ttype=steel
+INFO     Sampling battle 5
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=steel
+INFO     Sampling battle 6
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=flying
+INFO     Sampling battle 7
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, thunderwave] ttype=steel
+INFO     Sampling battle 8
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, heavyslam, stealthrock] ttype=flying
+INFO     Sampling battle 9
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, thunderwave] ttype=dragon
+INFO     Sampling battle 10
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, thunderwave] ttype=steel
+INFO     Sampling battle 11
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, heavyslam, thunderwave] ttype=flying
+INFO     Sampling battle 12
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, stealthrock] ttype=flying
+INFO     Sampling battle 13
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, flashcannon, stealthrock, thunderwave] ttype=dragon
+INFO     Sampling battle 14
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, fireblast, flashcannon, thunderwave] ttype=dragon
+INFO     Sampling battle 15
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     	   dialgaorigin     pressure adamantcrystal [dracometeor, dragontail, fireblast, heavyslam] ttype=dragon
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: closecombat visited 97.34% avg_score=0.815 sample_chance_multiplier=0.062
+INFO     Policy 1: closecombat visited 97.35% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 2: closecombat visited 97.38% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 3: closecombat visited 97.12% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 4: closecombat visited 97.24% avg_score=0.82 sample_chance_multiplier=0.062
+INFO     Policy 5: closecombat visited 97.42% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 6: closecombat visited 97.33% avg_score=0.816 sample_chance_multiplier=0.062
+INFO     Policy 7: closecombat visited 94.42% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 8: closecombat visited 97.19% avg_score=0.812 sample_chance_multiplier=0.062
+INFO     Policy 9: closecombat visited 97.34% avg_score=0.812 sample_chance_multiplier=0.062
+INFO     Policy 10: closecombat visited 97.24% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 11: closecombat visited 97.14% avg_score=0.81 sample_chance_multiplier=0.062
+INFO     Policy 12: closecombat visited 97.32% avg_score=0.814 sample_chance_multiplier=0.062
+INFO     Policy 13: closecombat visited 97.32% avg_score=0.82 sample_chance_multiplier=0.062
+INFO     Policy 14: closecombat visited 97.15% avg_score=0.808 sample_chance_multiplier=0.062
+INFO     Policy 15: closecombat visited 97.0% avg_score=0.807 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	97.082%: closecombat
+INFO     Choice: closecombat
+INFO     Opponent has switched - clearing the last used move
+INFO     Setting dialgaorigin's ability to pressure
+INFO     haxorus already has the move closecombat. Decrementing the PP by 2
+INFO     haxorus used a fighting move, removing fightinggem from possible items
+INFO     Setting haxorus's last used move: closecombat
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 17.0% damage to dialgaorigin with closecombat
+INFO     haxorus's defense was unboosted by 1 to -6
+INFO     haxorus's special-defense was unboosted by 1 to -3
+INFO     dialgaorigin has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     
+INFO     Turn: 10
+INFO     root priors (12): {'closecombat': 0.371, 'scaleshot': 0.295, 'closecombat-tera': 0.145, 'scaleshot-tera': 0.062}
+INFO     Sampling battle 0
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling battle 1
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling battle 2
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling battle 3
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling battle 4
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling battle 5
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling battle 6
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling battle 7
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=steel
+INFO     Sampling battle 8
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling battle 9
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling battle 10
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Sampling battle 11
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling battle 12
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling battle 13
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=flying
+INFO     Sampling battle 14
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=water
+INFO     Sampling battle 15
+INFO     	       floatzel    waterveil   choiceband [crunch, flipturn, icespinner, wavecrash] ttype=water
+INFO     	   miniormeteor  shieldsdown    whiteherb [acrobatics, earthquake, powergem, shellsmash] ttype=ground
+INFO     Searching for a move using MCTS...
+INFO     Sampling 16 battles at 500ms each
+INFO     Policy 0: closecombat visited 99.16% avg_score=0.985 sample_chance_multiplier=0.062
+INFO     Policy 1: closecombat visited 99.18% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 2: closecombat visited 99.13% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 3: closecombat visited 99.16% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 4: closecombat visited 99.18% avg_score=0.985 sample_chance_multiplier=0.062
+INFO     Policy 5: closecombat visited 99.17% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 6: closecombat visited 99.22% avg_score=0.985 sample_chance_multiplier=0.062
+INFO     Policy 7: closecombat visited 99.17% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 8: closecombat visited 99.13% avg_score=0.983 sample_chance_multiplier=0.062
+INFO     Policy 9: closecombat visited 99.15% avg_score=0.983 sample_chance_multiplier=0.062
+INFO     Policy 10: closecombat visited 99.11% avg_score=0.983 sample_chance_multiplier=0.062
+INFO     Policy 11: closecombat visited 99.14% avg_score=0.983 sample_chance_multiplier=0.062
+INFO     Policy 12: closecombat visited 99.08% avg_score=0.982 sample_chance_multiplier=0.062
+INFO     Policy 13: closecombat visited 99.16% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 14: closecombat visited 99.18% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Policy 15: closecombat visited 99.16% avg_score=0.984 sample_chance_multiplier=0.062
+INFO     Considered Choices:
+INFO     	99.156%: closecombat
+INFO     Choice: closecombat
+INFO     haxorus already has the move closecombat. Decrementing the PP by 1
+INFO     haxorus used a fighting move, removing fightinggem from possible items
+INFO     Setting haxorus's last used move: closecombat
+INFO     haxorus used a damaging move - not guessing lifeorb anymore
+INFO     haxorus did 3.0% damage to floatzel with closecombat
+INFO     haxorus's special-defense was unboosted by 1 to -4
+INFO     floatzel has less than maxhp during upkeep, no longer guessing leftovers or blacksludge
+INFO     Opponent has switched - clearing the last used move
+INFO     Renaming miniormeteor -> miniororange
+INFO     Form Change: miniororange -> Minior-Meteor
+INFO     
+INFO     Turn: 11
+INFO     root priors (12): {'ironhead-tera': 0.406, 'closecombat-tera': 0.241, 'ironhead': 0.089, 'scaleshot-tera': 0.089}

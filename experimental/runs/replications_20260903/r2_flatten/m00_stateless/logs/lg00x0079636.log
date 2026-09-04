@@ -1,0 +1,22 @@
+POKE_ENGINE_PROVENANCE {"distribution_version": "0.0.47", "editable": false, "isolated_import_root": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages", "mcts_parameters": ["state", "duration_ms", "iterations", "threads", "s1_priors", "s2_priors", "c_puct", "seed"], "mode": "exact_pinned_experimental_runtime", "module_path": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages/poke_engine/__init__.py", "native_path": "/Users/alityb/projects/metagross/.venv-foul-play/lib/python3.11/site-packages/poke_engine/poke_engine.cpython-311-darwin.so", "native_reveal_masks": true, "native_sha256": "79bea0e467b32e2958bd5d39595fd728a3068be2950085f7b18fa69943f30d71", "request_root_parameters": ["state", "request_actions", "duration_ms", "iterations", "threads", "s1_priors", "s2_priors", "c_puct", "seed"], "source_path": null}
+INFO     Logging in...
+INFO     Challenging lg00y007f800...
+INFO     Initialized battle-gen9randombattle-6301 against: lg00y007f800
+INFO     Loaded from cache: /Users/alityb/projects/metagross/srcs/vendor/foul-play/data/pkmn_sets_cache/gen9randombattle.json
+INFO     Opponent has switched - clearing the last used move
+INFO     ditto switched in, adding intimidate to impossible abilities
+INFO     ditto switched in, adding pressure to impossible abilities
+INFO     ditto switched in, adding neutralizinggas to impossible abilities
+INFO     ditto switched in, adding sandstream to impossible abilities
+INFO     ditto switched in, adding drought to impossible abilities
+INFO     ditto switched in, adding drizzle to impossible abilities
+INFO     ditto switched in, adding snowwarning to impossible abilities
+INFO     ditto switched in, adding boosterenergy to impossible items
+INFO     ditto switched in, adding airballoon to impossible items
+INFO     ditto transformed into persianalola
+INFO     Copied ditto's boosts: {}
+INFO     
+INFO     Turn: 1
+WARNING  ABANDON_BATTLE reason=%s (%s); forfeiting and continuing the ladder
+INFO     Lost with team: None
+INFO     W: 0	L: 1

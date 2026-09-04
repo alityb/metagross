@@ -1,0 +1,63 @@
+=== 2026-09-04T00:18:03Z r1_gumbel attempt 1
+[league] m00 gumbel-causal vs plain-causal (200 games)
+=== 2026-09-04T00:50:30Z r1_gumbel attempt 1
+[league] m00 gumbel-causal vs plain-causal (200 games)
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 307, in <module>
+    main()
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 273, in main
+    result = run_matchup(candidate, opp, i, base_seed, args.out, games)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 221, in run_matchup
+    raise RuntimeError(f"matchup {opp['name']} gave up after retries")
+RuntimeError: matchup plain-causal gave up after retries
+=== 2026-09-04T03:15:49Z r1_gumbel attempt 2
+[league] m00 gumbel-causal vs plain-causal (200 games)
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 307, in <module>
+    main()
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 273, in main
+    result = run_matchup(candidate, opp, i, base_seed, args.out, games)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 221, in run_matchup
+    raise RuntimeError(f"matchup {opp['name']} gave up after retries")
+RuntimeError: matchup plain-causal gave up after retries
+=== 2026-09-04T03:24:21Z r1_gumbel attempt 3
+[league] m00 gumbel-causal vs plain-causal (200 games)
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 307, in <module>
+    main()
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 273, in main
+    result = run_matchup(candidate, opp, i, base_seed, args.out, games)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 221, in run_matchup
+    raise RuntimeError(f"matchup {opp['name']} gave up after retries")
+RuntimeError: matchup plain-causal gave up after retries
+=== 2026-09-04T03:32:08Z r1_gumbel attempt 4
+[league] m00 gumbel-causal vs plain-causal (200 games)
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 307, in <module>
+    main()
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 273, in main
+    result = run_matchup(candidate, opp, i, base_seed, args.out, games)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 221, in run_matchup
+    raise RuntimeError(f"matchup {opp['name']} gave up after retries")
+RuntimeError: matchup plain-causal gave up after retries
+=== 2026-09-04T03:39:27Z r1_gumbel attempt 5
+[league] m00 gumbel-causal vs plain-causal (200 games)
+Traceback (most recent call last):
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 307, in <module>
+    main()
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 273, in main
+    result = run_matchup(candidate, opp, i, base_seed, args.out, games)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alityb/projects/metagross/experimental/src/scripts/league.py", line 221, in run_matchup
+    raise RuntimeError(f"matchup {opp['name']} gave up after retries")
+RuntimeError: matchup plain-causal gave up after retries
+=== 2026-09-04T03:48:28Z r1_gumbel attempt 6
+[league] m00 gumbel-causal vs plain-causal (200 games)
+[league]   -> 69-131 (34.5%) CI [0.283,0.413] valid=True
+[league] report written to /Users/alityb/projects/metagross/experimental/runs/replications_20260903/r1_gumbel/league_report.md
+=== 2026-09-04T04:33:35Z r2_flatten attempt 1
+[league] m00 flattened-causal vs stateless (200 games)

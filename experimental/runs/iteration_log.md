@@ -6984,3 +6984,12 @@ contradicting outcomes frozen): R1 gumbel-causal vs plain causal 200
 mirrored games (seed 2026090301), then R2 flattened vs stateless 200
 mirrored games (seed 2026090302); single wrapper, showdown recycled per
 stage, ~40h, Discord on each completion.
+
+## 2026-09-04 — R1 VERDICT: Gumbel harmful CONFIRMED at power (34.5% [28.3,41.3])
+
+200 verified-mirrored games, activation candidate-arm-only, all_valid.
+Frozen reading 1. Original 10-40 direction replicates (milder magnitude).
+Claim 3 residual risk closed. R2 (flattening H2H mirrored) now running.
+Note: R1's first launch was inert (production client lacks the hook) —
+caught at 30 games by the activation audit; chain now enforces activation
+fail-closed. Fifth silent-mechanism catch of the campaign.

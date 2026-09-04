@@ -1,0 +1,31 @@
+{
+  "candidate": "gumbel-causal",
+  "candidate_config": {
+    "name": "gumbel-causal",
+    "agent": "foul_play_root_priors",
+    "trajectory_mode": "causal-history",
+    "client_env": {
+      "METAGROSS_GUMBEL_ROOT_PORTS": "9023"
+    }
+  },
+  "base_seed": 2026090301,
+  "vector": [
+    {
+      "opponent": "plain-causal",
+      "agent": "foul_play_root_priors",
+      "wins": 69,
+      "games": 200,
+      "winrate": 0.345,
+      "ci95": [
+        0.2826,
+        0.4132
+      ],
+      "activation": {
+        "candidate_active": true,
+        "opponent_active": false,
+        "valid": true
+      }
+    }
+  ],
+  "all_valid": true
+}

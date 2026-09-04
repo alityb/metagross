@@ -33,3 +33,10 @@ self-mirror 11-19; discarded). R1 re-specified with agent
 foul_play_root_priors on BOTH arms (harness client, hook present) —
 faithful to the original lanes' stack. Chain now enforces activation
 fail-closed: no ACTIVE line within 25 min kills the stage.
+
+## R1 RESULT (2026-09-04) — HARMFUL CONFIRMED AT POWER, MIRRORED
+gumbel-causal vs plain causal: 69-131 (34.5%), Wilson 95% [28.3, 41.3], n=200, verified-mirrored, GUMBEL_ROOT ACTIVE candidate-arm only (all_valid=True).
+Frozen reading 1 applies (interval clearly below 45%): the completed-Q
+decision rule is HARMFUL under determinization, confirmed at power on
+mirrored games — milder than the original 20% (10-40, unpaired) but
+the same conclusion. Claim 3's residual risk is closed.
